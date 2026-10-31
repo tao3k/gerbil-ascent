@@ -1,6 +1,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :gerbil-ascent/core/positive-plan
+        (only-in :std/list/list append-map)
+        (prefix-in :clan/poo/testing/property property.)
+        (prefix-in :clan/poo/testing/property/generator generator.)
+        (prefix-in :clan/poo/testing/property/model model.)
+        (prefix-in :clan/poo/testing/property/replay replay.)
+        (only-in :clan/poo/testing/property/test require-passed)
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes
                  row-indexes-plan-rules! row-indexes-rows)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
@@ -15,8 +21,123 @@
           (vector 'atom (vector 1 '((variable . x) (variable . y)) [] [] [])))))
 (def (inputs atom frame delta? terms)
   (case (vector-ref atom 0) ((0) '((0) (1))) ((1) '((0 2) (1 3) (1 4)))))
+;;; Use POO's existing model/generator/shrink/replay protocol. Commands replace
+;;; the two finite row cuts; the reference is ordered filtering, not an index.
+(def (mask-rows mask)
+  (filter-map (lambda (i) (and (not (zero? (bitwise-and mask (arithmetic-shift 1 i))))
+                              (list (quotient i 2) (modulo i 2)))) (iota 4)))
+(def (cut-command? value)
+  (and (vector? value) (= (vector-length value) 2)
+       (andmap (lambda (n) (and (exact-integer? n) (<= 0 n) (< n 16))) (vector->list value))
+       (= (bitwise-and (vector-ref value 0) (vector-ref value 1)) (vector-ref value 1))))
+(def (reference-probes command)
+  (append-map
+   (lambda (mask)
+     (append-map (lambda (key)
+                   (let (rows (filter (lambda (row) (= (car row) key)) (mask-rows mask)))
+                     (list rows rows))) '(0 1))) (vector->list command)))
+(def cut-model
+  (model.make-model (lambda () (vector 0 0)) (lambda (_state _command) #t)
+    (lambda (_state command) (values command (reference-probes command)))
+    reference-probes cut-command? values))
+(def cut-generator
+  (model.trace-generator cut-model
+    (lambda (_state random _size)
+      (let (source (random 16)) (values #t (vector source (bitwise-and source (random 16))))))
+    (lambda (command)
+      (let ((source (vector-ref command 0)) (delta (vector-ref command 1)))
+        (append (map (lambda (next) (vector next (bitwise-and next delta))) (generator.integer-shrinks source))
+                (map (lambda (next) (vector source (bitwise-and source next))) (generator.integer-shrinks delta))))) 4))
+(def cut-domain
+  (property.make-specification
+   (lambda (commands) (and (list? commands) (<= (length commands) 4) (andmap cut-command? commands)))
+   (lambda (commands) (+ (length commands)
+                         (foldl (lambda (command total) (+ total (vector-ref command 0) (vector-ref command 1))) 0 commands)))))
+(def (cut-property commands)
+  (model.trace-report-matched?
+   (model.check-trace cut-model commands
+    (lambda (consume)
+      (let* ((all (vector [])) (delta (vector [])) (sizes (vector 0)) (dsizes (vector 0))
+             (versions (vector 0)) (dversions (vector 0))
+             (indexes (gerbil-ascent-make-row-indexes all delta sizes dsizes versions dversions
+                        (vector gerbil-ascent-hash-index-provider)))
+             (atoms (map (lambda (key) (vector 0 (list (cons 'literal key) '(variable . y))
+                                              '(0) [] (list (cons 'literal key)))) '(0 1)))
+             (plans (map (lambda (atom)
+                           (let* ((heads (list (vector 1 '((variable . y)))))
+                                  (body (list (vector 'atom atom)))
+                                  (plan (gerbil-ascent-compile-positive-plan heads body)))
+                             (vector heads body '(0) 0 (vector 0) plan))) atoms)))
+        (row-indexes-plan-rules! indexes plans #t #t)
+        (def (observe _state)
+          (append-map
+           (lambda (lane)
+             (append-map
+              (lambda (rule)
+                (let* ((plan (vector-ref rule 5)) (action (car (vector-ref plan 1)))
+                       (frame (make-vector 1 #f)))
+                  (def (probe) ((row-indexes-rows indexes) (vector-ref action 0) frame lane (vector-ref action 2)))
+                  (list (probe) (probe)))) plans)) '(#f #t)))
+        (consume
+         (model.make-system #f
+          (lambda (state command)
+            (let ((source (mask-rows (vector-ref command 0))) (fresh (mask-rows (vector-ref command 1))))
+              ;; These are independent cuts: a new delta with unchanged source
+              ;; must invalidate the delta certificate, not borrow source age.
+              (unless (equal? source (vector-ref all 0))
+                (vector-set! all 0 source) (vector-set! sizes 0 (length source))
+                (vector-set! versions 0 (+ 1 (vector-ref versions 0))))
+              (unless (equal? fresh (vector-ref delta 0))
+                (vector-set! delta 0 fresh) (vector-set! dsizes 0 (length fresh))
+                (vector-set! dversions 0 (+ 1 (vector-ref dversions 0))))
+              (values state (observe state)))) observe)))))))
+(def cut-codec
+  (replay.make-codec '(ascent-empty-bucket (nodes 0 1) (masks 16) (steps 4) (scope version key)) values values))
+(def (cut-labels commands)
+  (let ((same-size? #f) (reactivated? #f) (delta-only? #f) (previous 0) (previous-delta 0))
+    (for-each (lambda (command)
+                (let (source (vector-ref command 0))
+                  (when (and (not (= source previous)) (= (length (mask-rows source)) (length (mask-rows previous))))
+                    (set! same-size? #t))
+                  (when (and (> previous 0) (= (bitwise-and previous 3) 0) (> (bitwise-and source 3) 0))
+                    (set! reactivated? #t))
+                  (when (and (= source previous) (not (= (vector-ref command 1) previous-delta)))
+                    (set! delta-only? #t))
+                  (set! previous source) (set! previous-delta (vector-ref command 1)))) commands)
+    (filter values
+      (list (and same-size? 'equal-size-revision) (and reactivated? 'reactivated-key)
+            (and delta-only? 'delta-only-revision)
+            (and (ormap (lambda (command)
+                          (let ((source (vector-ref command 0)) (delta (vector-ref command 1)))
+                            (and (> delta 0)
+                                 (or (and (> (bitwise-and source 3) 0) (= (bitwise-and delta 3) 0))
+                                     (and (> (bitwise-and source 12) 0) (= (bitwise-and delta 12) 0)))))) commands)
+                 'different-lane-buckets)
+            (and (ormap (lambda (command) (= (vector-ref command 1) 0)) commands) 'empty-delta)))))
 (def ascent-rule-cost-kernel-test
   (test-suite "Native positive-plan cost charge points"
+    (test-case "POO model PBT checks source delta versions and lane isolation"
+      (let (report (property.check-property cut-generator cut-property cut-domain
+                     seed: 20261031 cases: 64 size: 4 shrink-budget: 64
+                     policy: (property.make-policy name: 'ascent-empty-bucket
+                               labels: cut-labels
+                               required: '((equal-size-revision . 1) (reactivated-key . 1)
+                                           (delta-only-revision . 1) (different-lane-buckets . 1) (empty-delta . 1)))))
+        (displayln "POO-PBT " (property.report-diagnostics report))
+        (when (eq? (property.report-status report) 'failed)
+          (displayln "POO-PBT-COUNTEREXAMPLE-BEGIN")
+          (replay.write-counterexample report cut-codec (current-output-port))
+          (displayln "POO-PBT-COUNTEREXAMPLE-END"))
+        (require-passed report)
+        (check-equal? (property.report-accepted report) 64)
+        (check-equal? (property.report-discarded report) 0)))
+    (test-case "POO shrunk stale-version counterexample replays after correction"
+      ;; Exported by POO from the actual native version-check mutation: 23
+      ;; charged shrink proposals, three reductions, exhausted local neighborhood.
+      (check-equal?
+       (replay.read-counterexample cut-codec
+        (open-input-string "#(property-counterexample 1 (ascent-empty-bucket (nodes 0 1) (masks 16) (steps 4) (scope version key)) (#(4 0) #(1 0)))")
+        cut-domain cut-property) #t))
     (test-case "independent finite oracle rejects invented support and outside-domain input"
       (check-equal? (finite-domain-closure '(0 1) '((p) (q))
                       '(((p x) (q x)) ((q x) (p x)))) '((p) (q)))

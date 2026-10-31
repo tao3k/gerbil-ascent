@@ -77,3 +77,7 @@ matching work, derived rows and the cost of materializing shared prefixes.
   [Maintaining Views Incrementally](https://sigmodrecord.org/1993/06/03/maintaining-views-incrementally/).
   SIGMOD 1993. Alternative supports and recursive deletion require an explicit
   maintenance argument; endpoint projection alone supplies neither counting nor DRed.
+- Koen Claessen and John Hughes.
+  [QuickCheck: A Lightweight Tool for Random Testing of Haskell Programs](https://doi.org/10.1145/351240.351266).
+  ICFP 2000. Generated property checks complement finite oracles and proofs.
+  ASCENT uses POO's existing model, coverage, shrinking and replay protocols.

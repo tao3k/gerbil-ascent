@@ -192,4 +192,42 @@ def source : String :=
   "\n    (let (" ++ extendSource .mutate ++ ")\n      " ++
   String.intercalate "\n      " ((extendOps.drop 2).map extendSource) ++ ")))\n"
 
+/-! An empty-bucket cell is scoped to one physical entry (owner/lane/layout),
+one current row version and one immutable key. It is not a prefix-failure
+certificate and may be published only after a complete empty lookup. -/
+namespace EmptyBucket
+variable {Scope Key Row : Type} [DecidableEq Scope] [DecidableEq Key]
+
+def mayReuse (savedScope currentScope : Scope) (savedVersion currentVersion : Nat)
+    (savedKey currentKey : Key) : Bool :=
+  decide (savedScope = currentScope ∧ savedVersion = currentVersion ∧ savedKey = currentKey)
+
+theorem exact_empty_reuse (rows : Scope → Nat → Key → List Row)
+    (savedScope currentScope : Scope) (savedVersion currentVersion : Nat)
+    (savedKey currentKey : Key)
+    (empty : rows savedScope savedVersion savedKey = [])
+    (admitted : mayReuse savedScope currentScope savedVersion currentVersion savedKey currentKey = true) :
+    rows currentScope currentVersion currentKey = [] := by
+  have same := of_decide_eq_true admitted
+  rcases same with ⟨rfl, rfl, rfl⟩
+  exact empty
+
+/-- An empty reuse cannot remove a supporting occurrence or a provenance
+continuation. Ordered lists, not Set-head equality, specify this boundary. -/
+theorem empty_has_no_continuation (rows : List Row) (emit : Row → List Proof)
+    (empty : rows = []) : rows.flatMap emit = [] := by
+  simp [empty]
+
+theorem different_delta_rejected (scope : Scope) (key : Key) (version : Nat) :
+    mayReuse scope scope version (version + 1) key key = false := by
+  simp [mayReuse]
+
+theorem different_owner_rejected (before after : Scope) (different : before ≠ after)
+    (version : Nat) (key : Key) : mayReuse before after version version key key = false := by
+  simp [mayReuse, different]
+
+#print axioms exact_empty_reuse
+#print axioms empty_has_no_continuation
+#print axioms different_delta_rejected
+end EmptyBucket
 end Ascent.CachePublication

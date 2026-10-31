@@ -725,3 +725,184 @@ provenance and source-maintenance papers. The borrowed idea is exact selection
 on variables bound by a prefix. No upstream implementation was copied or
 translated, and no asymptotic theorem from the papers is asserted for this
 bounded implementation experiment.
+
+* Source/delta-scoped empty-bucket reuse
+
+The next experiment starts at =cd4ef647=. The 26 observed dead-end prefixes
+remain 26: their absence of a complete extension is not cached. The reusable
+unit is narrower: a complete canonical index lookup returned an empty bucket
+for one immutable key in one physical entry and row version. Entry ownership
+separates relation, column layout and all/delta lane. A changed version or key
+refuses the certificate; a different entry cannot access its cell.
+
+The existing physical-index owner can retain one such certificate, with key
+written before its version. Successful buckets do not overwrite a prior empty
+certificate. Physical rebuild/extension and version admission happen before
+the reuse check. A failed lookup does not publish an empty certificate. No
+table of prefixes, cross-engine cache or search framework is added.
+
+This is an explicit native execution option, off by default:
+
+#+begin_src scheme
+;; The same admitted Scheme DSL program and evaluator, with unchanged limits.
+(gerbil-ascent-evaluate-program program empty-bucket-reuse?: #t)
+#+end_src
+
+It requires the existing fresh serial pure checked scalar Set route. Retained
+engines, reuse seeds, workers, cancellation and unsupported rules refuse the
+option; they do not silently adopt another semantics. Disabled execution keeps
+the original four-field physical entry. Enabled execution uses a private entry
+subtype with two additional fields, not a new cache owner. Its capacity is one
+cell per existing index entry and is separately counted.
+
+* Cost admission: fewer probes is not a total saving
+
+The same frozen graph tasks, row limits and independent finite-domain oracle
+run with the option both disabled and enabled. Ordered rows, partial matches,
+complete supports, proposals and admitted facts agree. All 16 two-node graphs
+are checked in both modes. Source replacement and restoration keep their prior
+meaning; retained Session checking remains separate from the optional fresh
+execution policy.
+
+| Cut | Policy | Matcher candidates | Complete witnesses | Admitted rows | Physical probes | Cell tests | Key comparisons | Hits | Certificate updates | Cell entries |
+|-----+--------+--------------------+--------------------+---------------+-----------------+------------+-----------------+------+---------------------+--------------|
+| Chain | Default | 48 | 8 | 7 | 37 | 0 | 0 | 0 | 0 | 0 |
+| Chain | Enabled | 48 | 8 | 7 | 31 | 37 | 29 | 6 | 19 | 2 |
+| Equal-size replacement | Default | 25 | 4 | 4 | 18 | 0 | 0 | 0 | 0 | 0 |
+| Equal-size replacement | Enabled | 25 | 4 | 4 | 11 | 18 | 13 | 7 | 8 | 2 |
+
+Restoration repeats the chain receipt. Both chain modes offer nine build-input
+rows, three extension-input rows and three old-membership-input rows; replacement
+offers seven, one and one. Each certificate update performs two metadata stores
+(key then version). Each enabled cell has two extra fields. Allocation bytes,
+GC and the relative cost of a hash probe versus a scalar comparison are not
+measured by these counters. The metrics are not interchangeable runtime units.
+
+Thus six repeated bucket probes can safely reuse emptiness on the chain, but
+there is no demonstrated reduction of matcher work or total runtime. The
+remaining two productive and 26 dead-end repeated prefixes are unchanged.
+Because maintenance is real and total benefit is unproved, this policy is not
+enabled by default. A bucket hit is not reported as eliminating a prefix visit.
+
+* Lean and Quint boundary checks
+
+=CachePublication.EmptyBucket.exact_empty_reuse= proves emptiness at the current
+query from emptiness at the saved cut only when scope, row version and key all
+agree. =different_delta_rejected= and =different_owner_rejected= reject crossing
+those boundaries. =empty_has_no_continuation= proves zero ordered continuation
+output for an empty bucket; this does not collapse distinct nonempty supports.
+The first law uses no axioms; the others report only existing Lean axioms
+=propext=, =Classical.choice= and/or =Quot.sound=. No new axiom or =sorry= is used.
+
+The existing Quint CachePublication model now also checks empty hits against
+the observed bucket at the instant of use. A later source update does not
+retroactively invalidate an old completed observation. Three new mutations
+omit the version, owner/lane or key condition and must produce counterexamples.
+Original publication/error/revocation controls remain intact. The group passes
+nine positive/expected-counterexample obligations, with unchanged domains and
+resource settings, =cache=0= and final =ALL-QUINT-CHECK-OK=.
+
+The matching-value and ordered-emission boundary from the prior indexed proof
+still applies. This is not a proof of raw provenance graph isomorphism, source
+occurrence identity or all recursive proof-tree preservation. Native tests keep
+the existing order/duplicate tuple and distinct-support controls. Source/model
+conformance remains a separate obligation from complete source extraction.
+
+* Using POO model-based PBT directly
+
+The existing native kernel suite now imports POO's public =property=,
+=property/generator=, =property/model=, =property/replay= and =property/test=
+modules. POO owns trace execution, generation, lazy shrinking, replay and
+failure propagation. ASCENT supplies only its finite command domain, native
+index fixture and independent ordered-filter oracle. There is no second runner,
+generator framework or Python implementation.
+
+Each generated command replaces a source mask and a dependent delta mask over
+the same four possible two-node rows, always satisfying =delta subset source=.
+Both keys in both lanes are probed repeatedly. Source and delta versions advance
+independently, only when their respective ordered row cuts change. This includes
+new delta with unchanged source; source generation cannot stand in for delta
+generation. Every returned ordered bucket is compared with direct filtering,
+without native indexes, match plans or memo state in the reference model.
+
+The fixed run uses seed =20261031=, 64 accepted traces, four commands per root,
+and 64 charged shrink proposals at most. The specification also bounds replay
+traces to four commands. No trial is discarded. Required effective coverage is
+enforced through POO's existing policy, not inferred from total trial count:
+
+| Root-trace classification | Accepted traces |
+|---------------------------+-----------------|
+| Equal-cardinality different source | 33 |
+| Previously missing source key becomes present | 27 |
+| Source and nonempty delta disagree on key presence | 47 |
+| Delta changes while source remains unchanged | 9 |
+| Contains empty delta | 48 |
+
+Labels overlap and count once per root trace, not per command. Shrink/replay
+work does not inflate coverage. POO's =require-passed= translates every failed,
+stale, exhausted, error or coverage-refused report into a standard TestError.
+A zero process exit or a formatted report cannot replace that assertion.
+
+The dependency remains =ASCENT -> Yuanxu 85a969c -> POO 30733c3=. At audit time
+the existing POO branch =feat/positive-closure-costs= had advanced to
+=dc951f8d3068aa37441a4568391dedb57265041e=. Its three subsequent commits change
+typed/function/recursive-generation modules, examples and documentation, not
+the generic property modules used here. This was checked through the actual
+GitHub compare tree. The executed PBT result binds the installed =30733c3=,
+not an untested claim about that newer cohort. No direct POO pin or dependency
+revision change is required for the interfaces used in this experiment.
+
+* Actual mutation finding, shrinking and replay
+
+Deliberately removing the native cell-version comparison causes POO PBT to
+fail on its first generated trial. POO charges 23 shrink proposals, confirms
+three reductions and exhausts the supplied local neighborhood. The retained
+portable counterexample is:
+
+#+begin_src scheme
+(#(4 0) #(1 0))
+#+end_src
+
+The first command installs source =((1 0))= with empty delta and learns that
+key 0 has no source bucket. The second installs =((0 0))=, also one row, with
+empty delta. Reusing the old empty result hides that new row. This is a real
+native mutation, not a fabricated failing property. The original four-command
+input and the full exported POO envelope remain in the failure log.
+
+The POO writer reconfirms failure before exporting data. The corrected native
+implementation replays the same envelope successfully through POO's reader,
+without drawing or shrinking. That concrete replay is now an ordinary kernel
+test. The claimed minimum is only the observed exhausted immediate neighborhood,
+not a globally smallest witness. Generated corpora are not committed wholesale.
+
+* Bounded-empty receipts and retained failures
+
+The standard installed-dependency test entry is unchanged; no source override,
+heap increase, timeout relaxation or CI wait is used. Logs are under =/private/tmp/=.
+
+| Final entry | Result | Log |
+|-------------+--------+-----|
+| Native kernel, POO PBT and concrete replay | 11 cases; 64 accepted generated traces, zero discards | ascent-empty-cell-final-kernel-independent-cuts-20261031.log |
+| Frozen DSL/oracle corpus, both policy modes and admission refusals | 10 cases | ascent-empty-cell-final-modes-20261031.log |
+| Positive-plan reference regression | 33 cases | ascent-empty-cell-final-regression-20261031.log |
+| Scheme relational contracts | 31 cases | ascent-empty-cell-final-contracts-20261031.log |
+| Lean CachePublication | Guard returncode 0, natural child exit | ascent-empty-cell-lean-attempt1-20261031.log |
+| Quint CachePublication | Nine positive/expected-counterexample controls, natural exit 0 | ascent-empty-cell-quint-attempt1-20261031.log |
+
+The native runs cover 85 cases with suite/module/harness/final OK and natural exit 0. The
+64 PBT traces are inside one of those cases, not 64 extra suite cases. These
+are focused local receipts, not whole-Library proof or clean cold-build acceptance.
+
+Retained non-passing outcomes are =ascent-empty-cell-trial-20261031.log= (a
+parenthesis error before native execution),
+=ascent-empty-cell-poo-pbt-attempt1-20261031.log= (missing explicit =append-map= import), and
+=ascent-empty-cell-poo-pbt-version-mutation-20261031.log= (the intended native
+version-check mutation, with failed report, shrink ledger and portable envelope).
+The normal trial's extra maintenance cost and unchanged 26 prefixes are also
+retained non-improvement results; they are not reclassified as total savings.
+
+The README adds Claessen/Hughes (ICFP 2000) for generated property testing.
+POO's concrete model/shrink/replay and refusal contracts come from its existing
+[[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/doc/property-kernel.md][property-kernel guide]] and implementation, not a new ASCENT test framework.
+Prior indexing, prefix-firing, provenance and view-maintenance references remain
+in place. None of these bounded tests establishes a general latency improvement.

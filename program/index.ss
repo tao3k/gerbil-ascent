@@ -139,14 +139,14 @@
 ;;     ;; => registers engine-owned logical lookup requirements
 ;;     ```
 ;;   %
-(def (row-indexes-plan-rules! indexes rules (small-exact? #f))
+(def (row-indexes-plan-rules! indexes rules (small-exact? #f) (empty-reuse? #f))
   ((row-indexes-plan! indexes)
    (lambda (accept!)
      (for-each (lambda (rule)
                  (for-each (lambda (clause)
                              (when (memq (vector-ref clause 0) '(atom negation aggregate))
                                (accept! (vector-ref clause 1))))
-                           (vector-ref rule 1))) rules)) small-exact?))
+                           (vector-ref rule 1))) rules)) small-exact? empty-reuse?))
 
 ;; row-indexes-plan-actions!
 ;; : (forall (i a) (-> (RowIndexes i) [(CompiledAction a)] Void))
@@ -193,10 +193,11 @@
    (lambda (atom environment use-delta? slot-terms)
      (error "ASCENT empty index owner has no lookup consumer"))
    (lambda (index rows (reverse-order? #f)) (void))
-   (lambda (visit! (small-exact? #f))
+   (lambda (visit! (small-exact? #f) (empty-reuse? #f))
      (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f #f))
 
 (defstruct physical-index-entry (version lookup shared? witness))
+(defstruct (empty-bucket-entry physical-index-entry) (empty-version empty-key) final: #t)
 (defstruct atom-index-view (entry permutation))
 
 ;; gerbil-ascent-make-row-indexes
@@ -227,7 +228,29 @@
         (sharing? (for/fold (found? #f) (provider (in-vector index-providers))
                     (or found? (gerbil-ascent-curried-index-provider? provider))))
         (ordered-all #f) (ordered-delta #f)
-        (delta-members #f) (exact-small? #f))
+        (delta-members #f) (exact-small? #f) (reuse-empty? #f))
+      ;; One empty bucket certificate per existing entry, never a prefix-failure
+      ;; table. Entry ownership separates all/delta lanes and column layouts.
+      ;; The physical lookup has already rebuilt/extended to this version.
+      (def (single-rows entry lookup value version)
+        (def (probe)
+          (positive-plan-cost-index! 'probe)
+          (gerbil-ascent-physical-index-single-rows lookup value))
+        (if (not reuse-empty?) (probe)
+          (begin
+            (positive-plan-cost-index! 'empty-test)
+            (if (and (empty-bucket-entry-empty-version entry)
+                     (= (empty-bucket-entry-empty-version entry) version)
+                     (begin (positive-plan-cost-index! 'empty-key)
+                            (equal? (empty-bucket-entry-empty-key entry) value)))
+              (begin (positive-plan-cost-index! 'empty-hit) [])
+              (let (rows (probe))
+                (when (null? rows)
+                  (positive-plan-cost-index! 'empty-write)
+                  (empty-bucket-entry-empty-key-set! entry value)
+                  ;; Publish only after a complete canonical empty return.
+                  (empty-bucket-entry-empty-version-set! entry version))
+                rows)))))
       ;; Only admitted pure Set rules use this lane. The first fresh occurrence
       ;; owns a witness: prefix reads exclude delta, suffix reads remain total.
       ;; Cache exact membership by the owner's delta version, never by row count.
@@ -279,9 +302,10 @@
                          (gerbil-ascent-view-rows captured)
                          (reverse (gerbil-ascent-view-rows captured))))
               (vector-set! cache index (cons captured rows)) rows))))
-      (def (plan! visit! (small-exact? #f))
+      (def (plan! visit! (small-exact? #f) (empty-reuse? #f))
         (when (or all-indexes delta-indexes) (error "cannot replan a live physical index"))
         (when small-exact? (set! exact-small? #t))
+        (when empty-reuse? (set! reuse-empty? #t))
         ;; Exact canonical indexes need no sharing-layout traversal. An
         ;; explicit curried receiver collects requirements for its first lookup.
         ;; Complete a fresh owned spine before replacing earlier requirements.
@@ -366,7 +390,11 @@
                                (shared (hash-get cache physical-columns))
                                (resolved
                                 (or shared
-                                    (let (fresh (make-physical-index-entry #f #f (and permutation #t) #f))
+                                    (let (fresh (if reuse-empty?
+                                                  (begin
+                                                    (positive-plan-cost-index! 'empty-entry)
+                                                    (make-empty-bucket-entry #f #f (and permutation #t) #f #f #f))
+                                                  (make-physical-index-entry #f #f (and permutation #t) #f)))
                                       (hash-put! cache physical-columns fresh) fresh))))
                           (let (view (make-atom-index-view resolved permutation))
                             (hash-put! identities atom view)
@@ -394,18 +422,18 @@
                         physical-index-entry-version-set!)))))
               ;; Only this trusted representation consumes a scalar. Custom
               ;; receivers retain list keys, callbacks and their lookup order.
-              (positive-plan-cost-index! 'probe)
               (if (and (not permutation) (gerbil-ascent-canonical-hash-index-provider? provider)
                        (null? (cdr columns)))
-                (gerbil-ascent-physical-index-single-rows
-                 lookup (gerbil-ascent-index-value
+                (single-rows entry lookup (gerbil-ascent-index-value
                          (car (vector-ref atom 4)) environment
-                         (and slot-terms (car slot-terms))))
-                (let (key (if slot-terms
+                         (and slot-terms (car slot-terms))) version)
+                (let (key (begin
+                           (positive-plan-cost-index! 'probe)
+                           (if slot-terms
                             (gerbil-ascent-index-key
                              (vector-ref atom 1) columns environment slot-terms)
                             (gerbil-ascent-index-key/terms
-                             (vector-ref atom 4) environment)))
+                             (vector-ref atom 4) environment))))
                   (if permutation
                     (gerbil-ascent-shared-index-rows lookup columns key)
                     (if (gerbil-ascent-canonical-hash-index-provider? provider)

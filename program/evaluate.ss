@@ -116,14 +116,17 @@
 (def (gerbil-ascent-make-engine program session? (analysis-override #f)
                                 (schema-override #f) (measure-rule-times? #f)
                                 (plan-error #f) (reuse #f)
-                                (workers 1) (canceled? #f))
+                                (workers 1) (canceled? #f) (empty-bucket-reuse? #f))
   (let (state (%make-engine program session? analysis-override schema-override
-                            measure-rule-times? plan-error reuse workers canceled?))
+                            measure-rule-times? plan-error reuse workers canceled? empty-bucket-reuse?))
     (if session? (engine-state-public state) state)))
 
 (def (%make-engine program session? (analysis-override #f)
                    (schema-override #f) (measure-rule-times? #f)
-                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f))
+                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f) (empty-bucket-reuse? #f))
+  (unless (boolean? empty-bucket-reuse?) (error "invalid empty bucket reuse option"))
+  (when (and empty-bucket-reuse? (or session? reuse (not (= workers 1)) canceled?))
+    (error "empty bucket reuse requires a fresh serial scalar Set engine"))
   (when (and (current-positive-plan-cost)
              (or session? reuse (not (= workers 1)) canceled?))
     (error "native plan cost supports one fresh serial solve only"))
@@ -274,7 +277,10 @@
                 (unless scalar-set-plans?
                   (error "native plan cost requires canonical pure Set rules"))))
              (_index-layout (row-indexes-plan-rules! indexes rule-plans
-                              (and checked-scalar-fields? scalar-set-plans?)))
+                              (and checked-scalar-fields? scalar-set-plans?)
+                              (and empty-bucket-reuse?
+                                   (if (and checked-scalar-fields? scalar-set-plans?) #t
+                                     (error "empty bucket reuse requires pure checked scalar Set rules")))))
              (rule-ticks (and measure-rule-times?
                               (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
@@ -1067,7 +1073,8 @@
 (def (gerbil-ascent-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f)
                                       workers: (workers 1)
-                                      canceled?: (canceled? #f))
+                                      canceled?: (canceled? #f)
+                                      empty-bucket-reuse?: (empty-bucket-reuse? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
-  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times? #f #f workers canceled?)))
+  ((gerbil-ascent-make-engine program #f #f #f measure-rule-times? #f #f workers canceled? empty-bucket-reuse?)))

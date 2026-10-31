@@ -26,7 +26,7 @@
 ;;; a new suffix can legitimately revisit an unchanged prefix.
 (defstruct native-plan-cost (counts prefixes started? visits) final: #t)
 (def (make-positive-plan-cost (record-prefixes? #t) (record-visits? #f))
-  (make-native-plan-cost (make-vector 18 0)
+  (make-native-plan-cost (make-vector 23 0)
                         (and record-prefixes? (make-hash-table)) #f (and record-visits? [])))
 ;;; Diagnostic values are detached on read; no callback observes a live frame.
 (def (positive-plan-cost-visits cost)
@@ -58,6 +58,11 @@
       ((extend) (cost-add! cost 15 (length rows)))
       ((probe) (cost-add! cost 16))
       ((membership) (cost-add! cost 17 (length rows)))
+      ((empty-test) (cost-add! cost 18))
+      ((empty-key) (cost-add! cost 19))
+      ((empty-hit) (cost-add! cost 20))
+      ((empty-write) (cost-add! cost 21))
+      ((empty-entry) (cost-add! cost 22))
       (else (error "invalid native index cost event" kind)))))
 (def (positive-plan-cost-snapshot cost)
   (unless (native-plan-cost? cost) (error "invalid native cost snapshot"))
@@ -69,8 +74,9 @@
          same-plan-prefix-revisits cross-plan-prefix-revisits
          same-plan-candidate-revisits cross-plan-candidate-revisits
          repeated-complete-witnesses same-plan-complete-revisits cross-plan-complete-revisits
-         index-build-input-rows index-extend-input-rows physical-index-probes old-membership-input-rows)
-       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)))
+         index-build-input-rows index-extend-input-rows physical-index-probes old-membership-input-rows
+         empty-cell-tests empty-key-comparisons empty-cell-hits empty-cell-writes empty-cell-entries)
+       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22)))
 (def (cost-prefix! cost kind index signature rows owner)
   (alet (seen (native-plan-cost-prefixes cost))
     (let* ((key (list kind signature rows))

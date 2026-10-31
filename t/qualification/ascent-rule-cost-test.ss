@@ -2,7 +2,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :clan/poo/object .ref)
         :gerbil-ascent/program/scheme-language
-        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program gerbil-ascent-make-engine)
         :gerbil-ascent/core/positive-plan
         (only-in :gerbil-ascent/program/analysis
                  gerbil-ascent-program-analysis gerbil-ascent-program-schema)
@@ -108,15 +108,19 @@
          (check-equal? (length rows) (length want))
          (check-equal? (andmap (lambda (row) (and (member row want) #t)) rows) #t)))
      '(edge path answer))))
-(def (run-recursive edges domain (trace? #f))
+(def (run-recursive edges domain (trace? #f) (empty-reuse? #f))
   (let* ((program (recursive-declaration edges)) (cost (make-positive-plan-cost #t trace?))
          (actual (call-with-positive-plan-cost cost
-                   (lambda () (gerbil-ascent-evaluate-program program))))
-         (plain (gerbil-ascent-evaluate-program program)))
+                   (lambda () (gerbil-ascent-evaluate-program program empty-bucket-reuse?: empty-reuse?))))
+         (plain (gerbil-ascent-evaluate-program program empty-bucket-reuse?: empty-reuse?)))
     (check-recursive edges domain actual)
     (for-each (lambda (name)
                 (check-equal? ((.ref actual 'rows-of) name) ((.ref plain 'rows-of) name)))
               '(edge path answer))
+    (when empty-reuse?
+      (let (baseline (gerbil-ascent-evaluate-program program))
+        (for-each (lambda (name) (check-equal? ((.ref actual 'rows-of) name)
+                                              ((.ref baseline 'rows-of) name))) '(edge path answer))))
     ;; Revisited prefixes may feed new suffixes in later rounds, but the same
     ;; complete supporting tuple must not be rescheduled by another pivot.
     (check-equal? (count-of (positive-plan-cost-snapshot cost) 'same-plan-complete-revisits) 0)
@@ -163,6 +167,18 @@
     (positive-plan-cost-snapshot cost)))
 (def ascent-rule-cost-test
   (test-suite "Native DSL plan costs and explicit prefix reuse"
+    (test-case "empty bucket reuse is explicit and refuses unsupported engine routes"
+      (let (program (recursive-declaration '((0 1))))
+        (check-exception (gerbil-ascent-evaluate-program program empty-bucket-reuse?: 'force) error?)
+        (check-exception (gerbil-ascent-evaluate-program program workers: 2 empty-bucket-reuse?: #t) error?)
+        (check-exception (gerbil-ascent-evaluate-program program canceled?: (lambda () #f)
+                                                        empty-bucket-reuse?: #t) error?)
+        (check-exception (gerbil-ascent-make-engine program #t #f #f #f #f #f 1 #f #t) error?))
+      (let (program (relational-program
+                      (relation input (x) '((0))) (relation blocked (x)) (relation out (x))
+                      (rule (out ?x) (input ?x) (not (blocked ?x))) (limits 16 32 64)))
+        (check-equal? ((.ref (gerbil-ascent-evaluate-program program) 'rows-of) 'out) '((0)))
+        (check-exception (gerbil-ascent-evaluate-program program empty-bucket-reuse?: #t) error?)))
     (test-case "collector ownership excludes unrelated solves and parallel routes"
       (let ((program (declaration '((0 1)) '((0 0) (1 1)) #f))
             (cost (make-positive-plan-cost)))
@@ -179,7 +195,8 @@
                   (for-each (lambda (factored?) (run (two-node-graph mask) '(0 1) factored?))
                             '(#f #t))) (iota 16)))
     (test-case "recursive matching and equal-size source revisions agree with finite grounding"
-      (for-each (lambda (mask) (run-recursive (two-node-graph mask) '(0 1))) (iota 16))
+      (for-each (lambda (mask)
+                  (for-each (lambda (reuse?) (run-recursive (two-node-graph mask) '(0 1) #f reuse?)) '(#f #t))) (iota 16))
       (let* ((first '((0 1) (1 2) (2 3)))
              (changed '((0 1) (1 2) (3 2)))
              (session (relational-open-program-session (recursive-declaration first)))
@@ -187,11 +204,17 @@
         (check-equal? (relational-program-query old 'answer) '((0 3)))
         (for-each
          (lambda (edges)
-           (let (cost (run-recursive edges '(0 1 2 3) #t))
-             (displayln "RULE-COST recursive edges=" edges " receipt=" cost)
+           (for-each
+            (lambda (reuse?)
+             (let (cost (run-recursive edges '(0 1 2 3) #t reuse?))
+             (displayln "RULE-COST empty-reuse=" reuse? " recursive edges=" edges " receipt=" cost)
              (check-equal? (count-of cost 'candidate-rows) (if (equal? edges first) 48 25))
              (check-equal? (count-of cost 'complete-witnesses) (if (equal? edges first) 8 4))
-             (check-equal? (count-of cost 'admitted-rows) (if (equal? edges first) 7 4)))
+             (check-equal? (count-of cost 'admitted-rows) (if (equal? edges first) 7 4))
+             (check-equal? (count-of cost 'physical-index-probes)
+                           (if (equal? edges first) (if reuse? 31 37) (if reuse? 11 18)))
+             (check-equal? (count-of cost 'empty-cell-hits)
+                           (if reuse? (if (equal? edges first) 6 7) 0)))) '(#f #t))
            (relational-program-replace-source! session 'edge edges)
            ;; Retained measurement remains unsupported; check its answers here
            ;; and report costs only for the separately checked fresh solve.

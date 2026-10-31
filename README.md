@@ -62,3 +62,11 @@ matching work, derived rows and the cost of materializing shared prefixes.
 - David McAllester. [On the Complexity Analysis of Static Analyses](https://doi.org/10.1145/581771.581774).
   Journal of the ACM 49(4), 2002. The prefix-firing cost model discussed by the
   finite-choice paper; its complexity assumptions require separate validation.
+- Ashok K. Chandra and Philip M. Merlin.
+  [Optimal Implementation of Conjunctive Queries in Relational Data Bases](https://research.ibm.com/publications/optimal-implementation-of-conjunctive-queries-in-relational-data-bases).
+  STOC 1977. Query equivalence is the relevant boundary for explicit positive
+  Set prefix projection; this Library does not implement a general query minimizer.
+- Todd J. Green, Grigoris Karvounarakis, and Val Tannen.
+  [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf).
+  PODS 2007. Answer equality and preservation of derivation information are
+  separate obligations; the native cost study does not claim semiring provenance.

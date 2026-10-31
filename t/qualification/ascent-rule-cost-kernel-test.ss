@@ -37,13 +37,44 @@
         (call-with-positive-plan-cost cost
           (lambda () (gerbil-ascent-run-positive-plan! plan (make-vector 2 #f) -1 inputs (lambda args #f))))
         (check-equal? (read-count cost 'repeated-prefixes) 5)
-        (check-equal? (read-count cost 'repeated-candidate-visits) 8)))
+        (check-equal? (read-count cost 'repeated-candidate-visits) 8)
+        (check-equal? (read-count cost 'same-plan-prefix-revisits) 5)
+        (check-equal? (read-count cost 'same-plan-candidate-revisits) 8)
+        (check-equal? (read-count cost 'cross-plan-prefix-revisits) 0)
+        ;; An independently compiled equal body is a different plan owner.
+        (call-with-positive-plan-cost cost
+          (lambda () (gerbil-ascent-run-positive-plan! (fixture) (make-vector 2 #f) -1 inputs (lambda args #f))))
+        (check-equal? (read-count cost 'repeated-prefixes) 10)
+        (check-equal? (read-count cost 'repeated-candidate-visits) 16)
+        (check-equal? (read-count cost 'cross-plan-prefix-revisits) 5)
+        (check-equal? (read-count cost 'cross-plan-candidate-revisits) 8)))
+    (test-case "nested native traversal retains its own plan attribution"
+      (def (one-atom-plan)
+        (gerbil-ascent-compile-positive-plan
+         (list (vector 2 '((variable . x))))
+         (list (vector 'atom (vector 0 '((variable . x)) [] [] [])))))
+      (let ((outer (one-atom-plan)) (inner (one-atom-plan))
+            (cost (make-positive-plan-cost)) (first? #t))
+        (call-with-positive-plan-cost cost
+          (lambda ()
+            (gerbil-ascent-run-positive-plan! outer (make-vector 1 #f) -1 inputs
+              (lambda args
+                (when first?
+                  (set! first? #f)
+                  (gerbil-ascent-run-positive-plan! inner (make-vector 1 #f) -1 inputs
+                    (lambda args #f)))))))
+        (check-equal? (read-count cost 'cross-plan-prefix-revisits) 2)
+        (check-equal? (read-count cost 'cross-plan-candidate-revisits) 2)
+        (check-equal? (read-count cost 'same-plan-prefix-revisits) 0)
+        (check-equal? (read-count cost 'same-plan-candidate-revisits) 0)))
     (test-case "unrecorded repeated prefixes are unknown rather than zero"
       (let (cost (make-positive-plan-cost #f))
         (call-with-positive-plan-cost cost
           (lambda () (gerbil-ascent-run-positive-plan! (fixture) (make-vector 2 #f) -1 inputs (lambda args #f))))
         (check-equal? (read-count cost 'repeated-prefixes) #f)
         (check-equal? (read-count cost 'repeated-candidate-visits) #f)
+        (check-equal? (read-count cost 'same-plan-prefix-revisits) #f)
+        (check-equal? (read-count cost 'cross-plan-candidate-revisits) #f)
         (check-equal? (read-count cost 'candidate-rows) 8)))
     (test-case "interruption preserves real work but emits no completed witness"
       (let ((cost (make-positive-plan-cost)) (emitted 0))

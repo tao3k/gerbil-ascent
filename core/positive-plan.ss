@@ -26,7 +26,7 @@
 ;;; a new suffix can legitimately revisit an unchanged prefix.
 (defstruct native-plan-cost (counts prefixes started?) final: #t)
 (def (make-positive-plan-cost (record-prefixes? #t))
-  (make-native-plan-cost (make-vector 7 0)
+  (make-native-plan-cost (make-vector 11 0)
                         (and record-prefixes? (make-hash-table)) #f))
 (def (positive-plan-cost-begin! cost)
   (when cost
@@ -49,12 +49,25 @@
          (cons name (if (and (>= index 5) (not (native-plan-cost-prefixes cost)))
                       #f (vector-ref (native-plan-cost-counts cost) index))))
        '(candidate-rows partial-matches complete-witnesses head-proposals
-         admitted-rows repeated-prefixes repeated-candidate-visits) '(0 1 2 3 4 5 6)))
-(def (cost-prefix! cost kind index signature rows)
+         admitted-rows repeated-prefixes repeated-candidate-visits
+         same-plan-prefix-revisits cross-plan-prefix-revisits
+         same-plan-candidate-revisits cross-plan-candidate-revisits)
+       '(0 1 2 3 4 5 6 7 8 9 10)))
+(def (cost-prefix! cost kind index signature rows owner)
   (alet (seen (native-plan-cost-prefixes cost))
-    (let (key (list kind signature rows))
-      (if (hash-get seen key) (cost-add! cost index)
-          (hash-put! seen key #t)))))
+    (let* ((key (list kind signature rows))
+           (owners (hash-get seen key)))
+      ;; Partition repeats by compiled plan identity, not by projected head.
+      ;; A first visit from a different plan is a sharing candidate, not proof
+      ;; that its suffix or its head/provenance work may be skipped.
+      (when owners
+        (cost-add! cost index)
+        (cost-add! cost (+ (if (eq? kind 'partial) 7 9)
+                          (if (hash-get owners owner) 0 1))))
+      (unless owners
+        (set! owners (make-hash-table-eq))
+        (hash-put! seen key owners))
+      (hash-put! owners owner #t))))
 
 (def +positive-plans+
   (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-positive-plans)))
@@ -419,7 +432,7 @@
     (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                           frame (if has-pivot? delta-at 0) has-pivot?
                           0 rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost [] [])))
+                          cost [] [] (and cost plan))))
 
 (def (emit-complete-heads! heads frame emit-row! cost)
   (cost-add! cost 2)
@@ -429,13 +442,13 @@
 ;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness)
+(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness owner)
   ;; Syntax owns the candidate protocol; no continuation closure per row.
   ;; Observe the remaining action tail after user code, at the original boundary.
   (defrule (resume next-depth next-signature next-witness)
     (visit-positive-atoms! (cdr atoms) heads frame pivot has-pivot? next-depth
                           rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost next-signature next-witness))
+                          cost next-signature next-witness owner))
   (defrule (accept matched? row action)
     (let ((matched matched?) (next-signature signature) (next-witness witness))
       (cost-add! cost 0)
@@ -446,10 +459,10 @@
           (cons (list (vector-ref (vector-ref action 0) 0)
                       (vector-ref action 1)) signature))
         (set! next-witness (cons row witness))
-        (cost-prefix! cost 'candidate 6 next-signature next-witness)
+        (cost-prefix! cost 'candidate 6 next-signature next-witness owner)
         (when matched
           (cost-add! cost 1)
-          (cost-prefix! cost 'partial 5 next-signature next-witness)))
+          (cost-prefix! cost 'partial 5 next-signature next-witness owner)))
       (when checkpoint! (checkpoint!))
       (when matched
         (if (null? (cdr atoms))

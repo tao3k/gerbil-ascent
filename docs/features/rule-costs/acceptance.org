@@ -238,3 +238,135 @@ Logs, each with suite/module/harness success, final OK and natural exit 0:
 
 The earlier failed dense cost hypothesis and installation failures remain
 separate recorded outcomes. No upstream implementation was copied or translated.
+
+* Remaining repeats: plan ownership and explicit projection
+
+The collector now partitions each repeat by compiled plan identity. A
+=same-plan-*-revisit= has already been seen by that plan. A
+=cross-plan-*-revisit= is a plan's first encounter with a structural prefix
+already seen by another plan. Subsequent visits by that plan enter the same-plan
+bucket, so the two buckets sum exactly to the existing total. Both partial
+successes and all candidate attempts are partitioned. Disabled recording keeps
+every repeat counter unknown (=#f=). This is ownership attribution, not an
+automatic determination that matching is avoidable. It adds diagnostic memory
+only while recording; no matching result is cached or reused by the observer.
+
+On the unchanged chain, baseline repeats are seven successful prefixes and
+22 candidates, all cross-plan. On the dense input they are 44 and 84, also all
+cross-plan. Full-prefix factoring leaves respectively 2/5 and 32/48 cross-plan
+repeats. These samples show no same-plan revisits after empty-pivot pruning;
+they do not establish this property for recursive programs or other workloads.
+
+The semantic distinction is:
+
+| Observation | Required work or possible reuse | Obligation |
+|-------------+--------------------------------+------------|
+| Different full support tuples for one projected answer | Distinct witnesses in a derivation-sensitive contract | Equal Set answers do not justify deleting provenance |
+| Same prefix in different rules | Prefix bindings may be shared | Every different suffix and head still needs evaluation/admission |
+| Same prefix in a later delta traversal | May carry new suffix facts or updates | Bind reuse to its source cut and invalidate dependencies |
+| Matching before an empty selected delta | Avoidable on the qualified pure route | Existing native empty-pivot optimization handles this |
+| Variables retained only for a discarded witness | Explicit existential projection can reduce materialization | No downstream use, callbacks, counts or witness-sensitive consumers |
+
+The new third lane is ordinary existing Scheme DSL. It changes the intermediate
+from =prefix(x,y,z,t)= to =prefix(x,t)=. Both downstream rules read only =x,t=;
+=y,z= have no consumer outside the defining body. The original two lanes,
+graphs, limits and independent oracle are retained unchanged.
+
+#+begin_src scheme
+(rule (prefix ?x ?t)
+      (edge ?x ?y) (edge ?y ?z) (edge ?z ?t))
+(rule (left ?x ?w) (prefix ?x ?t) (tail ?t ?w))
+(rule (right ?x ?w) (prefix ?x ?t) (tail ?t ?w))
+#+end_src
+
+For this nonrecursive positive Set program the answer argument is elementary:
+the direct rule succeeds for =(x,w)= iff there exist =y,z,t= satisfying its
+four premises. The projected relation contains =(x,t)= iff there exist =y,z=
+satisfying its three defining premises. Substitution yields the same existential
+formula. This is a query-answer equivalence argument for the declared outputs,
+not a transformation theorem for arbitrary recursive, aggregate, negative,
+lattice, callback or provenance programs. A consumer needing =y= or =z= is
+outside its precondition. No compiler rewrite or new syntax is installed.
+
+| Input | Representation | Candidates | Partial matches | Complete witnesses | Head proposals | Admitted rows | Repeated prefixes | Repeated candidates |
+|-------+----------------+------------+-----------------+--------------------+----------------+---------------+-------------------+---------------------|
+| Chain | Four-column prefix | 28 | 10 | 3 | 3 | 3 | 2 | 5 |
+| Chain | Endpoint prefix | 28 | 10 | 3 | 3 | 3 | 2 | 5 |
+| Dense two-node | Four-column prefix | 148 | 92 | 48 | 48 | 24 | 32 | 48 |
+| Dense two-node | Endpoint prefix | 76 | 44 | 24 | 24 | 12 | 8 | 12 |
+
+The sparse non-improvement is retained. Projection still enumerates all 16
+three-edge support tuples on the dense graph, but admits four endpoint tuples
+instead of 16 full tuples. Its two suffix rules each have four witnesses, so
+complete witnesses total =16+4+4=24= and admitted rows total =4+4+4=12=.
+This reduces later matching and materialization; it does not avoid discovering
+the original prefix supports. Comparing only the final answer count would hide
+that distinction. No wall-time or allocation-byte improvement is claimed.
+
+* Scheme DSL design assessment
+
+This assessment distinguishes semantic specification, native test evidence and
+unproved implementation properties. A paper reference or macro implementation
+alone is not a correctness proof of this Library.
+
+| Design question | Current source boundary | Assessment and limit |
+|-----------------+-------------------------+----------------------|
+| What does a pure rule mean? | =scheme-language.ss= restricts terms and exposes relation dependencies | Positive finite, function-free Set rules have a clear closure specification; the finite oracle covers the present variable-only subset, not all DSL terms |
+| Can host mutation silently change a rule? | =relational-term= captures explicit values; =scheme-checked.ss= admits immutable scalars | Construction-time values and rule-time variables are distinct; arbitrary host callbacks must retain separate operational semantics |
+| Does composition preserve private identities? | =relational-atom/lexical= and fragment construction allocate fresh handles | Composition is structurally meaningful; immutable plan sharing must not alias engine frames |
+| Are nonmonotone reads explicit? | =core/rule-semantics.ss= stratifies negative/aggregate and lattice-to-Set reads | These boundaries must survive rewrites; the positive oracle does not validate them |
+| Is completion explicit? | Mandatory limits, solve completion, Session admission and source revisions | A budget or interruption bounds execution, not mathematical closure; partial output must never certify a completed least model |
+| Is declarative meaning separated from cost? | Body order, indexes and semi-naive lanes determine observed work | Ordered cost semantics is useful; equal answer sets do not imply equal work, row order, bounded-run behavior or provenance |
+| Can users express economical sharing? | Existing ordinary intermediate relations | Yes, including live-variable projection, but users currently choose the representation manually; there is no qualified automatic prefix optimizer |
+| Is derivation identity preserved by factoring? | Set admission deduplicates values; provenance has its own path | Query-equivalent source rewrites need a separate support mapping before use in provenance-sensitive contexts |
+
+The design is well founded for the specified positive Set subset, with explicit
+boundaries for extensions. The remaining gap is a mechanically checked
+end-to-end refinement from all admitted DSL programs to native execution,
+including revision and incomplete-run behavior. Current finite tests provide
+bounded counterexample checking, not that general theorem. The single-head
+surface also makes identical-body sharing manual despite multi-head support in
+the native plan; this is a design tradeoff, not grounds to silently fuse rules
+and change rule/provenance identities.
+
+The paper basis is: Martens/Simmons/Arntzenius, Section 7.1, for prefix-firing
+accounting; Chandra/Merlin (STOC 1977) for distinguishing conjunctive query
+equivalence from implementation; and Green/Karvounarakis/Tannen (PODS 2007)
+for distinguishing query answers from richer provenance information. Full
+citations and primary-source links are in README References. No complexity
+bound or provenance algebra from those papers is claimed as implemented here.
+
+* Projection and DSL assessment receipts
+
+The local working tree based on =10575d7f= passed 78 cases through the existing
+=just test-file= entry with installed dependencies, =GERBIL_LOADPATH= unset,
+unchanged limits, natural exit 0 and final suite/module/harness/OK markers:
+
+| Test | Cases | Log under /private/tmp |
+|------+-------+------------------------|
+| Native cost kernel | 6 | ascent-prefix-final-kernel-20261031.log |
+| DSL cost/oracle and projection | 8 | ascent-prefix-final-dsl-20261031.log |
+| Positive-plan regression | 33 | ascent-prefix-final-regression-20261031.log |
+| Scheme relational contracts | 31 | ascent-prefix-final-contract-20261031.log |
+
+The kernel independently exercises same-plan and cross-plan attribution,
+disabled/unknown recording, interrupted work, and nested traversal: nested
+emission must not replace the outer traversal's plan identity. Plan ownership
+is threaded through traversal rather than kept in shared mutable observer state.
+The projection lane is checked against its own finite oracle on all 16 two-node
+graphs and both explicit sparse/dense controls. Its exported answers are also
+compared directly with the original unfactored lane on all 16 graphs. The
+original full-prefix and baseline checks remain unchanged.
+
+A retained projected-prefix Session is checked after two source revisions
+against independent finite grounding. Removing one of two supports preserves
+the answer; removing the last support withdraws it. The old completed snapshot
+remains unchanged. No projected tuple is reused across revisions without the
+existing Session invalidation path.
+
+All intermediate successful logs remain alongside the final receipts. The
+chain's equal cost after projection is a retained non-improvement result;
+the earlier failed hypothesis and installation failures are not deleted or
+reclassified. This is focused local verification, not a new clean-checkout,
+cold-build, complete-DSL proof or remote-CI result. Concurrent build and
+migration changes are outside this patch.

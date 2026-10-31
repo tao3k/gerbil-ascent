@@ -32,7 +32,9 @@
                  gerbil-ascent-result-observation)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
-                 gerbil-ascent-emit-heads!)
+                 gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?
+                 current-positive-plan-cost positive-plan-cost-admit! positive-plan-cost-begin!)
+        (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
         (only-in "types.ss" gerbil-ascent-fact-limit?)
         (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse
@@ -121,6 +123,10 @@
 (def (%make-engine program session? (analysis-override #f)
                    (schema-override #f) (measure-rule-times? #f)
                    (plan-error #f) (reuse #f) (workers 1) (canceled? #f))
+  (when (and (current-positive-plan-cost)
+             (or session? reuse (not (= workers 1)) canceled?))
+    (error "native plan cost supports one fresh serial solve only"))
+  (positive-plan-cost-begin! (current-positive-plan-cost))
   (unless (or (not canceled?) (procedure? canceled?))
     (error "invalid ASCENT cancellation predicate" canceled?))
   (when (and canceled? (or session? reuse measure-rule-times?))
@@ -237,6 +243,20 @@
                      (gerbil-ascent-prepare-program
                       relations rules schema plan-error)))))
              (rule-plans (vector-ref analysis 2))
+             (_cost-admission
+              (when (current-positive-plan-cost)
+                (unless (and (gerbil-ascent-update-eligible? program)
+                         (andmap (lambda (plans)
+                                   (andmap (lambda (rule)
+                                             (gerbil-ascent-pure-positive-plan?
+                                              (vector-ref rule 5))) plans))
+                                 (vector->list (vector-ref analysis 5)))
+                         (andmap gerbil-ascent-canonical-set-storage-provider?
+                                 (vector->list storage-providers))
+                         (andmap gerbil-ascent-canonical-hash-index-provider?
+                                 (vector->list index-providers))
+                         (andmap not (vector->list lattice-joins)))
+                  (error "native plan cost requires canonical pure Set rules"))))
              (_index-layout (row-indexes-plan-rules! indexes rule-plans))
              (rule-ticks (and measure-rule-times?
                               (make-vector (length rules) 0)))
@@ -380,6 +400,9 @@
               (unless (or (hash-get (vector-ref seen index) stored)
                           (hash-get pending-table stored))
                 (hash-put! pending-table stored #t)
+                ;; Counts admission into this round, not completed publication.
+                ;; A refused run keeps its partial counters and no success claim.
+                (positive-plan-cost-admit! (current-positive-plan-cost))
                 (when (and round-work (null? (vector-ref pending index)))
                   (round-work-write! round-work index))
                 (set! pending-count (+ pending-count 1))

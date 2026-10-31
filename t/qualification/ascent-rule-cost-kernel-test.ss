@@ -1,0 +1,68 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :std/test :gerbil-ascent/core/positive-plan
+        (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle finite-domain-closure))
+(export ascent-rule-cost-kernel-test)
+(def (read-count cost name) (cdr (assq name (positive-plan-cost-snapshot cost))))
+(def (fixture)
+  (gerbil-ascent-compile-positive-plan
+    (list (vector 2 '((variable . x) (variable . y)))
+          (vector 3 '((variable . x) (variable . y))))
+    (list (vector 'atom (vector 0 '((variable . x)) [] [] []))
+          (vector 'atom (vector 1 '((variable . x) (variable . y)) [] [] [])))))
+(def (inputs atom frame delta? terms)
+  (case (vector-ref atom 0) ((0) '((0) (1))) ((1) '((0 2) (1 3) (1 4)))))
+(def ascent-rule-cost-kernel-test
+  (test-suite "Native positive-plan cost charge points"
+    (test-case "independent finite oracle rejects invented support and outside-domain input"
+      (check-equal? (finite-domain-closure '(0 1) '((p) (q))
+                      '(((p x) (q x)) ((q x) (p x)))) '((p) (q)))
+      (check-equal? (finite-domain-closure '(0 1) '((edge (0 1)) (p))
+                      '(((p x y) (edge x y)))) '((edge (0 1)) (p (0 1))))
+      (check-exception (finite-domain-closure '(0) '((edge (1))) []) error?))
+    (test-case "failed candidates, partial matches and multi-head witnesses differ"
+      (let ((plan (fixture)) (cost (make-positive-plan-cost)) (emitted []))
+        (call-with-positive-plan-cost cost
+          (lambda ()
+            (gerbil-ascent-run-positive-plan! plan (make-vector 2 #f) -1 inputs
+              (lambda (head row) (set! emitted (cons row emitted))))))
+        (check-equal? (length emitted) 6)
+        (check-equal? (read-count cost 'candidate-rows) 8)
+        (check-equal? (read-count cost 'partial-matches) 5)
+        (check-equal? (read-count cost 'complete-witnesses) 3)
+        (check-equal? (read-count cost 'head-proposals) 6)
+        (check-equal? (read-count cost 'repeated-prefixes) 0)
+        (check-equal? (read-count cost 'repeated-candidate-visits) 0)
+        ;; A fresh frame changes no supporting row or relevant prefix identity.
+        (call-with-positive-plan-cost cost
+          (lambda () (gerbil-ascent-run-positive-plan! plan (make-vector 2 #f) -1 inputs (lambda args #f))))
+        (check-equal? (read-count cost 'repeated-prefixes) 5)
+        (check-equal? (read-count cost 'repeated-candidate-visits) 8)))
+    (test-case "unrecorded repeated prefixes are unknown rather than zero"
+      (let (cost (make-positive-plan-cost #f))
+        (call-with-positive-plan-cost cost
+          (lambda () (gerbil-ascent-run-positive-plan! (fixture) (make-vector 2 #f) -1 inputs (lambda args #f))))
+        (check-equal? (read-count cost 'repeated-prefixes) #f)
+        (check-equal? (read-count cost 'repeated-candidate-visits) #f)
+        (check-equal? (read-count cost 'candidate-rows) 8)))
+    (test-case "interruption preserves real work but emits no completed witness"
+      (let ((cost (make-positive-plan-cost)) (emitted 0))
+        (check-exception
+          (call-with-positive-plan-cost cost
+            (lambda ()
+              (gerbil-ascent-run-positive-plan! (fixture) (make-vector 2 #f) -1 inputs
+                (lambda args (set! emitted (+ emitted 1)))
+                (lambda () (error "diagnostic interrupted at the first real candidate"))))) error?)
+        (check-equal? emitted 0)
+        (check-equal? (read-count cost 'candidate-rows) 1)
+        (check-equal? (read-count cost 'partial-matches) 1)
+        (check-equal? (read-count cost 'complete-witnesses) 0)))
+    (test-case "unsupported callback plans refuse measurement before invocation"
+      (let* ((calls 0)
+             (plan (gerbil-ascent-compile-positive-plan
+                     [ (vector 0 []) ]
+                     [ (vector 'guard [] (lambda () (set! calls (+ calls 1)) #t)) ])))
+        (check-exception
+          (call-with-positive-plan-cost (make-positive-plan-cost)
+            (lambda () (gerbil-ascent-run-positive-plan! plan [] -1 inputs (lambda args #f)))) error?)
+        (check-equal? calls 0)))))

@@ -1,0 +1,171 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+title: Native Scheme rule-plan costs and explicit common-prefix control
+#+date: 2026-10-31
+#+status: bounded diagnostic implementation; focused source-bound controls, not full package acceptance
+
+* Scope
+
+The existing =core/positive-plan.ss= runner owns optional counters for native
+Scheme matching. No reference Dusa/miniDusa code, new evaluator, Python consumer,
+choice syntax or external study framework is introduced. The existing DSL and
+test harness own the workload. The paper sources are listed in the README's
+References: =10.1145/3704849= and its prefix-cost reference
+=10.1145/581771.581774=; Ascent rule planning is =10.1145/3497776.3517779=.
+
+This measures one fresh serial solve of canonical pure Set plans. Unsupported
+callbacks, storage/index providers, lattice rules, retained sessions and parallel
+or cancellable engine routes refuse measurement instead of returning zero work.
+A collector cannot be reused for a second solve. Native engine cancellation is
+not qualified by this diagnostic; interruption is checked at the plan's existing
+checkpoint. Normal unmeasured paths keep their original admission/dispatch.
+
+* Counter definitions
+
+| Counter | Charge point and meaning |
+|---------+--------------------------|
+| candidate-rows | A candidate actually passed to the native atom matcher, including mismatches |
+| partial-matches | One successful body-prefix extension |
+| complete-witnesses | All premises matched, before emitting heads |
+| head-proposals | One head emission attempted, before Set deduplication |
+| admitted-rows | A novel derived row admitted to the current pending round, not necessarily published |
+| repeated-prefixes | A successful prefix/support-row visit previously observed in this collector |
+| repeated-candidate-visits | A candidate attempt previously observed with the same relevant prefix/support rows, including failed matches |
+
+Repeated observations use relation/slot descriptors and full supporting rows,
+not stale unused frame slots or the final projected head. Slot identity follows
+first variable occurrence. Heads are omitted so identical relational prefixes
+in different rules can be compared. This is a structural diagnostic, not a
+general equivalence checker for reordered rules or arbitrary expressions.
+
+Revisiting a prefix with a new suffix may be legitimate work. Different complete
+witnesses producing one head are not collapsed into one derivation. No-op head
+proposals remain visible. Disabling prefix recording returns =#f= for both repeat
+counters, rather than claiming zero. The observer retains support keys and has
+memory/time overhead; these counts do not establish wall-time speedup or the
+paper's asymptotic theorem. Index construction, field validation and old-lane
+membership scans are outside the matcher counter's scope.
+
+The observer reports work, not completion authority. Refusal or interruption
+keeps partial counters; it does not turn admitted pending rows into a completed
+published result. Failed emission cannot count unattempted later heads.
+
+* Independent finite-domain check
+
+=finite-domain-closure= in the existing semi-naive oracle fixture enumerates
+all assignments of every rule variable over a declared finite domain, tests
+ground body membership, and applies synchronous immediate consequences until
+settled. It imports no native planner, matcher, index or delta code. It is
+restricted to function-free positive variable-only rules over declared relations.
+Source values outside the domain are rejected. This is not finite-choice or
+general Scheme callback semantics.
+
+The native DSL corpus checks every directed two-node graph (16 inputs) in both
+representations. Every source, intermediate and exported relation is compared
+with that representation's independent least closure. Measured and unmeasured
+native executions must produce identical ordered rows. A sparse four-node chain
+and the complete two-node graph provide explicit paired work receipts.
+
+* Prefix reuse control
+
+The baseline contains two rules with three identical edge premises and one tail
+premise. The second lane uses one ordinary four-column relation to retain all
+bindings of the common three-edge prefix; existing suffix rules read that
+relation. It is explicit DSL factoring, not an automatic compiler cache or a
+claim of provenance-graph equivalence. The declared exported left/right queries
+are unchanged. The intermediate relation intentionally differs between lanes;
+each lane is checked against its own complete finite oracle.
+
+The sparse and dense cases retain separate matching and materialization costs.
+The first dense run falsified the hypothesis that candidate scans must increase:
+they decreased, while intermediate rows and complete witnesses increased.
+The graph and both rule declarations were kept unchanged. The erroneous scan
+direction assertion was replaced by the independently derived row counts:
+2^4 prefix rows plus four rows in each exported relation, versus eight exported
+rows in the baseline. The original failed assertion and complete log are retained.
+No conclusion of universal prefix-caching benefit is admitted.
+
+* Native kernel controls
+
+The fixed two-atom kernel has eight candidates, five partial matches, three
+complete witnesses and six proposals across two heads. Repeating the traversal
+with a fresh frame yields five repeated successful prefixes and eight repeated
+candidate visits. No-prefix-recording mode preserves counts but reports unknown
+repeat metrics. Interruption at the first real checkpoint emits no complete
+witness; unsupported callbacks refuse before calling user code.
+
+Run through the existing entrypoint:
+
+#+begin_src sh
+just test-file t/qualification/ascent-rule-cost-kernel-test.ss
+just test-file t/qualification/ascent-rule-cost-test.ss
+just test-file t/qualification/ascent-positive-plan-test.ss
+#+end_src
+
+* Initial receipt boundary: Core 79a5526 and POO 98fcce3
+
+Five kernel cases, four DSL/oracle cases and 32 existing positive-plan regression
+cases passed through the original GxTest entry with MODULE-OK, HARNESS-OK,
+final OK and natural exit 0. The independent finite oracle checked 36 program
+instances; the measured and unmeasured controls executed 72 completed solves.
+Those checks bind Core PR #19 revision
+=79a5526a2ecd06408201be87b4a028b167c8d8a0= and its POO revision
+=98fcce3abec760373cc7486a8b51d6bb97424658=, with the Core source directory on
+GERBIL_LOADPATH. They do not qualify POO PR #13 revision =30733c3=.
+
+| Workload | Lane | Candidates | Partial matches | Complete witnesses | Head proposals | Admitted rows | Repeated successful prefixes | Repeated candidate visits |
+|----------+------+------------+-----------------+--------------------+----------------+---------------+------------------------------+---------------------------|
+| Four-node chain | Baseline | 104 | 36 | 2 | 2 | 2 | 29 | 82 |
+| Four-node chain | Factored | 52 | 20 | 3 | 3 | 3 | 12 | 29 |
+| Complete two-node graph | Baseline | 312 | 168 | 32 | 32 | 8 | 124 | 228 |
+| Complete two-node graph | Factored | 188 | 116 | 48 | 48 | 24 | 56 | 88 |
+
+Candidate savings therefore coexist with extra materialization/derivation work.
+No total-runtime, allocation-byte or universal speedup claim follows.
+
+The source-bound focused checks are separate from installed-package acceptance:
+the fresh standard dependency installation exited 124 at its fixed 600-second
+diagnostic cap. Its remaining owned Core build process group was identified and
+terminated. A partially generated manifest is not treated as installation success.
+The focused checks subsequently read the fixed source and already generated
+dependency modules; they do not close the clean-install or exact-head CI gate.
+
+The initial old-prefix test failed before evaluation because
+=:clan/poo/object-contract= was absent. A raw dependency invocation exited 70;
+the fresh dependency build then exposed missing OpenSSL pkg-config metadata.
+These failures remain in /private/tmp/ascent-rule-cost-*-20261031.log. The failed
+dense hypothesis is =ascent-rule-cost-dsl-source-control-2-20261031.log=; the
+corrected counter/semantic control is =ascent-rule-cost-dsl-tradeoffs-20261031.log=.
+No task input, rule declaration, test timeout, result oracle or admission guard
+was changed to obtain the measured results. The corrected hypothesis assertion
+is explicitly distinguished from those semantic validation gates.
+
+* Current dependency chain follow-up
+
+ASCENT keeps exactly one direct dependency, Yuanxu:
+
+=ASCENT -> Yuanxu 85a969c77431b971408610d908bcf694a21830bf ->
+POO 30733c3de7dbca4f0572b25a25b9099396da48a5=.
+
+The POO pin was updated in its owner on existing Yuanxu PR #19. Its replay
+correspondence constant was then updated without changing the checker or any
+theorem: the selected =object.ss= source is byte-identical to the previously
+bound source. All 11 unchanged selected replay positive/negative controls passed
+with the new producer source bound. POO's exact-head CI passed 53 checks.
+Full Yuanxu CI remains a separate gate.
+
+The native DSL/oracle control and the 32-case positive-plan regression were
+rerun with the current package checkout and explicit fixed Core source path.
+Both exited naturally with final OK; all four reported cost rows are identical
+to the initial table. These are new focused receipts, not transferred old passes:
+=/private/tmp/ascent-current-chain-cost-controls-20261031.log= and
+=/private/tmp/ascent-current-chain-plan-regression-20261031.log=.
+
+The new cold dependency installation also reached its unchanged 600-second cap;
+the remaining owned Core build group was terminated. Early attempts before the
+public Core prelude existed failed to read =object-types/contracts.ss=. A tagged
+official package update checked out the correct revision but then reported
+=bad package; missing gerbil.pkg=. The official =gerbil deps --install= route
+was subsequently used with the matching checkout. These installation outcomes
+are separate from the focused native execution receipts. No direct POO pin,
+manual tag rewrite, uninstall, compatibility facade or relaxed gate was added.

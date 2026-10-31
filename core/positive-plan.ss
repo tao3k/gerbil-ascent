@@ -15,7 +15,46 @@
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
-        gerbil-ascent-index-value gerbil-ascent-emit-heads!)
+        gerbil-ascent-index-value gerbil-ascent-emit-heads!
+        make-positive-plan-cost positive-plan-cost-snapshot
+        call-with-positive-plan-cost current-positive-plan-cost
+        positive-plan-cost-admit! positive-plan-cost-begin!)
+
+;;; Diagnostic ownership is one fresh serial solve over canonical pure Set
+;;; rules. Never share this mutable collector between engines or revisions.
+;;; Prefix observations count repeated successful visits, not avoidable work:
+;;; a new suffix can legitimately revisit an unchanged prefix.
+(defstruct native-plan-cost (counts prefixes started?) final: #t)
+(def (make-positive-plan-cost (record-prefixes? #t))
+  (make-native-plan-cost (make-vector 7 0)
+                        (and record-prefixes? (make-hash-table)) #f))
+(def (positive-plan-cost-begin! cost)
+  (when cost
+    (when (native-plan-cost-started? cost)
+      (error "native plan cost collector already belongs to a solve"))
+    (native-plan-cost-started?-set! cost #t)))
+(def current-positive-plan-cost (make-parameter #f))
+(def (call-with-positive-plan-cost cost thunk)
+  (unless (and (native-plan-cost? cost) (procedure? thunk))
+    (error "invalid native positive-plan cost collector"))
+  (parameterize ((current-positive-plan-cost cost)) (thunk)))
+(def (cost-add! cost index (amount 1))
+  (when cost
+    (let (counts (native-plan-cost-counts cost))
+      (vector-set! counts index (+ amount (vector-ref counts index))))))
+(def (positive-plan-cost-admit! cost) (cost-add! cost 4))
+(def (positive-plan-cost-snapshot cost)
+  (unless (native-plan-cost? cost) (error "invalid native cost snapshot"))
+  (map (lambda (name index)
+         (cons name (if (and (>= index 5) (not (native-plan-cost-prefixes cost)))
+                      #f (vector-ref (native-plan-cost-counts cost) index))))
+       '(candidate-rows partial-matches complete-witnesses head-proposals
+         admitted-rows repeated-prefixes repeated-candidate-visits) '(0 1 2 3 4 5 6)))
+(def (cost-prefix! cost kind index signature rows)
+  (alet (seen (native-plan-cost-prefixes cost))
+    (let (key (list kind signature rows))
+      (if (hash-get seen key) (cost-add! cost index)
+          (hash-put! seen key #t)))))
 
 (def +positive-plans+
   (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-positive-plans)))
@@ -338,13 +377,14 @@
     (dispatch-ordered-call (lambda (frame)) list (map cdr terms)
       (slot (vector-ref frame slot)))
     (lambda (frame) (map (lambda (term) (term-value term frame)) terms))))
-(def (emit-parts-heads! heads frame emit-row!)
+(def (emit-parts-heads! heads frame emit-row! (cost #f))
   (unless (null? heads)
     (let (head (car heads))
+      (cost-add! cost 3)
       (emit-row! (vector-ref head 0)
         (if (> (vector-length head) 2) ((vector-ref head 2) frame)
             (map (lambda (term) (term-value term frame)) (vector-ref head 1)))))
-    (emit-parts-heads! (cdr heads) frame emit-row!)))
+    (emit-parts-heads! (cdr heads) frame emit-row! cost)))
 
 ;;; The engine supplies row/index access and the authoritative output admission
 ;;; function. This runner changes binding representation, not fact admission.
@@ -373,33 +413,53 @@
     (error "ASCENT positive plan delta selector outside compiled atom extent"))
   ;; Decode Option<Nat> once for the entire traversal, not at every join
   ;; continuation. Generated policies retain primitive hot loops.
-  (let (has-pivot? (>= delta-at 0))
+  (let ((has-pivot? (>= delta-at 0)) (cost (current-positive-plan-cost)))
+    (when (and cost (not (gerbil-ascent-pure-positive-plan? plan)))
+      (error "native plan cost requires a pure positive plan"))
     (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                           frame (if has-pivot? delta-at 0) has-pivot?
-                          0 rows-access emit-row! checkpoint! parts-access old-rows-access)))
+                          0 rows-access emit-row! checkpoint! parts-access old-rows-access
+                          cost [] [])))
+
+(def (emit-complete-heads! heads frame emit-row! cost)
+  (cost-add! cost 2)
+  (emit-parts-heads! heads frame emit-row! cost))
 
 ;;; PartsAccess is private exact canonical selection, synchronous and complete.
 ;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access)
+(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness)
   ;; Syntax owns the candidate protocol; no continuation closure per row.
   ;; Observe the remaining action tail after user code, at the original boundary.
-  (defrule (resume next-depth)
+  (defrule (resume next-depth next-signature next-witness)
     (visit-positive-atoms! (cdr atoms) heads frame pivot has-pivot? next-depth
-                          rows-access emit-row! checkpoint! parts-access old-rows-access))
-  (defrule (accept matched?)
-    (begin
+                          rows-access emit-row! checkpoint! parts-access old-rows-access
+                          cost next-signature next-witness))
+  (defrule (accept matched? row action)
+    (let ((matched matched?) (next-signature signature) (next-witness witness))
+      (cost-add! cost 0)
+      (when cost
+        ;; Slot identities alpha-normalize variables by first occurrence.
+        ;; Include full supporting rows, not stale suffix frame contents.
+        (set! next-signature
+          (cons (list (vector-ref (vector-ref action 0) 0)
+                      (vector-ref action 1)) signature))
+        (set! next-witness (cons row witness))
+        (cost-prefix! cost 'candidate 6 next-signature next-witness)
+        (when matched
+          (cost-add! cost 1)
+          (cost-prefix! cost 'partial 5 next-signature next-witness)))
       (when checkpoint! (checkpoint!))
-      (when matched?
+      (when matched
         (if (null? (cdr atoms))
-          (emit-parts-heads! heads frame emit-row!)
-          (resume (+ depth 1))))))
+          (emit-complete-heads! heads frame emit-row! cost)
+          (resume (+ depth 1) next-signature next-witness)))))
   (match atoms
-    ([] (emit-parts-heads! heads frame emit-row!))
+    ([] (emit-complete-heads! heads frame emit-row! cost))
     ([action . _]
      (case (vector-ref action 0)
-       ((callbacks) (when ((vector-ref action 1) frame) (resume depth)))
+       ((callbacks) (when ((vector-ref action 1) frame) (resume depth signature witness)))
        (else
         (let* ((delta? (gerbil-ascent-delta-lane depth pivot has-pivot?))
                (old? (gerbil-ascent-old-lane depth pivot has-pivot? (and old-rows-access #t))))
@@ -407,7 +467,8 @@
                   (parts-access (vector-ref action 0) frame delta? (vector-ref action 2)
                     (lambda (prefix left right)
                       (accept ((or (vector-ref action 4) (vector-ref action 3))
-                               prefix left right frame)))))
+                               prefix left right frame)
+                              (and cost (append prefix (list left right))) action))))
           (let (rows (if old?
                       (old-rows-access (vector-ref action 0) frame (vector-ref action 2) checkpoint!)
                       (rows-access (vector-ref action 0) frame
@@ -416,16 +477,19 @@
               ((or (pair? rows) (null? rows))
                (let candidates ((remaining rows))
                  (unless (null? remaining)
-                   (accept (match-row! (vector-ref action 1) (car remaining) frame))
+                   (accept (match-row! (vector-ref action 1) (car remaining) frame)
+                           (and cost (car remaining)) action)
                    (candidates (cdr remaining)))))
               ((gerbil-ascent-row-parts? rows)
                (gerbil-ascent-for-each-row-parts
                 (lambda (prefix left right)
-                  (accept ((vector-ref action 3) prefix left right frame))) rows))
+                  (accept ((vector-ref action 3) prefix left right frame)
+                          (and cost (append prefix (list left right))) action)) rows))
               (else
                (gerbil-ascent-for-each-row
                 (lambda (row)
-                  (accept (match-row! (vector-ref action 1) row frame))) rows)))))))))))
+                  (accept (match-row! (vector-ref action 1) row frame)
+                          (and cost row) action)) rows)))))))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms
 ;;; read proved frame slots; the general path preserves expression callbacks.

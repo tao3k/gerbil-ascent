@@ -9,6 +9,9 @@ module ProviderFrontier {
     Pairs.filter(p => Nodes.exists(b => Nodes.exists(c => left.contains((p._1,b)) and middle.contains((b,c)) and right.contains((c,p._2)))))
   pure def BodyOf(rows: Set[(int,int)]): Set[(int,int)] = Join3(rows,rows,rows)
   pure def Pivots(fresh: Set[(int,int)], rows: Set[(int,int)]): Set[(int,int)] = Join3(fresh,rows,rows).union(Join3(rows,fresh,rows)).union(Join3(rows,rows,fresh))
+  pure def Supports(left: Set[(int,int)], middle: Set[(int,int)], right: Set[(int,int)]): Set[(int,int,int,int)] =
+    tuples(Nodes,Nodes,Nodes,Nodes).filter(t => left.contains((t._1,t._2)) and middle.contains((t._2,t._3)) and right.contains((t._3,t._4)))
+  pure def Endpoints(supports: Set[(int,int,int,int)]): Set[(int,int)] = supports.map(t => (t._1,t._4))
   // Floyd-Warshall folds all admitted intermediate nodes, without a runtime cap.
   pure def Close(edges: Set[(int,int)]): Set[(int,int)] = Nodes.fold(edges,(rows,b) =>
     rows.union(Pairs.filter(p => rows.contains((p._1,b)) and rows.contains((b,p._2)))))
@@ -37,6 +40,31 @@ module ProviderFrontier {
   val ExactFrontier = (q.phase == "pending" and Mutation == "none") implies q.delta == q.pending.exclude(q.total)
   val DeliveredExact = q.phase == "idle" implies (q.delivered == q.total and q.total == Concrete(q.inputs))
   val ConsumerSnapshot = q.answers == BodyOf(q.total)
+
+  // The suffix observes endpoints only. A hidden-column observer is a separate
+  // contract; the mutation deliberately applies the rewrite outside that domain.
+  val ProjectionExact = Endpoints(Supports(q.total,q.total,q.total)) == BodyOf(q.total)
+  val ProjectionLiveBoundary = {
+    val full = Supports(q.total,q.total,q.total)
+    val observed = Endpoints(full.filter(t => t._2 == 1))
+    (if (Mutation == "forget-live") Endpoints(full) else observed) == observed
+  }
+  val ProjectionSupportBoundary = {
+    val full = Supports(q.total,q.total,q.total)
+    val recorded = if (Mutation == "collapse-support") Endpoints(full).size() else full.size()
+    recorded == full.size()
+  }
+  // Frozen Set lanes, preserving full witnesses, not only endpoint answers.
+  // Source reads precede the two derived occurrences in the native diagnostic.
+  val EmptyOldPrefixSafe = {
+    val old = q.pending.exclude(q.delta)
+    val first = Supports(q.inputs,q.delta,q.pending)
+    val later = Supports(q.inputs,old,q.delta)
+    val selected = first.union(later)
+    val prunedFirst = if (Mutation == "prune-unselected-old" and old == Set()) Set() else first
+    val prunedLater = if (old == Set()) Set() else later
+    prunedFirst.union(prunedLater) == selected
+  }
 
 }
 

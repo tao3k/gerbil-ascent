@@ -370,3 +370,190 @@ the earlier failed hypothesis and installation failures are not deleted or
 reclassified. This is focused local verification, not a new clean-checkout,
 cold-build, complete-DSL proof or remote-CI result. Concurrent build and
 migration changes are outside this patch.
+
+* Conditional projection: Lean, Quint and native checks
+
+The follow-up starts at =974fb7b1= and keeps the existing positive task lanes
+unchanged. It adds obligations to existing proof modules and native suites,
+not a new evaluator, study framework or Python interface.
+
+| Contract | Formal statement or counterexample | Native boundary |
+|----------+------------------------------------+-----------------|
+| Endpoint-only suffix | =ProviderFrontier.EndpointProjection.suffix_equivalent= quantifies over arbitrary supports and suffixes whose type observes only retained coordinates | Both original representations and endpoint projection remain checked against finite grounding |
+| Recursive projection | =DerivationCounts.projected_rounds= requires the projection to commute with every rule step, starting at the projected seed | A single completed-query equality is not accepted as permission to rewrite a recursive SCC |
+| Alternative supports | =DerivationCounts.projection_presence_not_count= proves equal existence with different counts | The two-support native fixture has two full witness rows and one endpoint row |
+| Withdrawal | =projection_does_not_commute_with_withdrawal= refutes subtracting a projected removed witness when another support remains | Removing one support preserves the answer; removing the last retracts it |
+| Source cut | =revision_extensional= requires current support equivalence | Equal source row counts do not establish equality; the revision corpus replaces three rows with three different rows and restores them |
+| Empty required lane | =ProviderFrontier.empty_required_lane= rules out the complete witness, not just its projected head | Skipping an empty old prefix cannot remove an existing support tuple |
+
+The new projection and support-count counterexample theorems use no axioms;
+the generic empty-lane and recursive-round laws report only Lean's =propext=.
+No =sorry=, new axiom or compiler-trusting decision was added. Focused checking
+uses the existing locked LeanPoo Guard and =just check-lean-file= limits. The
+existing =SemiNaive.disjoint_partition= and =first_fresh_unique= laws are also
+kernel checked. These are semantic laws plus native conformance controls,
+not extraction or a complete source-refinement proof of the evaluator.
+
+Existing =ProviderFrontier.qnt= now checks endpoint equality, the live-column
+boundary, support accounting and empty-old-prefix pruning. Its new deliberate
+faults must produce counterexamples: dropping an observed hidden column,
+replacing support count with endpoint count, and pruning a lane that is not
+selected as old. The unchanged DeltaClosure controls reject overlapping pivot
+witnesses, lost work, early completion and all-old scheduling. The unchanged
+WithdrawalSession controls cover revision, support and publication faults.
+
+* Recursive diagnosis and minimal native reuse
+
+The added task uses existing Scheme DSL only:
+
+#+begin_src scheme
+(rule (path ?x ?y) (edge ?x ?y))
+(rule (path ?x ?z) (path ?x ?y) (path ?y ?z))
+(rule (answer ?x ?w)
+      (edge ?x ?y) (path ?y ?z) (path ?z ?w))
+#+end_src
+
+All 16 two-node graphs and a four-node revision sequence are checked against
+the independent finite-domain oracle. Fresh metered and unmetered rows agree.
+Retained Session answers are separately checked after each source replacement;
+the old snapshot remains unchanged. The collector still refuses retained
+execution: fresh recomputation costs are not represented as Session costs.
+
+The diagnosis found that trusted scalar field checks conservatively selected
+the ordered path, which disabled the existing disjoint delta lanes even for
+pure immutable Set rules. As a result, one complete supporting combination
+could fire at more than one pivot. The evaluator now enables the existing
+first-fresh partition on the already qualified fresh serial scalar Set route.
+It also computes the first empty old lane once per rule/round and reuses this
+fact to reject later pivots before matching. The check uses the same
+=all-size == delta-size= condition already used by the native old-row accessor.
+It is recomputed for the current cut, not cached by cardinality across cuts.
+
+The two changes preserve each distinct full supporting combination while
+removing repeated scheduling of that combination. They do not project away
+support columns, fuse rule identities or discard different witnesses for an
+equal head. Opaque callbacks, custom providers, lattices, retained sessions,
+parallel and canceled engine routes keep their prior eligibility boundaries.
+The existing row-order reference regression remains applicable.
+
+Here a supporting combination means full ground premise values under Set
+semantics at one source cut. It does not distinguish duplicate source-log
+occurrence IDs, raw provenance graph nodes or all recursive proof trees.
+Preserving those richer representations needs their own correspondence; this
+patch does not certify graph isomorphism or occurrence-sensitive provenance.
+
+| Source cut / control | Candidates | Partial matches | Complete witnesses / proposals | Admitted rows | Repeated candidates | Same-plan repeated candidates |
+|----------------------+------------+-----------------+--------------------------------+---------------+---------------------+-------------------------------|
+| Chain, original evaluator | 180 | 63 | 11 | 7 | 99 | 96 |
+| Chain, empty-old precheck alone | 180 | 63 | 11 | 7 | 99 | 96 |
+| Chain, disjoint lanes without precheck | 134 | 51 | 8 | 7 | 53 | 50 |
+| Chain, both changes | 131 | 48 | 8 | 7 | 50 | 47 |
+| Equal-size replacement, original | 95 | 34 | 5 | 4 | 56 | 53 |
+| Equal-size replacement, both changes | 63 | 25 | 4 | 4 | 24 | 21 |
+| Restored chain, both changes | 131 | 48 | 8 | 7 | 50 | 47 |
+
+The source cuts are =((0 1) (1 2) (2 3))= and
+=((0 1) (1 2) (3 2))=. The unchanged chain answer is =(0 3)=; the replacement
+removes it and restoration returns it. The saved historical answer remains.
+Lower complete-witness counts here remove scheduling duplicates, unlike the
+earlier endpoint projection that changes the witness representation.
+
+The observer now records repeated complete witnesses separately, partitioned
+by plan identity, with the same structural support key as the prefix counters.
+Each optimized recursive input has zero same-plan complete revisits. The
+kernel's disjoint-pivot control retains three distinct support pairs, including
+two with the same projected first column; the overlapping negative control
+visits four pairs by repeating one pair. The original two-head nonrecursive
+task still reports cross-plan complete repeats because both heads must be
+emitted. This separates scheduling duplication from distinct derivations.
+
+The remaining 47 same-plan candidate revisits on the chain include earlier
+prefixes inspected again as later-round suffix facts arrive, as well as failed
+candidate attempts. Zero repeated complete witnesses does not establish that
+every prefix revisit is necessary or that prefix memoization would be free.
+Reusing those prefixes persistently still needs an explicit source/dependency,
+space and invalidation argument. No such cache is introduced in this patch.
+
+* Retained failures, controls and reproduction
+
+Logs below are under =/private/tmp/= and are separate outcomes:
+
+- =ascent-recursive-before-old-prefix-20261031.log=: original frozen task costs.
+- =ascent-recursive-after-old-prefix-attempt1-20261031.log=: a real Scheme
+  lexical-scope error, fixed by using sequential bindings; retained as failure.
+- =ascent-recursive-after-old-prefix-attempt2-20261031.log=: successful but
+  non-improving precheck-only experiment, not counted as a performance gain.
+- =ascent-safe-reuse-empty-prefix-mutation-20261031.log=: deliberate removal
+  of the old-prefix precheck yields 134 candidates and fails the fixed 131
+  expectation; result checking precedes the cost assertion. The code was restored.
+- =ascent-safe-reuse-overlap-mutation-20261031.log=: deliberately restoring
+  overlapping checked-scalar pivots fails the independent complete-repeat
+  assertion (two same-plan repeated complete witnesses, expected zero). This
+  rejects the regression directly, not merely through a token/work threshold.
+- =ascent-projection-frontier-lean-attempt1-20261031.log= and
+  =ascent-projection-counts-lean-attempt1-20261031.log=: package reconfiguration
+  lock / sandbox DNS failures before proof checking. Lean preparation was then
+  serialized. =frontier-lean-attempt2= retains the fixed 30-second dependency
+  update timeout. The later unchanged entry completes without increasing limits.
+- =ascent-projection-frontier-quint-attempt1-20261031.log=: sandbox local
+  process communication refusal. The same entry subsequently runs successfully
+  with required local-process permissions and unchanged validators.
+
+The source revision and task inputs are not changed to make a check pass.
+The README additionally cites Gupta/Mumick/Subrahmanian, /Maintaining Views
+Incrementally/ (SIGMOD 1993), for the separate support/deletion maintenance
+problem. Its counting and DRed algorithms are reference material, not algorithms
+claimed as newly implemented here. The prior conjunctive-query, provenance,
+Ascent and finite-choice references remain in place.
+
+Reproduction uses the existing entrypoints, with the same installed dependency
+chain documented above; native commands below run with =GERBIL_LOADPATH= unset.
+The harness's existing supervisor and formal-obligation registry are reused;
+no Python semantic implementation or binding is added.
+
+#+begin_src sh
+just check-lean-file ProviderFrontier.lean
+just check-lean-file DerivationCounts.lean
+just check-lean-file SemiNaive.lean
+just _check-quint ProviderFrontier
+just _check-quint DeltaClosure
+just _check-quint WithdrawalSession
+just test-file t/qualification/ascent-rule-cost-kernel-test.ss
+just test-file t/qualification/ascent-rule-cost-test.ss
+just test-file t/qualification/ascent-positive-plan-test.ss
+just test-file t/qualification/scheme-relational-test.ss
+#+end_src
+
+Final formal receipts, all natural exit 0:
+
+| Entry | Log under /private/tmp | Qualified scope |
+|-------+------------------------+-----------------|
+| ProviderFrontier Lean | ascent-projection-frontier-lean-final-20261031.log | New projection/withdrawal/empty-lane laws and existing frontier module |
+| DerivationCounts Lean | ascent-projection-counts-lean-final-20261031.log | Existence versus support count; conditional recursive projection |
+| SemiNaive Lean | ascent-safe-reuse-seminaive-lean-20261031.log | Existing disjoint partition, unique first-fresh witness and recursive iteration laws |
+| ProviderFrontier Quint | ascent-projection-frontier-quint-attempt2-20261031.log | 13 original/new positive and expected-counterexample controls |
+| DeltaClosure Quint | ascent-safe-reuse-delta-quint-20261031.log | Five original positive and expected-counterexample controls |
+| WithdrawalSession Quint | ascent-safe-reuse-withdrawal-quint-20261031.log | 12 original positive and expected-counterexample controls |
+
+The models use their unchanged finite domains, watchdogs, heap and worker
+limits. Each Quint entry compiled with =cache=0= and ended with
+=ALL-QUINT-CHECK-OK=; expected counterexamples are successful negative controls,
+not silently ignored failures. The existing cold-install failures remain open
+and separate. No remote CI outcome is required or inferred.
+
+After both source mutations were restored, the final native working tree passed
+80 cases with suite/module/harness/final OK and natural exit 0:
+
+| Suite | Cases | Log under /private/tmp |
+|-------+-------+------------------------|
+| Native cost kernel | 7 | ascent-safe-reuse-accepted-kernel-20261031.log |
+| DSL projection, recursive costs and revisions | 9 | ascent-safe-reuse-accepted-recursive-20261031.log |
+| Positive-plan reference regression | 33 | ascent-safe-reuse-accepted-regression-20261031.log |
+| Scheme relational contracts | 31 | ascent-safe-reuse-accepted-dsl-contract-20261031.log |
+
+The complete-witness counters were enabled for these final controls; unrecorded
+repeat fields remain =#f=. Earlier 80-case passes before adding those counters
+are separate intermediate receipts, not substituted for the restored run.
+These are local installed-dependency checks, not clean cold-build or full
+package qualification. Concurrent build/migration changes remain uncommitted
+by this patch.

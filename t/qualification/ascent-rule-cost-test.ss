@@ -87,6 +87,40 @@
   (filter-map (lambda (i)
                 (and (not (zero? (bitwise-and mask (arithmetic-shift 1 i))))
                      (list (quotient i 2) (modulo i 2)))) (iota 4)))
+(def recursive-rules
+  '(((path x y) (edge x y))
+    ((path x z) (path x y) (path y z))
+    ((answer x w) (edge x y) (path y z) (path z w))))
+(def (recursive-declaration edges)
+  (relational-program
+    (relation edge (a b) edges) (relation path (a b)) (relation answer (a b))
+    (rule (path ?x ?y) (edge ?x ?y))
+    (rule (path ?x ?z) (path ?x ?y) (path ?y ?z))
+    (rule (answer ?x ?w) (edge ?x ?y) (path ?y ?z) (path ?z ?w))
+    (limits 1000 10000 12000)))
+(def (check-recursive edges domain actual)
+  (let (expected (finite-domain-closure domain
+                  (list (cons 'edge edges) (cons 'path []) (cons 'answer [])) recursive-rules))
+    (check-equal? (.ref actual 'finished) #t)
+    (for-each
+     (lambda (name)
+       (let ((rows ((.ref actual 'rows-of) name)) (want (cdr (assq name expected))))
+         (check-equal? (length rows) (length want))
+         (check-equal? (andmap (lambda (row) (and (member row want) #t)) rows) #t)))
+     '(edge path answer))))
+(def (run-recursive edges domain)
+  (let* ((program (recursive-declaration edges)) (cost (make-positive-plan-cost))
+         (actual (call-with-positive-plan-cost cost
+                   (lambda () (gerbil-ascent-evaluate-program program))))
+         (plain (gerbil-ascent-evaluate-program program)))
+    (check-recursive edges domain actual)
+    (for-each (lambda (name)
+                (check-equal? ((.ref actual 'rows-of) name) ((.ref plain 'rows-of) name)))
+              '(edge path answer))
+    ;; Revisited prefixes may feed new suffixes in later rounds, but the same
+    ;; complete supporting tuple must not be rescheduled by another pivot.
+    (check-equal? (count-of (positive-plan-cost-snapshot cost) 'same-plan-complete-revisits) 0)
+    (positive-plan-cost-snapshot cost)))
 (def ascent-rule-cost-test
   (test-suite "Native DSL plan costs and explicit prefix reuse"
     (test-case "collector ownership excludes unrelated solves and parallel routes"
@@ -104,6 +138,35 @@
       (for-each (lambda (mask)
                   (for-each (lambda (factored?) (run (two-node-graph mask) '(0 1) factored?))
                             '(#f #t))) (iota 16)))
+    (test-case "recursive matching and equal-size source revisions agree with finite grounding"
+      (for-each (lambda (mask) (run-recursive (two-node-graph mask) '(0 1))) (iota 16))
+      (let* ((first '((0 1) (1 2) (2 3)))
+             (changed '((0 1) (1 2) (3 2)))
+             (session (relational-open-program-session (recursive-declaration first)))
+             (old (relational-program-session-run session)))
+        (check-equal? (relational-program-query old 'answer) '((0 3)))
+        (for-each
+         (lambda (edges)
+           (let (cost (run-recursive edges '(0 1 2 3)))
+             (displayln "RULE-COST recursive edges=" edges " receipt=" cost)
+             (check-equal? (count-of cost 'candidate-rows) (if (equal? edges first) 131 63))
+             (check-equal? (count-of cost 'complete-witnesses) (if (equal? edges first) 8 4))
+             (check-equal? (count-of cost 'admitted-rows) (if (equal? edges first) 7 4)))
+           (relational-program-replace-source! session 'edge edges)
+           ;; Retained measurement remains unsupported; check its answers here
+           ;; and report costs only for the separately checked fresh solve.
+           (let* ((result (relational-program-session-run session))
+                  (expected (finite-domain-closure '(0 1 2 3)
+                              (list (cons 'edge edges) (cons 'path []) (cons 'answer []))
+                              recursive-rules)))
+             (for-each
+              (lambda (name)
+                (let ((rows (relational-program-query result name)) (want (cdr (assq name expected))))
+                  (check-equal? (length rows) (length want))
+                  (check-equal? (andmap (lambda (row) (and (member row want) #t)) rows) #t)))
+              '(path answer))))
+         (list first changed first))
+        (check-equal? (relational-program-query old 'answer) '((0 3)))))
     (test-case "retain sparse sharing and dense materialization tradeoffs"
       (let* ((chain '((0 1) (1 2) (2 3)))
              (before (run chain '(0 1 2 3) #f))
@@ -160,6 +223,14 @@
              (suffix '((0 0) (1 1) (2 2) (3 3)))
              (session (relational-open-program-session (declaration edges suffix 'projected)))
              (old (relational-program-session-run session)))
+        (let ((full (gerbil-ascent-evaluate-program (declaration edges suffix #t)))
+              (compact (gerbil-ascent-evaluate-program (declaration edges suffix 'projected))))
+          ;; Two different internal witnesses collapse to one endpoint row.
+          ;; Query equality therefore cannot certify preservation of supports.
+          (check-equal? (length (filter (lambda (row) (and (= (car row) 0) (= (cadddr row) 3)))
+                                       ((.ref full 'rows-of) 'prefix))) 2)
+          (check-equal? (length (filter (lambda (row) (equal? row '(0 3)))
+                                       ((.ref compact 'rows-of) 'prefix))) 1))
         (check-equal? (and (member '(0 3) (relational-program-query old 'left)) #t) #t)
         (for-each
          (lambda (remaining)

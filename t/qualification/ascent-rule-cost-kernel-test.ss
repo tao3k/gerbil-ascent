@@ -41,13 +41,16 @@
         (check-equal? (read-count cost 'same-plan-prefix-revisits) 5)
         (check-equal? (read-count cost 'same-plan-candidate-revisits) 8)
         (check-equal? (read-count cost 'cross-plan-prefix-revisits) 0)
+        (check-equal? (read-count cost 'same-plan-complete-revisits) 3)
         ;; An independently compiled equal body is a different plan owner.
         (call-with-positive-plan-cost cost
           (lambda () (gerbil-ascent-run-positive-plan! (fixture) (make-vector 2 #f) -1 inputs (lambda args #f))))
         (check-equal? (read-count cost 'repeated-prefixes) 10)
         (check-equal? (read-count cost 'repeated-candidate-visits) 16)
         (check-equal? (read-count cost 'cross-plan-prefix-revisits) 5)
-        (check-equal? (read-count cost 'cross-plan-candidate-revisits) 8)))
+        (check-equal? (read-count cost 'cross-plan-candidate-revisits) 8)
+        (check-equal? (read-count cost 'repeated-complete-witnesses) 6)
+        (check-equal? (read-count cost 'cross-plan-complete-revisits) 3)))
     (test-case "nested native traversal retains its own plan attribution"
       (def (one-atom-plan)
         (gerbil-ascent-compile-positive-plan
@@ -75,7 +78,29 @@
         (check-equal? (read-count cost 'repeated-candidate-visits) #f)
         (check-equal? (read-count cost 'same-plan-prefix-revisits) #f)
         (check-equal? (read-count cost 'cross-plan-candidate-revisits) #f)
+        (check-equal? (read-count cost 'same-plan-complete-revisits) #f)
         (check-equal? (read-count cost 'candidate-rows) 8)))
+    (test-case "first-fresh partition removes duplicate pivots but keeps distinct supports"
+      (let* ((plan (gerbil-ascent-compile-positive-plan
+                    (list (vector 1 '((variable . x) (variable . y))))
+                    (list (vector 'atom (vector 0 '((variable . x)) [] [] []))
+                          (vector 'atom (vector 0 '((variable . y)) [] [] [])))))
+             (exact []) (overlapping []))
+        (def (rows atom frame delta? terms) (if delta? '((0)) '((0) (1))))
+        (def (old atom frame terms checkpoint!) '((1)))
+        (for-each
+         (lambda (pivot)
+           (gerbil-ascent-run-positive-plan! plan (make-vector 2 #f) pivot rows
+             (lambda (head row) (set! exact (cons row exact))) #f #f old)
+           (gerbil-ascent-run-positive-plan! plan (make-vector 2 #f) pivot rows
+             (lambda (head row) (set! overlapping (cons row overlapping))))) '(0 1))
+        (check-equal? (length exact) 3)
+        (check-equal? (andmap (lambda (row) (and (member row exact) #t)) '((0 0) (0 1) (1 0))) #t)
+        (check-equal? (length (filter (lambda (row) (= (car row) 0)) exact)) 2)
+        ;; Counterexample to deduplicating by head or claiming overlapping
+        ;; scheduling duplicates are distinct semantic supporting witnesses.
+        (check-equal? (length overlapping) 4)
+        (check-equal? (length (filter (lambda (row) (equal? row '(0 0))) overlapping)) 2)))
     (test-case "interruption preserves real work but emits no completed witness"
       (let ((cost (make-positive-plan-cost)) (emitted 0))
         (check-exception

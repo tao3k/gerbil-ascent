@@ -250,3 +250,66 @@ theorem unique_whole_log (sourceLog : List Row) (unique : sourceLog.Nodup) :
 
 end SetBatch
 end Ascent.ProviderFrontier
+
+/-! Endpoint projection is valid when every later observation factors through
+the retained coordinates. Hidden supports are existential, not proof identities.
+These laws specify the optimization boundary; they do not extract Scheme code. -/
+namespace Ascent.ProviderFrontier.EndpointProjection
+
+def present (support : Live → Hidden → Prop) (live : Live) : Prop :=
+  ∃ hidden, support live hidden
+
+theorem suffix_equivalent (support : Live → Hidden → Prop)
+    (suffix : Live → Answer → Prop) (answer : Answer) :
+    (∃ live hidden, support live hidden ∧ suffix live answer) ↔
+      (∃ live, present support live ∧ suffix live answer) := by
+  constructor
+  · rintro ⟨live, hidden, supported, tail⟩
+    exact ⟨live, ⟨hidden, supported⟩, tail⟩
+  · rintro ⟨live, ⟨hidden, supported⟩, tail⟩
+    exact ⟨live, hidden, supported, tail⟩
+
+/-- The equality must hold at the current source cut, not merely at admission. -/
+theorem revision_extensional (before after : Live → Hidden → Prop)
+    (same : ∀ live hidden, before live hidden ↔ after live hidden) (live : Live) :
+    present before live ↔ present after live := by
+  constructor
+  · rintro ⟨hidden, supported⟩
+    exact ⟨hidden, (same live hidden).mp supported⟩
+  · rintro ⟨hidden, supported⟩
+    exact ⟨hidden, (same live hidden).mpr supported⟩
+
+/-- Projecting a removed witness and subtracting its endpoint is unsound if
+another witness remains. This is a kernel-checked negative control. -/
+theorem projection_does_not_commute_with_withdrawal :
+    (∃ hidden : Bool, True ∧ ¬ hidden = false) ∧
+      ¬ ((∃ _hidden : Bool, True) ∧ ¬ (∃ hidden : Bool, hidden = false)) := by
+  constructor
+  · exact ⟨true, trivial, Bool.noConfusion⟩
+  · rintro ⟨_, noRemoved⟩
+    exact noRemoved ⟨false, rfl⟩
+
+end Ascent.ProviderFrontier.EndpointProjection
+
+namespace Ascent.ProviderFrontier
+
+/-- An empty required lane eliminates the complete witness, not merely its
+projected head. Thus skipping such a branch loses no derivation support. -/
+theorem empty_required_lane (relations : Key → Env → Env → Prop)
+    (keys : List Key) (key : Key) (member : key ∈ keys)
+    (empty : ∀ input output, ¬ relations key input output) (input output : Env) :
+    ¬ body relations keys input output := by
+  induction keys generalizing input with
+  | nil => simp at member
+  | cons first rest ih =>
+    rintro ⟨middle, matched, tail⟩
+    rcases List.mem_cons.mp member with same | later
+    · subst first
+      exact empty input middle matched
+    · exact ih later middle tail
+
+#print axioms EndpointProjection.suffix_equivalent
+#print axioms EndpointProjection.projection_does_not_commute_with_withdrawal
+#print axioms empty_required_lane
+
+end Ascent.ProviderFrontier

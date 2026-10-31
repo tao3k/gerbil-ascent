@@ -302,7 +302,12 @@
              ;; old prefix would expand its Cartesian relation. Its existing
              ;; overlapping delta pivots remain semi-naive and fact-exact.
              (disjoint-sets?
-              (and (not ordered-execution?)
+              (and (or (not ordered-execution?)
+                       ;; Built-in immutable scalar checks carry no observable
+                       ;; callback trace. Pure checked Set rules can therefore
+                       ;; partition witnesses by their first fresh occurrence
+                       ;; even when the conservative field gate chose ordering.
+                       (and checked-scalar-fields? scalar-set-plans?))
                    (andmap gerbil-ascent-canonical-set-storage-provider?
                            (vector->list storage-providers))))
              (_routed-sources
@@ -768,11 +773,24 @@
             (when canceled? (error "ASCENT cancellation requires pure Set worker rules"))
             (for-each
              (lambda (rule)
-               (let ((started (and rule-ticks (current-jiffy)))
+               (let* ((started (and rule-ticks (current-jiffy)))
                      (heads (vector-ref rule 0))
                      (body (vector-ref rule 1))
                      (positions (vector-ref rule 2))
                      (prunable (vector-ref rule 4))
+                     ;; Reuse one frozen empty-old-lane fact for all later
+                     ;; pivots of this rule. Their prefix must read old rows;
+                     ;; no complete combination of premise values exists.
+                     ;; Cardinality equality is authoritative only on the same
+                     ;; checked canonical Set route as full pivot pruning.
+                     (first-empty-old
+                      (and checked-scalar-fields? scalar-set-plans? disjoint-sets?
+                           (let find ((position 0))
+                             (and (< position (vector-length prunable))
+                                  (let (relation (vector-ref prunable position))
+                                    (if (= (vector-ref all-size relation)
+                                           (vector-ref delta-size relation))
+                                      position (find (+ position 1))))))))
                      (positive-plan (vector-ref rule 5))
                      (frame (vector-ref rule 6)))
                  (let ((rows-access (if ordered-execution? callback-rows indexed-rows))
@@ -794,9 +812,10 @@
                        (visit! -1)
                        (for-each
                         (lambda (delta-at)
-                          (unless (and (< delta-at (vector-length prunable))
-                                       (= (vector-ref delta-size
-                                            (vector-ref prunable delta-at)) 0))
+                          (unless (or (and first-empty-old (< first-empty-old delta-at))
+                                      (and (< delta-at (vector-length prunable))
+                                           (= (vector-ref delta-size
+                                                (vector-ref prunable delta-at)) 0)))
                             (visit! delta-at))) positions))))
                  (when started
                    (let (index (vector-ref rule 3))

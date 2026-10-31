@@ -46,6 +46,13 @@ theorem alternative_union (a b : List (List Nat)) :
     annotation (a ++ b) = annotation a + annotation b := by
   simp [annotation, List.sum_append]
 
+/-- Existential projection preserves Boolean presence here but not the number
+of distinct supporting alternatives. No Set-answer rewrite proves provenance. -/
+theorem projection_presence_not_count :
+    (0 < annotation [[1], [1]] ↔ 0 < annotation [[1]]) ∧
+      annotation [[1], [1]] ≠ annotation [[1]] := by
+  decide
+
 def rounds {A : Type} (step : A → A) (seed : A) : Nat → A
   | 0 => seed
   | n + 1 => step (rounds step seed n)
@@ -54,4 +61,18 @@ theorem stable_rounds {A : Type} (step : A → A) (seed : A)
   induction n with
   | zero => rfl
   | succ n ih => simp [rounds, ih, stable]
+
+/-- Recursive projection requires a commuting step at every state. Equality
+of one completed query or one source cut does not supply this premise. -/
+theorem projected_rounds {A B : Type} (project : A → B)
+    (full : A → A) (compact : B → B)
+    (commutes : ∀ state, project (full state) = compact (project state))
+    (seed : A) (n : Nat) :
+    project (rounds full seed n) = rounds compact (project seed) n := by
+  induction n with
+  | zero => rfl
+  | succ n ih => simp only [rounds, commutes, ih]
+
+#print axioms projection_presence_not_count
+#print axioms projected_rounds
 end Ascent.DerivationCounts

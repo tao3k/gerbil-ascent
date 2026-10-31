@@ -26,7 +26,7 @@
 ;;; a new suffix can legitimately revisit an unchanged prefix.
 (defstruct native-plan-cost (counts prefixes started?) final: #t)
 (def (make-positive-plan-cost (record-prefixes? #t))
-  (make-native-plan-cost (make-vector 11 0)
+  (make-native-plan-cost (make-vector 14 0)
                         (and record-prefixes? (make-hash-table)) #f))
 (def (positive-plan-cost-begin! cost)
   (when cost
@@ -51,8 +51,9 @@
        '(candidate-rows partial-matches complete-witnesses head-proposals
          admitted-rows repeated-prefixes repeated-candidate-visits
          same-plan-prefix-revisits cross-plan-prefix-revisits
-         same-plan-candidate-revisits cross-plan-candidate-revisits)
-       '(0 1 2 3 4 5 6 7 8 9 10)))
+         same-plan-candidate-revisits cross-plan-candidate-revisits
+         repeated-complete-witnesses same-plan-complete-revisits cross-plan-complete-revisits)
+       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13)))
 (def (cost-prefix! cost kind index signature rows owner)
   (alet (seen (native-plan-cost-prefixes cost))
     (let* ((key (list kind signature rows))
@@ -62,7 +63,7 @@
       ;; that its suffix or its head/provenance work may be skipped.
       (when owners
         (cost-add! cost index)
-        (cost-add! cost (+ (if (eq? kind 'partial) 7 9)
+        (cost-add! cost (+ (case kind ((partial) 7) ((candidate) 9) ((complete) 12))
                           (if (hash-get owners owner) 0 1))))
       (unless owners
         (set! owners (make-hash-table-eq))
@@ -434,7 +435,8 @@
                           0 rows-access emit-row! checkpoint! parts-access old-rows-access
                           cost [] [] (and cost plan))))
 
-(def (emit-complete-heads! heads frame emit-row! cost)
+(def (emit-complete-heads! heads frame emit-row! cost signature witness owner)
+  (when cost (cost-prefix! cost 'complete 11 signature witness owner))
   (cost-add! cost 2)
   (emit-parts-heads! heads frame emit-row! cost))
 
@@ -466,10 +468,10 @@
       (when checkpoint! (checkpoint!))
       (when matched
         (if (null? (cdr atoms))
-          (emit-complete-heads! heads frame emit-row! cost)
+          (emit-complete-heads! heads frame emit-row! cost next-signature next-witness owner)
           (resume (+ depth 1) next-signature next-witness)))))
   (match atoms
-    ([] (emit-complete-heads! heads frame emit-row! cost))
+    ([] (emit-complete-heads! heads frame emit-row! cost signature witness owner))
     ([action . _]
      (case (vector-ref action 0)
        ((callbacks) (when ((vector-ref action 1) frame) (resume depth signature witness)))

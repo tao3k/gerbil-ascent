@@ -70,3 +70,7 @@ matching work, derived rows and the cost of materializing shared prefixes.
   [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf).
   PODS 2007. Answer equality and preservation of derivation information are
   separate obligations; the native cost study does not claim semiring provenance.
+- Ashish Gupta, Inderpal Singh Mumick, and V. S. Subrahmanian.
+  [Maintaining Views Incrementally](https://sigmodrecord.org/1993/06/03/maintaining-views-incrementally/).
+  SIGMOD 1993. Alternative supports and recursive deletion require an explicit
+  maintenance argument; endpoint projection alone supplies neither counting nor DRed.

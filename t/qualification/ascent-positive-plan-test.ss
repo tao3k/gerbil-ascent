@@ -1004,6 +1004,25 @@
              (expected (rows (ascent-positive-plan-reference-evaluate-program p) 'path))
              (workers (map (lambda (_) (spawn (lambda () (rows (gerbil-ascent-evaluate-program p) 'path)))) (iota 8))))
         (for-each (lambda (worker) (check-equal? (thread-join! worker) expected)) workers)))
+    (test-case "trusted scalar fields do not hide observable empty-suffix callbacks"
+      (let* ((x (v 'x)) (calls [])
+             (p (gerbil-ascent-program
+                 (map (lambda (entry)
+                        (gerbil-ascent-relation (car entry) 1 (cdr entry)
+                          gerbil-ascent-hash-index-provider gerbil-ascent-set-storage-provider
+                          (list exact-integer?)))
+                      '((input (1) (2)) (gate (1) (2)) (out)))
+                 (list (gerbil-ascent-rule (list (a 'out x))
+                          (list (a 'input x)
+                                (gerbil-ascent-guard '(x)
+                                  (lambda (value) (set! calls (cons value calls)) #t))
+                                (a 'gate x)))) 32 32 64))
+             (old (ascent-positive-plan-reference-evaluate-program p)) (old-calls calls))
+        (set! calls [])
+        (let (new (gerbil-ascent-evaluate-program p))
+          (check-equal? calls old-calls)
+          (check-equal? (length calls) 4)
+          (check-equal? (rows new 'out) (rows old 'out)))))
     (test-case "unsupported callback clauses preserve callback traces"
       (let* ((x (v 'x)) (calls [])
              (p (gerbil-ascent-program

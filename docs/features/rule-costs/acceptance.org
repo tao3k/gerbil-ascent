@@ -169,3 +169,72 @@ official package update checked out the correct revision but then reported
 was subsequently used with the matching checkout. These installation outcomes
 are separate from the focused native execution receipts. No direct POO pin,
 manual tag rewrite, uninstall, compatibility facade or relaxed gate was added.
+
+* Installed dependency and local execution receipt
+
+The subsequent standard =gerbil deps --install= completed naturally with exit 0
+using the matching package prefix, including the POO and Yuanxu native builds
+and package tagging. Its receipt is
+=/private/tmp/ascent-current-cohort-deps-after-update-20261031.log=.
+This is a successful warm recovery, not a successful cold 600-second build.
+Both cold timeout receipts and the tagged-update failure remain retained.
+
+With =GERBIL_LOADPATH= unset and only the installed =GERBIL_PATH= selected,
+the five kernel, four DSL/oracle and 32 positive-plan cases passed with natural
+exit 0 through =just test-file=. Logs are
+=/private/tmp/ascent-installed-chain-{kernel,dsl,regression}-20261031.log=.
+The measured rows still matched the initial table. These local checks no longer
+depend on a Core source-path override. They do not constitute complete package
+acceptance or a clean cold-install pass. Remote CI is separate from the local
+development decision and is not awaited for this work.
+
+* Native empty-pivot pruning
+
+At ASCENT =a789c052753372b061c8828614fdaee632012f9f= the remaining repeated
+matching had a concrete cause: the existing conservative pivot list stopped at
+a bound/indexed atom. A later empty delta could therefore rebuild earlier
+prefixes before discovering that no complete body was possible.
+
+The evaluator now marks every positive atom as an empty-pivot precheck only for
+fresh serial, pure, canonical Set/hash plans with trusted immutable scalar field
+predicates. It changes the engine-owned activation vectors, never cached rule
+analysis. This uses the existing empty-delta check, without persistent state,
+new syntax or an automatic materialization cache. Session/reuse, cancellation,
+parallel, unchecked fields, opaque callbacks, custom providers and lattice
+routes retain the conservative behavior. In particular, scalar field metadata
+does not authorize skipping an observable callback.
+
+The task declarations, graphs, finite oracle and fixed resource limits remain
+unchanged. Before/after counts are native matcher work, not wall-clock timings:
+
+| Workload | Lane | Candidates before / after | Partial matches before / after | Complete witnesses | Head proposals | Admitted rows | Repeated prefixes after | Repeated candidates after |
+|----------+------+---------------------------+--------------------------------+--------------------+----------------+---------------+-------------------------+---------------------------|
+| Four-node chain | Baseline | 104 / 44 | 36 / 14 | 2 | 2 | 2 | 7 | 22 |
+| Four-node chain | Factored | 52 / 28 | 20 / 10 | 3 | 3 | 3 | 2 | 5 |
+| Complete two-node graph | Baseline | 312 / 168 | 168 / 88 | 32 | 32 | 8 | 44 | 84 |
+| Complete two-node graph | Factored | 188 / 148 | 116 / 92 | 48 | 48 | 24 | 32 | 48 |
+
+Complete witnesses, head proposals and admitted rows are unchanged within each
+lane. On the chain, each baseline rule needs =3+9+6+4= candidate visits in its
+initial traversal; the paired total is 44. Later empty pivots need no matching.
+The remaining revisits include distinct rules and suffix witnesses; this is
+not a claim that every observed repeat can be eliminated. Dense factoring still
+raises complete witnesses from 32 to 48 and admitted rows from 8 to 24, despite
+lower matching counts. No universal factoring or wall-time benefit is claimed.
+
+The installed-dependency local controls now pass 44 cases: five kernel, six
+DSL/oracle and 33 positive-plan cases. The added controls check cached-analysis
+immutability, retained source withdrawal/restoration, old snapshot and sibling
+Session isolation, and callback-trace equivalence to the existing reference
+evaluator. Interrupted traversal keeps its partial counters and emits no
+complete witness. All 16 two-node input graphs remain checked in both lanes
+against independent finite grounding, with measured/unmeasured result equality.
+
+Logs, each with suite/module/harness success, final OK and natural exit 0:
+
+- =/private/tmp/ascent-empty-pivot-kernel-20261031.log= (five cases).
+- =/private/tmp/ascent-empty-pivot-boundary-dsl-20261031.log= (six cases).
+- =/private/tmp/ascent-empty-pivot-boundary-regression-20261031.log= (33 cases).
+
+The earlier failed dense cost hypothesis and installation failures remain
+separate recorded outcomes. No upstream implementation was copied or translated.

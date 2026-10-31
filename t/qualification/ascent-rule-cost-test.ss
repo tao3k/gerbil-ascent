@@ -4,11 +4,15 @@
         :gerbil-ascent/program/scheme-language
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         :gerbil-ascent/core/positive-plan
+        (only-in :gerbil-ascent/program/analysis
+                 gerbil-ascent-program-analysis gerbil-ascent-program-schema)
+        (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle
                  finite-domain-closure))
 (export ascent-rule-cost-test)
 
-;;; The language and evaluator are unchanged. The reuse lane names the complete
+;;; Both lanes use the existing language and the same native evaluator. The
+;;; reuse lane names the complete
 ;;; common prefix as an ordinary relation, retaining all witness variables.
 (def (declaration edges suffix factored?)
   (if factored?
@@ -82,6 +86,10 @@
              (before (run chain '(0 1 2 3) #f))
              (after (run chain '(0 1 2 3) #t)))
         (displayln "RULE-COST chain baseline=" before " factored=" after)
+        ;; One full initial traversal costs 3+9+6+4 candidates per rule.
+        ;; Later empty delta pivots must not rebuild either bound prefix.
+        (check-equal? (count-of before 'candidate-rows) 44)
+        (check-equal? (count-of before 'partial-matches) 14)
         (check-equal? (< (count-of after 'candidate-rows)
                          (count-of before 'candidate-rows)) #t)
         (check-equal? (> (count-of before 'repeated-prefixes) 0) #t))
@@ -94,6 +102,38 @@
         ;; Materialization overhead is real even when matching gets cheaper.
         (check-equal? (count-of before 'admitted-rows) 8)
         (check-equal? (count-of after 'admitted-rows) 24)))
+    (test-case "scalar empty-pivot pruning never mutates cached rule analysis"
+      (let* ((program (declaration '((0 1) (1 2) (2 3)) '((0 0) (1 1) (2 2) (3 3)) #f))
+             (relations (.ref program 'relations)) (rules (.ref program 'rules))
+             (schema (gerbil-ascent-program-schema program relations))
+             (analysis (gerbil-ascent-program-analysis program relations rules
+                         (lambda () (gerbil-ascent-prepare-program relations rules schema #f)))))
+        (def (snapshot)
+          (map (lambda (plans)
+                 (map (lambda (rule) (vector->list (vector-ref rule 4))) plans))
+               (vector->list (vector-ref analysis 5))))
+        (let (before (snapshot))
+          (gerbil-ascent-evaluate-program program)
+          (check-equal? (snapshot) before)
+          (gerbil-ascent-evaluate-program program)
+          (check-equal? (snapshot) before))))
+    (test-case "fresh pruning preserves retained source revision and sibling isolation"
+      (let* ((edges '((0 1) (1 2) (2 3)))
+             (program (declaration edges '((0 0) (1 1) (2 2) (3 3)) #f))
+             (first (relational-open-program-session program))
+             (sibling (relational-open-program-session program))
+             (old (relational-program-session-run first)))
+        ;; The fresh solve may share immutable planning, never a Session frame.
+        (gerbil-ascent-evaluate-program program)
+        (relational-program-replace-source! first 'edge '((0 1) (2 3)))
+        (let ((withdrawn (relational-program-session-run first))
+              (other (relational-program-session-run sibling)))
+          (check-equal? (relational-program-query withdrawn 'left) [])
+          (check-equal? (relational-program-query old 'left) '((0 3)))
+          (check-equal? (relational-program-query other 'left) '((0 3))))
+        (relational-program-replace-source! first 'edge edges)
+        (check-equal? (relational-program-query (relational-program-session-run first) 'left)
+                      '((0 3)))))
     (test-case "unfinished traversal retains partial counters and cannot emit"
       (let* ((atom (vector 0 '((variable . x)) [] [] []))
              (head (vector 1 '((variable . x))))

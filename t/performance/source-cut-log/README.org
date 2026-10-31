@@ -1,0 +1,101 @@
+#+title: Persistent actor source transaction qualification
+
+* Source and ownership
+
+Gerbil =1cfb032= =compiler/method.ss= uses =delay-atomic= for shared method
+registration. =core/sugar.ss:1012= lowers it to =make-atomic-promise=;
+=runtime/control.ss:15= protects the inner force with a mutex and unwind-safe
+release. The applicable pattern is one immutable published result, computed
+once when observed, with private admission and construction responsibilities.
+
+=reference.ss= is the complete =program/source-cut.ss= at
+=d2674822f3364b570c71e3efee2ccfadd99e0f96=. New private =source-change= records
+hold borrowed inputs only during preparation. After the entire batch is
+validated and budgeted, =source-slot= owns detached rows, a base/reversed
+addition log, an atomic ordered publication and its count. Its promise captures
+only the log roots, never a previous cut or previous publication cache.
+
+Input copying still happens before the update returns. Repeated appends share
+historical headers without forcing snapshots. The existing =source-log= owner
+materializes ordered headers once per selected cut. Replacement resets the
+base, while empty append retains its prior slot. Untouched slots and row
+identity remain shared read-only. Duplicate multiplicity and validation order
+are unchanged.
+
+* Complete measured workflow
+
+Initial source admission is outside both lanes. Each timed workflow performs
+all configured updates, final ordered publication, a retained middle-cut read
+and repeated-read/untouched-row identity checks. =observe-each= additionally
+materializes every intermediate update inside timing. Ordered facts, held cuts,
+false values, duplicate rows and borrowed update spines are checked per pair.
+These are source transaction/publication results; actor messaging, rule
+execution and completed Result publication are outside timing.
+
+Public ASP =make-benchmark-fixture= generated =benchmark.ss= before sampling.
+Each shape runs 50 alternating pairs. Batch targets require CPU <=80% of
+baseline and at least 35 CPU wins. Observed-each, replacement, small and empty
+controls allow <=105% plus 20us. Allocation is <=101% plus 4096 bytes for all
+shapes; ASP pair p95 is <=999ms. Gates are fixed. Allocation is Gambit's process
+allocation counter, not retained heap.
+
+* Native entry points
+
+Use the existing project Gerbil library and OpenSSL link environment:
+
+#+begin_src scheme
+;; just prepare-test-library
+;; gxi t/performance/source-cut-log/build.ss LIBRARY BINARY runner
+;; gxi t/performance/source-cut-log/build.ss LIBRARY QUALIFIER qualify
+;; BINARY batch RECEIPT
+;; BINARY many RECEIPT
+;; BINARY observe-each RECEIPT
+;; BINARY replace RECEIPT
+;; BINARY small RECEIPT
+;; BINARY empty RECEIPT
+;; QUALIFIER
+#+end_src
+
+The qualifier runs actor-session, source-log and compiled source-refusal
+allocation Suites. The existing native allocation Case requires
+=ASCENT_TEST_LIBRARY= and =ASCENT_PERFORMANCE_MODULES= to resolve the canonical
+compiled roster. These are existing qualification fields, not production
+configuration. Final =OK= and exit zero are required. A new actor-source Case
+forces one unpublished cut through eight reader threads, checks identical
+publication identity, mutates caller row/list headers and retains earlier cuts.
+
+Measurements run alone. Logs, executables and raw receipts stay in ignored
+=.cache/ascent/source-cut-log/=. Failed measurements are retained separately.
+
+* Isolated native results
+
+At baseline =d267482=, with Gerbil =1cfb032= / Gambit =ea114fc=, every shape
+completed 50 pairs and passed its fixed gates. Median CPU is in microseconds;
+bytes are the direct =##get-bytes-allocated!= counter difference.
+
+| Workflow | Old CPU | New CPU | Old counter bytes | New counter bytes | CPU wins |
+|----------+---------+---------+-------------------+-------------------+----------|
+| batch    |     987 |      29 |           6331952 |            431776 |       50 |
+| many     |    5581 |     110 |           2575248 |            693936 |       50 |
+| observe-each | 178 |     183 |           3159776 |           3189344 |       19 |
+| replace  |       4 |       3 |              8288 |              8288 |       25 |
+| small    |       1 |       1 |               656 |              2560 |       14 |
+| empty    |       1 |       1 |               560 |               416 |       18 |
+
+Batch and many CPU reductions are approximately 97% and 98% for the complete
+measured source workflow. Observing every update costs about 2.8% more CPU and
+29568 more counter bytes; a one-row append costs 1904 extra counter bytes.
+These controls pass the declared budgets but are not improvements. One-
+microsecond results cannot establish a useful speed difference. Allocation
+counters are recorded per shape; they are not a retained-memory estimate or a
+cross-shape scaling claim. There is no whole actor solve performance claim.
+
+Final receipts use a fixed two-element counter buffer. Earlier process-statistic
+counter diagnostics are retained in the cache; final receipts are the files
+with =-final= names. All timed processes ran alone.
+
+Native qualification passed 3 Suites / 16 Cases, including 675 finite source-log
+cases and both replacement/append rejection allocation controls. Eight-reader
+publication and actor generation/cancellation/rollback controls passed. Final
+=OK= and exit zero were checked with =tools/assert-test-cases.awk=. Native
+production policy checked the 86-source roster: 0 errors, 27 warnings.

@@ -1,0 +1,34 @@
+[package]
+name = "ascent-python"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "ascent"
+crate-type = ["cdylib"]
+
+[dependencies]
+gerbil-ascent = { workspace = true, features = ["artifacts"] }
+ascent-c-abi = { path = "../ascent-c-abi", optional = true }
+pyo3.workspace = true
+serde_json.workspace = true
+ascent-scheme = { path = "../ascent-scheme", optional = true }
+gerbil-scheme-python = { workspace = true, features = ["python", "c-abi", "parallel-verification"], optional = true }
+
+[build-dependencies]
+ascent-build = { path = "../ascent-build", features = ["python-sources"] }
+
+[dev-dependencies]
+asp-rust.workspace = true
+
+[features]
+default = ["rayon", "rust-runtime"]
+scheme-runtime = ["dep:ascent-scheme"]
+instances = ["scheme-runtime", "ascent-scheme/instances"]
+rust-runtime = ["dep:gerbil-scheme-python", "dep:ascent-c-abi"]
+rayon = ["gerbil-ascent/rayon"]
+extension-module = ["pyo3/extension-module"]
+
+[lints]
+workspace = true

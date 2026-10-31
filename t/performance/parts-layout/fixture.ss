@@ -1,0 +1,21 @@
+;;; -*- Gerbil -*-
+(import :gerbil-ascent/core/positive-plan
+ (prefix-in :gerbil-ascent/t/performance/parts-layout/reference old-))
+(export layout-input layout-workflow layout-expected)
+(def (name n) (string->symbol (string-append "v" (number->string n))))
+(def (layout-input width count shape)
+ (let* ((terms (lambda (n)
+          (case shape
+            ((selected) (list (cons 'variable (name 0)) (cons 'variable (name 1)) (cons 'variable (name (+ n 2)))))
+            ((mixed) (list (cons 'variable (name n)) '(literal . #f) '(wildcard)))
+            (else (map (lambda (slot) (cons 'variable (name (+ (* n width) slot)))) (iota width))))))
+        (body (map (lambda (n)
+          (vector 'atom (vector n (terms n) (if (and (eq? shape 'selected) (> n 0)) '(0 1) [])))) (iota count)))
+        (heads (if (= count 0) [] (list (vector 'out (if (eq? shape 'mixed) (list (cons 'variable (name 0))) (terms 0))))))
+        (slots (if (= count 0) 0 (case shape ((selected) (+ count 2)) ((mixed) count) (else (* width count))))))
+  (vector heads body (+ slots count (length heads)))))
+(def (layout-workflow old? input)
+ (let (plan ((if old? old-gerbil-ascent-compile-positive-plan gerbil-ascent-compile-positive-plan)
+            (vector-ref input 0) (vector-ref input 1)))
+  (+ (vector-ref plan 2) (length (vector-ref plan 1)) (length (vector-ref plan 0)))))
+(def (layout-expected input) (vector-ref input 2))

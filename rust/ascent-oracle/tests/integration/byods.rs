@@ -6,10 +6,255 @@
 use super::common::scheme_output;
 use ascent::ascent;
 use ascent_byods_rels::{eqrel, trrel, trrel_uf};
+use std::collections::BTreeSet;
 
 type BinaryRows = Vec<(u32, u32)>;
 type TernaryRows = Vec<(u32, u32, u32)>;
 type ByodsSnapshot = (BinaryRows, TernaryRows);
+type BinaryOracle = fn(&[(u32, u32)], &[(u32, u32, u32)]) -> Vec<String>;
+
+fn four_node_edges() -> [(u32, u32); 8] {
+    [
+        (0, 0),
+        (0, 1),
+        (0, 2),
+        (1, 2),
+        (2, 1),
+        (2, 3),
+        (3, 0),
+        (3, 3),
+    ]
+}
+
+fn eight_node_edges() -> [(u32, u32); 12] {
+    [
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 4),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 0),
+        (0, 4),
+        (2, 6),
+        (4, 0),
+        (6, 2),
+    ]
+}
+
+fn eight_node_subset(mask: u16) -> BinaryRows {
+    eight_node_edges()
+        .into_iter()
+        .enumerate()
+        .filter_map(|(bit, edge)| (mask & (1 << bit) != 0).then_some(edge))
+        .collect()
+}
+
+fn closure_reference(edges: &[(u32, u32)], symmetric: bool, strict_trrel: bool) -> Vec<String> {
+    let nodes: BTreeSet<_> = edges.iter().flat_map(|&(from, to)| [from, to]).collect();
+    let mut expected = Vec::new();
+    for &from in &nodes {
+        let mut reached = BTreeSet::new();
+        let mut pending = vec![from];
+        while let Some(node) = pending.pop() {
+            if reached.insert(node) {
+                pending.extend(edges.iter().filter_map(|&(left, right)| {
+                    if left == node { Some(right) } else { None }
+                }));
+                if symmetric {
+                    pending.extend(edges.iter().filter_map(|&(left, right)| {
+                        if right == node { Some(left) } else { None }
+                    }));
+                }
+            }
+        }
+        for to in reached {
+            if !strict_trrel || from != to || edges.contains(&(from, from)) {
+                expected.push(format!("binary-output\t{from}\t{to}"));
+            }
+        }
+    }
+    expected.sort_unstable();
+    expected
+}
+
+#[test]
+fn four_node_byods_subsets_match_independent_closure() {
+    let possible = four_node_edges();
+    for mask in 0..(1u16 << possible.len()) {
+        let edges: Vec<_> = possible
+            .iter()
+            .enumerate()
+            .filter_map(|(bit, edge)| (mask & (1 << bit) != 0).then_some(*edge))
+            .collect();
+        assert_eq!(
+            ascent_eqrel_rows(&edges, &[]),
+            closure_reference(&edges, true, false),
+            "eqrel mask={mask}"
+        );
+        assert_eq!(
+            ascent_trrel_rows(&edges, &[]),
+            closure_reference(&edges, false, true),
+            "trrel mask={mask}"
+        );
+        assert_eq!(
+            ascent_trrel_uf_rows(&edges, &[]),
+            closure_reference(&edges, false, false),
+            "trrel_uf mask={mask}"
+        );
+    }
+}
+
+#[test]
+fn eight_node_byods_subsets_match_model_and_selected_scheme_snapshots() {
+    let masks = (0..256u32)
+        .map(|sample| ((sample * 263) & 0x0fff) as u16)
+        .chain([0x0001, 0x0555, 0x0f0f, 0x0fff]);
+    for mask in masks {
+        let edges = eight_node_subset(mask);
+        let expected_eq = closure_reference(&edges, true, false);
+        let expected_tr = closure_reference(&edges, false, true);
+        let expected_uf = closure_reference(&edges, false, false);
+        assert_eq!(
+            ascent_eqrel_rows(&edges, &[]),
+            expected_eq,
+            "eqrel mask={mask}"
+        );
+        assert_eq!(
+            ascent_trrel_rows(&edges, &[]),
+            expected_tr,
+            "trrel mask={mask}"
+        );
+        assert_eq!(
+            ascent_trrel_uf_rows(&edges, &[]),
+            expected_uf,
+            "trrel_uf mask={mask}"
+        );
+        eprintln!("ORACLE-BYODS-CUT-OK nodes=8 mask={mask}");
+
+        if [0, 1, 0x0555, 0x0f0f, 0x0fff].contains(&mask) {
+            let rows = edges
+                .iter()
+                .map(|(from, to)| format!("({from} {to})"))
+                .collect::<Vec<_>>()
+                .join(" ");
+            let request = format!("(({rows}) ())\n");
+            for (recipe, expected) in [
+                ("eqrel-rows", &expected_eq),
+                ("trrel-rows", &expected_tr),
+                ("trrel-uf-rows", &expected_uf),
+            ] {
+                let output = scheme_output(recipe, &request);
+                let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
+                assert_eq!(actual.pop().as_deref(), Some("END"));
+                actual.sort_unstable();
+                assert_eq!(&actual, expected, "{recipe} mask={mask}");
+            }
+        }
+    }
+}
+
+// Each provider is an independent scale check. Separate test cases let the
+// Rust harness schedule them independently. The pinned Rust trrel-uf 10,000
+// edge run is opt-in below; the independent model and Scheme check remain
+// in the ordinary oracle at both scales.
+fn check_chain_components_at_input_scale(
+    recipe: &str,
+    symmetric: bool,
+    reflexive: bool,
+    ascent_rows: BinaryOracle,
+    max_rust_edges: u32,
+) {
+    for edge_count in [1_000_u32, 10_000] {
+        // Four edges connect five nodes per component. Keeping components
+        // separate bounds output size while exercising multi-step closure.
+        let edges: BinaryRows = (0..edge_count)
+            .map(|edge| {
+                let base = (edge / 4) * 5;
+                (base + edge % 4, base + edge % 4 + 1)
+            })
+            .collect();
+        let request = format!(
+            "(({}) ())\n",
+            edges
+                .iter()
+                .map(|(from, to)| format!("({from} {to})"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+        let mut expected = Vec::new();
+        for component in 0..edge_count / 4 {
+            let base = component * 5;
+            for from in 0..5 {
+                for to in 0..5 {
+                    if symmetric || from < to || (reflexive && from == to) {
+                        expected.push(format!("binary-output\t{}\t{}", base + from, base + to));
+                    }
+                }
+            }
+        }
+        expected.sort_unstable();
+        if edge_count <= max_rust_edges {
+            let rust_rows = ascent_rows(&edges, &[]);
+            assert_eq!(rust_rows, expected, "Rust {recipe} edges={edge_count}");
+        }
+        let output = scheme_output(recipe, &request);
+        let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "Scheme {recipe} edges={edge_count}");
+    }
+}
+
+#[test]
+fn eqrel_chain_components_match_model_and_scheme_at_input_scale() {
+    check_chain_components_at_input_scale(
+        "eqrel-scale-rows",
+        true,
+        true,
+        ascent_eqrel_rows,
+        10_000,
+    );
+}
+
+#[test]
+fn trrel_chain_components_match_model_and_scheme_at_input_scale() {
+    check_chain_components_at_input_scale(
+        "trrel-scale-rows",
+        false,
+        false,
+        ascent_trrel_rows,
+        10_000,
+    );
+}
+
+#[test]
+fn trrel_uf_chain_components_match_model_and_scheme_at_input_scale() {
+    check_chain_components_at_input_scale(
+        "trrel-uf-scale-rows",
+        false,
+        true,
+        ascent_trrel_uf_rows,
+        1_000,
+    );
+}
+
+// Opt-in full Rust scale oracle. A focused macOS run on 2026-10-01 spent
+// 196.9s in pinned Ascent 0.8.0 at 10,000 edges and 5.6s in the Scheme
+// fixture. Keep the Rust comparison available without serializing every PR
+// on this one reference case.
+#[test]
+#[ignore = "pinned Ascent trrel-uf 10,000-edge reference is a slow full-scale gate"]
+fn trrel_uf_full_rust_scale_oracle() {
+    check_chain_components_at_input_scale(
+        "trrel-uf-scale-rows",
+        false,
+        true,
+        ascent_trrel_uf_rows,
+        10_000,
+    );
+}
 
 fn ascent_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {
     ascent! {
@@ -45,6 +290,74 @@ fn ascent_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<
         .collect();
     rows.sort_unstable();
     rows
+}
+
+fn ascent_default_eqrel_rows(binary: &[(u32, u32)], grouped: &[(u32, u32, u32)]) -> Vec<String> {
+    ascent! {
+        #![ds(eqrel)]
+        #[ds(::ascent::rel)]
+        relation binary_seed(u32, u32);
+        #[ds(::ascent::rel)]
+        relation grouped_seed(u32, u32, u32);
+        relation binary_eq(u32, u32);
+        relation grouped_eq(u32, u32, u32);
+        #[ds(::ascent::rel)]
+        relation binary_output(u32, u32);
+        #[ds(::ascent::rel)]
+        relation grouped_output(u32, u32, u32);
+        binary_eq(x, y) <-- binary_seed(x, y);
+        grouped_eq(g, x, y) <-- grouped_seed(g, x, y);
+        binary_output(x, y) <-- binary_eq(x, y);
+        grouped_output(g, x, y) <-- grouped_eq(g, x, y);
+    }
+    let mut program = AscentProgram {
+        binary_seed: binary.to_vec(),
+        grouped_seed: grouped.to_vec(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows = program
+        .binary_output
+        .iter()
+        .map(|(from, to)| format!("binary-output\t{from}\t{to}"))
+        .chain(
+            program
+                .grouped_output
+                .iter()
+                .map(|(group, from, to)| format!("grouped-output\t{group}\t{from}\t{to}")),
+        )
+        .collect::<Vec<_>>();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn program_default_storage_and_relation_overrides_match_scheme() {
+    for (binary, grouped) in [
+        (vec![], vec![]),
+        (vec![(1, 2)], vec![(0, 3, 4)]),
+        (vec![(1, 2), (2, 3)], vec![(0, 1, 2), (1, 2, 3)]),
+        (vec![(1, 2), (2, 3), (3, 1)], vec![(0, 1, 2), (1, 4, 5)]),
+    ] {
+        let expected = ascent_default_eqrel_rows(&binary, &grouped);
+        assert_eq!(expected, ascent_eqrel_rows(&binary, &grouped));
+        let binary_request = binary
+            .iter()
+            .map(|(from, to)| format!("({from} {to})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let grouped_request = grouped
+            .iter()
+            .map(|(group, from, to)| format!("({group} {from} {to})"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let request = format!("(({binary_request}) ({grouped_request}))\n");
+        let output = scheme_output("eqrel-default-rows", &request);
+        let mut actual = output.lines().map(str::to_owned).collect::<Vec<_>>();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected);
+    }
 }
 
 #[test]
@@ -286,6 +599,24 @@ fn grouped_byods_join_with_string_keys_matches_ascent() {
         tr_match(g, x, y) <-- tr(g, x, y), wanted(g, y);
         uf_match(g, x, y) <-- uf(g, x, y), wanted(g, y);
     }
+    let eight_node_cases = [0u16, 1, 0x0555, 0x0fff].map(|mask| {
+        let first = eight_node_subset(mask);
+        let second = eight_node_edges()
+            .into_iter()
+            .filter(|edge| !first.contains(edge))
+            .collect::<Vec<_>>();
+        let grouped = |edges: Vec<(u32, u32)>| {
+            edges
+                .into_iter()
+                .map(|(from, to)| ("alpha".to_owned(), from, to))
+                .collect::<Vec<_>>()
+        };
+        (
+            grouped(first),
+            grouped(second),
+            vec![("alpha".to_owned(), 0)],
+        )
+    });
     for (seed, seed_extra, wanted) in [
         (vec![], vec![], vec![]),
         (
@@ -307,7 +638,10 @@ fn grouped_byods_join_with_string_keys_matches_ascent() {
             vec![("alpha".to_owned(), 2, 3), ("beta".to_owned(), 2, 1)],
             vec![("alpha".to_owned(), 3), ("beta".to_owned(), 1)],
         ),
-    ] {
+    ]
+    .into_iter()
+    .chain(eight_node_cases)
+    {
         let mut program = AscentProgram {
             seed: seed.clone(),
             seed_extra: seed_extra.clone(),

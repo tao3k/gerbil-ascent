@@ -1,0 +1,119 @@
+#+title: Fresh UF products and monotone replay axes
+
+* Source learning and ownership
+
+Gerbil =1cfb032= =std/struct/dag.ss:31-47= separates visiting state, completed
+attributes and callback order inside one walk. =compiler/optimize-base.ss:63-89=
+represents class/accessor premises as explicit private structure metadata.
+This batch applies those ownership patterns to admission: represent a proved
+state premise once, select the appropriate algorithm, and retain the original
+callback/commit boundary. It introduces no global cache, environment setting or
+second execution scheduler.
+
+For a non-self injection with a fresh endpoint, every pair in Pred(a) x Succ(b)
+is missing. A fresh source has no incoming arc; a fresh sink has no outgoing
+arc. Native UF count-only admission therefore preflights the exact weighted
+product =(sum predecessor sizes) * (sum successor sizes)= plus new diagonals.
+It avoids per-pair reachability probes both during count preflight and commit.
+Scalar frontiers still collect their descriptors in the original order, using
+the same missing-product premise. Ordinary and self injections retain existing
+membership tests. All budget decisions precede graph mutation and publication.
+
+Packed replay keeps two private monotone flags on each node. False =inbound?=
+certifies a singleton predecessor axis; false =outbound?= certifies a singleton
+successor axis. Committing an external root-pair arc sets the flags on source
+and target, including when output is declined for an earlier delta prefix.
+SCC roots retain conservative true flags after retirement. False cannot survive
+on a multi-root SCC winner because closing the SCC admits incoming/outgoing
+arcs for every participating root. True merely selects the existing scan.
+No counters, edge removals or new retained cut state are needed for these flags.
+Fresh replay products use the same weighted count and skip pair membership
+probes during writing. Journals, delta boundaries, output order and the
+512-vertex capacity limit remain observable through their existing protocols.
+
+* Frozen baseline and fixed qualification
+
+Five owners freeze =e17bd86eca696dc2aa7220c22ad1424f9b49cb9e= with relative
+import relocation only: native UF, evaluator, initialization, view-state and
+view-replay. Native =chain/cycle= targets compare historical/current fresh
+count-only states and physical closure observations. Chain has 256 unique edges
+and 33153 rows; cycle has 128 chain edges plus closure into 129 members and
+16641 rows. These qualify native closure maintenance.
+
+Complete engine legs share current live storage/native UF helpers and canonical
+provider/type identity. Their frozen program/replay owners qualify replay axis
+planning. =unique= has 256 unique star edges; =partitioned= has 16 groups of
+64 unique star edges. Each leg creates an engine, runs and exports complete
+results three times. Result order, completion/path/rule metadata, mathematical
+closure and uniqueness agree before timing. Retained additionally appends eight
+chain edges and runs/exports every intermediate publication. This is a flow
+comparison with shared native helpers, rather than an entirely historical build.
+
+The native ASP fixture fixes the same fourteen populations and gates as the
+preceding UF-growth batch: targets =chain/cycle/unique/partitioned=; controls
+=sparse/grouped/retained/capture/cold/small/packed/adjacent/large/eqrel=.
+Interleaved/adjacent inputs and the 600-edge sparse fallback remain controls.
+Capture measures 64 captures of a prepared 1025-member SCC, excluding population.
+Cold/small are one-edge complete engines; EqRel remains the 16-edge chain.
+
+One 90-second invocation contains all fourteen scenarios, twenty alternating
+process CPU pairs with natural GC, twenty separate native ASP admissions and
+five alternating allocation pairs. Allocation GC precedes counter reads;
+negative deltas reject. Targets require <=90% baseline CPU and >=16/20 wins.
+Controls require <=110% +20us. Every allocation median requires <=110% +8192
+bytes. ASP p95 <=999ms retains 500ms target +499ms budget. Never widen gates,
+drop controls or combine attempts.
+
+* Native reproduction and receipts
+
+Build this unit with =std/make= through =build.ss= into canonical =.gerbil/lib=,
+then use the native repository build. Run =gxi :gerbil/tools/gxtest -v 5= for this
+unit and linked growth/reuse/admission/storage/commit/export suites. Policy checks
+the source owner closure. The tests compare all 512 three-node replay histories
+and valid delta boundaries, weighted fresh sources/sinks attached to a large SCC,
+budget rejection, self injections and scalar frontier order.
+
+After other compilation and benchmark tasks naturally end, run
+=timeout 90s gxi :gerbil-ascent/t/performance/uf-axis/runner all .cache/ascent/uf-axis/=
+with canonical libraries and a 3G heap bound. Logs, individual receipts and
+fingerprints belong only in ignored =.cache/ascent/uf-axis/=.
+
+* Accepted complete result
+
+All fourteen scenarios passed in one fixed invocation with final =OK= and exit
+zero. All 172 selected source/SSI/SCM/object/contract fingerprints matched
+before and after. Native package/unit builds passed; GxTest passed 10 Suites
+/74 Cases with =HARNESS-OK=, final =OK= and no ERROR/FAIL. Source Policy passed
+with zero findings. All five historical owner bodies matched their frozen commit
+after import relocation. No performance attempt was rejected or combined.
+
+| Scenario | CPU old ->new us | Wins /20 | Allocation old ->new bytes |
+|----------+-----------------+----------+---------------------------|
+| chain | 11885 ->8721 | 18 | 9452704 ->9452704 |
+| cycle | 4000 ->3254 | 19 | 3485648 ->3485648 |
+| unique | 5122 ->1555 | 20 | 2831168 ->2806880 |
+| partitioned | 10705 ->7065 | 19 | 11847376 ->11753680 |
+| sparse | 1156 ->918 | 20 | 997600 ->991744 |
+| grouped | 9694 ->9436 | 18 | 5528640 ->5508672 |
+| retained | 3851 ->2970 | 20 | 2315824 ->2296272 |
+| capture | 38 ->37 | 12 | 256000 ->256000 |
+| cold | 545 ->551 | 12 | 1603200 ->1602752 |
+| small | 97 ->96 | 10 | 262800 ->262864 |
+| packed | 759 ->531 | 20 | 933088 ->929216 |
+| adjacent | 843 ->589 | 20 | 976288 ->970432 |
+| large | 5637 ->5543 | 9 | 17820608 ->17820608 |
+| eqrel | 146 ->143 | 10 | 464272 ->464272 |
+
+Native chain/cycle CPU falls 26.6% /18.7%; native allocation is unchanged.
+Complete unique/partitioned engine CPU falls 69.6% /34.0%, allocation 0.9% /0.8%.
+Cold CPU adds 6us (+1.1%) and small allocation adds 64 bytes. These costs remain
+in the result and satisfy the predeclared controls. Gains are relative to the
+already optimized frozen baseline and must not be compounded across reports.
+
+The shared branch advanced to =b262558= during qualification through an unrelated
+native-library change; measured owner/artifact fingerprints remained stable.
+These measurements qualify the declared populations and execution scopes.
+Dense native reach tables still retain an explicit quadratic closure. This
+batch removes redundant planning/membership work, without a retained-space
+reduction claim. Larger remaining work includes dense closure representation
+and actor pending selection; peak RSS and SMP scaling require separate evidence.

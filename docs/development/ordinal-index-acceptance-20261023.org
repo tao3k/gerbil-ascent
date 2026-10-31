@@ -1,0 +1,104 @@
+#+TITLE: Query-owned ordinal index acceptance
+#+DATE: 2026-10-23
+
+* Actual execution change
+Single-column joins use the query-owned injective Cell ordinal for direct
+lookup instead of hashing that code for every candidate lookup. Composite
+indexes, scalar interning, fact digests, deduplication, publication order,
+lattice handling, and all cancellation/resource accounting remain unchanged.
+No Scheme handle is dereferenced by a Rayon worker.
+
+A density-bounded spine retains hashed sparse bins. Growth moves each whole bin,
+without sorting or rebuilding its row sequence, and removes the migrated sparse
+entry. The spine has at most twice the distinct-key count plus six logical
+slots. Checked arithmetic and the Vec native byte limit retain sparse fallback.
+This bounds logical extent, not physical cumulative allocator traffic or RSS.
+
+* Independent compiled checks
+The real generic implementation is tested against an independent HashMap over
+five insertion strides, 257 keys, 1,028 appends per history, every key after
+every append. Another history inserts high keys before low keys and checks
+whole-bin migration, duplicates, and distinct typed identity. Overflow and very
+large ordinals retain sparse admission. A counting wrapper around the actual
+randomized hasher records 10,000 hashes for 10,000 old indexed reads and zero
+for the same dense reads in the candidate, with identical row sequences.
+
+This is work-count evidence. It does not establish an end-to-end latency ratio.
+The original independent naive oracle, delta witness counts, complex-value,
+lattice, source replacement, provenance, cancellation and limit suites remain
+required in both supported Rust feature configurations and the Scheme bridge.
+Rust Ascent remains a dev-dependency used for alignment.
+
+* Formal boundary
+Lean proves lookup denotation across monotone migration and the admitted logical
+extent bound. Its rendered extent guard is byte-compared with the marked Rust
+guard. Quint checks ordered rows, exclusive dense/sparse ownership, spine and
+native bounds, and same-request phase partitions. Required fault cases retain
+unbounded growth, native-limit omission, lost or reversed migration, duplicate
+ownership, skipped sparse insertion, mixed phase maxima, and omitted validation.
+
+These results do not establish Rust Vec/HashMap/allocator source refinement.
+The generated guard alone is not a proof of the complete mutable index, SCC
+implementation, decoder or Actor/Rayon message transformation. Those source
+obligations remain explicitly open.
+
+* Matched measurement requirements
+The common integration baseline contains the same gerbil-scheme-rust REV,
+Cargo graph, native DSL/C ABI, integer conversion, and same-request observation
+code. The index candidate changes only Rust-owned single-column storage and its
+validation/model sources. The existing optional control compares this baseline
+and candidate on one three-CPU runner, twelve clients, five fixed-work samples,
+and a thirty-second soak, at twelve and one Rayon worker. The original full
+matrix still compares one/three/twelve single-threaded VM processes and
+one/three/six/eight/twelve Rayon workers on the same three workloads.
+
+All original answer and compiler-isolation admission remains required. Invalid
+or timeout rows remain visible. Fixed-work and saturated-load results must both
+be reported; improvement in one cannot erase regression in the other. Shared
+local-host timings rejected by the isolation audit are excluded from acceptance.
+
+* Local compiled receipt before isolated performance measurement
+The combined candidate uses common integration baseline
+0d1925d50cb9e7b203d5174963977585019e0e91 with the ordinal-index changes above.
+With the frozen SDK and gerbil-scheme-rust 079be2bc, all 72 Scheme bridge tests
+passed with twelve nextest workers, no retries and no skips (80.849 seconds).
+The workspace Rust/PyO3 profile passed 89 tests; the no-Rayon feature profile
+passed 70. Strict Clippy with -D warnings passed for all three configurations.
+The seven throughput-receipt controls and frozen formal inventory check passed.
+These are local compiled receipts, not three-CPU performance measurements or
+remote exact-head CI results. The workspace wheel used by unrelated local
+workbench tests is not claimed as a newly installed candidate PyO3 wheel.
+
+Original formal configurations and fault obligations for all 58 existing models
+were compared structurally with published 4024319b and remain identical. Scheme
+sources, source performance gates and the optional control harness remain
+unchanged. The full formal candidate adds two models and retains every original
+obligation. A previous in-flight formal run rejected its Rust source-render
+comparison while fingerprint admission was being corrected; it is retained as
+an invalid superseded run. Only the frozen corrected run may qualify.
+
+The frozen corrected full formal run passed all 60 models: 75 positive checks
+and 439 required counterexamples. Both newly marked Rust source regions matched
+the Lean-rendered definitions. The full 117 workbench/orchestration tests passed
+in 75.451 seconds. Lean retained the original LeanPoo Guard, 1,024 MiB and
+10,000,000 heartbeat budgets; the focused LookupCost check reported zero
+additional helper threads. No abstract or finite-state result is relabeled as
+complete compiler, mutable-container, allocator, or C ABI source refinement.
+
+* CI preflight installation repair
+The Linux semantic job for 7eb5b485 failed before tests in the existing Just
+installer, reporting no release matching 1.56.0. The sibling performance job
+installed the same version successfully. The exact-tag official API lists the
+release and both required assets; the release-list API also includes it. The
+failed installer's response body was not recorded, so its precise API-side
+failure remains unknown. The pinned action bundle uses a release-list search
+and asset/version filtering instead of a direct exact-tag download.
+
+The replacement installer is pinned to
+a4d3f3f761dcd95cce1b72cb61cb6d1963438177. Its committed manifest supplies direct
+versioned URLs and SHA256 checksums for Just 1.56.0. Fallback installation is
+explicitly disabled. Both Linux x86_64 and macOS aarch64 archives were downloaded
+and matched those checksums; the macOS binary reported just 1.56.0. This changes
+only CI tool discovery, without upgrading Just, the SDK, or any runtime source.
+The original failed run remains recorded and is not relabeled as a semantic
+failure or success. Current-head acceptance must run with the repaired installer.

@@ -1,0 +1,41 @@
+#+TITLE: ASCENT Python bindings
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Library package
+
+=gerbil-ascent= provides =ascent= through Rust/PyO3. The original Scheme ASCENT
+owns DSL expansion, modules, components, complex values and host callbacks.
+The library build prepares the C ABI and AOT closure. Users load Scheme DSL
+at runtime without invoking a compiler. Values cross the bridge as typed
+objects, without JSON program or result transport.
+
+Each Gambit VM has one owning OS thread. Owned finite relational snapshots
+execute on Rayon, enabled by default. =Engine(backend="scheme")= selects the
+VM path; =Engine(backend="rayon")= requires an admissible finite projection.
+Arbitrary Scheme callbacks remain on the VM owner. The pinned upstream runtime
+currently admits one VM per process.
+
+See [[file:../rust/README.md][runtime contracts and qualification boundaries]].
+The wheel still requires matching Gerbil syntax resources; it does not bundle
+a standalone Gerbil SDK. =ascent.build.runtime_identity()= exposes the actual
+build-frozen source and resource identities.
+
+* Development and validation
+
+#+begin_src console
+python3 -m pip install -e ./python -e ./workbench
+python3 -m unittest discover -s python/tests -v
+python3 workbench/engine_tests/run_suite.py --python /absolute/venv/bin/python --output /new/receipt/directory
+ascent-workbench formal all
+#+end_src
+
+=python/tests/= checks package contracts. =workbench/engine_tests/= contains
+the complete public semantic corpus. =workbench/tests/= checks downstream
+orchestration. Original Scheme semantic tests remain under =t/qualification/=.
+The workbench imports the library; the library does not depend on it.
+Historical study records retain their original hashes and authorization scope.
+
+Compiled =.oN= publication preserves immutable generation identities and byte
+validation. Permission denial fails explicitly. Cross-volume copying is recorded
+as copying; it cannot bypass validation or atomic publication.

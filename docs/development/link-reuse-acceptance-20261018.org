@@ -1,0 +1,1664 @@
+#+title: SDK compiler output reuse across executable build phases
+
+* Scope
+
+Reuse the existing released SDK, compiler executor and compiled Reader SHA-256
+implementation. No SDK, upstream source, runtime, resource limit, cancellation,
+provenance rule, semantic deadline or existing performance threshold changes.
+Build-only helpers stay in bindings/build-entry.ss; the C ABI runtime does not
+import this module. Unrelated feature edits are outside the commit.
+
+* Actual duplicate work
+
+The preceding build's 96 repeated static object compilations comprise 89
+ASCENT objects and seven dependency objects. The SDK registers the ASCENT
+runtime C producers, but closes their executor at each make boundary. The next
+make therefore lacks those producer records and translates Scheme again.
+
+Capture the SDK's actual producer predicate before the first make. After its
+successful drain, observe only those registered outputs and their SHA-256
+values. Register digest-validation jobs with the SDK in the next executor.
+Its existing dependency barrier prevents link preparation until validation
+succeeds, and propagates a changed or missing output as a build error. This is
+scoped to one single-writer build invocation; it is not a persistent cache,
+filesystem-existence shortcut, GSC wrapper or replacement scheduler.
+
+The first executor is explicitly drained even when synchronous make or a warm
+build submitted no jobs. Each executable still has a separate completed make
+call, retaining isolation of shared C writers. Dependency files not registered
+by the SDK remain on the original path; no producer evidence is invented.
+
+* Validation and remaining scope
+
+A cold diagnostic using the released SDK observes 126 admitted output paths.
+Actual GSC invocations fall from 573 to 484, and invocations triggering C
+compilation from 445 to 356. Repeated object paths fall from 96 to seven, all
+in dependencies. The shared-host diagnostic wall time is not speedup evidence.
+
+Two added artifact Cases use the real SDK executor: only registered outputs
+cross a completed executor boundary; changed or missing bytes prevent the
+dependent consumer from running. Every pre-existing semantic Case is retained.
+The compiled artifact-test closure declares its build-only helper explicitly.
+
+A separate hosted macOS 26 runner supplies uncontaminated timing controls.
+The released binary requires macOS 26 or later; its SDK and declared dependency
+seed are fixed for all controls. The predeclared order is baseline, candidate,
+candidate, baseline. Each control starts with zero ASCENT artifacts, executes
+the same policy-enabled build and test preparation, and rejects unrelated
+compiler activity or production recompilation during preparation. Binary
+receipts and common program source hashes are checked before retaining each
+result. All controls are preserved; there is no fastest-run selection.
+
+The complete macOS semantic and exact pushed-commit CI results, together with
+the hosted control receipts, are recorded in PR #1 after execution. Compiler
+output re-admission is not a new production source-refinement proof.
+
+The Linux Release lacks the producer registry API; it admits no outputs and
+retains its original build path. The same Cases check this fail-closed fallback.
+The remaining seven dependency recompilations need a separate SDK producer
+contract before they can be reused safely through this interface.
+
+
+* First hosted control and diagnostic extension
+
+The first fixed ABBA control on the three-core macOS runner completed without
+observed foreign compilers. Cold build command walls were 167.465, 187.492,
+209.626 and 234.933 seconds. Preparation walls were 74.031, 124.445, 112.027
+and 94.560 seconds. These are retained negative performance evidence: a 1.3%
+mean cold reduction does not establish a stable speedup, and the candidate
+preparation mean is 40.3% higher. Every preparation compiled the same 124
+support modules from the same 259-entry declaration, with production-rebuilt=0.
+The make phase, rather than inventory construction, accounts for the increase.
+
+A diagnostic extension records child process CPU, faults and context switches,
+plus a fixed 2 GiB streaming SHA-256 CPU calibration before each timed phase.
+It also retains support-artifact file counts and byte totals. These observations
+are not new admission thresholds. They distinguish added compiler work from
+CPU speed or waiting changes while preserving the original raw observations.
+The subsequent fixed ABBA control uses the same application data, build commands,
+SDK and dependency-seed policy. No fastest run is selected.
+
+* Preparation dependency currentness investigation
+
+Two consecutive unchanged preparations on the released SDK each rebuilt
+ascent-steensgaard-performance-test and ascent-support-study-output. Their
+imports reached ascent-steensgaard-test and scheme-library-contract-test,
+respectively. These source Suites are intentionally absent from the compiled
+support inventory. The SDK library resolver reports "cannot find library
+module" for both dependencies; std/make treats a missing dependency timestamp
+as requiring a rebuild. This is an application dependency error, not evidence
+of a compiler defect.
+
+The support-study consumer now imports the existing contract fixture directly.
+The independent Steensgaard reference function is moved unchanged to a support
+module shared by the semantic Suite and the performance Suite. Every Case and
+assertion remains intact. A subsequent unchanged preparation emits no compile
+jobs. This closes that repeatable invalidation defect; it does not retrospectively
+explain the entire first 40.3% cold-preparation regression.
+
+The next fixed ABBA control compares against 957e0de, retains the first cold
+preparation, and separately measures unchanged warm preparation. Hashes and
+nanosecond modification times of all test SSI, Scheme, bundle and static-object
+outputs are retained before and after the warm command. A candidate warm rebuild
+fails acceptance. Builder phases, time outside the builder, child CPU, faults,
+context switches and OS block-I/O counters remain raw diagnostics. Darwin zero
+block counters do not demonstrate absence of I/O. Full macOS source semantics
+run after all timing controls, with the existing 180-second deadline and 2G
+child heaps; their runtime does not contaminate the paired timing intervals.
+
+The historical first control lacks per-compiler CPU and I/O traces. Its unique
+cause cannot be recovered by treating a subsequent faster group as a repair.
+Both historical control groups remain evidence, including the negative result.
+No SDK source, production evaluator, resource limit or performance threshold
+changes in this dependency repair.
+
+* Darwin CPU-counter units
+
+A native calibration found an independent measurement defect in build
+supervision: proc_pid_rusage CPU fields are Mach absolute ticks. Treating
+them as nanoseconds underreports CPU time by 125/3 on this ARM host. A
+one-second process-CPU workload produced approximately 24 million ticks;
+mach_timebase_info converted that to 1.00005 seconds. The supervisor now
+uses the host timebase for both self and reaped-child CPU. Positive advance
+remains the activity criterion; no startup, idle, heap or acceptance deadline
+changes. Linux accounting is unchanged. Raw ticks, rather than previously
+mislabelled supervisor seconds, must be used for historical Darwin logs.
+RUSAGE_CHILDREN CPU measurements and monotonic wall measurements in the
+hosted controls already use seconds and are unaffected by this correction.
+This unit error does not explain the historical 40.3% wall regression.
+
+The diagnostic expander hook observed 265 distinct project source misses
+and zero GSC jobs on an unchanged warm preparation. This identifies source
+currentness/expansion work that remains even after fixing the missing-library
+dependencies. These instrumented shared-host timings are not speedup evidence.
+Native process disk-byte samples were partial; they do not establish an I/O
+bottleneck or a unique cause for the historical first control.
+
+* Three-worker macOS source semantics: open acceptance
+
+Commit 3712be2 passed all nine original CI jobs. Its additional three-worker
+macOS source run reached the unchanged 180-second deadline (exit 124), with
+475 completed Cases and 56 completed modules recorded before termination.
+Commit 658ce25 also passed all nine original CI jobs; its three-worker run
+reached the same deadline, with 1141 completed Cases and 146 completed modules.
+Neither partial result is complete semantic acceptance. The failed runs remain
+in Actions 39088480174 and 39088917891, including every retained batch log.
+
+The two additional fixed ABBA groups also remain distinct evidence:
+
+| Candidate | Baseline cold preparation mean (s) | Candidate mean (s) | Change |
+|-----------+------------------------------------+--------------------+--------|
+| 3712be2   |                            99.2875 |           104.6325 |  +5.4% |
+| 658ce25   |                            85.5235 |            68.9735 | -19.4% |
+
+Candidate warm preparations changed zero compiled outputs in both groups.
+Cold compiler-work diagnostics nevertheless counted 257 baseline jobs and
+259 candidate jobs: the shared reference adds two cold compiler invocations.
+Its benefit is removal of four unnecessary warm invocations, not a reduction
+in cold compiler work. The faster cold group does not close either negative
+cold result or identify the unique cause of the historical 40.3% increase.
+
+A shared-host native investigation observed object/MOP calls, late movable-GC
+scanning and dynamic-library loading. A separate source-import hook confirmed
+that GxTest imports each entire compatible batch before executing its Cases.
+Three workers currently produce two isolated exhaustive batches and three
+ordinary batches. Later ordinary batches therefore begin preparation only
+when an exhaustive batch releases a worker. These instrumented local timings
+are excluded from performance admission: unrelated Lean/Scheme activity and
+host memory pressure were observed. They identify paths to investigate, not
+a validated single root cause or an accepted optimization.
+
+The user explicitly retained three workers, the 180-second deadline and 2G
+per-child heaps. That source-semantic check now runs as an independent macOS
+job, without a dependency on build-cost acceptance. The diagnostic receipt
+samples live descendant SELF CPU counters and RSS, and timestamps observed
+batch/Case output at one-second resolution. Observation time is not the exact
+Case event time. On timeout, RUSAGE_CHILDREN covers reaped children only;
+it must not be presented as total descendant CPU or evidence of I/O waiting.
+
+Concurrent feature commit 070cc8e changed the runtime and test inventory.
+The fixed 957e0de comparison correctly rejected that unmatched program in
+Actions 39090409116. The next comparison freezes 070cc8e as the baseline;
+its runtime and workload must match the candidate under the existing strict
+path and binary-input checks. This starts a new control series, preserving
+all earlier negative observations. No runtime source is added to the allowed
+comparison changes. No SDK, evaluator, cancellation, provenance, resource
+limit or performance threshold changes in this diagnostic follow-up.
+
+* Admission workflow gap and executable cost policy
+
+The earlier build-cost job did not check relative preparation regressions.
+It checked experiment isolation, matching inputs and currentness, then printed
+CONTROL-OK even for the historical 40.3% preparation increase. Reporting those
+conditions as complete performance acceptance was incorrect. A subsequent
+faster series cannot discharge that failure.
+
+ExecutionPolicy.lean now defines the preparation-admission predicates over
+unbounded natural-number observed costs. Theorems establish rejection of any
+strict increase, rejection of unresolved failures, current/complete/accounted
+admission, and preservation of a failure across arbitrary later observations.
+The actual Python decisions and the Quint predicates are generated from that
+same predicate AST. Formal CI regenerates and compares both files exactly.
+PreparationAdmission explores the protocol with six required counterexamples:
+dropped failure history, ignored regression, stale inputs, incomplete controls,
+missing cost observations and ignored warm rebuilds. These are admission laws;
+they neither predict wall time nor prove the host language/compiler correct.
+
+The collector now emits native integer monotonic nanoseconds. The projector
+uses both baseline and both candidate samples in the fixed ABBA order, compares
+complete phase totals without floating-point ratios, and retains failures
+across phases. It does not add a timing allowance. Existing runtime performance
+thresholds, semantic deadlines and heap limits remain unchanged. Cost coverage
+here means command wall/CPU receipts; it does not mean compiler, expander or
+allocator source-work refinement has been proved.
+
+The committed regression ledger retains Actions 39084120171 and 39088480174,
+including the original source identities and both observations per arm. Legacy
+seconds are floored to nanoseconds with less than one nanosecond error per
+sample. Original raw controls remain authoritative. A later faster group does
+not resolve either entry. Source-bound resolution certificates are not yet
+implemented; arbitrary resolution flags are rejected. Accordingly, current
+performance completion remains unqualified rather than being reported green.
+
+A replay of the real 070cc8e/eddf4f9 ABBA receipts demonstrates the difference:
+all three phase means were lower (build 19.2%, preparation 10.8%, warm 5.7%),
+yet the new admission rejects completion while the historical failures remain
+unresolved. The empty-history control admits those same observations. This is
+a check of the real receipt projection, not a newly selected timing run or a
+claim that the unchanged production code became faster.
+
+Formal CI is independent of Rust/PyO3 execution. The independent Python
+consumer checks retain their exact producer wheel and now run separately after
+that producer. The aggregate gate still requires formal, Python consumers,
+Scheme, Rust/PyO3 and all oracle shards. A Rust failure can no longer suppress
+the Lean/Quint model checks.
+
+Remaining gaps are explicit: complete compiler/expander/allocation work traces,
+source refinement of receipt collection/decoding, verified regression-resolution
+certificates, and the three-worker macOS runtime regression itself. No abstract
+model or bounded model-check result closes those source obligations. The new
+policy blocks unsupported completion claims while that work remains open.
+
+The next native-program control base is ab3d5e2. It contains the Rust
+owner-layout correction over 7341569: clues/mod.rs declares and exports the
+owner, while exchange.rs retains the implementation. Private sibling access
+remains inside this owner. The relative include resolves to the same Scheme
+DSL file. After normalizing owner visibility and that relative path, the
+implementation body is byte-for-byte unchanged. No performance effect is
+attributed to this move.
+The historical failure ledger remains unchanged by this baseline update.
+
+The independent three-worker source runs on eddf4f9 and 7341569 both timed out:
+180.301 and 180.254 seconds, respectively. They recorded 350/38 and 815/104
+completed Cases/modules. Neither is complete acceptance. Live process samples
+from the first run account for at least 338.73 CPU seconds and a sampled peak
+aggregate RSS of 2,970,480 KiB; these are lower-bound/sampled observations, not
+an I/O diagnosis or a proof of a single root cause.
+
+A separate staged diagnostic over thirty small graph inputs reported about
+475.6 MB through Gambit statistics during public declaration construction,
+versus 4.9 MB during evaluation and 4.4 MB during independent oracle checks.
+These are SDK counter observations, not exact allocator event counts. Method-level probes observed 56
+Term, 21 Atom, six Rule, six Relation and one Program admission calls per
+constructed sample, for both empty and full graph inputs. Term and Atom layers
+accounted for about 6.7 MB and 5.2 MB of exclusive admission allocation in the
+full graph sample. Selected probe source files match the current implementation;
+these instrumented, staged observations are not complete-suite acceptance or
+an unbounded allocation/source-refinement proof. They identify a concrete
+construction/validation path for the remaining cost model and optimization.
+
+The owner-layout repair compiles and all 85 Rust integration tests pass locally
+with provider-protocol/artifacts and default Rayon enabled. The 12 Clue tests
+also passed separately. The ASP gate no longer reports the duplicate owner or
+implementation-in-mod.rs violations, but it still fails on the existing Clue
+API/complexity/membership diagnostics. No diagnostic severity or gate is waived.
+The workspace CI uses --no-fail-fast so that a failing library test does not
+prevent the remaining Rust test targets from running. This local integration
+result is not full Scheme, Python, formal or performance acceptance.
+
+The first independent formal job on 822c6ea exposed a cold-build inventory
+failure: AscentProof imported ClueSubmission and AnchoredEvidenceSlice, but
+neither module was registered in Lake's explicit roots. Registering both
+modules fixes the missing-module failure without changing any proof body,
+SDK, or resource budget. Both focused checks and the complete guarded Lean
+build pass locally (178 jobs, 51.60 seconds, zero additional helper threads).
+This repairs proof execution coverage; it does not resolve preparation costs
+or establish source refinement of the measurement collector.
+
+* Source work diagnosis and bridge target removal
+
+The original 39084120171 artifact is retained in full. Its prepare intervals
+were 74.031/94.560 seconds for the baseline and 124.445/112.027 for the
+candidate. Most of the difference is inside make: 69.976/89.458 versus
+117.757/106.025 seconds. Source inventory alone does not explain it. That
+receipt did not collect per-task CPU, allocation or faults. Its interleaved
+human-readable compiler log is not a reliable exact invocation counter.
+The historical failure remains unresolved; no later faster group clears it.
+
+The initial bridge-target hypothesis is rejected for this preparation lane.
+After removing interleaved supervisor messages, every original prepare log
+contains the same 257 distinct compile-file jobs, with no differing job paths.
+This reconstruction is not a complete process census, but it disproves the
+claim that these logs show two extra bridge jobs. scheme-artifact-test is a
+consumer of the separate compiled DSL lane; it is absent from the performance
+consumers selected by prepare-test-library. Removing its declared dependency
+does not reduce this lane's compiler jobs. The helper ownership move retains
+identical bodies and passes all 18 artifact Cases, but is not a measured
+preparation performance fix. The 40.3% failure remains open.
+
+The actual dependency selector is now a Lean-rendered region in the existing
+harness, with exact rendering checked by formal CI. The Lean model proves
+that removing an inactive dependency leaves the selected sequence unchanged,
+for arbitrary dependency/test lists. This prevents applying the conditional
+two-phase removal theorem to an unselected declaration. It preserves the
+previous order and flattening algorithm and introduces no extra module. The
+Scheme compiler/library primitives and surrounding make/decoder are still
+outside a complete source-refinement proof.
+
+The work-only diagnostic uses disposable-prefix observers and the same
+commands, SDK, ABBA order and process supervisor. It records every GSC
+invocation separately with actual input hashes/bytes, exit, child CPU, RSS,
+faults and block IO. The public expander import hook records ordered timing
+and allocator snapshots for actual source/interface import requests, including
+direct registry hits under the fixed SDK. These
+snapshots are process-wide and inclusive, including observer overhead;
+nested or concurrent imports must not be added as exclusive allocation.
+Instrumentation timings never enter the ordinary latency admission. Malformed
+traces fail decoding; absent import observers are explicitly marked unobserved.
+Compiler failures keep their
+original exit status; changed input bytes also fail the diagnostic compiler.
+
+PreparationWork.lean checks additive compiler-job/input work, ordered
+allocation subtraction, nested double-counting and the independence of wait
+time from reduced work. Its removal theorem concerns two observed records, not two processes per
+module or per logical compile-file job; those units must remain distinct.
+PreparationWork.qnt checks observation coverage/currentness and six required
+fault counterexamples. These checks do not prove the observer/decoder, SDK
+expander, C compiler or allocator correct. Their source refinement and a
+complete allocator/cost bound remain open. They are not used to certify a
+wall-time improvement.
+
+Workflow dispatch can select work-only mode and an explicit historical
+candidate. Ordinary PR runs retain the original uninstrumented wall gate and
+the independent three-worker/180-second source Suite. No timeout, heap,
+performance threshold, cancellation or provenance behavior changes.
+
+A bounded observer smoke test exposed a decreasing SDK counter: an import
+reported 151,027,128 before and 149,841,056 after. The exact ea114fc sources
+implement statistics slot 7 using ___bytes_allocated; its occupied-byte term
+includes both heap and stack pointers. It is not an independently verified
+monotonic allocation-event counter. The released interpreter reports one VM
+processor, so this observation is not evidence of accidental multi-processor
+execution. The observer retains negative deltas and rejects allocation
+qualification after the complete diagnostic group. It never clamps them to
+zero or claims the earlier staged statistics establish an allocator bound.
+No SDK or upstream source is modified.
+
+The prior exact-head control 39094480095 (ab3d5e2 versus 28823c5) also rejects:
+prepare totals are 164,658,395,251 versus 190,941,144,291 ns (+15.96%),
+and warm totals are 18,774,240,875 versus 26,418,953,750 ns (+40.72%).
+Every warm-output change set is empty and the native program inputs match.
+The fixed 2 GiB SHA reference itself reports CPU times from 0.933 to 1.316
+seconds within the group. This is evidence that raw timing variation is not
+an isolated compiler-job-count effect; it is not a normalization, an excuse
+to accept the candidate, or a retrospective root-cause proof for 39084120171.
+The three-worker source Suite on that head still times out at 180.133 seconds
+with zero observed foreign compilers. Both failures remain acceptance failures.
+
+The first two work-only dispatches (39095491596 and 39095493824) are invalid
+comparisons: both stop in baseline build with exit 70 because the observer's
+GERBIL_GSC directory has no gambuild-C sibling. This is a downstream observer
+calling error, not an SDK defect or a performance result. The adapter now
+executes the unchanged SDK helper at its original path, retaining its sibling
+resolution and cache identity, and records external helper calls separately.
+A full module pipeline smoke test produces two dynamic artifacts, observes
+three GSC invocations and one external helper, then loads the compiled module
+and checks its exported answer. This also demonstrates why 257 logical
+compile-file jobs cannot be reported as 257 GSC/native compiler invocations.
+The original failed logs and artifacts remain retained. No result from either
+failed dispatch qualifies the historical or current performance comparison.
+
+Rust style failure previously suppressed Clippy, the independent Scheme
+interface, PyO3 wheel/interface checks and downstream Python consumers. These
+steps now execute independently after their actual shared prerequisites pass.
+The exact interface-checked wheel and runtime closure use an immediate
+source-keyed cache save, so consumer checks can run even if the Rust job is
+already red. Every original check, failure status, timeout and aggregate
+requirement remains required; no continue-on-error or severity waiver is used.
+A failed wheel/interface cannot authorize the downstream consumer job.
+
+The follow-up allocation reader reuses the existing ##exec-stats primitive
+used by Gambit's time implementation, rather than subtracting raw counter
+reads in the interpreter callback. The pinned _repl.scm applies interpreted
+thunk-frame and statistics-structure corrections, and reports CPU, GC CPU,
+GC wall time and collection counts. The observer keeps all intervals inclusive.
+Even that SDK-corrected estimate can be negative: the real full-module smoke
+records -28,238,680 bytes with four collections during gerbil/builtin.ssxi.ss.
+Thus neither reader establishes an exact cumulative allocator bound. The new
+reader preserves signed estimates and rejects allocation qualification when
+negative; it does not clamp, take absolute values or discard failed samples.
+GC and CPU intervals remain separately available for diagnosis. The complete
+module compile still records three GSC calls and one SDK helper successfully.
+
+** Complete work-group observations and entry-point correction
+
+The helper-corrected diagnostic groups 39096423111 (historical pair) and
+39096425255 (current pair) complete all four controls. Their wall times are
+instrumented observations, not latency acceptance. Historical preparation
+starts 257 GSC processes in every control; the candidate has six additional
+import requests (5906 versus 5900). Current preparation starts 259 GSC
+processes in every control and has three fewer candidate import requests
+(5913 versus 5916). Current warm preparation starts zero GSC processes and
+changes no compiled outputs in all four controls. The historical warm route
+still starts four GSC processes and changes eight outputs; this negative
+historical evidence is retained.
+
+For the current preparation pair, all 259 input paths match, 258 input sizes
+match, and the remaining generated input is four bytes smaller. SHA equality
+alone cannot isolate semantic differences: even the two baseline controls
+have only 128 equal generated-input hashes although all sizes match. The
+historical pair likewise has identical path sets, with 248 of 257 sizes equal.
+These observations reject an explanation based on a large added batch of
+GSC jobs. They do not prove equal expansion work, equal native instructions,
+or the cause of the original 40.3 percent wall-time failure.
+
+The current baseline preparation GSC CPU totals are 236.161 and 176.890
+seconds; candidate totals are 235.397 and 222.008 seconds. The baseline
+itself therefore varies substantially for matching source paths and sizes.
+No CPU normalization is applied to the original wall gate, and no later
+faster run discharges the original regression obligation.
+
+These diagnostic groups also reveal a coverage defect: the package builder
+executes build.ss through its env-gxi shebang, outside the explicit package
+prefix interpreter command. Its build-phase import trace is absent. The
+work-only installer now prepends its interpreter directory to PATH as well
+as supplying the compiler adapter. It leaves the SDK gerbil executable and
+native compiler commands intact. The shebang path has its own executable
+regression check. A real released-SDK gerbil build of a fresh package exits
+zero, records 402 import events and two GSC processes through that path. The
+first smoke invocation omitted the release activation GAMBOPT and failed;
+the corrected invocation uses the existing relocation options, without SDK
+changes. Absence of build import coverage still rejects the older groups. This correction changes diagnostic coverage, not production build
+behavior or acceptance thresholds. Full compiler/expander/allocator source
+refinement and causal repair of the original regression remain open.
+
+** Remove package construction from module-inventory loading
+
+Commit cca82a9 completes its full main CI: Scheme semantics/performance,
+formal, all three oracles and Python consumers pass. The Rust job still
+fails its ASP style gate and eighteen Clippy errors; its 85 integration tests,
+PyO3 wheel and original interfaces pass. Independent three-worker source
+semantics times out at 180.228 seconds after 640 completed Cases and 77 modules,
+with no observed foreign compiler or audit error. Its complete uninstrumented
+ABBA rejects cold build +29.97%, preparation +31.75% and warm +65.71%. All four
+warm output-change sets are empty. These remain failures, not speed claims.
+
+The complete historical observer group 39098736586 covers build, preparation
+and warm imports in every control. Historical GSC counts remain 573/484 in
+build (baseline/candidate), 257 in preparation, and four in warm preparation.
+Negative SDK allocation estimates and historical warm rebuilds still reject
+that group. Original supervisor logs also retain reported activity increments:
+8.818 baseline versus 12.305 candidate, about +39.5%. Those logs divide Mach
+ticks by 1e9 incorrectly; only a same-host relative sampled comparison is
+meaningful. Sampling, rounding, process reaping and interleaved output prevent
+an exact CPU census or a causal attribution. Absolute seconds are not recovered.
+
+A source-level startup experiment identifies removable work: t/harness/build.ss
+imports the full build entry solely to read gerbil-ascent-library-modules.
+That evaluates the PackageSpec declaration and imports its build-only closure.
+The module list now lives in build-modules.ss as the same ordered quoted data,
+with its complete definition preserved verbatim. Both consumers use that one
+owner. Preparation no longer imports build.ss to get the list. The production
+build keeps its unchanged PackageSpec and std/make orchestration.
+
+A temporary fixed-path ABBA import control observes one PackageSpec declaration
+per old startup and zero per data-only startup. The SDK exec-stats estimates
+are 361,035,528/361,037,416 bytes for the old route and
+322,106,624/322,108,112 for the data route. These positive estimates identify
+about 39 MB of reported startup work removed; they are not exact allocator
+bounds. Local foreign compiler activity makes their wall times unqualified.
+A separate native time-tool probe confirms fixed-input object identity, but
+its hardware counters have process-scope limits and are not an original-run
+explanation. Neither experiment discharges the 40.3 percent obligation.
+
+The new data file participates in production source snapshots and Cargo's
+source identity/rerun inventory. Changing its bytes requires conservative
+invalidation. The artifact Suite checks this admission behavior, the exact
+two-form quoted-data shape, the exported ordered value, and the preparation
+import. Its compiled test dependency is declared explicitly; it is not selected
+by the thirteen performance consumers. Lean renders the actual import region
+and models removal of the package-declaration step. Quint retains every prior
+control and adds bootstrap-inventory as a required negative control. These are
+bounded source/import checks and a parametric work model, not source refinement
+of the complete SDK compiler, expander, allocator or decoder. All prior
+performance failures, three-worker configuration, timeouts and heap limits
+remain required. Cancellation, provenance and production evaluator behavior
+are unchanged.
+
+Focused validation of the inventory change: all twenty artifact Cases pass
+using a separately compiled artifact module in a disposable package prefix;
+the shared compiled application is not overwritten. The actual selection
+function is read from the harness with Gerbil's reader and evaluated against
+the real manifest: thirteen consumers still select twenty-three dependencies.
+The complete Lean build passes 179 jobs through the locked LeanPoo Guard,
+with zero additional helper threads. The rendered preparation import matches
+its actual source region exactly. Quint passes the correct configuration and
+all seven required counterexamples. Fourteen work/admission/formal receipt
+unit tests pass. These focused results precede exact-head full CI and the
+unchanged isolated performance comparison; they are not full acceptance.
+
+* Demanded compilation and complete source-Suite preparation
+
+The c9860b0 three-core ABBA receipt rejected preparation +33.123187%.
+Its make intervals were 64.582/112.217/106.192/99.035 seconds (ABBA);
+entry and inventory savings cannot establish a repair of this result.
+The independent source run exhausted 180 seconds with all three ordinary
+batches still consuming CPU. These failures remain retained and unresolved.
+
+The existing preparation entry compiled every non-Suite qualification source
+for thirteen performance consumers. The pinned ASP v0.1.2.2 import projection
+identifies 204 required sources for the complete fresh-prefix performance
+roots: production catalog, base modules, declared dynamic dependencies and
+all thirteen compiled consumers and fifteen dynamically loaded scenario scripts.
+Seventy-four qualification support sources are outside
+this closure. Projecting the historical 259 GSC records onto that exact graph
+identifies 151 calls on unrequested support sources in each ABBA control.
+Their observed compiler CPU costs were 148.415/144.388/136.144/109.393 seconds
+out of 236.161/235.397/222.008/176.890 seconds respectively. These are
+historical work observations, not a prediction of equal wall-time savings.
+The old entry also supplied unrelated support in the baseline; this finding
+alone does not explain the temporal variation responsible for +33.12%.
+
+Preparation now reuses the existing ASP/Gerbil import-closure API. It has no
+new dependency parser, scheduler, compiler, or upstream patch. std/make owns
+ordering and freshness. Cached support stays in the refresh set so producer
+changes cannot strand previously compiled reference consumers. The source
+snapshot begins before projection and covers expansion as well as make.
+
+Source qualification requests its actual Suite dependency graph rather than
+the performance consumers. A bounded projection of the complete 173-Suite
+inventory succeeded under the existing 3G preparation heap and returned 610
+sources including Suites. Suite carriers are filtered from compilation;
+GxTest still loads every original Suite from its explicit source path. The
+reference implementations keep their independent algorithms. This prepares
+more reference dependencies than the old performance-only setup: its cost
+must not be hidden or described as free. The three-worker CI records this
+preparation as candidate-prepare-semantics separately, checks that it emitted
+no compiled Suite interfaces, and retains the unchanged 180-second/2G runtime
+qualification. Both costs are required when discussing end-to-end results.
+
+A 128-declaration diagnostic collected 597 heartbeat samples, 573 including
+POO object admission. A separate 128-candidate diagnostic collected 852
+samples; 799 included contract validation and 88 included construction of the
+owned-root contract refinement. These observations identify validation work,
+not permission to skip checks or persist caller-owned admission results. No
+validation, cancellation, resource, or provenance implementation is changed.
+The bounded complete semi-naive semantic module also exited successfully;
+this does not replace the failed complete three-worker qualification.
+
+Lean renders the exact source-carrier selection used by preparation and
+proves preservation of dependency carriers, exclusion of source Suite carriers,
+and nonincreasing demanded source work for arbitrary observed nonnegative
+weights. Compile-key lemmas require source/dependency/SDK/options identity and
+an existing output before reuse. These are explicit preconditions: the SDK's
+timestamp cache, graph projector, allocator and untyped receipt decoder are
+not thereby source-refined. Quint checks the correct protocol and eleven fault
+controls, including eager catalog compilation, compiled source Suites and
+reuse after input generation changes. Neither model proves a hardware latency
+bound. Compilation and expansion/allocator source-cost closure remains open.
+
+The diagnostic compiler-work format is version 2. It retains actual expanded
+input bytes by digest, including generated names and source positions, and
+rejects a missing or damaged retained input. This permits subsequent causal
+input comparisons that the previous digest-only receipts could not support.
+Work-only observations remain separate from uninstrumented latency gates;
+inclusive/negative SDK allocation estimates are not promoted to exact totals.
+
+Focused validation passed all 22 artifact Cases (including the original 20),
+15 work/admission/formal unit tests (20 including repository policy), the PreparationWork Lean file through the
+locked LeanPoo Guard, and the correct Quint model plus all eleven fault controls.
+Full current-commit CI and the fixed ABBA comparison must supply the remaining
+acceptance evidence; the earlier 39 MB estimate is not a closure certificate.
+
+The remote evidence-read commit efcec55 was preserved by rebasing this
+preparation change onto it. The original ab3d5e2 comparison and historical
+failure ledger are unchanged. A separate fixed-parent comparison against
+efcec55 isolates this preparation patch without mixing unrelated Rust/model
+changes into its timed-source comparison. Such diagnostics cannot replace the
+original gate or discharge its unresolved failures. Manual cost dispatches
+run only the cost job; the PR event still requires the original complete
+three-worker source qualification once, with its unchanged deadline and heap.
+
+* Resident projection and per-entry source VMs
+
+The exact-head 89ad617 fixed-parent uninstrumented ABBA result reduced cold
+preparation by 52.51% (198.291 to 94.161 seconds summed across each pair), but
+warm preparation regressed by 17.96% (22.714 to 26.794 seconds). This is a
+failure, not a repaired acceptance. The independent three-core run prepared
+in 268.667 seconds and then exhausted the original 180-second runtime budget
+with 1,152 completed Cases in 145 of 173 source modules. Its last two worker
+RSS observations were approximately 1.22 and 1.32 GB. All failures are retained.
+
+The normal ASP projection first tries the complete compiled-interface graph.
+Explicit source-only scenario scripts have no interface, so this work is
+followed by source fallback even on a warm prefix. Preparation now imports
+its roots through Gerbil and calls the existing public resident-context
+projection. There is no custom graph cache or invalidation bypass. std/make
+continues to own compilation freshness, and the source inventory still spans
+the entire projection and compilation interval.
+
+Gerbil's source test tool imports every requested module before running the
+harness; the native module registry retains expanded contexts until VM exit.
+The directory recipe now selects the existing process-isolation profile:
+one entry per child VM, with the same three-worker pool, 2G child heaps and
+180-second deadline. This trades retained entry contexts for additional VM
+starts. It must be measured; a lower modeled peak does not establish a wall
+time improvement. No test is dropped, compiled in place of source, or relaxed.
+
+Lean renders the actual recipe and proves singleton entry coverage, process
+count and a conditional retained-entry peak bound for arbitrary nonnegative
+weights. Quint adds batched-root and leaked-root counterexamples; all thirteen
+PreparationWork fault controls pass. The complete 179-job guarded Lean build,
+all four generated preparation regions and twenty focused Python tests pass.
+These do not prove the SDK compiler, allocator, registry, timestamp cache or
+untyped observer decoder equivalent to Lean. Those source refinements remain
+open, and process-wide signed allocation estimates remain diagnostic only.
+
+The two new artifact controls initially failed in the standalone DSL binary:
+a test relied on the interpreter's eval macro environment and a fixture
+implicitly relied on its prelude. The source policy is now imported directly
+and both fixture modules declare the original Gerbil prelude explicitly. A
+private-prefix standalone executable passes all 22 Cases with the original
+1G/120-second bounds, including prepared-graph equality and rejection of an
+unprepared root. No SDK or upstream compiler change was needed.
+
+Current-head remote full CI and clean-host timing are still required. The
+original ab3d5e2 gate also rejects the unrelated preserved efcec55 change set
+before timing; this mismatch is retained rather than allowlisted away.
+
+* Failed per-entry experiment and capacity-derived refinement
+
+The complete 05b5d3a CI passed Linux source semantics (173 modules and 1,399
+Cases), compiled DSL semantics, the full original Scheme performance gates,
+formal verification and all three independent oracle jobs. The separate
+three-core macOS experiment failed: preparation took 385.315 seconds
+(projection 44.616, make 334.854), and runtime exhausted 180.206 seconds after
+only 672 Cases in 83 modules. No foreign compiler or audit error was observed.
+Peak observed RSS fell to 700 MiB, but the additional VM starts and repeated
+module loading reduced throughput. Memory reduction is not acceptance.
+
+The source runner therefore returns to compatible native batches, refined
+once by that same native grouping API before enqueueing in the existing pool.
+For 171 ordinary entries and three workers, the native partition is composed
+twice to produce nine batches of 19 entries; the two exhaustive isolated
+modules keep their existing profiles. There is no additional worker or
+batch-size setting. All native option compatibility rules and child limits
+are retained. This amortizes imports while providing more queueing units than
+the three original long-lived stripes. It is a measured hypothesis, not a
+proven timing improvement.
+
+Lean renders the actual composition and proves entry preservation conditional
+on the native grouping coverage contract. The earlier per-entry memory bound
+is retained as an explicit failed tradeoff, not presented as the chosen
+throughput policy. Quint checks a finite two-entry batch lifecycle and rejects
+oversized and retained batches. Native grouping implementation equivalence,
+SDK allocation and hardware latency remain outside this proof. The comparison
+scope adds only these preparation-runner/control paths; the unrelated efcec55
+paths remain rejected by the original gate.
+
+Compiler-work reconciliation for 89ad617 accounts for every changed GSC call:
+259 baseline calls minus 151 unrequested calls plus two observed library-spec
+calls equals 110 candidate calls. Both baseline controls have identical input
+inventories, as do both candidate controls. Actual input bytes are retained;
+this does not derive exclusive allocation totals from inclusive counters.
+
+The local full source-import control encountered an already stale reference
+interface in the existing development prefix. Both grouping controls passed,
+but that run is retained as failed; it is not substituted for clean-prefix
+CI. The native grouping projection independently preserves inventories of
+0, 1, 2, 3, 7, 37, 171 and 173 entries at the selected core capacities.
+
+* Complete three-core runtime and remaining preparation regression
+
+The first be22b6a three-core qualification passed without a retry: 173 source
+modules and 1,399 Cases completed in 157.416 seconds, exit zero, with three
+workers, eleven batches, original 180-second deadline and 2G child heaps.
+No Suite interfaces were generated, and both process audits were clean.
+Full source preparation still cost 419.943 seconds (projection 40.687, make
+373.196); this is not a preparation optimization. Peak observed child RSS
+was 1,268.781 MiB. The earlier 700 MiB per-entry run did not complete the same
+workload and cannot establish a complete-workload memory saving.
+
+The exact be22b6a fixed-parent timing comparison against e1fa92a rejected all
+three phases: build +2.255%, cold preparation +4.668%, warm preparation
++14.911%. All four samples have zero changed warm outputs and clean process
+audits. The earlier efcec55-to-05b5d3a cold/warm improvements do not override
+these failures. The original comparison still rejects unrelated concurrent
+paths and the historical regression ledger remains unresolved.
+
+The next fix removes an unnecessary root acquisition step: the complete
+production catalog already remains in the std/make carrier list, but the
+projection imported every producer explicitly from source as well. It now
+projects only explicit consumers, dynamic/base dependencies and retained
+support. Gerbil can load production dependencies through its native interface
+resolution; std/make still checks every production carrier and owns freshness.
+No private cache or parser is added, and the source snapshot still covers the
+whole preparation. Explicitly requested consumers remain roots even if their
+names also occur in the production catalog.
+
+Independent native projections return 204 versus 166 performance graph nodes
+but the exact same 189 compilation carriers. The complete semantic projection
+also preserves all 438 compilation carriers (611 to 608 graph nodes). The compiler input list is not
+the root filter. Lean renders that filter and proves preservation of explicit
+consumers and non-production support roots; existing compiler carriers are
+retained. Quint adds a forced-catalog-expansion counterexample. These checks
+remain conditional on the native SDK graph contract, not an SDK source proof.
+
+The expanded input snapshots also expose a real cache-identity distinction:
+repeated builds of unchanged response-projection source produced equal-size
+expanded files with different module timestamp constants. Byte counts alone
+do not identify compiler inputs. CompileKey.source denotes the exact expanded
+input digest, including metadata. Raw bytes and signed allocator observations
+are retained; neither timestamps nor negative estimates are normalized away.
+
+The preparation correction also fixes an earlier report count: there are
+thirteen compiled performance consumers and fifteen dynamic scenario scripts.
+The shared directory-derived scenario selection itself has never been reduced.
+The concurrent 8341fe36 Rust decoder and test-organization changes are preserved.
+
+The fast path is conditional on the existing content admission:
+artifact-invalidated-modules must return an empty change set for the complete
+production input inventory, current SDK/root and actual library digest.
+Otherwise every original root is still expanded, so restored timestamps or a
+missing/corrupt receipt cannot suppress source validation. The two canonical
+inventories now share the existing build-modules data file; build.ss uses the
+same four source-only ABI entries without duplicating them in the test tool.
+No PackageSpec is constructed by this data import. The artifact control also
+checks actual rejection of an unadmitted malformed producer.
+
+A second demand correction removes t/harness/test from the unconditional
+performance base. None of the compiled performance consumers or dynamic
+scenario scripts imports this source-semantics scheduler. The final performance
+carrier list has 188 entries instead of 189; that scheduler is the only
+removed entry. Source qualification still discovers it through its real
+importing Suite and retains all 438 semantic compilation carriers. The
+root-filter-only experiment above preserved 189 entries before this separate
+unused-carrier removal. The final performance graph has 165 nodes.
+
+Lean additionally bounds explicit root-request work and proves the complete
+fallback for an unadmitted catalog. This does not bound total transitive
+expansion, allocator work or wall time. Quint retains every earlier control
+and checks both unnecessary producer expansion and erroneous pruning before
+admission, for fifteen fault controls in total. The new functional controls
+keep the original standalone artifact Case count and all original limits.
+
+* Consumer-root results and on-demand experiment policy
+
+The 045533450fd54e700c66c438bc9b8f90639e1369 receipts are retained, including
+failures. The three-core macOS source qualification completed all 173 modules
+and 1,399 Cases in 122.146155 seconds under the unchanged 180-second deadline
+and 2G per-child heap. Preparation is separate: 292.588780 seconds, including
+25.815760 seconds of dependency projection and 261.942133 seconds of make.
+The peak child RSS was 1297.421875 MiB. Neither phase reported foreign compiler
+activity or process-audit errors. This closes this commit's complete three-core
+execution timeout, not the compiler allocation or timing-variance obligations.
+
+The uninstrumented 455397c9/04553345 ABBA experiment (run 39118249862) reports:
+
+| Phase       | Baseline total ns | Candidate total ns | Change percent |
+|-------------+-------------------+--------------------+----------------|
+| Build       |      268035232999 |       248779607833 |          -7.18 |
+| Preparation |       88150154125 |        70749405542 |         -19.74 |
+| Warm prep   |       16015134250 |        13183824417 |         -17.68 |
+
+All four controls have empty foreign-compiler/audit lists and no changed warm
+outputs. Individual preparation samples remain variable: baseline 29.050098
+and 59.100077 seconds; candidate 28.046221 and 42.703196 seconds. This is a
+bounded observation of one matched experiment, not proof of stable latency
+or resolution of every historical regression. The job was red because its
+historical admission ledger still contains runs 39084120171 and 39088480174;
+no faster observation clears those records.
+
+The separate work-only run 39118252329 preserves identical observations in
+both controls of each revision: production GSC calls/bytes remain
+490/240762807; preparation calls change from 110 to 108, input bytes from
+2096985 to 2070568, import requests from 5554 to 5388. Warm calls remain zero;
+warm import requests change from 5196 to 5040. The allocation observations
+contain negative SDK corrected estimates, so that run remains unqualified.
+Instrumented latency is never used for the preceding timing claim.
+
+Fixed historical-baseline ABBA no longer runs on pull requests. It remains an
+explicit workflow_dispatch experiment and requires a baseline input with no
+historic default. The macos-semantics job still runs independently on pull
+requests with three workers, the original 180-second deadline, and 2G heaps.
+The main semantic, formal, performance and oracle checks are unchanged. Every
+old negative receipt and the historical admission ledger remain intact.
+
+The collector now verifies retained input byte counts as well as SHA256 before
+publishing work costs. It applies the Lean-rendered observation-completeness
+predicate to both GSC and SDK helper records: helper failure and changed helper
+inputs cannot qualify a phase merely because GSC records succeeded. Quint
+imports the same generated decision and adds failure/changed-input controls.
+This closes the executable decision's correspondence for those conditions;
+JSON decoding, observer coverage, SDK expansion/allocation, native cache
+invalidation, and a transitive source-work or latency bound remain open.
+
+The full 04553345 CI passed Scheme semantics, Scheme performance, formal, all
+three oracle lanes and Python consumers. Rust/PyO3 failed the ASP Rust style
+gate in the separately developed Clue interfaces and twelve assert_is_empty
+Clippy diagnostics; the PyO3 wheel and Python interface nevertheless passed.
+Those failures are not a Python timeout and are not waived by this CI policy
+change. Other tasks' Rust API and test changes are preserved.
+
+* Complete producer cache bundles
+
+A further CI cache audit found that ascent-compiled restored interfaces/static
+objects but omitted bin/libascent and its .json source receipt. The existing
+artifact-invalidated-modules guard requires that payload/receipt pair; a
+missing pair correctly selects conservative clean/rebuild. Meanwhile the
+shared dependency cache included application bin outputs, so an application
+receipt could come from the wrong cache entry. This is a cache-content defect,
+not evidence that the released compiler is broken.
+
+The minimal CI correction stores libascent* and ascent-develop* with the
+content-bound application cache, excludes both from the shared dependency
+cache, and removes dependency-restored application bins before restoring the
+application cache. Versioned cache keys avoid treating old incomplete entries
+as complete bundles. All source, SDK/root and binary-digest checks remain.
+Native make still checks compiler interfaces and dependency freshness; bundle
+presence alone does not authorize reuse. No generated timestamps are forged.
+
+A new native artifact Case exercises the real guard using a fixture payload
+and receipt: complete matching metadata permits the empty fixture inventory;
+missing receipt, missing payload and mismatched payload all reject. All 23
+standalone compiled artifact Cases passed on the existing released SDK under
+the original 1G/120-second test limit. Lean proves that missing payload or
+receipt cannot satisfy bundle reuse and that changed inputs still reject.
+Quint retains earlier controls and adds missing-payload/missing-receipt
+counterexamples, for nineteen fault controls. Full Lean checking still uses
+the locked process Guard and original budgets.
+
+This corrects an unconditional rebuild trigger, not every cause of rebuilds.
+Fresh checkout timestamps, native make behavior, dependency changes and cache
+availability remain separate. The versioned cache starts cold; no wall-time
+improvement from a future warm restore is claimed without its own receipt.
+The preceding uninstrumented ABBA measurements concern 04553345, not this
+additional cache configuration correction.
+
+* Clue lint repair and content-bound Cargo cache
+
+The 4c856086 CI run retained two independent failures: the Clue ASP source
+style gate and twelve Clippy empty-container assertions. The repair introduces
+named projection/selector arguments and separates projection validation,
+request decoding, hypothesis staging, family collection and deferred lookup.
+Python call signatures stay unchanged. Hypotheses are still published only
+after the complete submission validates. Deferred summaries retain their
+original display order; an indexed lookup removes every equal summary, and
+rollback appends exactly as before. A regression checks both behaviors.
+No lint allowance, resource budget or performance threshold was changed.
+
+The Rust product cache used github.sha without a restore prefix, so an
+otherwise identical input set could never reuse products across commits.
+The v3 key uses platform, Rust/Python compiler fingerprint, released SDK
+fingerprint and explicit source/configuration content. It has no fallback
+from different source content. The generated source inventory and ownership
+receipt travel with Cargo products; Cargo and the existing resource publisher
+still validate their own freshness. Generated outputs are excluded from the
+key. A missing product continues to require work.
+
+Lean now renders the actual CI key line and proves commit labels do not alter
+content identity. Quint adds an independent commit transition and a twentieth
+negative control which incorrectly changes the key on commit alone. These
+checks connect the configured identity policy to source. They do not prove
+Cargo's fingerprint implementation or the SDK compiler correct.
+
+At 4c856086, isolated three-core macOS semantics completed 173 modules and
+1400 Cases in 105.404445291 seconds, below the unchanged 180-second deadline.
+Preparation took 257.662540916 seconds: projection 24.283255 seconds and make
+229.375416 seconds. The audit reported no foreign compiler and no compiled
+source suites. Earlier preparation values of 225.77699025 and 292.588780
+seconds remain recorded. Different hosted machines and cache states prevent
+attributing these differences to one source change.
+
+Preparation closure remains incomplete. Warm controls with zero GSC work
+show that repeated compilation alone cannot explain all elapsed variation.
+Generated compiler timestamps can change expanded-input digests even when
+sizes agree; that observation alone does not explain the historical 40.3%
+or 33.12% regression. Negative corrected allocation estimates remain rejected,
+not clamped. SDK allocation snapshots, observer/decoder equivalence, fresh
+checkout mtime invalidation and wait/I/O attribution still require source-bound
+receipts. The new cache namespace first needs a cold seed; no warm restore
+speedup is claimed by this correction.
+
+* Observed archive construction and cross-configuration ownership
+
+The ASCENT Scheme build now calls the pinned upstream
+=build_program_archive_observed=. The same upstream operation observer measures
+bridge preparation, library graph staging, private publication and
+source identity. It retains the original compiler error on failure. The SDK
+continues to own Scheme graph interpretation, compiler options, fingerprints,
+parallel native commands and archive packaging.
+
+Cargo configurations previously staged the same program under distinct
+OUT_DIR paths. The SDK fingerprint includes staged paths, so its existing
+object cache could not reuse those objects across configurations. The program
+now has one target-local graph/object directory under an OS file lease. Native
+objects still pass the SDK fingerprint check on each invocation. The completed
+archive is copied to each consumer's private OUT_DIR before releasing the
+lease. Rustc therefore never links a mutable shared archive. Generated version
+manifests are excluded from the Cargo product key: their Git labels are not
+ASCENT compiler inputs. The package's declared source inventory supplies raw
+Cargo dependencies, including newly added source directories.
+
+Compiler outputs are observed but are not dependencies of their own Cargo
+producer. External package and SDK inputs remain watched. Watching the shared
+manifest or self-produced SCM would create a rebuild feedback loop. Actual
+inputs are hashed with a bounded streaming buffer, generated Scheme inputs are
+retained by digest, and all inputs are rechecked before a receipt is admitted.
+A cache hit means no object compiler execution; fingerprint reads, lease wait,
+source observation and publication still have costs. Parallel worker times and
+the inclusive module-C parent interval are not added into elapsed time.
+
+Lean generates the event decoder, compilation-unit classification, receipt
+admission, cache namespace and CI cache region. It proves rejection of changed
+inputs, malformed terminal events and incomplete observations, as well as
+profile-independent target selection. Quint checks lease ownership, exact
+native compilation accounting, cross-profile reuse, current inputs and detached
+publication, with eight fault controls. PreparationWork retains its earlier
+controls and adds generated-manifest invalidation. These are executable policy
+and lifecycle correspondences, not a proof of the GCC optimizer or Rust/OS
+implementation.
+
+Build-time controls cover interleaved compiler workers, cache hits, malformed
+or missing events, failed builders, source mutation/removal, real file-lock
+exclusion, detached archive copies and generated-output watch exclusion. An
+initial isolated draft called the complete executable package builder for every
+configuration and ceased producing compiler children. Its native stack sample
+and interrupted failure are retained. The corrected caller prepares only the complete declared library inventory
+and the AOT entry through shared std/make state. It does not invoke the package
+executable builder: those CLI/shared-library link targets are not dependencies
+of the AOT consumer. The ordinary package CI still validates those targets. Build processes use the
+selected gxi explicitly with closed stdin. No upstream changes or increased
+limits were used; the draft sample alone does not establish an upstream defect.
+
+The optional ABBA experiment can now select semantic preparation explicitly.
+The original performance-preparation route, historical failures, admission
+ledger and thresholds remain unchanged. Both lanes retain three selected cores.
+Current-commit CI and matched experiment receipts are reported separately.
+
+** Concurrent test execution
+
+The CI Rust harness uses =RUST_TEST_THREADS=12=, including Rust/PyO3 semantics
+and archive controls. A single-threaded Gambit VM is an ownership constraint
+on that VM; it does not require serializing independent tests or VM owners.
+The existing three-worker Scheme qualification and its 180-second deadline
+remain unchanged. Performance measurement isolation does not authorize
+reducing semantic-test concurrency.
+
+The archive controls also start twelve independent processes behind a common
+barrier. They contend on the real file lease and publish an SDK-built archive
+eight times each, checking private archive digests outside the lease. A
+separate twelve-thread observer test submits 768 start/complete pairs and
+checks exact event and compilation-unit accounting. These are concurrency
+controls, not end-to-end runtime speed measurements.
+
+Local control validation uses the existing SDK-built archive and the pinned
+SDK Rust libraries. It does not constitute a successful current-head cold
+package build or full CI acceptance. Both interrupted cold-package drafts
+and the initial stress-fixture directory-creation failure are retained.
+
+** Demand-based source qualification preparation
+
+The source-Suite lane previously selected every non-test source under
+=t/qualification= as a compiler root, including unrelated oracle output drivers.
+It now selects the original production carriers, explicit dynamic dependencies
+and previously compiled fixtures requiring ABI refresh. Every Suite remains a
+projection root; Gerbil supplies its transitive dependencies. The performance
+lane retains its original base carriers and gates. This semantic-preparation
+change must not be presented as a fix for historical performance-lane timing.
+
+Lean proves requested/cached roots are retained, unrelated uncached roots are
+excluded from source qualification, and compiled consumers retain their base.
+The exact Scheme selection and Quint support function are rendered from Lean.
+PreparationWork uses that function and checks omitted-demand/cached-root fault
+controls in addition to the original observation and cache controls.
+
+The isolated library-only SDK build completed with 101 actual native object
+compilations, 210 matched start/complete observations, no observer errors and
+an accepted receipt. Its seven controls passed with twelve test threads.
+This is one real construction receipt, not a matched cold-build speed claim;
+local concurrent compiler activity prevents latency qualification. Full
+semantic, cross-configuration reuse and current-head CI receipts follow
+separately. SDK compiler internals and allocator correctness remain outside
+these policy proofs.
+
+CI executes the complete =ascent-scheme= test inventory with twelve harness
+threads, including the VM lifecycle and original interface tests; compiling
+that inventory with =--no-run= is no longer used as semantic acceptance.
+
+** Full concurrent binding qualification
+
+Running the complete binding inventory exposed the process-wide module-owner
+quota tests: two Cases intentionally occupy all 64 owner slots. Those tests
+cannot share one VM with unrelated Cases without changing the resource model.
+CI therefore uses pinned nextest 0.9.140 with twelve concurrent test processes
+and zero retries. Each process retains one VM owner thread and the original
+64-slot limit and operation deadlines. A separate twelve-thread Case exercises
+192 requests against one shared owner below that quota. Rust/PyO3 workspace
+Cases continue using twelve harness threads.
+
+The build adapter is a build-only crate, =ascent-build=, so the Cargo build.rs
+and root test harness remain thin, as required by the existing ASP gate. The
+compiler/archive algorithm remains upstream. The generated decoder/cache
+regions track their new source paths exactly.
+
+The first complete local Rust/PyO3 workspace run passed 114 tests (including
+88 integration Cases) with twelve test threads. The shared-process Scheme
+binding run retained its 30 passes and 11 failures. The local three-worker
+Scheme source run reached the unchanged 180-second deadline and is incomplete;
+it is not accepted as a pass. Its preparation was concurrent with compilation
+and is not timing evidence.
+
+A later local native test link failed before execution. The retained macOS
+crash report identifies stack exhaustion in Apple's linker dead-strip
+=AtomFileConsolidator::markLive= recursion, not a Scheme runtime crash. The
+classic linker is used only for the local diagnostic qualification; no upstream
+changes or test-budget increases are introduced. A cross-configuration SDK
+receipt independently records 101 cached native objects, zero object compiler
+starts and complete source revalidation. Packaging and observation costs remain.
+
+** Retained negative results and remaining preparation obligation
+
+At revision =166d003d=, the isolated macOS three-worker job rejected the
+180-second runtime gate: 135 of 173 module completions and 1051 Case completions
+were observed, with no foreign compilers or audit errors. Preparation took
+394.775 seconds (projection 47.165 seconds, make 338.771 seconds), despite
+253 compiled support modules versus 301 in the earlier =3b8a3b6e= run.
+The earlier 272.328-second preparation and 110.240-second runtime are historical
+controls from a different runner instance. This reduction of 48 compiler inputs
+therefore does not close the wall-time regression or the 180-second obligation.
+The fixed-namespace SDK object reuse and policy proofs are separate results.
+
+After preserving the shared-process failures, process-isolated qualification
+passed all 51 native binding tests in 45.179 seconds with twelve concurrent
+processes, zero retries and zero skipped tests. It also passed the explicit
+192-call, twelve-thread shared-owner Case. Strict build-helper Clippy and the
+original ASP source-layout gate pass after the build-only crate refactor.
+
+Linux's 12-thread oracle lane exposed an interpreted composed-corpus driver
+hitting its original 90-second deadline. The identical driver is now mounted
+in the existing compiled =dsl-closure --oracle= entry. Its 778 cases,
+256-case chunks, three Session phases, independent Rust Ascent comparison and
+90-second deadline are retained. No solver or expected rows were changed.
+
+The stalled disposable executable build was traced to four copied, day-old
+existence-based compiler lock files in its private dependency seed. The
+installed compiler's =compile-obj= retry loop waits while those files exist.
+Removing only those files in the disposable prefix immediately resumed native
+compiler jobs. The original workspace and upstream compiler were untouched.
+The raw lock inventory and earlier interrupted runs remain diagnostic evidence.
+
+** SDK allocation diagnosis and authorized 240-second observation
+
+The user explicitly authorized a 240-second macOS source-semantic deadline on
+2026-10-18. Only the three-worker runtime deadline changes; preparation remains
+separately timed. Twelve-way Rust/PyO3 and Scheme binding concurrency, child
+heaps, cancellation, resource limits, provenance, fixture deadlines and the
+LeanPoo Guard remain unchanged. A pass at 240 seconds does not resolve the
+retained 180-second failures or historical latency regressions.
+
+Revision 144ed6e5 passed the complete main CI, including all 51 process-isolated
+Scheme binding tests with twelve concurrent processes. Its separate macOS
+three-worker run took 231.027 seconds to prepare and reached 180.067 seconds
+with 168 of 173 modules and 1383 of 1401 Cases completed. That failure remains
+negative evidence; the previous runner's pass does not replace it.
+
+The allocation failure is reproducible with the existing pinned Release:
+= gxi -:debug=q workbench/tests/fixtures/sdk-allocation-counter.scm =
+retains an 8,000,000-byte bytevector, collects, then drops it and collects inside
+=##exec-stats=. The observed corrected estimate is -7,999,776 bytes with one GC;
+the independent raw snapshots also decrease (68,851,608 to 60,854,072 in the
+local probe). These absolute snapshots include startup and observer work.
+
+At pinned Gambit ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f,
+=lib/mem.c:7521= adds current =occupied_words_still= to processor accounting;
+=determine_occupied_words= recomputes that occupancy after collection.
+=lib/_repl.scm:5278= subtracts frame and statistics-structure corrections from
+the counter difference. Releasing previously allocated still objects can
+therefore decrease the reported counter. This is not negative allocation or
+an allocation saving. No upstream code was changed.
+
+Work trace v3 retains raw counter endpoints beside the original corrected
+estimate. Either a raw decrease or a negative corrected estimate rejects
+complete cost admission. Legacy trace v2 remains readable for historical
+receipts; malformed mixed-version events are rejected. Nested inclusive
+intervals are never summed. The signed arithmetic and rejection conditions are
+represented in Lean and the existing Quint decreasing-counter control. This
+is a correspondence to the cited formula, not a proof of the C allocator,
+collector, expansion engine or Python decoder source.
+
+The retained matched experiment still rejects the 19.41 percent cold-build
+regression. Its separate instrumented controls each execute 490 GSC calls and
+consume 240,762,807 input bytes; the production cold-build entry files are
+unchanged between those controls. GSC CPU totals are 274.96, 320.90, 303.66 and
+281.31 seconds in ABBA order. The retained input hashes differ across runs,
+including path-bearing generated sources; equal byte counts do not establish
+equal compiler work. Zero recorded block-I/O counters do not prove absence of
+I/O. The negative allocator observations prevent complete allocation-cost
+admission. No causal fix for that wall-time regression is claimed here.
+
+The standalone Gambit diagnostic uses a =.scm= fixture with ordinary =define=,
+not an ASCENT =.ss= module. An initial =.ss= placement unnecessarily changed
+the broad Scheme product-cache key, even though no production compiler consumes
+that fixture. The correction avoids this newly introduced invalidation without
+excluding any actual Scheme module from the key. It does not explain or resolve
+the earlier 19.41 percent regression. Both published CI revisions are retained.
+
+The first published macOS observation (04b803a5) failed before preparation:
+the newly added diagnostic passed a list to a variadic command wrapper and
+raised TypeError. No semantic runtime result exists for that attempt. The
+mandatory diagnostic call is removed; the fixed-SDK probe remains a standalone
+reproduction command rather than a prerequisite for every semantic run.
+
+** Completed 240-second observations and an independent oracle failure
+
+At aa8a1b29, the macOS three-worker run completed all 173 modules and 1401
+Cases: preparation 258.470 seconds, runtime 161.742 seconds, no foreign
+compilers or audit errors. The subsequently shared revision 88b4aa5e completed
+the same module/Case counts: preparation 299.726 seconds, runtime 152.070
+seconds, again without foreign compilers or audit errors. Both runtimes are
+below the former 180-second deadline. These are separate runner observations,
+not evidence that increasing the deadline improves performance or that the
+preparation/cold-build regressions are resolved.
+
+The aa8a1b29 full CI retained a different failure: the interpreted lattice
+Session corpus reached its unchanged 120-second deadline after 135,168 output
+bytes. The later shared revision's oracle pass is not a replacement for this
+failure. Like the existing composed corpus, the identical lattice fixture is
+now imported into the existing compiled dsl-closure oracle dispatcher. The
+514 recursive graph cases, direct/mixed source-update corpora, wide retained
+Session cases, independent Rust Ascent expectations, snapshot checks and
+120-second runtime deadline are unchanged. This moves fixture compilation
+into the already separate DSL preparation phase; it is not reduced solver work.
+The production loading interface and source Suite execution remain unchanged.
+
+The formal inventory unit guard also now classifies the two concurrently
+committed EvidenceCheckpoint and ClueQueryResume models as additions. Its
+historical 56-model, 377-obligation and 349-obligation assertions remain exact;
+no original proof scope or counterexample expectation is reduced.
+
+The shared revision's full CI additionally exposed the existing ASP membership
+and test-leaf size contracts and ten strict Clippy findings. Integration fixes
+index selected component IDs with a BTreeSet, preserve all tests while splitting
+the exchange suite into focused modules, retain exact empty/nonempty assertions,
+and check the finite corpus degree conversion. No feature behavior, accepted
+rows, resource limits or lint settings are weakened. These failures and the
+independent oracle timeout remain recorded separately.
+
+The existing macOS job can also be dispatched directly without an ABBA baseline;
+a supplied baseline still selects only the on-demand experiment. This reuses
+the same three-worker semantic job and 240-second deadline for exact-revision
+qualification without manufacturing an unrelated ABBA experiment.
+
+After these corrections, the isolated current workspace passes all 131
+Rust/PyO3 tests at twelve threads (including all 105 integration Cases and
+both ASP gates). Strict workspace Clippy passes with =-D warnings=. The
+exchange suite retains all 17 original test names. The new helper extraction
+preserves request inheritance, selector validation, error order and checkpoint
+content; its existing semantic Cases remain the qualification, not a new
+source-equivalence proof. Full exact-head CI remains a separate requirement.
+
+
+** Cold-build variance and internal compiler-child accounting
+
+The retained 19.41 percent result is a measured total, not an established
+per-build slowdown or a causal attribution. Its ABBA cold-build samples are
+187.254453, 186.220807, 188.146780 and 126.250123 seconds. The last baseline
+also consumes less reaped-child CPU (278.049351 seconds versus 380.868096 for
+the first baseline); descheduling alone does not explain that difference.
+There are too few controls to classify this as a stable regression or noise.
+The original failed admission and unresolved ledger remain unchanged.
+
+The separate preparation samples measure a different phase. The current
+46a46bbe macOS preparation log records 253 distinct module compile starts and
+zero production rebuilds; it does not demonstrate duplicate DF scheduling.
+Gerbil's separate runtime and phase compilation products are distinct jobs.
+No build.ss scheduling change is justified by these observations.
+
+In the historical instrumented cold-build controls, 161 compiler inputs have
+identical bytes and matching relative names across all four runs. Their summed
+inclusive GSC CPU is 67.682868, 79.077658, 73.302743 and 67.836389 seconds.
+Equal inputs do not bound hardware latency or the cost of the other inputs;
+these instrumented controls cannot replace the uninstrumented latency failure.
+
+The work-only observer previously recorded direct Gerbil helper calls but
+missed gambuild-C started internally by GSC. It now uses the existing SDK's
+documented ~~bin override while pinning ~~ to the original SDK root. Both
+are necessary: overriding bin alone changes the inferred include directory
+and fails before C compilation. The installed SDK is not modified. Each helper
+still executes at its original absolute path, preserving sibling lookup and
+SDK cache identity. Original compiler arguments and the added diagnostic
+runtime options are retained separately.
+
+Compiler-work v3 records the containing GSC observer, child PID and native
+process wall interval before source-validation overhead. A helper without its
+parent record, or nested helper CPU exceeding its parent's inclusive CPU, is
+rejected. Stage summaries and largest compiler jobs retain exact input blobs.
+Nested helper CPU is a subset of GSC child usage, never an additional total;
+the residual includes observer overhead and must not be called pure expansion
+or frontend CPU. Import requests and direct registry hits still are not actual
+expansion counts or complete cache-hit counts.
+
+The existing Release compiles a diagnostic dynamic module through the internal
+helper observer, then loads it and returns 49 for the square of 7. This checks
+routing and execution only, not latency equivalence. Lean checks conservation
+of an accepted inclusive/residual partition and rejection of an excessive
+child cost. Quint adds a sum-helper-cpu counterexample while retaining every
+existing preparation control. OS accounting, the observer decoder, actual
+expansion, cumulative allocation and the compiler source remain outside those
+proofs. The signed SDK occupancy counter is not relabeled as allocation work.
+
+A same-revision, on-demand work experiment is required to characterize these
+costs without assuming a version regression. Its timings remain diagnostic,
+and source semantics retain three workers, a 240-second runtime limit and
+all existing Cases. Twelve-thread Rust/PyO3 acceptance remains independent.
+No performance threshold, cancellation, resource or provenance rule changes.
+
+
+** Retained first-control compiler costs and signed endpoint decoder repair
+
+Work experiment 39146265938 retains its first complete cold/prepare/warm
+control. It stops at summary decoding, so it is not a four-control work study.
+The decoder incorrectly required nonnegative raw SDK endpoints. An intact
+record reports -93,032,752 to -93,029,504 with a positive corrected estimate of
+880 bytes. Signed parsing now retains that event while rejecting its use as
+allocation evidence. Neither endpoint is clamped, discarded or counted as a
+saving. Lean and Quint explicitly reject even increasing negative endpoints.
+The failed remote run remains failed; its retained bytes are replayed locally,
+without repeating compilation to replace the failure.
+
+The first preparation control has exactly 253 runtime SCM inputs, 253 phase-0
+inputs and 83 phase-1 inputs: 589 distinct inputs, with no repeated input path.
+These belong to 251 test-support modules and the two artifact/inventory support
+modules. All 589 GSC processes dispatch an observed native C/dynamic-link helper.
+Their inclusive GSC CPU is 653.535935 seconds, of which 547.491334 seconds
+(83.77 percent) are helper child CPU. The remaining 106.044601 seconds include
+GSC frontend and observer overhead. These are process-work observations, not
+source-refinement proofs or additive wall-time components. Exact SCM inputs
+consume 17,624,206 bytes and helper C inputs consume 161,255,886 bytes.
+
+Preparation wall time is 387.560746 seconds in this instrumented control,
+including 48.218444 seconds of dependency projection and 330.170402 seconds of
+make. Warm preparation starts no GSC or SDK helper process, changes no retained
+test output, and spends 41.038652 of 47.305641 seconds in dependency projection;
+make takes 0.423790 seconds. Both phases have zero foreign-compiler observations
+and audit errors. Negative raw endpoints (135 build, 5 prepare) and decreasing
+counters still reject complete allocation-cost admission.
+
+At fa3f080e, main CI 39146270550 passes all ten jobs. Its tested merge tree
+matches the head tree a8d4d79fc7bcc7e7e9f5ac9bd980398cd58e3721. The independent
+macOS run 39146270642 passes 173 modules and 1401 Cases with three workers and
+the unchanged 240-second runtime limit: preparation 364.796200 seconds and
+runtime 164.996896 seconds. This is not an improvement over 46a46bbe: the
+Scheme/Rust workload is unchanged, yet these separate runners have materially
+different timings. The independent fixed 2-GiB hashing reference also changes
+from 0.967444 to 1.185326 CPU seconds. This supports investigating environment
+variance; it does not certify that all of the earlier 19.41 percent difference
+is noise. No performance resolution is recorded. A separate uninstrumented
+same-revision study retains the required four controls.
+
+
+** Same-source variance and a separate cache-restoration defect
+
+Uninstrumented experiment 39146806746 uses 46a46bbe for both labels and retains
+all four controls. Cold builds take 223.498, 195.466, 162.144 and 175.304 seconds;
+preparation takes 383.648, 361.776, 354.174 and 348.283 seconds. Warm preparation
+takes 38.868, 43.482, 47.291 and 29.957 seconds. Identical source therefore
+produces a nominal cold improvement of 10.33 percent and a nominal warm
+regression of 31.89 percent under the same unchanged admission calculation.
+These are not version effects. The experiment fails its original gate and
+retains both older unresolved runs. This establishes substantial run variance,
+not a statistical attribution of all of the earlier 19.41 percent to noise.
+
+A different, repairable integration defect appears in exact-head CI logs:
+restoring the exact compiled-artifact key still compiles production modules.
+For example c9d50c7f's Scheme semantics job restores ascent-compiled-v2 and
+records 428 distinct module compile starts across its phases. DF is not
+scheduling a module twice. Fresh checkout source timestamps are newer than
+restored outputs, so its native timestamp checks correctly request compilation.
+
+An existing-Release probe with one unchanged source digest records one compile
+on a cold build, one after changing only the source mtime, and zero on the next
+unchanged build. A second probe restores an archive: restoring only outputs
+causes one compile, while restoring the matching source and output timestamps
+causes zero. This is a call-count characterization, not a timing speed claim.
+No compiler, SDK or build.ss change is required.
+
+The existing application cache now carries its matching tracked Scheme/C
+sources alongside products. The exact key includes Git index paths, blob IDs
+and modes, actual source-byte hashes, toolchain identity and existing job/lane
+separation. Before build, both the raw byte fingerprint and Git diff must match
+the requested checkout. Version manifests and generated/untracked sources are
+not restored. There are no fallback keys, synthetic source timestamps, new
+build tasks or skipped native builds. Source receipts, all std/make dependency
+checks and every semantic/performance gate still run. A first successful cold
+CI must save this v3 payload; a separately retained successful-run replay is
+required to validate cross-run restoration rather than infer reuse from a
+cache-hit message.
+
+Lean models the actual direct-input timestamp comparison from std/make:
+newer checkout timestamps request work even for equal bytes; matching restored
+source timestamps do not force that rebuild. Quint retains the original
+controls and rejects outputs-only restoration and stale-source restoration.
+This closes neither the complete native dependency graph nor the compiler,
+allocator or host decoder source. Cold build variance remains separate from
+the avoidable work caused by restoring mismatched timestamp generations.
+
+* Dependency projection: resident graph versus source loading (2026-10-19)
+
+This change diagnoses the remaining preparation cost. It does not claim a
+reduction of the historical roughly 36-second CI projection interval. The
+existing Release, dependency roots, compilation policy, source Suites, and
+native scheduler remain unchanged. The aggregate dependency-projection marker
+is retained. Three child markers distinguish input admission, source-context
+loading, and resident-context projection plus carrier selection. These child
+markers are subdivisions; do not add them to their inclusive parent.
+
+A bounded local probe imported all 173 qualification entry sources through the
+released SDK and called ASP's existing prepared-native-import-closure API.
+It performed no compilation. Loading took 19.345088 seconds, resident projection
+0.117609 seconds, and importing the same entry roots again in that VM took
+0.015637 seconds. The projected closure contained 560 package-local sources.
+These are attribution observations on this host, not matched CI speedups or
+semantic acceptance. Source loading includes native reading, macro expansion,
+interface acquisition, and required macro evaluation; it is not pure expansion.
+
+A separate instrumented probe retained the locally installed cached support
+carriers as roots: 420 supports plus 173 Suites, 593 total. Loading took
+22.630236 seconds, resident projection 0.151302 seconds, and resident root reuse
+0.865201 seconds. It observed 8452 import requests, 3820 source import requests,
+4060 raw-key registry hits, 828 top-level returned-context reuses, and 934 newly
+registered context identities (752 source and 182 interface contexts). This
+local support inventory differs from the earlier CI inventory. It is not a
+paired latency comparison. Observer overhead and retention also preclude using
+these timings as an optimization result.
+
+** Native source correspondence and its boundary
+
+The pinned Gerbil expander/module.ss core-import-module import-source path
+reads the module, acquires its prelude, creates a module context, completes
+core-expand-module-begin, quotes and assigns code, then registers the context
+under its normalized path and module id. Library lookup can add another alias.
+The observer snapshots distinct module-context identities after successful
+outermost imports and primes its identity index before installation. Thus path,
+id and library aliases do not inflate completion counts. A newly registered
+string-path context records a completed module expansion at this boundary;
+it does not count individual macro invocations, failed expansions, or work
+before observer installation. Nested and prelude contexts discovered through
+native recursion are included when they reach this registry boundary.
+
+The returned-context identity is checked before the snapshot update. This
+records native normalized-path reuse even if the raw request key missed.
+A real SDK probe imports a temporary source, imports its /./ path alias, then
+explicitly reloads it. The alias reuses its identity; reloading records another
+identity with the same path. The source probe is now an executable test when
+the released SDK is available. The decoder rejects incomplete outermost
+observations and truncated context records. Old traces retain their explicit
+absence of context observations rather than inventing expansion counts.
+
+The SDK occupancy-based allocation counter remains unsuitable as a cumulative
+allocation stream even when every interval is nonnegative. Summaries now expose
+cumulative_allocation_observed=false and cumulative_allocation_bytes=null.
+No positive interval, cache hit or reduced RSS fills that gap. Lean checks
+identity filtering and empty resident scans, and distinguishes occupancy from
+cumulative event metrics. Quint retains all previous controls and adds an
+occupancy-as-cumulative counterexample. These statements do not prove the
+native hash implementation or the full observer decoder equivalent to Lean.
+
+** Unclosed optimization and proof obligations
+
+The measured expensive operation is acquiring native contexts, not the final
+resident DAG traversal. Removing cached support carriers, replacing source
+Suite discovery with installed interface parsing, or persisting a projected
+graph without complete macro/prelude/dependency invalidation is not justified
+by these measurements. No such shortcut is enabled. SDK allocator event
+telemetry, per-expansion exclusive costs, complete observer/SDK source
+refinement, cross-process context reuse with sound invalidation, and the
+historical 19.41 percent causal attribution remain open. Green acceptance
+cannot discharge these obligations.
+
+Local failure receipts are retained separately: an initial fixture assertion
+compared /var with the SDK-normalized /private/var path; the corrected path
+identity check passes without rerunning the measured import. Initial Lean
+proof errors were repaired under the same Guard budget. A broad Python test
+invocation used an environment without ascent._core and failed; it is not a
+full Python acceptance receipt. The exact-head wheel consumer CI is required.
+
+* Preparation GC and macOS compiled reuse candidate (2026-10-19)
+
+The previous macOS receipt is cold: 44.030551 seconds of dependency projection,
+347.852286 seconds in native make, and 399.407757 seconds for preparation. The
+macOS semantics job did not restore compiled application/support outputs.
+Consequently each fresh job compiled the support closure again. This is not
+proof of duplicate compilation within one make. The retained native trace
+contains 589 distinct GSC phase inputs. Its three compiler slots were occupied
+for 874.101047 slot-seconds over a 323.231993-second interval, about 90.14 percent
+utilization. Reordering jobs cannot remove the actual C work represented by
+those distinct inputs.
+
+The candidate uses the released SDK's documented live-ratio=20 option in the
+two preparation commands. Their existing max-heap=3G remains unchanged. The
+source test runtime, three-worker capacity, 240-second macOS runtime deadline,
+12-thread binding tests, performance gates, cancellation, resources, and
+provenance are unchanged. Production and GSC child compiler flags are unchanged.
+This tunes native GC rather than implementing a new collector or evaluator.
+
+The SDK adjust_heap path computes max(live / ratio * 100, minimum), using
+integer division before multiplication. resize_heap separately caps selected
+sections with its upper maximum bound. Lean renders the actual preparation
+option line and checks that section-selection arithmetic respects its maximum;
+a real SDK test reads back 3221225472 max-heap bytes and live-percent 20 from the
+rendered command. Quint retains every old control and adds rejection of both
+raising the maximum and bypassing it. The complete resize/overflow implementation
+and process RSS remain outside this arithmetic proof.
+
+Local diagnostic loading preserved all 173 entry roots and the 560-source
+closure. The default policy performed 29 GCs versus 11 at live-ratio=20. Timing
+admission was rejected because other compilers and Lean appeared during both
+probes. Those rejected receipts are retained; their wall times are not speedup
+evidence. An initial diagnostic used the unsupported spelling live-percent;
+the SDK rejected it. The corrected option comes directly from its runtime help.
+
+The macOS semantics job also reuses the already established source/product
+snapshot method. Its exact key binds the released SDK binaries/header/receipt,
+GCC driver/cc1, linker, architecture, three-worker configuration, indexed source
+names/modes/blobs, and actual source bytes. There is no fallback key. It restores
+the dependency/application prefix and matching tracked Scheme/C source mtimes.
+Raw bytes and Git are rechecked after restoration. Dependency installation,
+production native make, complete source preparation, zero compiled source Suite
+interfaces, and every semantic Case still execute on a hit. This is compiled
+artifact reuse, not a cache of source graph verdicts or macro-expansion results.
+The on-demand cold ABBA experiment continues to use four fresh application
+prefixes and cannot consume this macOS acceptance cache.
+
+Allocation remains a separate limitation. A real SDK probe allocates an 8MB
+still vector between forced GCs: the last-GC processor counter increases by
+only 32 bytes, then by 240 after releasing it. Thus substituting that field for
+the earlier signed raw counter would omit this allocation. The large still
+allocation path accounts space at the VM level; the exposed endpoint statistics
+do not supply a cumulative still-allocation event history. Lean checks the
+component-difference identity under exact integer observations and proves that
+equal still-occupancy endpoints cannot identify total allocated bytes. The
+observer continues to report cumulative allocation as unknown. Neither fewer
+GCs nor unchanged endpoints is presented as a total allocation saving.
+
+Cold wall/CPU, warm compiled reuse, current-head semantics, and full SDK source
+refinement must be reported separately. The historical unresolved performance
+ledger is retained without a resolution entry or threshold change. This
+candidate does not close per-macro source refinement or the full allocator
+observer/decoder equivalence.
+
+
+* Rejected GC candidate; retain compiled reuse (2026-10-19)
+
+The independent three-worker cold experiment 39180328303 completed all four
+controls, in the fixed original order, without foreign compilers or audit
+errors. It compares baseline 76e485a6 with candidate 52aa65bb. All negative and
+positive samples are retained:
+
+| Control | Build seconds | Cold preparation seconds | Compiled-prefix preparation seconds |
+|---------+---------------+--------------------------+-------------------------------------|
+| Baseline 0 | 195.269 | 396.777 | 31.421 |
+| Candidate 1 | 212.998 | 415.225 | 44.998 |
+| Candidate 2 | 169.372 | 303.210 | 41.043 |
+| Baseline 3 | 216.350 | 291.389 | 38.812 |
+
+Cold preparation is 4.398 percent worse in aggregate and compiled-prefix
+preparation is 22.508 percent worse. The experiment rejects both under its
+unchanged policy. The historical unresolved runs 39084120171 and 39088480174
+also remain unresolved. The second candidate becoming faster is not a repair
+certificate. Build time, which the preparation-only GC option does not change,
+varies too; no precise causal percentage is inferred from these four samples.
+The GC candidate has not demonstrated a benefit and is removed without retrying
+the failed experiment or changing its thresholds. The final preparation option
+explicitly selects the existing SDK default live-ratio=50 and preserves 3G.
+
+The compiled-reuse change is retained. On 52aa65bb the first macOS job succeeded
+before any replay. Its populated-cache replay also succeeded. Both qualified
+173 source modules and 1401 Cases, with zero compiled source Suite interfaces,
+three workers, the original 240-second runtime limit, and clean isolation
+audits. Preparation changed from 343.571735 seconds to 36.452008 seconds;
+native make changed from 287.123218 seconds to 0.458765 seconds. Support-module
+compilations changed from 253 to zero while the 390-target native carrier list
+remained present. The cache archive was 57,837,006 bytes and restored in about
+3.4 seconds. The complete job changed from 1071 seconds to 354 seconds, including
+cache IO and full semantics. These are concrete compiled-reuse observations,
+not evidence of a cold algorithmic speedup. This receipt used the rejected GC
+candidate; the final default-policy commit requires its own cold and cache-hit
+semantic acceptance, rather than relabeling the candidate's measurements.
+
+The main 52aa65bb CI completed 10/10 jobs at its first attempt, including full
+Scheme, Rust/PyO3, formal, all original performance and oracle controls. Binding
+nextest retained 12 concurrent tests, no retries, and passed 51/51 with no skips.
+The successful CI does not override the failed optional GC experiment.
+
+The primary checkout acquired unrelated edits to gerbil.pkg, formal_models.py
+and a new ModelApplicability.qnt while the experiment ran. They are preserved;
+this rejection and final default-policy acceptance use a separate worktree
+based on the tested commit. No SDK or upstream code is changed.
+
+* Context-load input selection (2026-10-19)
+
+The remaining source-context interval is separate from native make and from
+compiled-product cache restoration. The existing harness prepends the source
+root to Gerbil's load path. Gerbil resolves a qualified import to a concrete
+path before invoking current-expander-module-import; preloading a qualified
+interface therefore does not prevent a subsequent source-path expansion.
+
+The harness now uses that existing SDK import parameter only during context
+loading. Its mapping contains the canonical source paths of the production
+catalog, and only interfaces present in the installed package library. It is
+empty unless the existing production receipt admits source bytes, SDK, root and
+linked-library identity. Explicit reload, unsupported path values, absent
+interfaces and non-production inputs retain the original SDK import path.
+Gerbil owns normalization, module caching, interface/source expansion and macro
+evaluation. Dynamic parameter scope restores the original hook on success or
+exception, before resident projection and native make. Source Suite and support
+roots, the full carrier list and all execution gates remain unchanged.
+
+PreparationWork.lean renders the deployed mapping/dispatch region exactly and
+renders the shared Quint selection predicate. It proves the four fallback
+conditions and the admitted source-completion selection. PreparationWork.qnt
+adds five mutation controls for invalidated producers, reload, consumers,
+missing interfaces and needless admitted source expansion. These dispatch
+correspondences do not prove the entire native resolver, decoder or allocator.
+Real SDK fixtures generate an interface through Gerbil's compiler (without C
+compilation), then check source/interface paths, aliases, reload, missing
+outputs and exceptional hook restoration.
+
+Local probes are diagnostic only: unrelated compiler and Lean activity was
+present. The incomplete older local prefix also lacks current interfaces, so
+its timings are not admitted as candidate performance. Independent remote
+baseline/candidate controls must qualify actual context-load work and latency.
+The existing import observer distinguishes completed source contexts from
+completed interface contexts. Its allocator/GC samples remain inclusive SDK
+observations, not cumulative still-object allocation. No negative counter is
+clamped, no historical regression is resolved by this change, and no SDK or
+upstream source is modified.
+
+The first candidate's formal job 39190450404 reached the unchanged 15-minute
+job limit after ALL-FORMAL-CHECK-OK and before the conformance step. The failure
+is retained. The selector is stateless, but its first Quint representation
+added eight no-op ImportPath choices to every protocol state. It generated
+67,969,681 transitions while exploring 2,442,600 states locally. The revision
+checks the entire 16-element Boolean input domain as constant predicates selected by the original admission state and
+removes the artificial state field and no-op action. All original protocol
+states, transitions, invariants and five new mutation controls remain; no
+sampling, cutoff, timeout, worker count or resource limit changes. Runtime
+Scheme, observer, controller, production inputs and experiment code are
+identical to 4bdf2922, whose independent native experiments remain attributable
+to that exact revision rather than being relabeled as another SHA.
+
+* Keep dependency checks separate from actual compilation
+
+The first selector was scoped only to consumer loading. Source inspection of
+this exact SDK shows std/make calling import-module on each carrier in both
+module-id and build-coordinator. Restoring the hook before make can therefore
+move producer expansion into make rather than remove it. Its successful macOS
+receipt 39190450400 is retained: context loading 46.068162s, make 317.427017s,
+preparation 371.604331s, source runtime 148.346624s, 173 modules / 1401 Cases,
+253 support compilations and zero production rebuilds. These unmatched wall
+values are not a speedup or a causal regression estimate.
+
+The revised selector also scopes std/make's dependency checks. It uses the SDK's
+current-expander-compiling? capability, which compile-module binds before
+importing its actual input. When this capability is true the selector always
+passes the original source path; it cannot compile an interface as the program
+body. Source/support inputs remain original paths in every mode. Native make
+still owns all carriers, dependency ordering, currentness, workers and builds.
+No module registry alias is written by ASCENT. The parameter restores naturally
+on success or exception and is inherited by native Scheme build threads.
+
+The real compiler regression fixture first generates an interface, removes the
+compiled object, reads that interface in a child Scheme thread, then recompiles
+the program while the selector is active. It loads the newly compiled object
+through the SDK loader and checks the actual value 17 against a sentinel. This
+validates compiler body selection and thread inheritance, rather than checking
+method names or only the Boolean policy. Reload and missing-interface controls
+remain. The generated Lean/Quint policy adds compilation as its fifth Boolean
+input: all 32 combinations and six new mutation controls are retained.
+
+The earlier independent experiments bind 4bdf2922, not this expanded-scope
+implementation. Their observations remain historical and cannot qualify this
+revision's costs. Fresh matched controls are required for the revised runtime
+path. The 3G preparation heap, live-ratio=50, three-core/240-second semantics,
+12-thread bindings, cancellation, resource, provenance and original performance
+rules are unchanged. Cumulative allocator events remain unobserved.
+
+* Refine the compiler marker against the complete SDK call path
+
+Further source audit found std/make itself setting
+current-expander-compiling?=#t around its entire operation. The 4c4cf633 marker
+therefore preserved correct compilation but still disabled reuse during native
+dependency checks. The two unfinished 4c4cf633 experiments were canceled as
+superseded; their partial controls are retained, not used as complete results.
+
+The corrected selector reads the existing public current-compile-context from
+:gerbil/compiler/base. Its default is #f. std/make does not set it, whereas both
+compile-module and compile-exe bind their diagnostic context before importing
+the actual program input. No stack tags or caller names are parsed. Any present
+compiler context conservatively retains the source path. The generated Scheme
+region uses this actual SDK getter; the Lean/Quint Boolean denotes context
+presence, not the broader expansion-mode flag.
+
+The strengthened native fixture runs real std/make with three workers against
+an unchanged compiled producer in a fresh VM. It asserts zero producer-source
+requests and at least one interface request, checks thread inheritance, then
+recompiles and loads the actual program object to obtain 17 instead of a
+sentinel. Replacing only the getter with the earlier broad flag makes this
+fixture fail its readonly counter assertion while still returning 17. That
+negative control is retained. The corrected fixture and all 14 work-observer
+tests pass on the existing released SDK. This checks the concrete native call
+path that the Boolean model alone could not distinguish; it does not establish
+full native compiler/decoder source equivalence or cumulative allocation.
+
+* Native compiled-interface dependency requests
+
+The completed 20ca9be3 ABBA experiments retain all four independent controls
+against 4df75849. Cold/warm source completions were 815/516 versus 862/563;
+compiler jobs stayed 589/0. Cold context time summed to 65.278085s versus
+71.335481s (-8.49%), but complete cold preparation only changed from
+589.219499s to 587.335356s (-0.32%). Build time regressed 7.16%. The
+uninstrumented latency experiment 39196369920 was rejected, including the
+unchanged historical failure ledger. Work experiment 39196373467 was also
+rejected: the SDK allocation estimates cannot provide cumulative allocator
+events. No byte reduction or end-to-end improvement is admitted. The separate
+macOS semantics receipt 39196292780 retains its slow 350.226764s preparation
+and 40.846909s context phase; its 118.873312s runtime passed the original gate.
+
+The remaining 90 production source contexts are concrete, distinct identities,
+not additional compilations. This SDK's compiled spec: imports call
+core-import-nested-module, which forwards a syntax-wrapped qualified origin to
+import-module. A filename-only selector misses these requests and the SDK
+then resolves them against the ordinary source-first load path. The revised
+selector indexes each admitted interface by both normalized source filename
+and qualified interned symbol. The existing SDK core-library-module-path? and
+stx-e decode native bare and syntax-wrapped library requests. Unknown forms,
+explicit reloads, nonadmitted producers, missing interfaces and actual compiler
+contexts retain their original request. Global load-path order and module
+registry remain untouched.
+
+The real native regression test now compiles two modules, with an only-in
+import producing a compiled spec: dependency. Fresh-VM readonly make uses
+three workers and must not register the dependency source, then actual
+compile-module emits an executable object whose value is 17. Disabling only
+qualified-origin selection makes the same test fail its source-registry
+assertion while still returning 17: correct values alone would miss the
+expansion waste. Guarded Lean checks source/symbol/syntax request policy and
+renders the exact deployed helper and Quint predicate; Quint adds three
+negative controls for missing qualified/syntax routes and accepting unknown
+forms. SDK syntax decoding, full macro expansion and allocator internals remain
+explicit unproved premises. This change needs new exact-revision matched
+receipts; the earlier 47-context reduction cannot qualify the revised selector.
+The immutable released SDK, three cores, 240-second source runtime deadline,
+12 binding-test threads and every semantic and performance limit are unchanged.

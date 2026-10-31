@@ -1,0 +1,99 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: monotone containers reading: mono types as a typed reasoning-language boundary
+#+STATUS: primary-source and code-anchored research; no native mono type implemented
+#+DATE: 2026-10-05
+#+FILETAGS: :research:datalog:mono-types:language:proof:
+
+* Source and value test
+
+Runqing Xu, David Klopp and Sebastian Erdweg, [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types – First-Class Containers
+for Datalog]], ECOOP 2025. The [[https://drops.dagstuhl.de/storage/00lipics/lipics-vol333-ecoop2025/LIPIcs.ECOOP.2025.33/LIPIcs.ECOOP.2025.33.pdf][published PDF]] is the evidence source. Read §§2–5
+and §6.1; PDF pages count from one. The paper provides a Rocq
+mechanization and source artifact. Its two evaluations are dependency
+analysis and interval analysis, including plain Datalog comparisons;
+the dependency study also compares a translated set variant on Ascent
+and Soufflé (§5.1). These are concrete PL and program-analysis results,
+not an LLM benchmark or a performance result for this repository.
+
+| Paper locus | Substantive result | Our transfer boundary |
+|-------------+--------------------+-----------------------|
+| §2.1, PDF pp. 4–5 | =create/add/read=; observable read grows on each addition and is independent of insertion order | A host mutable collection or arbitrary lattice callback does not satisfy these laws merely by having the right name |
+| §§2–4, PDF pp. 4–18 | Rocq-checked constructions, observational equivalence and optimizations | A new Scheme descriptor would need concrete admission and translation proofs, not a reproof of the paper's abstract record |
+| §5, PDF pp. 19–22 | Dependency and interval analyses; unoptimized nested map is slower, optimized lowering scales better on the studied inputs | Require matched output before comparing allocations, intermediate rows and time; no inherited speedup |
+| §6.1, PDF pp. 23–24 | Explicit comparison with Datafun and BYODS | Keep language-level monotone observations, Provider storage, and finite-height termination as distinct contracts |
+
+* Semantic price of a first-class container
+
+The paper's =Mono= record has internal state =ST=, input =I=, output =O=,
+=init=, =add= and =read=. The required laws are:
+
+#+begin_example
+read(s) <= read(add(s, i))
+read(add(add(s, a), b)) = read(add(add(s, b), a))
+#+end_example
+
+The order =<== belongs to =O=. Users cannot observe arbitrary =ST=.
+The first law makes reads monotone; the second makes observable results
+independent of the order in which two items are added. The interface has
+no removal operation. It does not, by itself, make duplicate additions
+idempotent, authenticate an input, or prove finite-height termination.
+The paper explicitly contrasts this with Datafun's finite semilattice
+termination condition (§6.1, PDF p. 23). Summation over unbounded natural
+numbers can be monotone and order independent yet still ascend forever.
+
+This is valuable for a reasoning *language*: a container may be passed
+through rules, filled by different derivations, and read as a structured
+result. It is different from placing an opaque mutable object in a row.
+The evaluator must know its observational order and how an addition
+participates in fixed-point evaluation.
+
+* Comparison with the existing language
+
+| Existing owner | Current behavior | Missing condition before a mono type can be admitted |
+|----------------+------------------+-----------------------------------------------------|
+| =program/scheme-checked.ss= | Checked =min/max= lattice modes and reducers over a completed lower stratum | A first-class container needs a typed =add/read= descriptor and proof of both laws; a lower-stratum reduction is not recursive container reading |
+| =program/objects.ss= | Trusted lattice declarations may carry a host join procedure | A host procedure is not an inert checked mono-type definition; changing it must not be hidden behind a stable descriptor identity |
+| =program/higher-order.ss= | Finite typed relation/arrow domains and bounded-height normalization | Relate the proposed output order and reachable states to a finite bound; the paper's laws alone do not supply one |
+| =table/provider.ss= and =table/storage.ss= | Physical relation Providers and indexes | BYODS concretization and delta laws govern physical new-fact exposure; mono types govern source-language observations. One does not imply the other |
+| =program/session.ss= | Source replacement and withdrawal create a new completed snapshot | Recompute or prove a separate decremental algebra; =add= alone cannot justify reusing a container after source withdrawal |
+
+The [[file:functional-fixed-points.org][Datafun]] and [[file:higher-order-change.org][semi-naive Datafun]] notes cover typed monotonicity
+and finite higher-order change. [[file:provider-concretization.org][BYODS]] covers concrete and delta
+Provider behavior. The [[file:../../scheme-compiler-proof-bridge.org][compiler proof bridge]] proves an abstract positive
+lowering kernel and finite-rank laws, but no native Scheme mono-type
+translation. The paper's Rocq proofs cannot be counted as Lean proofs of
+these Scheme paths.
+
+* Falsifiable language experiment
+
+Do not add a general =new/add/read= syntax until one closed, finite
+candidate descriptor has a semantics-preserving lowering. A set mono
+is the smallest useful discriminator:
+
+1. On a cyclic program-analysis graph, compare complete result sets of
+   plain positive rules and the proposed descriptor against an independent
+   finite set model. Record intermediate tuple counts and allocations.
+2. Feed the same two contributions in both orders and duplicate one
+   contribution. State whether duplicates represent source occurrences,
+   set members or aggregate multiplicity; assert only the chosen law.
+3. Withdraw one of two source supports and then the final support. A
+   retained Session may publish only a new, complete result; an old
+   container cannot silently remain authoritative.
+4. Run an unbounded ascending output as a negative control. Budget
+   exhaustion is =bounded=, never a completed fixed point.
+5. Only after semantic parity, compare direct relation lowering with
+   an unoptimized container representation. The paper's interval case
+   shows that abstraction without a suitable lowering can regress badly.
+
+For Lean, the immediate useful theorem would be a *translation* theorem:
+if a finite admitted descriptor satisfies the two observable laws and
+its lowering emits the same element relation for every reachable state,
+then completed native rows equal the finite reference closure. Merely
+restating =mono_law= and =ord_indep= in Lean would duplicate the paper's
+Rocq work and leave native correctness open. Quint belongs to the separate
+Session/publication trace: it must show no stale or incomplete container
+observation is released across a source generation change.
+
+[[file:index.org][Scheme DSL index]]; [[file:../agent-inference/reasoning-language-formal-agenda.org][reasoning-language agenda]].

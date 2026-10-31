@@ -7,7 +7,7 @@
  (target_total . 1000us)
  (regression_budget . 1000us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Measure Scheme binary rule evaluation through complete canonical pair-list publication over a 20-node chain; persistent-set conversion is a separate optional operation.")
  (unit . "us")
  (sourcePath . "t/performance/ascent-binary-program-performance-test.ss")

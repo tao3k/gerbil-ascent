@@ -1,0 +1,52 @@
+#+title: ASCENT Build and Acceptance
+
+* Build ownership
+
+ASCENT declares its modules, two executables, C ABI headers, and library link options.
+=build.ss= builds the complete BuildSpec through one standard =defbuild-script=
+entry point. Gerbil's =std/make= and compiler own dependency tracking, currentness,
+job execution, and draining. ASCENT no longer splits module and executable phases
+or constructs compiler commands.
+
+The SDKs remain pinned to the existing Releases and SHA256 values in
+=tools/ci/install-gerbil-v19-release.sh=. This change introduces no SDK replacement
+or dependency on unpublished upstream patches. A minimal standard BuildSpec was
+built once at one core and once at four cores on each original Linux and macOS
+Release. Two executables share a runtime and macro module; all builds and runs
+passed. This finite control does not establish correctness for every parallel
+build shape. The complete ASCENT project requires separate acceptance.
+
+The library retains source identity, invalidation cleanup, and publication checks
+for its C ABI artifacts. These checks describe this library's ABI and DSL
+resources; they do not implement another compiler job executor. Downstream users
+continue loading Scheme DSL directly without compiling it at runtime.
+
+* Naming
+
+Test support lives in =t/harness/=. Compiled performance artifacts live in
+=.cache/ascent/compiled-library/=. Independent Python interface consumers run
+through =ascent_workbench.interface_tests=.
+Formal models use responsibility names: =GraphWorklist=, =BitmapWorklist=,
+=SessionPublication=, =EvidenceLifecycle=, and =DslOwnership=.
+Scheme indexing, reuse, and owned results use =indexed-path=, =session-reuse=,
+and =owned-result=; Rust conversion code explicitly identifies Scheme values.
+Existing upstream API identifiers and original paths and SHAs in historical
+receipts remain unchanged. Frozen reference sources receive only corresponding
+identifier renames, without changes to joins, control flow, data, ordering,
+or workloads.
+
+* Acceptance boundaries
+
+All 94 existing performance contracts retain their sample counts, budgets, and
+thresholds; only study labels follow renamed paths. Scheme semantics and
+performance remain independent CI jobs. The complete Scheme corpus retains its
+180-second total deadline and 2G heap per VM. Existing assertions for
+cancellation, resource rejection, and provenance remain mandatory.
+Rust Ascent and ASP Rust remain dev-dependencies; Rayon remains enabled by default.
+
+Minimal controls invoke the published =gxi= directly. They inject no compiler
+failures and do not intercept or delay compiler calls. Each control uses its own
+source directory and package prefix, preserving programs, logs, SDK identity,
+and result receipts. Recorded times do not establish parallel speedup because
+host cold and warm states were not matched. Historical passes do not replace
+current-revision acceptance after source, SDK, or revision changes.

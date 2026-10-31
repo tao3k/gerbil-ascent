@@ -1,0 +1,79 @@
+#+title: Cold build and test preparation costs
+
+* Scope
+
+This change is confined to application build orchestration in build.ss. It
+uses the existing released Gerbil SDK and standard make. No compiler or
+upstream source, runtime semantics, cancellation, resource limit, provenance,
+semantic deadline, or performance threshold is changed. Concurrent feature
+work is excluded from the commit and isolated acceptance checkout.
+
+* Diagnosis
+
+The preceding accepted cold control took 270.861 seconds for production and
+54.881 seconds for the complete test preparation command. These are distinct
+phases; preparation is outside the unchanged 180-second semantic deadline.
+
+The old production log contains 139 distinct source-module compilation
+actions plus two executable-compilation messages. Each source module is
+compiled once; the executable messages describe their separate stub/link phase. However, executable object jobs are not merely harmless duplicate
+queue entries: a GSC invocation trace confirms 203 actual object compilations
+for 107 distinct static C files. The two executable links regenerate shared
+C, resulting in 96 repeated object compilations. The old split between all
+libraries and every executable also disables standard make's existing
+static-runtime-object reuse selection while compiling the libraries.
+
+Cold source invalidation additionally calls the PackageSpec projection once
+for cleanup and again for compilation. With the required policy enabled,
+this executes the same complete 139-module policy pass twice.
+
+The old test preparation log compiles 124 distinct test/reference modules:
+83 qualification, 37 performance, one scenario, two harness and one model
+module. No production module recompiles. Its make phase takes 50.961 seconds;
+the two source inventory phases total less than 0.6 seconds. The invocation
+trace confirms 257 distinct GSC calls, with no repeated argument vector. An empty test
+cache necessarily needs these reference and consumer artifacts. This is not
+evidence of invalid production-cache reuse or repeated source compilation.
+
+* Minimal correction
+
+Compute the PackageSpec once per invocation and pass that same value through
+cleanup and compilation. This is call-local reuse, not a persistent admission
+cache. Source snapshots, invalidation and receipt checks remain in place.
+
+Give standard make the libraries together with the first executable. Its
+existing static-runtime-object path can then reuse generated C and objects
+for dynamic bundles and the executable. Subsequent executables retain their
+own completed make call, so competing gsc -link writers are not reintroduced.
+The executor closes at each make boundary: its produced-output registry does
+not survive into the second executable. The 96 repeated static C object
+compilations there remain an explicit limitation of this local correction.
+
+The completed diagnostic records 541 old and 573 new GSC invocations. Calls
+that trigger native C compilation fall from 539 to 445; 126 explicit C
+translation calls replace part of the old combined dynamic compilation path.
+This reduces native C compilation work, not total process invocations. The
+old and new diagnostic wall times were 309.359 and 319.669 seconds, both with
+external build interference. Neither is admitted as a speedup comparison;
+the 270.861-second historical observation is also not a matched control.
+
+The test preparation implementation and requested module set are unchanged.
+A startup, timestamp, hash or queue-entry count alone is not counted as a
+compiler invocation. Timing controls retain raw compiler arguments and exit
+status, and separate contaminated diagnostics from acceptance results.
+
+* Validation
+
+Final local and exact-head CI receipts are recorded in PR #1. The preceding
+historical timings are not a matched speedup claim.
+
+The first unchanged-input warm production build exits successfully with zero
+GSC invocations. The candidate's first complete test preparation takes 53.870
+seconds (48.862 seconds inside the builder), exits successfully, and reports
+production-rebuilt=0. It is not reported as a preparation speedup. The final
+macOS semantic run passes all 171 modules and 1379 Cases in 172.388 seconds
+of command wall time, exit 0, retaining the original default 12 workers, 2G
+children and independent 180-second deadline. The complete module/Case
+inventory equals the preceding accepted run. Exact pushed-commit CI results
+are recorded in the PR acceptance section after execution; no pending run is
+treated as green.

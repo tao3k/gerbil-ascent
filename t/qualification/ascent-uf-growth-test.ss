@@ -1,0 +1,55 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import :std/test :gerbil-ascent/core/relation-view
+        :gerbil-ascent/t/performance/uf-growth/fixture
+        (prefix-in :gerbil-ascent/t/performance/uf-growth/reference-trrel-uf old-)
+        :gerbil-ascent/table/trrel-uf)
+(export ascent-uf-growth-test)
+(def (rows state) (gerbil-ascent-view-rows (gerbil-ascent-trrel-uf-freeze state #f)))
+(def (same-members? left right)
+  (let (seen (list->hash-table (map (cut cons <> #t) left)))
+    (and (= (length left) (length right)) (= (hash-length seen) (length left))
+         (andmap (cut hash-get seen <>) right))))
+(def ascent-uf-growth-test
+  (test-suite "Unique UF growth and ordered replay"
+    (test-case "all fixed native and complete engine scenarios preserve independent truth"
+      (for-each (lambda (scenario)
+        (let* ((old (ui-prepare #t scenario)) (new (ui-prepare #f scenario))
+               (expected (ui-expected old scenario)))
+          (check-equal? (ui-consume old scenario #t) expected)
+          (check-equal? (ui-consume new scenario #f) expected)))
+        '(chain cycle unique partitioned sparse grouped retained capture cold small packed adjacent large eqrel)))
+    (test-case "dense axes and late SCC merge retain ordered scalar frontiers and atomic count rejection"
+      (let ((old (old-gerbil-ascent-trrel-uf-state))
+            (scalar (gerbil-ascent-trrel-uf-state)) (counted (gerbil-ascent-trrel-uf-state)))
+        (for-each (lambda (row)
+          (let* ((expected (old-gerbil-ascent-trrel-uf-insert! old row 200000))
+                 (needed (relation-view-count expected))
+                 (before (gerbil-ascent-trrel-uf-observation counted)))
+            (check-equal? (gerbil-ascent-view-rows (gerbil-ascent-trrel-uf-insert! scalar row 200000))
+                          (gerbil-ascent-view-rows expected))
+            (when (> needed 0)
+              (check-exception (gerbil-ascent-trrel-uf-count-insert! counted row (- needed 1)) true)
+              (check-equal? (gerbil-ascent-trrel-uf-observation counted) before)
+              (check-equal? (gerbil-ascent-trrel-uf-validate counted) #t))
+            (check-equal? (gerbil-ascent-trrel-uf-count-insert! counted row needed) needed)
+            (check-equal? (gerbil-ascent-trrel-uf-observation counted)
+                          (old-gerbil-ascent-trrel-uf-observation old))
+            (check-equal? (gerbil-ascent-trrel-uf-validate scalar) #t)
+            (check-equal? (gerbil-ascent-trrel-uf-validate counted) #t)))
+          (append (map (lambda (i) (list i (+ i 1))) (iota 96)) '((96 0) (97 98) (96 97) (98 0))))
+        (let (truth (apply append (map (lambda (a) (map (cut list a <>) (iota 99))) (iota 99))))
+          (check-equal? (same-members? (rows counted) truth) #t)
+          (check-equal? (same-members? (rows scalar) truth) #t))))
+    (test-case "all three-node histories preserve count-only state and mathematical closure"
+      (let (edges (apply append (map (lambda (a) (map (cut list a <>) (iota 3))) (iota 3))))
+        (for-each (lambda (mask)
+          (let ((old (old-gerbil-ascent-trrel-uf-state)) (new (gerbil-ascent-trrel-uf-state)))
+            (for-each (lambda (row bit)
+              (when (not (= 0 (bitwise-and mask (arithmetic-shift 1 bit))))
+                (check-equal? (gerbil-ascent-trrel-uf-count-insert! new row 16)
+                              (relation-view-count (old-gerbil-ascent-trrel-uf-insert! old row 16))))) edges (iota 9))
+            (check-equal? (gerbil-ascent-trrel-uf-validate new) #t)
+            (check-equal? (same-members? (rows new)
+                           (gerbil-ascent-view-rows (old-gerbil-ascent-trrel-uf-freeze old #f))) #t))) (iota 512))))))

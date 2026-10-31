@@ -1,0 +1,78 @@
+#+TITLE: Normalized insertion propagation
+
+* Production flow and Gerbil source patterns
+
+=program/operator-change.ss= implements the public finite insertion interpreter.
+Every recursive branch returns normalized, row-bounded old and delta sets.
+Previously, =difference= scanned the old list once per candidate row and then
+normalized the filtered set again. Empty unions also copied and normalized a
+set that was already admitted. Each fixed-point frontier reconstructed the same
+grown external environment.
+
+The implementation follows the local membership-table pattern in Gerbil
+=src/std/list/list.ss:delete-duplicates/hash=: use the native equal? hash table
+for membership and retain list traversal for output order. No table iteration
+publishes rows. Difference preserves the normalized-set contract; empty unions
+reuse the admitted set. Singleton exclusion uses direct equality. A lexical
+=delay=/=force= publishes the fixed-point external environment on first demand,
+then reuses it through subsequent frontiers. This is an invocation-local promise;
+no global cache, environment option or SDK build is introduced.
+
+All nonempty two-sided unions and source/input admission still enforce the
+row limit. Join and fixed-point measurement counters retain their prior meaning.
+The independent reference interpreter is unchanged.
+
+* Native matched evidence
+
+The frozen baseline is =4f0780b:program/operator-change.ss=, original Git blob
+=23a8a5904c947ad59b49bd49bd477e558ce459e4=. Only relative module imports were
+normalized in =reference.ss=, blob =e307e657ad3f67d1abe0cc93bb293b66cef3a408=.
+Old and new compile with the same flags into the same executable. Each timed
+call includes input copying, normalization, evaluation and all three returned
+sets. A/B alternates ordering for 50 pairs, with synchronous allocation counters
+and process user+system CPU. Exact baseline output order and an independent
+list-only membership oracle are checked outside timing. ASP Scheme's native
+=benchmark-run/result= admits the sample contract.
+
+Large overlap, duplicate-only and fixed-point targets require at least 20% less
+CPU and 35/50 wins. Small/empty and recursive-join controls allow 10% + 20us CPU;
+all scenarios allow 10% + 4096 bytes allocation. Gates are declared before runs.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| overlap  |      17851 |        971 |   1429616 |   1396784 |       50 |
+| duplicate |      6810 |        593 |   1014640 |    865008 |       50 |
+| fix      |      52229 |       2040 |   2446992 |   2529152 |       50 |
+| chain    |       3624 |       3462 |   2276576 |   2333376 |       46 |
+| small-many |        5 |          5 |      9840 |      9488 |       17 |
+| small    |          6 |          6 |      8640 |      5376 |       35 |
+| empty    |          4 |          3 |      7920 |      4752 |       27 |
+
+These are finite insertion-interpreter CPU results, not native rule engine solve
+or end-to-end session latency claims. Fixed-point allocation grows 3.4%, within
+the declared budget. Microsecond controls support only a bounded-regression claim.
+Raw samples, native binaries and logs stay under ignored =.cache/ascent/delta-sets=.
+
+* Qualification
+
+=ascent-delta-sets-test.ss= checks all 64 before/added subsets through five
+transforms (320 comparisons): projection, collapsing projection, selection,
+finite mapping and self-join. Each compares exact baseline order, independent
+reference membership and both measurement counters. Further cases cover nested
+lexical fixed points, multi-frontier reachability/cycles, scalar equality and
+nonmutation, and empty/singleton overflow rejection. Existing operator, retained
+session and higher-order Suites run alongside it through native =std/test=.
+
+* Run
+
+Build =build.ss= with library =.gerbil/lib= and the output path under
+=.cache/ascent/delta-sets=; lane is =runner= or =qualify=. The native runner takes
+scenario and receipt path. Scenarios: =overlap duplicate fix chain small-many small empty=.
+No changes to =build.ss= or a separate scheduling language are needed.
+
+Final native qualification: 4 Suites, 79 Cases, final =OK= and exit 0.
+The source-loaded production module also executes a fixed-point insertion with
+exact old/grown/delta assertions. Policy scan: 30 findings, zero errors.
+The first qualifier rejected two invalid test fixtures (flatmap entry shape and
+unsupported string scalars); its log remains in the cache. These were fixture
+repairs, with no production contract change.

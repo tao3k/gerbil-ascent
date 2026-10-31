@@ -1,0 +1,207 @@
+#+title: Build Simplification and Naming Acceptance, 2026-10-17
+
+* Scope
+
+The ASCENT baseline is =3a5525376206ddea41ed91ed5a6dcd3374b3eab1=.
+=build.ss= removes 43 lines of phase scheduling and compiler command construction.
+The complete BuildSpec uses one standard build entry point.
+SDK pins remain unchanged: Gerbil =1cfb032= and Gambit =ea114fc=, with SMP,
+multiple VMs, and one thread per VM. No new SDK release or unpublished upstream
+patch is required.
+
+There are 34 file and directory renames. Test support, execution paths, Scheme
+conversion, owned results, indexed views, and formal models use responsibility
+names. Upstream API names and original historical paths and SHAs remain intact.
+Corresponding reference-source changes are mechanical identifier renames only.
+All 94 performance contracts retain their numbers, sample counts, and budgets.
+Cancellation, resource limits, provenance, default Rayon, and alignment-only
+dev-dependencies remain unchanged.
+
+* macOS export measurement audit
+
+The green CI for =711563d3469b707315da7e6eaaec765c82f9aad5= ran on Linux.
+It did not claim macOS performance acceptance. The retained macOS membership
+=export= failure was a CPU comparison rejection (exit 70), not the 90-second
+scenario timeout. Other historical Scheme timeout receipts are separate.
+
+Using the unchanged published macOS SDK and a fixed source copy of that head:
+
+| Control before calibration | Reference CPU, us | Candidate CPU, us | Result |
+|----------------------------+-------------------+-------------------+--------|
+| Original comparison        |              1826 |              3310 | reject |
+| Current code in both arms  |              1736 |              3268 | reject |
+| Exchanged implementation roles |          1967 |              2488 | reject |
+| Collection before each arm only |         1893 |              2980 | reject |
+
+Each original comparison arm allocated 18876160 bytes. Median CPU excluding GC
+was approximately 493 and 491 microseconds; the observed difference was GC time.
+The identical-implementation rejection establishes that the short shared-heap
+measurement could misattribute cost. It does not establish a compiler defect.
+No upstream source change or new SDK is required by this correction.
+
+The sampler previously claimed 20ms calibration in a comment but performed
+none. It now collects before each arm and calibrates one common CPU repetition
+count until the slower arm reaches 20ms. Both arms execute that same count, and
+all natural GC during the measured calls remains included. Every intermediate
+batch is checked, including calibration batches. A regression test rejects an
+incorrect intermediate batch even when the last batch agrees.
+
+The 20 CPU pairs, 20 ASP admission samples, five allocation samples, workload,
+ratio, required wins, absolute CPU overhead allowance, allocation limits, heap
+limit and scenario deadline are unchanged. Admission and allocation retain the
+original eight trajectories. The absolute CPU overhead allowance is applied
+once to the entire calibrated CPU batch, not multiplied by repetitions. CPU
+receipts include the repetition count and heap precondition; batch CPU totals
+must not be compared directly with the earlier eight-trajectory totals.
+
+The compiled performance suite now checks current/current, reference/reference,
+and exchanged-role export controls, and requires rejection of deliberately
+added scalar CPU work with equal measured allocation. Historical failures,
+including the insufficient collection-only change, remain failures. This is a
+measurement correction, not an export implementation speedup claim.
+
+** Isolated macOS acceptance
+
+The final compiled executable ran each of the seven original membership
+scenarios in a fresh process with the original 90-second deadline and 1G heap.
+A continuous compiler inventory recorded 161 polls and no concurrent compiler.
+All seven scenarios passed. The export CPU batch used eight repetitions of the
+original eight trajectories: 20561 to 20481 microseconds (ratio 0.9961), with
+18876160 bytes allocated by each original allocation sample.
+
+Current/current, reference/reference and exchanged-role controls also passed.
+The equal-allocation scalar CPU negative control measured 5388 to 20164
+microseconds and was rejected with exit 70, as required. Both arms still
+allocated 18876160 bytes. The compiled suite also passed the intermediate-batch
+semantic rejection test. The numerical performance contracts were not edited.
+
+A preliminary =check-policy= invocation unexpectedly expanded to a package
+build and was stopped. Overlapping CPU observations were not admitted as
+isolated evidence; the measurements above started after compilation and the
+semantic test processes had ended. Their executable SHA256, source digests,
+individual receipts, and compiler inventory are retained with the local audit.
+
+Complete final-source Scheme semantics passed with four workers: 170 modules,
+1365 Cases, 70 seconds, the original 180-second deadline and 2G per VM. A prior
+twelve-worker invocation of the same production sources reached the original
+180-second deadline amid concurrent host work, including a Lean compiler wave;
+that timeout remains a failure and is not attributed to the SDK. Changing to
+the existing four-worker configuration was an invocation control, not a test,
+resource-limit or semantic change.
+
+* Abandoned upstream experiment cleanup
+
+The existing Release minimal controls did not justify an ASCENT dependency on
+the upstream experiment. Gerbil-bazel PRs #55 and #56 are closed. The #56 head
+=093eeeb1383fa576c69700fca5b24aa300f1da6f= is preserved by the verified remote
+annotated tag =archive/20261017/stable-shared-executable-closure=; its remote and
+local experiment branches were removed. Earlier #55 branches and other owned
+legacy experiments were already archived before removal. The remaining upstream
+branches =main=, =codex/v19-threaded-bootstrap-fix=, and
+=release/v0.19-multiple-vms= belong to active work or the existing release base
+and were preserved. No SDK was published from the abandoned experiment.
+
+* Local validation
+
+- The complete standard BuildSpec passed on the SHA-verified original macOS Release, without phase splitting or upstream patches.
+- The complete test library passed on that Release with =production-rebuilt=0=.
+- After fixing the renamed import, complete Scheme semantics passed: 170 modules and 1364 Cases, at four workers in 123 seconds and twelve workers in 57 seconds. Both retained the 180-second total deadline and 2G per VM.
+- Rust: 92 tests passed; strict Clippy with =-D warnings= passed.
+- The independent Scheme backend API compilation check passed.
+- Lean: the complete AscentProof and AscentProofTests build passed, 163 jobs.
+- Quint: 56 models and 377 positive and required-counterexample obligations passed; conformance output matched the original fixture byte for byte.
+- The release PyO3 wheel contains 196 members. Its independent interface matrix binds 288 inputs; 35 groups and 199 tests passed within the original 120-second total budget.
+- Python IO: 15 tests passed. Workbench: 162 tests passed.
+- macOS UF query, plan, initialization, compact-query, selector-init, and owner-plan performance groups passed. Earlier performance-contract, index-sharing, and general scenario groups also passed.
+
+Before the measurement audit above, the unchanged macOS UF membership =export=
+gate failed on both the baseline and the earlier candidate. Baseline CPU medians
+were 1815 to 3262 microseconds, with 5 wins in 20 pairs; candidate medians were
+2092 to 3306 microseconds,
+with 4 wins in 20 pairs. Both arms allocated 18876160 bytes in both runs.
+Both receipts remain failures. No threshold was relaxed and no unchanged
+measurement was repeated to obtain a pass. The Linux performance gate passed.
+At that stage, those controls did not establish the cause of the macOS result.
+
+The earlier full Scheme run using the Homebrew installation timed out at the
+original 180-second deadline and is not accepted. That installation had not been
+matched to the published archive SHA. Subsequent comparison found different
+SHA256 values for =gxi=, =gsc=, and =gxtest=. A matching revision does not establish
+identical artifacts, and the timeout does not demonstrate a defect in the
+original Release. Preserved process samples show
+=dyld -> dlopen -> mapSegments -> fcntl= during loading. This observation does
+not establish the cause of the entire timeout.
+
+An initial twelve-worker run on the original macOS Release also reached the
+180-second deadline. A four-worker control then exposed a local rename omission:
+one test still imported =../native/artifact-admission=. The import now uses
+=../harness/artifact-admission=. Both corrected four- and twelve-worker runs
+passed as recorded above. Earlier failures remain preserved. Host cold and warm
+states were not matched, so these times do not establish parallel speedup.
+
+The first wheel manually built from the repository root lacked source-identity
+resources and was rejected by the existing identity check. Building from the
+Python project directory with the complete CI features and release command
+produced a wheel whose identity and interface matrix passed. The failed receipt
+remains preserved; no manual package repair or disabled identity check was used.
+
+* Minimal controls using existing Releases
+
+Two executables share one module exporting a value and a macro. The build uses
+standard =defbuild-script= only. One-core and four-core cases each use a separate
+source directory and package prefix and execute once, without retries.
+Both binaries must exit zero and print exactly =42\n=.
+
+- The original macOS archive passed SHA256 =0e18d063f888a73d9f9692d441fb3776898114e8440eada6876937d289578183= verification; both cases passed.
+- The original Linux archive passed SHA256 =143c691fee5af4f9f631fd339f69a66f562e42e0bfc1d4ee2cda5fa8d35c35ee= verification; both cases passed.
+- Linux control source: =581f2591e46ff53f43654ab99a6bd0917d4f0743=.
+  Logs, generated artifacts, and receipts: https://github.com/tao3k/gerbil-ascent/actions/runs/38998285720 .
+
+No compiler command was intercepted, delayed, or replaced, and no failures were
+injected. These controls did not reproduce the previously inferred normal-build
+defect and do not support requiring upstream changes before simplifying ASCENT.
+Finite controls cannot establish correctness for every parallel build shape;
+the complete project is qualified separately using the existing Release.
+Unmatched host cold and warm states prevent parallel-speedup claims.
+
+Earlier upstream bootstrap failures and failures of the added recovery contract
+remain in their original records. The related upstream CI was stopped. This
+change does not depend on those patches and did not publish an SDK.
+
+* Subsequent point-publication control
+
+The English documentation revision =4f30b4d= failed the unchanged Linux
+=uf-selector-init / wide= gate in run =39002766435=: 6019 to 5939 CPU
+microseconds and 10 wins in 20 pairs. The contract still requires a CPU ratio
+of at most 9/10 and at least 16 wins. Result and allocation checks passed;
+both arms allocated 99712 bytes. This failure is preserved, not retried or
+reclassified as a pass.
+
+The subsequent candidate specializes fully bound point intersections to two
+immutable cursors and a callback. The general traversal retains bindings,
+consumer, and expansion arguments. Callback order and per-point publication
+boundaries remain unchanged. An independent regression covers sparse ordinals,
+duplicate descriptors, stored-value identity, nested reads, callback exceptions,
+and complete subsequent reads.
+
+On the original macOS Release, the candidate passed complete Scheme semantics:
+170 modules and 1365 Cases in 61 seconds within the unchanged 180-second/2G
+limits. All 16 original selector-init scenarios passed. Wide measured 3400 to
+2365 CPU microseconds against its frozen reference, with 20 wins and equal
+99712-byte allocation. The test-library build reported =production-rebuilt=0=.
+This macOS result does not replace Linux qualification of the final revision.
+
+* Complete runtime qualification
+
+Runtime revision =47a97ba34eb34ff476463a07d94bf406fc07399c= passed all nine
+jobs in https://github.com/tao3k/gerbil-ascent/actions/runs/38999392004 before
+that identical commit was pushed to PR #1. Complete Linux Scheme semantics
+covered 170 modules and 1364 Cases in 77 seconds. Performance, Rust/PyO3,
+three oracle shards, Lean, Quint, Python IO, and workbench checks passed.
+
+Scheme semantics, performance, Rust/PyO3, oracles, and formal checks execute
+independently. The corpus, 180-second Scheme total deadline, 2G per VM,
+performance thresholds, and required counterexamples remain unchanged.
+PR #1 records exact revision ownership and subsequent CI results, including
+https://github.com/tao3k/gerbil-ascent/actions/runs/39001305159 .
+Local checks and minimal controls do not replace current-revision acceptance.

@@ -1,0 +1,301 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+;;; Frozen row representations. Consumers own invocation-local traversal;
+;;; views retain no cursor or mutable storage owner. Nested fields stay stable.
+(export relation-view? make-relation-view relation-view-count relation-view-units
+        relation-view-identity relation-view-generation relation-view-revision relation-view-lane
+        gerbil-ascent-view-with-export gerbil-ascent-view-bind gerbil-ascent-view-select gerbil-ascent-view-rows
+        gerbil-ascent-explicit-view gerbil-ascent-lazy-explicit-view gerbil-ascent-view-union gerbil-ascent-view-difference
+        gerbil-ascent-row-parts? gerbil-ascent-admitted-row-parts? gerbil-ascent-for-each-row-parts gerbil-ascent-visit-view-parts! gerbil-ascent-visit-admitted-view-parts!
+        gerbil-ascent-for-each-row gerbil-ascent-any-row? gerbil-ascent-row-count
+        gerbil-ascent-view-contains? make-rectangle gerbil-ascent-rectangle-view)
+(defstruct relation-view (identity generation revision lane count units visit contains export parts))
+(defstruct part-visitors (checked admitted))
+(defstruct row-stream (view columns key))
+(defstruct rectangle (prefix left right))
+(defstruct rectangle-bucket (members blocks count plain) final: #t)
+;; : (-> FrozenView Symbol SourceGeneration Natural Symbol FrozenView)
+(def (gerbil-ascent-view-bind view identity generation revision lane)
+  (make-relation-view identity generation revision lane (relation-view-count view)
+    (relation-view-units view) (relation-view-visit view) (relation-view-contains view) (relation-view-export view) (relation-view-parts view)))
+;; Private ordered export can replay a frozen injection cut without a tuple cache.
+(def (gerbil-ascent-view-with-export view export)
+  (make-relation-view (relation-view-identity view) (relation-view-generation view)
+    (relation-view-revision view) (relation-view-lane view) (relation-view-count view)
+    (relation-view-units view) (relation-view-visit view) (relation-view-contains view) export (relation-view-parts view)))
+;; : (-> RowVisitor (Or Rows FrozenView RowStream) Void)
+(def (gerbil-ascent-for-each-row consume rows)
+  (cond ((relation-view? rows) ((relation-view-visit rows) [] [] consume))
+        ((row-stream? rows) ((relation-view-visit (row-stream-view rows))
+                            (row-stream-columns rows) (row-stream-key rows) consume))
+        (else (for-each consume rows))))
+;; : (-> RowPredicate (Or Rows FrozenView RowStream) Boolean)
+(def (gerbil-ascent-any-row? predicate rows)
+  (call/cc (lambda (done)
+    (gerbil-ascent-for-each-row (lambda (row) (when (predicate row) (done #t))) rows) #f)))
+;; : (-> (Or Rows FrozenView) Natural)
+(def (gerbil-ascent-row-count rows)
+  (if (relation-view? rows) (relation-view-count rows) (length rows)))
+;; : (-> FrozenView Columns Key (Or FrozenView RowStream))
+(def (gerbil-ascent-view-select view columns key)
+  (if (and (null? columns) (null? key)) view
+    (make-row-stream view columns key)))
+;; Compiled consumers bind fields directly; no temporary Cartesian row is built.
+;; : (-> RowSource Boolean)
+(def (gerbil-ascent-row-parts? rows)
+  (and (cond ((relation-view? rows) (relation-view-parts rows))
+             ((row-stream? rows) (relation-view-parts (row-stream-view rows))) (else #f)) #t))
+;; Checked custom visitors do not establish exact canonical key selection.
+;; A mixed union retains that distinction through arbitrarily nested cuts.
+(def (gerbil-ascent-admitted-row-parts? view)
+  (and (relation-view? view)
+       (let (parts (relation-view-parts view))
+         (and (part-visitors? parts) (part-visitors-admitted parts) #t))))
+;; : (-> PartVisitor RowSource Void)
+(def (gerbil-ascent-for-each-row-parts consume rows)
+  (if (relation-view? rows) (gerbil-ascent-visit-view-parts! rows [] [] consume)
+    (gerbil-ascent-visit-view-parts! (row-stream-view rows)
+      (row-stream-columns rows) (row-stream-key rows) consume)))
+;; Synchronous indexed consumers own traversal. Custom parts retain the
+;; checked three-argument protocol; built-in visitors carry admission separately.
+;; : (-> FrozenView Columns Key PartVisitor Void)
+(def (gerbil-ascent-visit-view-parts! view columns key consume)
+  (let (parts (relation-view-parts view))
+    ((if (part-visitors? parts) (part-visitors-checked parts) parts) columns key consume)))
+;; Only the canonical compiled index owner supplies admitted columns and keys.
+;; : (-> BuiltinView AdmittedColumns AdmittedKey PartVisitor Void)
+(def (gerbil-ascent-visit-admitted-view-parts! view columns key consume)
+  (unless (gerbil-ascent-admitted-row-parts? view)
+    (error "ASCENT view lacks admitted parts"))
+  ((part-visitors-admitted (relation-view-parts view)) columns key consume))
+;; : (-> FrozenView Row Boolean)
+(def (gerbil-ascent-view-contains? view row)
+  ((relation-view-contains view) row))
+;; : (-> FrozenView Rows)
+(def (gerbil-ascent-view-rows view)
+  (if (relation-view-export view)
+    ((relation-view-export view))
+    (let (rows [])
+      (gerbil-ascent-for-each-row (lambda (row) (set! rows (cons row rows))) view)
+      (reverse rows))))
+;; : (-> Row Columns Key Boolean)
+(def (matches-key? row columns key)
+  (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key))
+;; Compare without allocating a temporary prefix or importing a prelude binding.
+(def (matches-prefix? row prefix)
+  (or (null? prefix)
+      (and (pair? row) (equal? (car row) (car prefix))
+           (matches-prefix? (cdr row) (cdr prefix)))))
+;; : (-> Rows Natural FrozenView)
+(def (gerbil-ascent-explicit-view rows count)
+  (gerbil-ascent-lazy-explicit-view
+    (map (lambda (row) (map values row)) rows) count))
+;; : (-> (Or Rows (Promise Rows)) Natural FrozenView)
+;; Persistent engine rows are borrowed read-only; every emitted row spine is
+;; detached. Count observation never forces the ordering promise.
+(def (gerbil-ascent-lazy-explicit-view snapshot count)
+  (def (rows) (if (promise? snapshot) (force snapshot) snapshot))
+  (make-relation-view #f #f 0 'total count count
+    (lambda (columns key consume)
+      (for-each (lambda (row) (when (matches-key? row columns key) (consume (map values row)))) (rows)))
+    (lambda (row) (and (member row (rows)) #t)) #f #f))
+;; : (-> FrozenView FrozenView FrozenView)
+;; The caller establishes disjoint facts; this is not a general Set union.
+(def (gerbil-ascent-view-union left right)
+  (make-relation-view #f #f 0 'delta
+    (+ (relation-view-count left) (relation-view-count right))
+    (+ (relation-view-units left) (relation-view-units right))
+    (lambda (columns key consume)
+      ((relation-view-visit left) columns key consume)
+      ((relation-view-visit right) columns key consume))
+    (lambda (row) (or (gerbil-ascent-view-contains? left row)
+                     (gerbil-ascent-view-contains? right row))) #f
+    (and (relation-view-parts left) (relation-view-parts right)
+         (make-part-visitors
+           (lambda (columns key consume)
+             (gerbil-ascent-visit-view-parts! left columns key consume)
+             (gerbil-ascent-visit-view-parts! right columns key consume))
+           (and (gerbil-ascent-admitted-row-parts? left) (gerbil-ascent-admitted-row-parts? right)
+             (lambda (columns key consume)
+               (gerbil-ascent-visit-admitted-view-parts! left columns key consume)
+               (gerbil-ascent-visit-admitted-view-parts! right columns key consume)))))))
+;; Monotone cuts with row parts; caller establishes older is a subset of newer.
+;; : (-> FrozenView FrozenView Natural FrozenView)
+(def (gerbil-ascent-view-difference newer older count)
+  (unless (and (exact-integer? count) (>= count 0)
+               (gerbil-ascent-row-parts? newer) (gerbil-ascent-row-parts? older)
+               (= count (- (relation-view-count newer) (relation-view-count older))))
+    (error "ASCENT view difference requires coherent part cuts"))
+  (let ((admitted? (and (gerbil-ascent-admitted-row-parts? newer)
+                         (gerbil-ascent-admitted-row-parts? older))))
+      (def (parts columns key consume admitted?)
+        ((if admitted? gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!)
+          newer columns key
+          (lambda (prefix left right)
+            (let ((found? #f) (row (append prefix (list left right))))
+              ((if admitted? gerbil-ascent-visit-admitted-view-parts! gerbil-ascent-visit-view-parts!)
+                older (case (length row) ((2) '(0 1)) ((3) '(0 1 2)) (else (iota (length row)))) row (lambda (_prefix _left _right) (set! found? #t)))
+              (unless found? (consume prefix left right))))))
+      (make-relation-view #f #f 0 'delta count
+        (+ (relation-view-units newer) (relation-view-units older))
+        (lambda (columns key consume)
+          (parts columns key (lambda (prefix left right) (consume (append prefix (list left right)))) #f))
+        (lambda (row) (and (gerbil-ascent-view-contains? newer row)
+                          (not (gerbil-ascent-view-contains? older row)))) #f
+        (make-part-visitors
+          (lambda (columns key consume) (parts columns key consume #f))
+          (and admitted? (lambda (columns key consume) (parts columns key consume #t)))))))
+;; : (-> Value Natural Columns Key Boolean)
+(def (matches-coordinate? value coordinate columns key)
+  (andmap (lambda (column selected) (or (not (= column coordinate)) (equal? value selected))) columns key))
+;; : (-> Members Natural Columns Key Members)
+(def (captured-member routes members coordinate value)
+  (let find ((hits (or (hash-get (vector-ref routes coordinate) value) [])))
+    (and (pair? hits)
+         (if (eq? (rectangle-bucket-members (cdar hits)) members) (car hits)
+             (find (cdr hits))))))
+(def (selected-members members coordinate columns key routes)
+  (let find ((remaining columns) (values key))
+    (cond ((null? remaining) members)
+          ((= (car remaining) coordinate)
+           (let (present (if routes (let (hit (captured-member routes members coordinate (car values)))
+                                     (and hit (car hit)))
+                              (member (car values) members)))
+             (if (and present (matches-coordinate? (car present) coordinate columns key))
+               (if routes present (list (car present))) [])))
+          (else (find (cdr remaining) (cdr values))))))
+(def (visit-right-members prefix left rights consume)
+  (unless (null? rights)
+    (consume prefix left (car rights))
+    (visit-right-members prefix left (cdr rights) consume)))
+(def (visit-left-members prefix lefts rights consume)
+  (unless (null? lefts)
+    (visit-right-members prefix (car lefts) rights consume)
+    (visit-left-members prefix (cdr lefts) rights consume)))
+;; : (-> Rectangle Columns Key PartVisitor Void)
+(def (visit-rectangle-parts block columns key consume (routes #f))
+  (let (offset (length (rectangle-prefix block)))
+    (unless (andmap (lambda (column) (< column (+ offset 2))) columns)
+      (error "invalid ASCENT UF view column")))
+  (visit-admitted-rectangle-parts block columns key consume routes))
+(def (visit-admitted-rectangle-parts block columns key consume routes)
+  (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
+    (when (andmap (lambda (column value)
+                    (or (>= column offset) (equal? (list-ref prefix column) value))) columns key)
+      (let ((lefts (selected-members (rectangle-left block) offset columns key routes))
+            (rights (selected-members (rectangle-right block) (+ offset 1) columns key routes)))
+        (visit-left-members prefix lefts rights consume)))))
+(def (visit-admitted-blocks blocks columns key consume routes)
+  (unless (null? blocks)
+    (visit-admitted-rectangle-parts (car blocks) columns key consume routes)
+    (visit-admitted-blocks (cdr blocks) columns key consume routes)))
+;; Build once from owned spines. Each component contributes its members once
+;; per coordinate; the buckets retain descriptor references, never pair tuples.
+;; Readers only inspect these private tables after construction.
+(def (rectangle-routing blocks)
+  (let* ((arity (foldl (lambda (block n) (max n (+ 2 (length (rectangle-prefix block))))) 0 blocks))
+         (owners (list->vector (map (lambda (_) (make-hash-table-eq)) (iota arity))))
+         (routes (list->vector (map (lambda (_) (make-hash-table)) (iota arity)))))
+    (for-each (lambda (block ordinal)
+      (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
+        (def (add! column identity members)
+          (let* ((table (vector-ref owners column))
+                 (bucket (or (hash-get table identity)
+                             (let (fresh (make-rectangle-bucket members [] 0 []))
+                               (hash-put! table identity fresh) fresh))))
+            (rectangle-bucket-blocks-set! bucket
+              (cons (cons ordinal block) (rectangle-bucket-blocks bucket)))
+            (rectangle-bucket-count-set! bucket (+ 1 (rectangle-bucket-count bucket)))))
+        (for-each (lambda (column value) (add! column prefix (list value))) (iota offset) prefix)
+        (add! offset (rectangle-left block) (rectangle-left block))
+        (add! (+ offset 1) (rectangle-right block) (rectangle-right block)))) blocks (iota (length blocks)))
+    (for-each (lambda (column)
+      (hash-for-each (lambda (_ bucket)
+        (using (bucket :- rectangle-bucket)
+          (set! bucket.blocks (reverse bucket.blocks))
+          (set! bucket.plain (map cdr bucket.blocks))
+          (let (table (vector-ref routes column))
+            (for-each (lambda (member)
+              (let (hits (or (hash-get table member) []))
+                ;; Construction finishes this bucket before any other bucket
+                ;; inserts. A duplicate must therefore have this owner at the
+                ;; head; retain its first stored value without scanning hits.
+                (unless (and (pair? hits) (eq? (cdar hits) bucket))
+                  (hash-put! table member (cons (cons (list member) bucket) hits))))) bucket.members))))
+        (vector-ref owners column))) (iota arity))
+    routes))
+;; Choose the smallest descriptor bucket, then preserve captured traversal order.
+;; Other coordinates (including repeated constraints) remain checked by visitor.
+(def (routed-rectangles routes blocks columns key)
+  (if (null? columns) blocks
+    (let ((selected #f) (cost +inf.0))
+      (for-each (lambda (column value)
+        (when (>= column (vector-length routes)) (error "invalid ASCENT UF view column"))
+        ;; A single descriptor is already minimal for traversal. Remaining
+        ;; coordinates still receive range checks here and value checks in
+        ;; the visitor, including absent keys and repeated constraints.
+        (when (> cost 1)
+          (let* ((buckets (or (hash-get (vector-ref routes column) value) []))
+                 (size (foldl (lambda (hit n) (+ n (rectangle-bucket-count (cdr hit)))) 0 buckets)))
+            (when (< size cost) (set! selected buckets) (set! cost size))))) columns key)
+      (cond ((null? selected) [])
+            ((null? (cdr selected)) (rectangle-bucket-plain (cdar selected)))
+            (else (map cdr (list-sort (lambda (a b) (< (car a) (car b)))
+                            (apply append (map (lambda (hit) (rectangle-bucket-blocks (cdr hit))) selected)))))))))
+;; Routing narrows descriptors; exact membership still belongs to each captured
+;; rectangle, including equal endpoint values shared by unrelated groups.
+(def (rectangle-contains? block row width)
+  (let* ((prefix (rectangle-prefix block)) (offset (length prefix)))
+    (and (= width (+ offset 2)) (matches-prefix? row prefix)
+         (member (list-ref row offset) (rectangle-left block))
+         (member (list-ref row (+ offset 1)) (rectangle-right block)) #t)))
+;; : (-> (List Rectangle) Natural Natural Boolean FrozenView)
+;; Rectangles must be disjoint; member spines belong to the captured cut.
+(def (gerbil-ascent-rectangle-view blocks count units (indexed? #f))
+  (let* ((routes (and indexed? (pair? blocks) (rectangle-routing blocks)))
+         ;; One or two descriptors are cheaper to scan than route and gather.
+         (membership-routes (and routes (pair? (cdr blocks)) (pair? (cddr blocks)) routes))
+         (query-columns (and membership-routes (iota (vector-length membership-routes))))
+         (grouped? (and (pair? blocks) (= (length (rectangle-prefix (car blocks))) 1))))
+  (def (selected columns key)
+    (if routes (routed-rectangles routes blocks columns key) blocks))
+  (def (validate-key! columns key)
+    (unless (and (list? columns) (list? key) (= (length columns) (length key))
+                 (andmap (lambda (column) (and (exact-integer? column) (>= column 0))) columns))
+      (error "invalid ASCENT UF view key")))
+  (def (visit-admitted columns key consume)
+    ;; One prefix bucket owning one descriptor proves the first group key.
+    ;; Drop just that checked constraint; repeated group keys still remain in
+    ;; the suffix. Multi-descriptor/multi-owner buckets retain general routing.
+    (if (and grouped? routes (pair? columns) (= (car columns) 0))
+      (let (hits (or (hash-get (vector-ref routes 0) (car key)) []))
+        (cond
+          ((null? hits) (void))
+          ((and (null? (cdr hits)) (= (rectangle-bucket-count (cdar hits)) 1)
+                 (= (length (rectangle-prefix (car (rectangle-bucket-plain (cdar hits))))) 1))
+           (visit-admitted-rectangle-parts (car (rectangle-bucket-plain (cdar hits)))
+             (cdr columns) (cdr key) consume routes))
+          (else (visit-admitted-blocks (selected columns key) columns key consume routes))))
+      (visit-admitted-blocks (selected columns key) columns key consume routes)))
+  (make-relation-view #f #f 0 'total count units
+    (lambda (columns key consume)
+      (validate-key! columns key)
+      (for-each (lambda (block)
+        (visit-rectangle-parts block columns key
+          (lambda (prefix left right) (consume (append prefix (list left right)))) routes)) (selected columns key)))
+    (lambda (row)
+      (let (width (length row))
+        (and (>= width 2)
+             (or (not membership-routes) (<= width (vector-length membership-routes)))
+             (ormap (cut rectangle-contains? <> row width)
+               (if membership-routes
+                 (routed-rectangles membership-routes blocks
+                   (if (= width (vector-length membership-routes)) query-columns (take query-columns width)) row)
+                 blocks))))) #f
+    (make-part-visitors
+      (lambda (columns key consume)
+        (validate-key! columns key)
+        (for-each (lambda (block) (visit-rectangle-parts block columns key consume routes))
+                  (selected columns key)))
+      visit-admitted))))

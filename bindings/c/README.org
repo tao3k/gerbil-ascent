@@ -1,0 +1,144 @@
+#+TITLE: ASCENT Scheme engine interface
+
+The normal Gerbil package build owns =interface/engine-api.ss= and =interface/c-api.ss=.
+=build.ss/std/make= links the compiler-derived dependency closure into one
+general shared library; =python -m ascent_engine.build= packages its recorded
+outputs. Applications use =ascent_engine.Engine= and
+=Session=; they do not introduce separate scene executables or build tools.
+
+* Ownership and lifecycle
+
+=bindings/c/ascent.h= declares ABI version 1. One OS thread initializes the
+Gambit runtime, submits requests and shuts it down. Python initialization uses
+the main thread. Shutdown is terminal; the runtime cannot be restarted in the
+same process. The Python binding retains the loaded library until process exit.
+Closing a session releases its engine handle. Stale handles reject.
+
+C callers zero-initialize =ascent_result= and call =ascent_result_release= after
+every request, including errors. Payloads are copied UTF-8 bytes owned by the
+result. Python copies them and releases the C allocation in a finally block.
+Input is limited to 1 MiB and rejects NUL, invalid UTF-8, duplicate JSON keys,
+trailing input and unknown contract fields. Errors return a typed status.
+
+* Declarative operations
+
+=describe= returns the ABI and operators. =open= admits a program containing
+finite relations, typed scalar columns with optional finite domains, source
+facts, rules and query relation names. Rules support variables, literals,
+positive relational atoms and stratified negation. Checked body operators are
+also available through inert descriptors: =where= (=<= and =even?=), =compute=
+(=+= and =identity=), and =reduce= (=count/sum/min/max=). These delegate to the
+existing =program/scheme-checked.ss= constructors, not a second evaluator.
+=describe.clauseOperators= reports this surface. Operands are variable/literal
+terms; compute/reduce declare their output variable, and reduce additionally
+declares a relation, its terms and value-input variables. Scheme checks binding
+order, exact integer operands, reduction arity and stratification. No executable
+expressions, host callbacks or arbitrary predicate serialization are supported.
+The reverse =ascent-engine-program-wire= serializer remains relational-only;
+opaque Scheme procedures cannot acquire wire authority from an attached label.
+
+=run= returns completion and query rows with an execution deadline of at most
+one second. A fresh zero-budget run is incomplete; an already completed clean
+session can return its retained result. =replace= atomically replaces declared
+source relations after the initial run completes. All replacement rows are
+validated before publication. Derived relations cannot be updated as sources.
+=close= releases a handle. =compare= checks extensional row agreement; caller
+expectations do not certify natural-language intent or source completeness.
+
+* Qualification
+
+=t/qualification/ascent-engine-interface-test.ss= exercises recursion,
+negation, retained updates and invalid transactions directly in Scheme.
+=workbench/engine_tests/test_engine.py= exercises actual shared-library ownership,
+thread errors, parsing boundaries, retained sessions and all 1,536 frozen
+movie observations corresponding to Lean and Quint. This finite correspondence
+does not prove generic C ABI memory safety or arbitrary-program refinement.
+
+* Inert rule sessions
+
+=Engine.open_rule_sources(*texts, limits=...)= dispatches =open-rule-sources=.
+It accepts the same =inert-relational-subset.v1= contract as =read-rules=:
+the installed Scheme reader validates complete typed relational declarations
+and constructs a native Program without importing macro modules or evaluating
+caller Scheme. Unsupported executable forms fail; there is no DSL fallback.
+
+The result is an ordinary =SourceSession= with descriptors, full finite
+projection, native results and caller fact ceilings. Complete the initial
+=run= before replacing sources. Replacement authority, atomic rejection,
+withdrawal, generation accounting and terminal close use the existing session
+implementation. General =open_sources= retains its upstream DSL contract.
+Consumers must explicitly select the inert contract and bind all source bytes;
+the new entry point does not qualify arbitrary Scheme or macro expansion.
+
+* Compiled syntax resources
+
+Embedded DSL entries initialize the upstream expander and use its ordinary
+=eval-syntax= / =current-expander-context= protocol. ASCENT does not replace
+=##expand-source= or force the runtime's private raw-Scheme parameter. Generated
+metadata handling and dynamic loading remain with the installed Gerbil runtime.
+The executable entry explicitly imports the public Evidence facades, so the
+upstream linker includes their runtime constructors and higher-order execution
+dependencies in its builtin closure. Declaring a module in the build inventory
+alone does not link it into that executable.
+
+=bindings/artifact.ss= records the generated =.ssi= and =.scm= closure and
+asks upstream =__find-library-module= which compiled module it selects.
+Resolution respects load-path order: within each directory the loader selects
+the final contiguous generation starting at =.o1=, stopping at the first gap;
+otherwise it selects that directory's =.scm= before trying a later directory.
+A larger orphan generation is not a substitute for a missing =.o1=.
+
+On source-identity rejection, the build removes dynamic generations, generated
+Scheme phases and =.ssxi.ss= optimization metadata only for its declared ASCENT
+modules before the existing upstream clean/rebuild. Native
+=make-clean= owns declared interface/static outputs; old dynamic generations
+and obsolete generated phases are outside those outputs. The compiler caches
+optimization metadata across batch compilations, so that metadata must also
+belong to the current source identity. Preserving old resources could select
+an older binary beside newly generated Scheme. This invalidation leaves SDK/dependency files and
+unrelated module names alone; generation ownership is tested separately.
+
+The receipt preserves every real filename and byte hash through the selected
+compiled generation. Gambit linker symbols contain the actual =.oN= filename;
+renaming a binary to =.o1= changes loader identity without changing its symbol.
+=compiledResourceOrigins= binds the selected module, producer path, compiled
+SHA and generated-source SHA. Packaging publishes recorded bytes and keeps the
+origin observation; it does not compile, rename or fabricate generations.
+ABI repackaging stages an exact resource tree before replacing the previous
+tree: old unrecorded higher generations must not survive in a reused directory.
+A resource failure during staging preserves the previous tree and Library.
+The API extension builder already requires a new output directory.
+
+On the same filesystem, ABI and API packaging retain ordinary hard links to
+canonical positive =.oN= generations. These are regular files, not symbolic
+loader aliases: removing the producer name leaves the published bytes intact.
+Native compilation must append a new generation or unlink an invalidated name
+before replacing it; an in-place write is outside this ownership contract.
+Metadata, the Library and the API extension are independently copied. Packaging
+never changes permissions or signing attributes of a shared generation.
+The receipt records actual transfer counts; cross-volume or unsupported linking
+falls back to a checked byte copy. Other I/O failures propagate.
+
+Every resource is checked against its recorded SHA before transfer, after
+transfer and before publication. Shared writable aliases are not absolute
+immutability: consumers must bind their resource ownership and reject later
+SHA drift, and must not chmod a shared inode as if it were an independent copy.
+Copy fallback correctness does not establish its cold-loading performance on
+another filesystem or a portable wheel qualification.
+
+Artifact initialization uses the native syntax-path contract separately from
+the caller's =max_request_bytes=. Public requests always retain that ceiling,
+including a caller-supplied =configure-syntax= request. Source-scope and fact
+limits remain applied through the same native request transport.
+
+Every inventoried generated module requires compiled code. A missing module,
+source-only resolution, or missing first generation raises =CompiledResourceError=
+before a receipt can be published. The two =interface/entry= generated resources
+are explicitly classified in =sourceOnlyResources=: the =exe:= target links
+that driver into the Library and does not produce dynamic modules for it.
+Their generated-source hashes remain in the complete resource inventory.
+
+Native inventory tests exercise gaps, absent first generations and search-path
+precedence. Python packaging tests exercise binary bytes and drift rejection.
+Actual DSL loading and complete downstream consumer qualification remain
+separate gates, under their existing budgets and execution environment.

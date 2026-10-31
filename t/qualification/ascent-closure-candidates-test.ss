@@ -51,6 +51,20 @@
         ;; Cy -> Ada, then the lexically first equal-length route back.
         (check-equal? (.ref (candidate receipt 9) 'support) '(99 103 104))
         (check-equal? (.ref (candidate receipt 9) 'distance) 3)))
+    (test-case "sixty-four-node chain retains exact shortest supports"
+      (let* ((radix 64)
+             (facts
+              (map (lambda (from)
+                     (cons (+ (* from radix) (+ from 1)) from))
+                   (iota 63)))
+             (receipt
+              (gerbil-ascent-closure-candidates
+               facts radix 63 4096 4096))
+             (last (.ref (list-ref (.ref receipt 'candidates) 62)
+                         'support)))
+        (check-equal? (.ref receipt 'status) 'complete)
+        (check-equal? (length (.ref receipt 'candidates)) 2016)
+        (check-equal? last (iota 63))))
     (test-case "bounded result truncates after complete closure"
       (let ((receipt (evaluate diamond 16 64 2)))
         (check-equal? (.ref receipt 'status) 'output-truncated)

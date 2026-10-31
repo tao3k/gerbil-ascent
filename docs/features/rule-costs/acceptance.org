@@ -1,0 +1,1105 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+title: Native Scheme rule-plan costs and explicit common-prefix control
+#+date: 2026-10-31
+#+status: bounded diagnostic implementation; focused source-bound controls, not full package acceptance
+
+* Scope
+
+The existing =core/positive-plan.ss= runner owns optional counters for native
+Scheme matching. No reference Dusa/miniDusa code, new evaluator, Python consumer,
+choice syntax or external study framework is introduced. The existing DSL and
+test harness own the workload. The paper sources are listed in the README's
+References: =10.1145/3704849= and its prefix-cost reference
+=10.1145/581771.581774=; Ascent rule planning is =10.1145/3497776.3517779=.
+
+This measures one fresh serial solve of canonical pure Set plans. Unsupported
+callbacks, storage/index providers, lattice rules, retained sessions and parallel
+or cancellable engine routes refuse measurement instead of returning zero work.
+A collector cannot be reused for a second solve. Native engine cancellation is
+not qualified by this diagnostic; interruption is checked at the plan's existing
+checkpoint. Normal unmeasured paths keep their original admission/dispatch.
+
+* Counter definitions
+
+| Counter | Charge point and meaning |
+|---------+--------------------------|
+| candidate-rows | A candidate actually passed to the native atom matcher, including mismatches |
+| partial-matches | One successful body-prefix extension |
+| complete-witnesses | All premises matched, before emitting heads |
+| head-proposals | One head emission attempted, before Set deduplication |
+| admitted-rows | A novel derived row admitted to the current pending round, not necessarily published |
+| repeated-prefixes | A successful prefix/support-row visit previously observed in this collector |
+| repeated-candidate-visits | A candidate attempt previously observed with the same relevant prefix/support rows, including failed matches |
+
+Repeated observations use relation/slot descriptors and full supporting rows,
+not stale unused frame slots or the final projected head. Slot identity follows
+first variable occurrence. Heads are omitted so identical relational prefixes
+in different rules can be compared. This is a structural diagnostic, not a
+general equivalence checker for reordered rules or arbitrary expressions.
+
+Revisiting a prefix with a new suffix may be legitimate work. Different complete
+witnesses producing one head are not collapsed into one derivation. No-op head
+proposals remain visible. Disabling prefix recording returns =#f= for both repeat
+counters, rather than claiming zero. The observer retains support keys and has
+memory/time overhead; these counts do not establish wall-time speedup or the
+paper's asymptotic theorem. Index construction, field validation and old-lane
+membership scans are outside the matcher counter's scope.
+
+The observer reports work, not completion authority. Refusal or interruption
+keeps partial counters; it does not turn admitted pending rows into a completed
+published result. Failed emission cannot count unattempted later heads.
+
+* Independent finite-domain check
+
+=finite-domain-closure= in the existing semi-naive oracle fixture enumerates
+all assignments of every rule variable over a declared finite domain, tests
+ground body membership, and applies synchronous immediate consequences until
+settled. It imports no native planner, matcher, index or delta code. It is
+restricted to function-free positive variable-only rules over declared relations.
+Source values outside the domain are rejected. This is not finite-choice or
+general Scheme callback semantics.
+
+The native DSL corpus checks every directed two-node graph (16 inputs) in both
+representations. Every source, intermediate and exported relation is compared
+with that representation's independent least closure. Measured and unmeasured
+native executions must produce identical ordered rows. A sparse four-node chain
+and the complete two-node graph provide explicit paired work receipts.
+
+* Prefix reuse control
+
+The baseline contains two rules with three identical edge premises and one tail
+premise. The second lane uses one ordinary four-column relation to retain all
+bindings of the common three-edge prefix; existing suffix rules read that
+relation. It is explicit DSL factoring, not an automatic compiler cache or a
+claim of provenance-graph equivalence. The declared exported left/right queries
+are unchanged. The intermediate relation intentionally differs between lanes;
+each lane is checked against its own complete finite oracle.
+
+The sparse and dense cases retain separate matching and materialization costs.
+The first dense run falsified the hypothesis that candidate scans must increase:
+they decreased, while intermediate rows and complete witnesses increased.
+The graph and both rule declarations were kept unchanged. The erroneous scan
+direction assertion was replaced by the independently derived row counts:
+2^4 prefix rows plus four rows in each exported relation, versus eight exported
+rows in the baseline. The original failed assertion and complete log are retained.
+No conclusion of universal prefix-caching benefit is admitted.
+
+* Native kernel controls
+
+The fixed two-atom kernel has eight candidates, five partial matches, three
+complete witnesses and six proposals across two heads. Repeating the traversal
+with a fresh frame yields five repeated successful prefixes and eight repeated
+candidate visits. No-prefix-recording mode preserves counts but reports unknown
+repeat metrics. Interruption at the first real checkpoint emits no complete
+witness; unsupported callbacks refuse before calling user code.
+
+Run through the existing entrypoint:
+
+#+begin_src sh
+just test-file t/qualification/ascent-rule-cost-kernel-test.ss
+just test-file t/qualification/ascent-rule-cost-test.ss
+just test-file t/qualification/ascent-positive-plan-test.ss
+#+end_src
+
+* Initial receipt boundary: Core 79a5526 and POO 98fcce3
+
+Five kernel cases, four DSL/oracle cases and 32 existing positive-plan regression
+cases passed through the original GxTest entry with MODULE-OK, HARNESS-OK,
+final OK and natural exit 0. The independent finite oracle checked 36 program
+instances; the measured and unmeasured controls executed 72 completed solves.
+Those checks bind Core PR #19 revision
+=79a5526a2ecd06408201be87b4a028b167c8d8a0= and its POO revision
+=98fcce3abec760373cc7486a8b51d6bb97424658=, with the Core source directory on
+GERBIL_LOADPATH. They do not qualify POO PR #13 revision =30733c3=.
+
+| Workload | Lane | Candidates | Partial matches | Complete witnesses | Head proposals | Admitted rows | Repeated successful prefixes | Repeated candidate visits |
+|----------+------+------------+-----------------+--------------------+----------------+---------------+------------------------------+---------------------------|
+| Four-node chain | Baseline | 104 | 36 | 2 | 2 | 2 | 29 | 82 |
+| Four-node chain | Factored | 52 | 20 | 3 | 3 | 3 | 12 | 29 |
+| Complete two-node graph | Baseline | 312 | 168 | 32 | 32 | 8 | 124 | 228 |
+| Complete two-node graph | Factored | 188 | 116 | 48 | 48 | 24 | 56 | 88 |
+
+Candidate savings therefore coexist with extra materialization/derivation work.
+No total-runtime, allocation-byte or universal speedup claim follows.
+
+The source-bound focused checks are separate from installed-package acceptance:
+the fresh standard dependency installation exited 124 at its fixed 600-second
+diagnostic cap. Its remaining owned Core build process group was identified and
+terminated. A partially generated manifest is not treated as installation success.
+The focused checks subsequently read the fixed source and already generated
+dependency modules; they do not close the clean-install or exact-head CI gate.
+
+The initial old-prefix test failed before evaluation because
+=:clan/poo/object-contract= was absent. A raw dependency invocation exited 70;
+the fresh dependency build then exposed missing OpenSSL pkg-config metadata.
+These failures remain in /private/tmp/ascent-rule-cost-*-20261031.log. The failed
+dense hypothesis is =ascent-rule-cost-dsl-source-control-2-20261031.log=; the
+corrected counter/semantic control is =ascent-rule-cost-dsl-tradeoffs-20261031.log=.
+No task input, rule declaration, test timeout, result oracle or admission guard
+was changed to obtain the measured results. The corrected hypothesis assertion
+is explicitly distinguished from those semantic validation gates.
+
+* Current dependency chain follow-up
+
+ASCENT keeps exactly one direct dependency, Yuanxu:
+
+=ASCENT -> Yuanxu 85a969c77431b971408610d908bcf694a21830bf ->
+POO 30733c3de7dbca4f0572b25a25b9099396da48a5=.
+
+The POO pin was updated in its owner on existing Yuanxu PR #19. Its replay
+correspondence constant was then updated without changing the checker or any
+theorem: the selected =object.ss= source is byte-identical to the previously
+bound source. All 11 unchanged selected replay positive/negative controls passed
+with the new producer source bound. POO's exact-head CI passed 53 checks.
+Full Yuanxu CI remains a separate gate.
+
+The native DSL/oracle control and the 32-case positive-plan regression were
+rerun with the current package checkout and explicit fixed Core source path.
+Both exited naturally with final OK; all four reported cost rows are identical
+to the initial table. These are new focused receipts, not transferred old passes:
+=/private/tmp/ascent-current-chain-cost-controls-20261031.log= and
+=/private/tmp/ascent-current-chain-plan-regression-20261031.log=.
+
+The new cold dependency installation also reached its unchanged 600-second cap;
+the remaining owned Core build group was terminated. Early attempts before the
+public Core prelude existed failed to read =object-types/contracts.ss=. A tagged
+official package update checked out the correct revision but then reported
+=bad package; missing gerbil.pkg=. The official =gerbil deps --install= route
+was subsequently used with the matching checkout. These installation outcomes
+are separate from the focused native execution receipts. No direct POO pin,
+manual tag rewrite, uninstall, compatibility facade or relaxed gate was added.
+
+* Installed dependency and local execution receipt
+
+The subsequent standard =gerbil deps --install= completed naturally with exit 0
+using the matching package prefix, including the POO and Yuanxu native builds
+and package tagging. Its receipt is
+=/private/tmp/ascent-current-cohort-deps-after-update-20261031.log=.
+This is a successful warm recovery, not a successful cold 600-second build.
+Both cold timeout receipts and the tagged-update failure remain retained.
+
+With =GERBIL_LOADPATH= unset and only the installed =GERBIL_PATH= selected,
+the five kernel, four DSL/oracle and 32 positive-plan cases passed with natural
+exit 0 through =just test-file=. Logs are
+=/private/tmp/ascent-installed-chain-{kernel,dsl,regression}-20261031.log=.
+The measured rows still matched the initial table. These local checks no longer
+depend on a Core source-path override. They do not constitute complete package
+acceptance or a clean cold-install pass. Remote CI is separate from the local
+development decision and is not awaited for this work.
+
+* Native empty-pivot pruning
+
+At ASCENT =a789c052753372b061c8828614fdaee632012f9f= the remaining repeated
+matching had a concrete cause: the existing conservative pivot list stopped at
+a bound/indexed atom. A later empty delta could therefore rebuild earlier
+prefixes before discovering that no complete body was possible.
+
+The evaluator now marks every positive atom as an empty-pivot precheck only for
+fresh serial, pure, canonical Set/hash plans with trusted immutable scalar field
+predicates. It changes the engine-owned activation vectors, never cached rule
+analysis. This uses the existing empty-delta check, without persistent state,
+new syntax or an automatic materialization cache. Session/reuse, cancellation,
+parallel, unchecked fields, opaque callbacks, custom providers and lattice
+routes retain the conservative behavior. In particular, scalar field metadata
+does not authorize skipping an observable callback.
+
+The task declarations, graphs, finite oracle and fixed resource limits remain
+unchanged. Before/after counts are native matcher work, not wall-clock timings:
+
+| Workload | Lane | Candidates before / after | Partial matches before / after | Complete witnesses | Head proposals | Admitted rows | Repeated prefixes after | Repeated candidates after |
+|----------+------+---------------------------+--------------------------------+--------------------+----------------+---------------+-------------------------+---------------------------|
+| Four-node chain | Baseline | 104 / 44 | 36 / 14 | 2 | 2 | 2 | 7 | 22 |
+| Four-node chain | Factored | 52 / 28 | 20 / 10 | 3 | 3 | 3 | 2 | 5 |
+| Complete two-node graph | Baseline | 312 / 168 | 168 / 88 | 32 | 32 | 8 | 44 | 84 |
+| Complete two-node graph | Factored | 188 / 148 | 116 / 92 | 48 | 48 | 24 | 32 | 48 |
+
+Complete witnesses, head proposals and admitted rows are unchanged within each
+lane. On the chain, each baseline rule needs =3+9+6+4= candidate visits in its
+initial traversal; the paired total is 44. Later empty pivots need no matching.
+The remaining revisits include distinct rules and suffix witnesses; this is
+not a claim that every observed repeat can be eliminated. Dense factoring still
+raises complete witnesses from 32 to 48 and admitted rows from 8 to 24, despite
+lower matching counts. No universal factoring or wall-time benefit is claimed.
+
+The installed-dependency local controls now pass 44 cases: five kernel, six
+DSL/oracle and 33 positive-plan cases. The added controls check cached-analysis
+immutability, retained source withdrawal/restoration, old snapshot and sibling
+Session isolation, and callback-trace equivalence to the existing reference
+evaluator. Interrupted traversal keeps its partial counters and emits no
+complete witness. All 16 two-node input graphs remain checked in both lanes
+against independent finite grounding, with measured/unmeasured result equality.
+
+Logs, each with suite/module/harness success, final OK and natural exit 0:
+
+- =/private/tmp/ascent-empty-pivot-kernel-20261031.log= (five cases).
+- =/private/tmp/ascent-empty-pivot-boundary-dsl-20261031.log= (six cases).
+- =/private/tmp/ascent-empty-pivot-boundary-regression-20261031.log= (33 cases).
+
+The earlier failed dense cost hypothesis and installation failures remain
+separate recorded outcomes. No upstream implementation was copied or translated.
+
+* Remaining repeats: plan ownership and explicit projection
+
+The collector now partitions each repeat by compiled plan identity. A
+=same-plan-*-revisit= has already been seen by that plan. A
+=cross-plan-*-revisit= is a plan's first encounter with a structural prefix
+already seen by another plan. Subsequent visits by that plan enter the same-plan
+bucket, so the two buckets sum exactly to the existing total. Both partial
+successes and all candidate attempts are partitioned. Disabled recording keeps
+every repeat counter unknown (=#f=). This is ownership attribution, not an
+automatic determination that matching is avoidable. It adds diagnostic memory
+only while recording; no matching result is cached or reused by the observer.
+
+On the unchanged chain, baseline repeats are seven successful prefixes and
+22 candidates, all cross-plan. On the dense input they are 44 and 84, also all
+cross-plan. Full-prefix factoring leaves respectively 2/5 and 32/48 cross-plan
+repeats. These samples show no same-plan revisits after empty-pivot pruning;
+they do not establish this property for recursive programs or other workloads.
+
+The semantic distinction is:
+
+| Observation | Required work or possible reuse | Obligation |
+|-------------+--------------------------------+------------|
+| Different full support tuples for one projected answer | Distinct witnesses in a derivation-sensitive contract | Equal Set answers do not justify deleting provenance |
+| Same prefix in different rules | Prefix bindings may be shared | Every different suffix and head still needs evaluation/admission |
+| Same prefix in a later delta traversal | May carry new suffix facts or updates | Bind reuse to its source cut and invalidate dependencies |
+| Matching before an empty selected delta | Avoidable on the qualified pure route | Existing native empty-pivot optimization handles this |
+| Variables retained only for a discarded witness | Explicit existential projection can reduce materialization | No downstream use, callbacks, counts or witness-sensitive consumers |
+
+The new third lane is ordinary existing Scheme DSL. It changes the intermediate
+from =prefix(x,y,z,t)= to =prefix(x,t)=. Both downstream rules read only =x,t=;
+=y,z= have no consumer outside the defining body. The original two lanes,
+graphs, limits and independent oracle are retained unchanged.
+
+#+begin_src scheme
+(rule (prefix ?x ?t)
+      (edge ?x ?y) (edge ?y ?z) (edge ?z ?t))
+(rule (left ?x ?w) (prefix ?x ?t) (tail ?t ?w))
+(rule (right ?x ?w) (prefix ?x ?t) (tail ?t ?w))
+#+end_src
+
+For this nonrecursive positive Set program the answer argument is elementary:
+the direct rule succeeds for =(x,w)= iff there exist =y,z,t= satisfying its
+four premises. The projected relation contains =(x,t)= iff there exist =y,z=
+satisfying its three defining premises. Substitution yields the same existential
+formula. This is a query-answer equivalence argument for the declared outputs,
+not a transformation theorem for arbitrary recursive, aggregate, negative,
+lattice, callback or provenance programs. A consumer needing =y= or =z= is
+outside its precondition. No compiler rewrite or new syntax is installed.
+
+| Input | Representation | Candidates | Partial matches | Complete witnesses | Head proposals | Admitted rows | Repeated prefixes | Repeated candidates |
+|-------+----------------+------------+-----------------+--------------------+----------------+---------------+-------------------+---------------------|
+| Chain | Four-column prefix | 28 | 10 | 3 | 3 | 3 | 2 | 5 |
+| Chain | Endpoint prefix | 28 | 10 | 3 | 3 | 3 | 2 | 5 |
+| Dense two-node | Four-column prefix | 148 | 92 | 48 | 48 | 24 | 32 | 48 |
+| Dense two-node | Endpoint prefix | 76 | 44 | 24 | 24 | 12 | 8 | 12 |
+
+The sparse non-improvement is retained. Projection still enumerates all 16
+three-edge support tuples on the dense graph, but admits four endpoint tuples
+instead of 16 full tuples. Its two suffix rules each have four witnesses, so
+complete witnesses total =16+4+4=24= and admitted rows total =4+4+4=12=.
+This reduces later matching and materialization; it does not avoid discovering
+the original prefix supports. Comparing only the final answer count would hide
+that distinction. No wall-time or allocation-byte improvement is claimed.
+
+* Scheme DSL design assessment
+
+This assessment distinguishes semantic specification, native test evidence and
+unproved implementation properties. A paper reference or macro implementation
+alone is not a correctness proof of this Library.
+
+| Design question | Current source boundary | Assessment and limit |
+|-----------------+-------------------------+----------------------|
+| What does a pure rule mean? | =scheme-language.ss= restricts terms and exposes relation dependencies | Positive finite, function-free Set rules have a clear closure specification; the finite oracle covers the present variable-only subset, not all DSL terms |
+| Can host mutation silently change a rule? | =relational-term= captures explicit values; =scheme-checked.ss= admits immutable scalars | Construction-time values and rule-time variables are distinct; arbitrary host callbacks must retain separate operational semantics |
+| Does composition preserve private identities? | =relational-atom/lexical= and fragment construction allocate fresh handles | Composition is structurally meaningful; immutable plan sharing must not alias engine frames |
+| Are nonmonotone reads explicit? | =core/rule-semantics.ss= stratifies negative/aggregate and lattice-to-Set reads | These boundaries must survive rewrites; the positive oracle does not validate them |
+| Is completion explicit? | Mandatory limits, solve completion, Session admission and source revisions | A budget or interruption bounds execution, not mathematical closure; partial output must never certify a completed least model |
+| Is declarative meaning separated from cost? | Body order, indexes and semi-naive lanes determine observed work | Ordered cost semantics is useful; equal answer sets do not imply equal work, row order, bounded-run behavior or provenance |
+| Can users express economical sharing? | Existing ordinary intermediate relations | Yes, including live-variable projection, but users currently choose the representation manually; there is no qualified automatic prefix optimizer |
+| Is derivation identity preserved by factoring? | Set admission deduplicates values; provenance has its own path | Query-equivalent source rewrites need a separate support mapping before use in provenance-sensitive contexts |
+
+The design is well founded for the specified positive Set subset, with explicit
+boundaries for extensions. The remaining gap is a mechanically checked
+end-to-end refinement from all admitted DSL programs to native execution,
+including revision and incomplete-run behavior. Current finite tests provide
+bounded counterexample checking, not that general theorem. The single-head
+surface also makes identical-body sharing manual despite multi-head support in
+the native plan; this is a design tradeoff, not grounds to silently fuse rules
+and change rule/provenance identities.
+
+The paper basis is: Martens/Simmons/Arntzenius, Section 7.1, for prefix-firing
+accounting; Chandra/Merlin (STOC 1977) for distinguishing conjunctive query
+equivalence from implementation; and Green/Karvounarakis/Tannen (PODS 2007)
+for distinguishing query answers from richer provenance information. Full
+citations and primary-source links are in README References. No complexity
+bound or provenance algebra from those papers is claimed as implemented here.
+
+* Projection and DSL assessment receipts
+
+The local working tree based on =10575d7f= passed 78 cases through the existing
+=just test-file= entry with installed dependencies, =GERBIL_LOADPATH= unset,
+unchanged limits, natural exit 0 and final suite/module/harness/OK markers:
+
+| Test | Cases | Log under /private/tmp |
+|------+-------+------------------------|
+| Native cost kernel | 6 | ascent-prefix-final-kernel-20261031.log |
+| DSL cost/oracle and projection | 8 | ascent-prefix-final-dsl-20261031.log |
+| Positive-plan regression | 33 | ascent-prefix-final-regression-20261031.log |
+| Scheme relational contracts | 31 | ascent-prefix-final-contract-20261031.log |
+
+The kernel independently exercises same-plan and cross-plan attribution,
+disabled/unknown recording, interrupted work, and nested traversal: nested
+emission must not replace the outer traversal's plan identity. Plan ownership
+is threaded through traversal rather than kept in shared mutable observer state.
+The projection lane is checked against its own finite oracle on all 16 two-node
+graphs and both explicit sparse/dense controls. Its exported answers are also
+compared directly with the original unfactored lane on all 16 graphs. The
+original full-prefix and baseline checks remain unchanged.
+
+A retained projected-prefix Session is checked after two source revisions
+against independent finite grounding. Removing one of two supports preserves
+the answer; removing the last support withdraws it. The old completed snapshot
+remains unchanged. No projected tuple is reused across revisions without the
+existing Session invalidation path.
+
+All intermediate successful logs remain alongside the final receipts. The
+chain's equal cost after projection is a retained non-improvement result;
+the earlier failed hypothesis and installation failures are not deleted or
+reclassified. This is focused local verification, not a new clean-checkout,
+cold-build, complete-DSL proof or remote-CI result. Concurrent build and
+migration changes are outside this patch.
+
+* Conditional projection: Lean, Quint and native checks
+
+The follow-up starts at =974fb7b1= and keeps the existing positive task lanes
+unchanged. It adds obligations to existing proof modules and native suites,
+not a new evaluator, study framework or Python interface.
+
+| Contract | Formal statement or counterexample | Native boundary |
+|----------+------------------------------------+-----------------|
+| Endpoint-only suffix | =ProviderFrontier.EndpointProjection.suffix_equivalent= quantifies over arbitrary supports and suffixes whose type observes only retained coordinates | Both original representations and endpoint projection remain checked against finite grounding |
+| Recursive projection | =DerivationCounts.projected_rounds= requires the projection to commute with every rule step, starting at the projected seed | A single completed-query equality is not accepted as permission to rewrite a recursive SCC |
+| Alternative supports | =DerivationCounts.projection_presence_not_count= proves equal existence with different counts | The two-support native fixture has two full witness rows and one endpoint row |
+| Withdrawal | =projection_does_not_commute_with_withdrawal= refutes subtracting a projected removed witness when another support remains | Removing one support preserves the answer; removing the last retracts it |
+| Source cut | =revision_extensional= requires current support equivalence | Equal source row counts do not establish equality; the revision corpus replaces three rows with three different rows and restores them |
+| Empty required lane | =ProviderFrontier.empty_required_lane= rules out the complete witness, not just its projected head | Skipping an empty old prefix cannot remove an existing support tuple |
+
+The new projection and support-count counterexample theorems use no axioms;
+the generic empty-lane and recursive-round laws report only Lean's =propext=.
+No =sorry=, new axiom or compiler-trusting decision was added. Focused checking
+uses the existing locked LeanPoo Guard and =just check-lean-file= limits. The
+existing =SemiNaive.disjoint_partition= and =first_fresh_unique= laws are also
+kernel checked. These are semantic laws plus native conformance controls,
+not extraction or a complete source-refinement proof of the evaluator.
+
+Existing =ProviderFrontier.qnt= now checks endpoint equality, the live-column
+boundary, support accounting and empty-old-prefix pruning. Its new deliberate
+faults must produce counterexamples: dropping an observed hidden column,
+replacing support count with endpoint count, and pruning a lane that is not
+selected as old. The unchanged DeltaClosure controls reject overlapping pivot
+witnesses, lost work, early completion and all-old scheduling. The unchanged
+WithdrawalSession controls cover revision, support and publication faults.
+
+* Recursive diagnosis and minimal native reuse
+
+The added task uses existing Scheme DSL only:
+
+#+begin_src scheme
+(rule (path ?x ?y) (edge ?x ?y))
+(rule (path ?x ?z) (path ?x ?y) (path ?y ?z))
+(rule (answer ?x ?w)
+      (edge ?x ?y) (path ?y ?z) (path ?z ?w))
+#+end_src
+
+All 16 two-node graphs and a four-node revision sequence are checked against
+the independent finite-domain oracle. Fresh metered and unmetered rows agree.
+Retained Session answers are separately checked after each source replacement;
+the old snapshot remains unchanged. The collector still refuses retained
+execution: fresh recomputation costs are not represented as Session costs.
+
+The diagnosis found that trusted scalar field checks conservatively selected
+the ordered path, which disabled the existing disjoint delta lanes even for
+pure immutable Set rules. As a result, one complete supporting combination
+could fire at more than one pivot. The evaluator now enables the existing
+first-fresh partition on the already qualified fresh serial scalar Set route.
+It also computes the first empty old lane once per rule/round and reuses this
+fact to reject later pivots before matching. The check uses the same
+=all-size == delta-size= condition already used by the native old-row accessor.
+It is recomputed for the current cut, not cached by cardinality across cuts.
+
+The two changes preserve each distinct full supporting combination while
+removing repeated scheduling of that combination. They do not project away
+support columns, fuse rule identities or discard different witnesses for an
+equal head. Opaque callbacks, custom providers, lattices, retained sessions,
+parallel and canceled engine routes keep their prior eligibility boundaries.
+The existing row-order reference regression remains applicable.
+
+Here a supporting combination means full ground premise values under Set
+semantics at one source cut. It does not distinguish duplicate source-log
+occurrence IDs, raw provenance graph nodes or all recursive proof trees.
+Preserving those richer representations needs their own correspondence; this
+patch does not certify graph isomorphism or occurrence-sensitive provenance.
+
+| Source cut / control | Candidates | Partial matches | Complete witnesses / proposals | Admitted rows | Repeated candidates | Same-plan repeated candidates |
+|----------------------+------------+-----------------+--------------------------------+---------------+---------------------+-------------------------------|
+| Chain, original evaluator | 180 | 63 | 11 | 7 | 99 | 96 |
+| Chain, empty-old precheck alone | 180 | 63 | 11 | 7 | 99 | 96 |
+| Chain, disjoint lanes without precheck | 134 | 51 | 8 | 7 | 53 | 50 |
+| Chain, both changes | 131 | 48 | 8 | 7 | 50 | 47 |
+| Equal-size replacement, original | 95 | 34 | 5 | 4 | 56 | 53 |
+| Equal-size replacement, both changes | 63 | 25 | 4 | 4 | 24 | 21 |
+| Restored chain, both changes | 131 | 48 | 8 | 7 | 50 | 47 |
+
+The source cuts are =((0 1) (1 2) (2 3))= and
+=((0 1) (1 2) (3 2))=. The unchanged chain answer is =(0 3)=; the replacement
+removes it and restoration returns it. The saved historical answer remains.
+Lower complete-witness counts here remove scheduling duplicates, unlike the
+earlier endpoint projection that changes the witness representation.
+
+The observer now records repeated complete witnesses separately, partitioned
+by plan identity, with the same structural support key as the prefix counters.
+Each optimized recursive input has zero same-plan complete revisits. The
+kernel's disjoint-pivot control retains three distinct support pairs, including
+two with the same projected first column; the overlapping negative control
+visits four pairs by repeating one pair. The original two-head nonrecursive
+task still reports cross-plan complete repeats because both heads must be
+emitted. This separates scheduling duplication from distinct derivations.
+
+The remaining 47 same-plan candidate revisits on the chain include earlier
+prefixes inspected again as later-round suffix facts arrive, as well as failed
+candidate attempts. Zero repeated complete witnesses does not establish that
+every prefix revisit is necessary or that prefix memoization would be free.
+Reusing those prefixes persistently still needs an explicit source/dependency,
+space and invalidation argument. No such cache is introduced in this patch.
+
+* Retained failures, controls and reproduction
+
+Logs below are under =/private/tmp/= and are separate outcomes:
+
+- =ascent-recursive-before-old-prefix-20261031.log=: original frozen task costs.
+- =ascent-recursive-after-old-prefix-attempt1-20261031.log=: a real Scheme
+  lexical-scope error, fixed by using sequential bindings; retained as failure.
+- =ascent-recursive-after-old-prefix-attempt2-20261031.log=: successful but
+  non-improving precheck-only experiment, not counted as a performance gain.
+- =ascent-safe-reuse-empty-prefix-mutation-20261031.log=: deliberate removal
+  of the old-prefix precheck yields 134 candidates and fails the fixed 131
+  expectation; result checking precedes the cost assertion. The code was restored.
+- =ascent-safe-reuse-overlap-mutation-20261031.log=: deliberately restoring
+  overlapping checked-scalar pivots fails the independent complete-repeat
+  assertion (two same-plan repeated complete witnesses, expected zero). This
+  rejects the regression directly, not merely through a token/work threshold.
+- =ascent-projection-frontier-lean-attempt1-20261031.log= and
+  =ascent-projection-counts-lean-attempt1-20261031.log=: package reconfiguration
+  lock / sandbox DNS failures before proof checking. Lean preparation was then
+  serialized. =frontier-lean-attempt2= retains the fixed 30-second dependency
+  update timeout. The later unchanged entry completes without increasing limits.
+- =ascent-projection-frontier-quint-attempt1-20261031.log=: sandbox local
+  process communication refusal. The same entry subsequently runs successfully
+  with required local-process permissions and unchanged validators.
+
+The source revision and task inputs are not changed to make a check pass.
+The README additionally cites Gupta/Mumick/Subrahmanian, /Maintaining Views
+Incrementally/ (SIGMOD 1993), for the separate support/deletion maintenance
+problem. Its counting and DRed algorithms are reference material, not algorithms
+claimed as newly implemented here. The prior conjunctive-query, provenance,
+Ascent and finite-choice references remain in place.
+
+Reproduction uses the existing entrypoints, with the same installed dependency
+chain documented above; native commands below run with =GERBIL_LOADPATH= unset.
+The harness's existing supervisor and formal-obligation registry are reused;
+no Python semantic implementation or binding is added.
+
+#+begin_src sh
+just check-lean-file ProviderFrontier.lean
+just check-lean-file DerivationCounts.lean
+just check-lean-file SemiNaive.lean
+just _check-quint ProviderFrontier
+just _check-quint DeltaClosure
+just _check-quint WithdrawalSession
+just test-file t/qualification/ascent-rule-cost-kernel-test.ss
+just test-file t/qualification/ascent-rule-cost-test.ss
+just test-file t/qualification/ascent-positive-plan-test.ss
+just test-file t/qualification/scheme-relational-test.ss
+#+end_src
+
+Final formal receipts, all natural exit 0:
+
+| Entry | Log under /private/tmp | Qualified scope |
+|-------+------------------------+-----------------|
+| ProviderFrontier Lean | ascent-projection-frontier-lean-final-20261031.log | New projection/withdrawal/empty-lane laws and existing frontier module |
+| DerivationCounts Lean | ascent-projection-counts-lean-final-20261031.log | Existence versus support count; conditional recursive projection |
+| SemiNaive Lean | ascent-safe-reuse-seminaive-lean-20261031.log | Existing disjoint partition, unique first-fresh witness and recursive iteration laws |
+| ProviderFrontier Quint | ascent-projection-frontier-quint-attempt2-20261031.log | 13 original/new positive and expected-counterexample controls |
+| DeltaClosure Quint | ascent-safe-reuse-delta-quint-20261031.log | Five original positive and expected-counterexample controls |
+| WithdrawalSession Quint | ascent-safe-reuse-withdrawal-quint-20261031.log | 12 original positive and expected-counterexample controls |
+
+The models use their unchanged finite domains, watchdogs, heap and worker
+limits. Each Quint entry compiled with =cache=0= and ended with
+=ALL-QUINT-CHECK-OK=; expected counterexamples are successful negative controls,
+not silently ignored failures. The existing cold-install failures remain open
+and separate. No remote CI outcome is required or inferred.
+
+After both source mutations were restored, the final native working tree passed
+80 cases with suite/module/harness/final OK and natural exit 0:
+
+| Suite | Cases | Log under /private/tmp |
+|-------+-------+------------------------|
+| Native cost kernel | 7 | ascent-safe-reuse-accepted-kernel-20261031.log |
+| DSL projection, recursive costs and revisions | 9 | ascent-safe-reuse-accepted-recursive-20261031.log |
+| Positive-plan reference regression | 33 | ascent-safe-reuse-accepted-regression-20261031.log |
+| Scheme relational contracts | 31 | ascent-safe-reuse-accepted-dsl-contract-20261031.log |
+
+The complete-witness counters were enabled for these final controls; unrecorded
+repeat fields remain =#f=. Earlier 80-case passes before adding those counters
+are separate intermediate receipts, not substituted for the restored run.
+These are local installed-dependency checks, not clean cold-build or full
+package qualification. Concurrent build/migration changes remain uncommitted
+by this patch.
+
+* Locating the remaining 47 visits
+
+Starting from =78a57014=, the optional native collector now records detached
+visit data: =(stratum, round, source-rule-index)=, pivot, atom depth, Boolean
+match result, repeat attribution and full supporting value rows. Recording is
+off by default. Readers receive copies, not engine frames or mutable source
+aliases. Without prefix recording, repeat labels are explicitly =unrecorded=,
+not false claims of zero repeats. Traversal interruption still records only
+visited candidates, and the original completion/admission authority is unchanged.
+
+The chain's 47 same-plan repeated candidates have the following source owners;
+rule indices and atom depths are zero based:
+
+| Rule / atom | Successful repeated matches | Rejected repeated matches |
+|-------------+-----------------------------+---------------------------|
+| Rule 1, first =path= atom | 8 | 0 |
+| Rule 2, first =edge= atom | 15 | 0 |
+| Rule 2, second =path= atom | 5 | 19 |
+| Total | 28 | 19 |
+
+The 19 rejected visits are in rule 2's third pivot (ordinal 2), at atom depth 1:
+seven in round 3 and twelve in round 4. These inspect an old =path= relation
+whose first column is already bound by =edge=. Small relations bypassed the
+existing physical index, so the matcher repeatedly rejected other keys.
+
+The native trace is also checked against actual completed extensions in the
+same rule/round/pivot, using all premise values rather than the projected head:
+
+| Classification of the original 47 | Visits | Interpretation |
+|-----------------------------------+--------+----------------|
+| Repeated prefix with a new complete extension | 2 | Participates in a new first-fresh witness |
+| Successful repeated prefix with no complete extension in that traversal | 26 | Observed dead end at this cut; not a reusable future failure |
+| Repeated candidate rejected by its bound key | 19 | Can be excluded by exact current-cut index selection |
+
+The first two classes must not be merged into an unsupported claim that all 28
+are necessary. The concrete =answer= prefix supported by =edge(0,1)= has no
+completion in round 1 and does complete in round 2. This is asserted from the
+trace. Memoizing the earlier absence without suffix-version invalidation would
+lose =answer(0,3)=. The 26 dead-end visits are therefore retained in this patch;
+no persistent successful-prefix or negative-result cache is introduced.
+
+* Minimal reuse through the existing index owner
+
+The evaluator enables the existing exact bound-key index below its usual
+32-row scan threshold only for its already admitted fresh serial pure scalar
+Set route. =row-indexes-plan-rules!= communicates this mode to the same physical
+index owner. No new cache, syntax, relation, evaluator or Python interface is
+introduced. All/delta entries still use the existing source version, canonical
+build/extend functions and failure-publication macros. Empty relation snapshots
+return directly without allocating an empty physical index. Callbacks, custom
+providers, lattices, retained sessions, parallel and canceled routes retain the
+previous engine eligibility boundary and small-scan policy.
+
+The two new laws in =IndexedPositiveTraversal.lean= are independent of relation
+size. =exact_key_filter_any_size= proves equality of ordered continuation output
+lists, including multiplicity. =matching_support_retained= proves that a full
+matching support value tuple remains selected. Their premises require admitted
+row shape, known columns and a frame representing the current environment.
+The existing =compiled_key_refines= law excludes stale fresh slots from key
+reads. The new theorems use only the existing =propext= and =Quot.sound= axioms;
+no =sorry=, new axiom, native decision oracle or budget increase is used.
+
+This is stronger than Set-head equality, but it is still not an isomorphism of
+provenance graphs or a proof about source occurrence IDs. The physical-index
+native fixture retains =((0 20) (0 10) (0 20))= in that order, including the equal
+tuple occurrences. The original two different derivation supports for one
+projected answer remain in the oracle corpus. Wildcard-erased identities, raw
+graph node IDs and all recursive proof trees require their own correspondence.
+
+The underlying indexes are new for each fresh solve and may extend within the
+solve. This is not a claim of retained-Session performance. The native fixture
+also probes one owner repeatedly, replaces its rows with different rows of
+equal cardinality, observes an empty selected bucket, and restores its rows.
+Version advancement forces correct rebuilds, and the held older result remains
+unchanged. Source replacement/restoration in the DSL Session is independently
+checked against finite grounding as before.
+
+* Matcher savings and index costs
+
+The task declarations, graph inputs, fact limits, completion oracle and
+complete-support expectations remain unchanged. Three old matcher-cost
+assertions were replaced by exact new receipts (131 to 48 for the recursive
+chain, 44 to 14 for the nonrecursive baseline, 76 to 44 for dense projection).
+The old expectations failed in the first optimized run and remain recorded;
+they were cost references, not independent semantic acceptance rules.
+
+| Source cut | Matcher candidates before / after | Same-plan repeated candidates before / after | Partial matches after | Complete witnesses | Admitted rows |
+|------------+-----------------------------------+----------------------------------------------+-----------------------+--------------------+---------------|
+| Chain | 131 / 48 | 47 / 28 | 48 | 8 | 7 |
+| Equal-size replacement | 63 / 25 | 21 / 13 | 25 | 4 | 4 |
+| Restored chain | 131 / 48 | 47 / 28 | 48 | 8 | 7 |
+
+All optimized same-plan repeats are successful matches: the chain's remaining
+28 still split into two productive extensions and 26 observed dead ends. No
+same-plan complete witness repeats. Partial matches, complete supports, head
+proposals and admitted rows are unchanged by this index optimization. The
+original baseline/Factoring/projection representations retain equal exports
+against their respective independent finite oracles.
+
+Index work is not matcher work and is now recorded separately, including when
+repeat recording is disabled:
+
+| Fresh source cut | Index build input rows | Index extend input rows | Physical probes | Old-membership input rows |
+|------------------+-----------------------+-------------------------+-----------------+---------------------------|
+| Chain | 9 | 3 | 37 | 3 |
+| Equal-size replacement | 7 | 1 | 18 | 1 |
+| Restored chain | 9 | 3 | 37 | 3 |
+
+The scan control has no physical builds/extensions/probes for these small
+relations and still offers three old-membership input rows on the chain.
+Input-row counters charge rows offered to each build/extension/membership
+construction; a failed construction does not certify that every input was
+processed. Probe counts include misses. Key extraction, allocation bytes,
+hash/equality costs, old-lane filtering and observer trace overhead are not
+collapsed into a scalar runtime estimate. These completed workloads show less
+matching at the cost of index maintenance, not a universal latency speedup.
+
+* Exact-small validation receipts and retained failures
+
+All logs below are under =/private/tmp/=. The existing installed dependency
+chain is used with =GERBIL_LOADPATH= unset; this is not a new clean cold build.
+
+- =ascent-revisit-location-before-20261031.log=: original 47 visits located by
+  rule, round, pivot and atom before enabling exact-small indexes.
+- =ascent-revisit-index-attempt1-20261031.log=: preserved failures against the
+  old cost references after matching improved; result/oracle checks passed.
+- =ascent-revisit-scan-control-20261031.log=: deliberate restoration of scan
+  mode reproduces the 2/26/19 classification and fails the new cost assertions.
+- =ascent-exact-small-stale-version-mutation-20261031.log=: deliberately
+  ignoring the physical version check returns =((0 10))= after the equal-size
+  replacement, instead of =((0 20))=. The native kernel rejects it. The original
+  version check was restored before final acceptance.
+
+Final successful native receipts, all with final suite/module/harness/OK and
+natural exit 0, total 82 cases:
+
+| Suite | Cases | Log |
+|-------+-------+-----|
+| Native cost/index kernel | 9 | ascent-exact-small-final-kernel-occurrences-20261031.log |
+| Frozen DSL/oracle/recursive/revision corpus | 9 | ascent-exact-small-final-recursive-20261031.log |
+| Positive-plan reference regression | 33 | ascent-exact-small-final-regression-20261031.log |
+| Scheme relational contracts | 31 | ascent-exact-small-final-contracts-20261031.log |
+
+The final kernel includes detached trace access, unknown repeat labels, repeated
+bucket reuse, equal-size revision, empty bucket invalidation, occurrence/order
+preservation, interruption and the original native charge-point controls.
+
+The existing formal entrypoints also exit naturally with status 0:
+
+| Entry | Log | Scope |
+|-------+-----+-------|
+| =just check-lean-file IndexedPositiveTraversal.lean= | ascent-exact-small-lean-attempt1-20261031.log | New arbitrary-size key filtering and matching-support laws |
+| =just check-lean-file CachePublication.lean= | ascent-exact-small-publication-lean-20261031.log | Existing exact version/error publication laws |
+| =just _check-quint ProviderFrontier= | ascent-exact-small-quint-20261031.log | 15 positive/expected-counterexample controls, including stale/missing small buckets and full support selection |
+| =just _check-quint CachePublication= | ascent-exact-small-publication-quint-20261031.log | Six original positive/expected-counterexample controls |
+
+Both Quint groups compiled with =cache=0= and ended with =ALL-QUINT-CHECK-OK=.
+No timeout, heap, model domain, worker count or validator was relaxed. Model
+laws and native conformance remain separate from complete source extraction or
+whole-Library proof. No remote CI was awaited.
+
+README References now includes the primary PDF for McAllester's indexing
+transformation as well as the existing prefix-firing, Ascent, query-equivalence,
+provenance and source-maintenance papers. The borrowed idea is exact selection
+on variables bound by a prefix. No upstream implementation was copied or
+translated, and no asymptotic theorem from the papers is asserted for this
+bounded implementation experiment.
+
+* Source/delta-scoped empty-bucket reuse
+
+The next experiment starts at =cd4ef647=. The 26 observed dead-end prefixes
+remain 26: their absence of a complete extension is not cached. The reusable
+unit is narrower: a complete canonical index lookup returned an empty bucket
+for one immutable key in one physical entry and row version. Entry ownership
+separates relation, column layout and all/delta lane. A changed version or key
+refuses the certificate; a different entry cannot access its cell.
+
+The existing physical-index owner can retain one such certificate, with key
+written before its version. Successful buckets do not overwrite a prior empty
+certificate. Physical rebuild/extension and version admission happen before
+the reuse check. A failed lookup does not publish an empty certificate. No
+table of prefixes, cross-engine cache or search framework is added.
+
+This is an explicit native execution option, off by default:
+
+#+begin_src scheme
+;; The same admitted Scheme DSL program and evaluator, with unchanged limits.
+(gerbil-ascent-evaluate-program program empty-bucket-reuse?: #t)
+#+end_src
+
+It requires the existing fresh serial pure checked scalar Set route. Retained
+engines, reuse seeds, workers, cancellation and unsupported rules refuse the
+option; they do not silently adopt another semantics. Disabled execution keeps
+the original four-field physical entry. Enabled execution uses a private entry
+subtype with two additional fields, not a new cache owner. Its capacity is one
+cell per existing index entry and is separately counted.
+
+* Cost admission: fewer probes is not a total saving
+
+The same frozen graph tasks, row limits and independent finite-domain oracle
+run with the option both disabled and enabled. Ordered rows, partial matches,
+complete supports, proposals and admitted facts agree. All 16 two-node graphs
+are checked in both modes. Source replacement and restoration keep their prior
+meaning; retained Session checking remains separate from the optional fresh
+execution policy.
+
+| Cut | Policy | Matcher candidates | Complete witnesses | Admitted rows | Physical probes | Cell tests | Key comparisons | Hits | Certificate updates | Cell entries |
+|-----+--------+--------------------+--------------------+---------------+-----------------+------------+-----------------+------+---------------------+--------------|
+| Chain | Default | 48 | 8 | 7 | 37 | 0 | 0 | 0 | 0 | 0 |
+| Chain | Enabled | 48 | 8 | 7 | 31 | 37 | 29 | 6 | 19 | 2 |
+| Equal-size replacement | Default | 25 | 4 | 4 | 18 | 0 | 0 | 0 | 0 | 0 |
+| Equal-size replacement | Enabled | 25 | 4 | 4 | 11 | 18 | 13 | 7 | 8 | 2 |
+
+Restoration repeats the chain receipt. Both chain modes offer nine build-input
+rows, three extension-input rows and three old-membership-input rows; replacement
+offers seven, one and one. Each certificate update performs two metadata stores
+(key then version). Each enabled cell has two extra fields. Allocation bytes,
+GC and the relative cost of a hash probe versus a scalar comparison are not
+measured by these counters. The metrics are not interchangeable runtime units.
+
+Thus six repeated bucket probes can safely reuse emptiness on the chain, but
+there is no demonstrated reduction of matcher work or total runtime. The
+remaining two productive and 26 dead-end repeated prefixes are unchanged.
+Because maintenance is real and total benefit is unproved, this policy is not
+enabled by default. A bucket hit is not reported as eliminating a prefix visit.
+
+* Lean and Quint boundary checks
+
+=CachePublication.EmptyBucket.exact_empty_reuse= proves emptiness at the current
+query from emptiness at the saved cut only when scope, row version and key all
+agree. =different_delta_rejected= and =different_owner_rejected= reject crossing
+those boundaries. =empty_has_no_continuation= proves zero ordered continuation
+output for an empty bucket; this does not collapse distinct nonempty supports.
+The first law uses no axioms; the others report only existing Lean axioms
+=propext=, =Classical.choice= and/or =Quot.sound=. No new axiom or =sorry= is used.
+
+The existing Quint CachePublication model now also checks empty hits against
+the observed bucket at the instant of use. A later source update does not
+retroactively invalidate an old completed observation. Three new mutations
+omit the version, owner/lane or key condition and must produce counterexamples.
+Original publication/error/revocation controls remain intact. The group passes
+nine positive/expected-counterexample obligations, with unchanged domains and
+resource settings, =cache=0= and final =ALL-QUINT-CHECK-OK=.
+
+The matching-value and ordered-emission boundary from the prior indexed proof
+still applies. This is not a proof of raw provenance graph isomorphism, source
+occurrence identity or all recursive proof-tree preservation. Native tests keep
+the existing order/duplicate tuple and distinct-support controls. Source/model
+conformance remains a separate obligation from complete source extraction.
+
+* Using POO model-based PBT directly
+
+The existing native kernel suite now imports POO's public =property=,
+=property/generator=, =property/model=, =property/replay= and =property/test=
+modules. POO owns trace execution, generation, lazy shrinking, replay and
+failure propagation. ASCENT supplies only its finite command domain, native
+index fixture and independent ordered-filter oracle. There is no second runner,
+generator framework or Python implementation.
+
+Each generated command replaces a source mask and a dependent delta mask over
+the same four possible two-node rows, always satisfying =delta subset source=.
+Both keys in both lanes are probed repeatedly. Source and delta versions advance
+independently, only when their respective ordered row cuts change. This includes
+new delta with unchanged source; source generation cannot stand in for delta
+generation. Every returned ordered bucket is compared with direct filtering,
+without native indexes, match plans or memo state in the reference model.
+
+The fixed run uses seed =20261031=, 64 accepted traces, four commands per root,
+and 64 charged shrink proposals at most. The specification also bounds replay
+traces to four commands. No trial is discarded. Required effective coverage is
+enforced through POO's existing policy, not inferred from total trial count:
+
+| Root-trace classification | Accepted traces |
+|---------------------------+-----------------|
+| Equal-cardinality different source | 33 |
+| Previously missing source key becomes present | 27 |
+| Source and nonempty delta disagree on key presence | 47 |
+| Delta changes while source remains unchanged | 9 |
+| Contains empty delta | 48 |
+
+Labels overlap and count once per root trace, not per command. Shrink/replay
+work does not inflate coverage. POO's =require-passed= translates every failed,
+stale, exhausted, error or coverage-refused report into a standard TestError.
+A zero process exit or a formatted report cannot replace that assertion.
+
+The dependency remains =ASCENT -> Yuanxu 85a969c -> POO 30733c3=. At audit time
+the existing POO branch =feat/positive-closure-costs= had advanced to
+=dc951f8d3068aa37441a4568391dedb57265041e=. Its three subsequent commits change
+typed/function/recursive-generation modules, examples and documentation, not
+the generic property modules used here. This was checked through the actual
+GitHub compare tree. The executed PBT result binds the installed =30733c3=,
+not an untested claim about that newer cohort. No direct POO pin or dependency
+revision change is required for the interfaces used in this experiment.
+
+* Actual mutation finding, shrinking and replay
+
+Deliberately removing the native cell-version comparison causes POO PBT to
+fail on its first generated trial. POO charges 23 shrink proposals, confirms
+three reductions and exhausts the supplied local neighborhood. The retained
+portable counterexample is:
+
+#+begin_src scheme
+(#(4 0) #(1 0))
+#+end_src
+
+The first command installs source =((1 0))= with empty delta and learns that
+key 0 has no source bucket. The second installs =((0 0))=, also one row, with
+empty delta. Reusing the old empty result hides that new row. This is a real
+native mutation, not a fabricated failing property. The original four-command
+input and the full exported POO envelope remain in the failure log.
+
+The POO writer reconfirms failure before exporting data. The corrected native
+implementation replays the same envelope successfully through POO's reader,
+without drawing or shrinking. That concrete replay is now an ordinary kernel
+test. The claimed minimum is only the observed exhausted immediate neighborhood,
+not a globally smallest witness. Generated corpora are not committed wholesale.
+
+* Bounded-empty receipts and retained failures
+
+The standard installed-dependency test entry is unchanged; no source override,
+heap increase, timeout relaxation or CI wait is used. Logs are under =/private/tmp/=.
+
+| Final entry | Result | Log |
+|-------------+--------+-----|
+| Native kernel, POO PBT and concrete replay | 11 cases; 64 accepted generated traces, zero discards | ascent-empty-cell-final-kernel-independent-cuts-20261031.log |
+| Frozen DSL/oracle corpus, both policy modes and admission refusals | 10 cases | ascent-empty-cell-final-modes-20261031.log |
+| Positive-plan reference regression | 33 cases | ascent-empty-cell-final-regression-20261031.log |
+| Scheme relational contracts | 31 cases | ascent-empty-cell-final-contracts-20261031.log |
+| Lean CachePublication | Guard returncode 0, natural child exit | ascent-empty-cell-lean-attempt1-20261031.log |
+| Quint CachePublication | Nine positive/expected-counterexample controls, natural exit 0 | ascent-empty-cell-quint-attempt1-20261031.log |
+
+The native runs cover 85 cases with suite/module/harness/final OK and natural exit 0. The
+64 PBT traces are inside one of those cases, not 64 extra suite cases. These
+are focused local receipts, not whole-Library proof or clean cold-build acceptance.
+
+Retained non-passing outcomes are =ascent-empty-cell-trial-20261031.log= (a
+parenthesis error before native execution),
+=ascent-empty-cell-poo-pbt-attempt1-20261031.log= (missing explicit =append-map= import), and
+=ascent-empty-cell-poo-pbt-version-mutation-20261031.log= (the intended native
+version-check mutation, with failed report, shrink ledger and portable envelope).
+The normal trial's extra maintenance cost and unchanged 26 prefixes are also
+retained non-improvement results; they are not reclassified as total savings.
+
+The README adds Claessen/Hughes (ICFP 2000) for generated property testing.
+POO's concrete model/shrink/replay and refusal contracts come from its existing
+[[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/doc/property-kernel.md][property-kernel guide]] and implementation, not a new ASCENT test framework.
+Prior indexing, prefix-firing, provenance and view-maintenance references remain
+in place. None of these bounded tests establishes a general latency improvement.
+
+* Native POO contracts, extension and C4 boundaries
+
+The next increment uses POO in the Library itself, beyond generated tests.
+Native index representation and borrowed storage access were authorized by
+private receiver identity, but supported source edits could still change those
+receivers. The index interface prototype, shared hash-method prototype, both
+trusted index receivers, storage interface prototype and four built-in storage
+receivers are now sealed through =seal-object!=. Their complete native
+precedence lists are checked for rejected supported edits. Low-level writes to
+private runtime representations are not part of this guarantee.
+
+The two index receivers now inherit the same sealed method source through POO;
+they no longer repeat method declarations. Descendants remain custom providers,
+not trusted representations. Public build, extend and lookup generics use POO's
+=:~= argument contracts to reject malformed row lists, column lists and keys
+before extension callbacks execute. Opaque external index state remains owned
+by its provider. Complete candidate shape, membership, occurrence and coverage
+admission remains in the existing evaluator; a method contract is not a proof
+that an arbitrary provider is a correct index.
+
+The public capability sources are POO's pinned
+[[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/doc/parameters.md][generic formal-parameter contracts]],
+[[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/doc/inheritance-hooks.md][inheritance and source-edit protocol]], and
+[[https://github.com/tao3k/gerbil-poo/blob/30733c3de7dbca4f0572b25a25b9099396da48a5/object.ss][native object implementation]]. These are dependency API contracts, not a new
+algorithmic claim attributed to Dusa.
+
+Native checks exercise a C4 diamond with ordered left/right/common-base method
+composition, a single common-base invocation, conflicting parent precedence
+rejection before callback effects, and contract refusal of a non-procedure
+lookup. The same diamond also runs through a real engine-local index: an
+invented candidate is rejected, its cached version is revoked, and the next
+valid lookup rebuilds. These are extension contracts, not permission to mutate
+an arbitrary custom provider during an active engine epoch.
+
+The executable dependency cohort remains Yuanxu =85a969c= and POO =30733c3=.
+The observed newer POO branch head =d58ac8a= adds typed generated-testing work;
+the generic property kernel, contracts, source sealing and C4 used here are
+already available in the pinned cohort. No direct POO dependency or unqualified
+dependency promotion is added.
+
+* State-dependent revision coverage and preserved replay
+
+The historical four-step generator, seed =20261031=, 64 cases, dependent mask
+domain and portable counterexample codec remain unchanged. A second use of
+the same POO model protocol generates eight-step state-dependent traces with
+seed =20261101=, 128 cases and 64 charged shrink proposals. Source-only,
+delta-only, no-op and withdrawal commands preserve =delta subset source= by
+construction; there is no rejection sampling or ignored content counted as a
+successful check. Independent ordered filtering still supplies every expected
+probe result, and source/delta versions advance independently.
+
+The first completed run accepted all 128 traces with zero discards. Coverage
+counts are per trace and overlap: no-op 128, source-only 110, delta-only 38,
+withdrawal 96, A/B/A 42, reactivated key 28, equal-size revision 18 and
+different-lane buckets 59. A passing run has no newly discovered counterexample;
+it is not evidence that shrinking was needed. The previous actual native
+version-check mutation, reduced two-command witness and portable POO replay
+remain intact. Any new failure exports the eight-step codec and shrink ledger
+through the same POO writer, which reconfirms failure before export.
+
+* Frozen same-budget empty-bucket performance protocol
+
+=just performance-empty-bucket= extends the existing native index-entry study;
+it introduces no evaluator, provider policy framework or runner. Both arms use
+the same current implementation, differing only in =empty-bucket-reuse?=.
+Each timed call constructs and solves the same chain, equal-size replacement
+and restored chain, with a fresh engine and physical indexes per cut. The
+limits remain =1000/10000/12000=. This is fresh-index runtime measurement with
+warm installed dependencies, not a clean cold package-build claim.
+
+There are four shared warmup pairs and 50 alternating A/B--B/A pairs, four
+calls per arm per sample, three cuts per call. A/A and B/B control scenarios
+use exactly the same sample/call budgets. Independent finite-domain closure
+checks every sampled result outside the clock. The timed work includes DSL
+construction, admission, all solver and index maintenance, result construction,
+allocation and naturally occurring GC after shared warmup. CPU, wall time and
+allocated bytes retain all raw samples. Metered runs are separate from timing.
+
+The benefit gate is frozen before measurement: at least 15 percent lower median
+CPU and wall time, at least 35 of 50 wins for each clock, and at most 256 extra
+allocated bytes per complete three-cut call. Existing control tolerances are
+unchanged. Rejected gates still write their samples and still undergo the final
+source-identity check; remaining scenarios continue to preserve all outcomes.
+Passing an individual scenario cannot enable the policy automatically.
+
+Cost snapshots now separately charge version comparisons and each of the two
+certificate field stores, in addition to cell checks, key comparisons, hits,
+certificate updates, entry capacity, physical probes, build/extension input
+rows and old-membership construction. Two extra fields per enabled physical
+entry are explicit. Heterogeneous operations are not summed into an invented
+unit-cost speedup.
+
+* Native compiler-input ownership findings
+
+The isolated production prefix initially lacked the declared ASP development
+dependency. Standard =just prepare-dev= first failed on missing Homebrew
+OpenSSL =pkg-config= metadata, then completed with that metadata exposed. It
+installed the declared ASP =31c7dde= while retaining POO =30733c3=.
+
+The full performance preparation then exposed two distinct ownership failures:
+raw source expansion of a module DSL role rejected its unbound =.def=, and
+raw source-path registry lookup could not identify a lowered role's native
+context. These failures were not filtered out or accepted as empty results.
+The existing test and performance build entries now use the production
+=call-with-init-build-spec= handoff. Native closure discovery uses ASP's public
+import projection inside that owner extent, where Yuanxu verifies each role's
+source currentness and compiler identity before and after acquisition. Native
+make remains the compiler and scheduler; no alternate module manifest or
+source-path alias registry is introduced. Compiler-input ownership and its
+return guard remain active during preparation and study compilation.
+
+The earlier five-second preparation watchdog rejection remains a separate
+failure. A bounded catalog diagnostic subsequently completed with 148 native
+targets; that observation does not retroactively qualify the failed run.
+
+* Completed measurements: admission rejected, default unchanged
+
+The complete-counter run is =c9fdd628-a874-4548-8c8c-124c3b8c46fa= under
+=.cache/ascent/empty-bucket-reuse/=. All three scenarios completed 50 pairs,
+wrote raw samples and were rejected by their fixed gates. The controller
+completed its source check and returned nonzero for the rejected scenarios;
+there is deliberately no =STUDY-OK= or performance acceptance. An independent
+SHA-256 comparison of all 1,180 manifest entries found zero mismatches after
+the run. The observed values below are per complete three-cut call.
+
+| Scenario | CPU A/B, microseconds | Wall A/B, microseconds | Allocated bytes A/B | CPU/wall wins for B | Gate |
+|----------+----------------------+------------------------+---------------------+---------------------+------|
+| A/A, disabled/disabled | 7414.25 / 7550.50 | 7462.50 / 7854.50 | 28689308 / 29740954 | 21/20 of 50 | Rejected control |
+| B/B, enabled/enabled | 7923.50 / 9509.50 | 8511.50 / 15621.50 | 30299286 / 29766076 | 20/21 of 50 | Rejected control |
+| A/B, disabled/enabled | 8895.00 / 9572.50 | 15124.75 / 18459.00 | 29818030 / 29754812 | 21/20 of 50 | Rejected benefit |
+
+The A/A and B/B controls are unstable against the unchanged CPU/allocation
+tolerances. Therefore the enabled/disabled timing difference is not admitted
+as a causal estimate of policy overhead or speedup. It also misses the benefit
+gate on its own observations. No retry selects a faster timing result. The
+policy remains opt-in and default-off.
+
+The deterministic maintenance accounting is independently useful despite the
+rejected timing controls:
+
+| Cut, enabled | Candidate visits | Complete witnesses | Probes off/on | Cell tests | Version comparisons | Key comparisons | Certificate updates | Field stores | Extra cells |
+|--------------+------------------+--------------------+---------------+------------+---------------------+-----------------+---------------------+--------------+-------------|
+| Chain | 48 | 8 | 37 / 31 | 37 | 33 | 29 | 19 | 38 | 2 |
+| Replacement | 25 | 4 | 18 / 11 | 18 | 15 | 13 | 8 | 16 | 2 |
+| Restored chain | 48 | 8 | 37 / 31 | 37 | 33 | 29 | 19 | 38 | 2 |
+
+Across the complete call, 19 fewer physical probes require 92 cell tests,
+81 version comparisons, 71 key comparisons, 46 certificate updates and 92 field
+stores in six added cells. Build input rows remain 25, extension input rows
+seven and old-membership input rows seven in both modes. Candidate visits
+remain 121, complete witnesses 20 and admitted rows 18. Unknown repeated-prefix
+metrics in the timing study's unrecorded collector remain =#f=, never zero.
+The separately recorded native attribution corpus still checks those metrics.
+
+* Final local qualification and retained non-passing attempts
+
+| Entry | Result | Log under =.data/ascent-poo-native-20261031/= |
+|-------+--------+-------------------------------------------|
+| Compiled provider contracts, C4 and packet revocation | 7 cases, natural exit 0 | ascent-poo-native-ascent-provider-packet-test-20261031.log |
+| Compiled native kernel, both PBT corpora and historical replay | 12 cases; 128 + 64 accepted traces, zero discards; natural exit 0 | ascent-poo-native-ascent-rule-cost-kernel-test-20261031.log |
+| Compiled frozen DSL/oracle, revision and provenance boundaries | 10 cases, natural exit 0 | ascent-poo-native-ascent-rule-cost-test-20261031.log |
+| Existing nested value/contract admission | 36 cases, natural exit 0 | ascent-poo-regression-ascent-value-membership-test-20261031.log |
+| Existing provider views and source journals | 16 cases, natural exit 0, including 512 graph checks | ascent-poo-regression-ascent-provider-views-test-20261031.log |
+| Existing Scheme relational contracts | 31 cases, natural exit 0 | ascent-poo-regression-scheme-relational-test-20261031.log |
+| Lean CachePublication | Guard natural returncode 0 | ascent-poo-cache-lean-20261031.log |
+| Lean PreparationWork | Guard natural returncode 0; generated import literal exactly matches | ascent-poo-preparation-lean-20261031.log |
+| Quint CachePublication | Nine positive/expected-counterexample obligations, natural exit 0 | ascent-poo-cache-quint-20261031.log |
+| Frozen runtime comparison | Three rejected scenarios, all raw samples retained | ascent-poo-empty-benchmark-final-20261031.log |
+
+The 29 compiled cases and 83 existing source-entry cases are focused local
+qualification, not whole-Library, clean cold checkout or remote CI acceptance.
+PreparationWork's import renderer now names the same init-owned specification
+as the native harness. Its small work model does not prove zero initialization
+cost or the runtime correctness of the SDK compiler.
+
+All =ascent-poo-*-20261031.log= attempts and every study directory have been
+copied to =.data/ascent-poo-native-20261031/=. This includes the first invalid
+POO mutation-test fixture (a raw procedure supplied instead of a slot spec),
+the missing development dependency, missing OpenSSL metadata, source reader
+parenthesis errors, watchdog rejection, raw DSL expansion refusal, raw-path
+context refusal, and production-owner diagnostic's missing OpenSSL metadata.
+The one-collector-for-three-solves refusal is retained; the collector contract
+was preserved and each cut now owns its own collector. The following attempt
+omitted two snapshot fields despite charging them internally; it is explicitly
+excluded from complete-cost admission, with its existing control/negative
+timing samples retained in =eaaf48a7-eeea-4e99-8f3e-b36b62ac301a=. The complete
+run adds the missing enumeration without changing tasks, sample budgets or
+gates. An incorrect qualification filename is also retained as a command error;
+the correct existing relational suite was then run and passed.
+
+Replay the current comparison with the normal installed production/development
+dependencies, Homebrew OpenSSL =pkg-config= metadata exposed if needed, and
+=just performance-empty-bucket=. A nonzero exit is expected when the recorded
+performance gate fails; raw receipts are written before refusal. None of the
+failed or unreviewed attempts is counted as zero repetition, free maintenance,
+unused-budget savings or a passed experiment.

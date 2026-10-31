@@ -1,0 +1,22 @@
+[package]
+name = "ascent-build"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+gerbil-scheme-aot-build.workspace = true
+# The upstream PR retired the IR generator. Freeze the exact build-only
+# generator inputs still used by ascent; this crate is never a runtime owner.
+gerbil-scheme-compiler-source = { package = "gerbil-scheme-python", git = "https://github.com/tao3k/gerbil-scheme-rust", rev = "7ebc26dac9e32f982f9ab1455b664b01f2f6e007", default-features = false, optional = true }
+gerbil-scheme-python = { workspace = true, optional = true }
+serde_json.workspace = true
+sha2.workspace = true
+
+[features]
+instances = ["dep:gerbil-scheme-python"]
+python-sources = ["dep:gerbil-scheme-python", "dep:gerbil-scheme-compiler-source"]
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

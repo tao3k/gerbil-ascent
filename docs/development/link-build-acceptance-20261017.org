@@ -1,0 +1,61 @@
+#+title: Shared dependency C files and executable link isolation
+
+* Failure and matched controls
+
+The first CI attempt for 86524544866feed3ad5edfe04ae24a09f6833ab6 failed
+before measuring performance. Its Scheme performance job reported missing or
+invalid linking information in =gerbil-ascent__program__evidence-dag.c= at
+13:32:22 UTC. The later missing =ascent-develop__exe_.c= is a consequence of
+that failed link, not an independent compiler invocation failure or a benchmark
+threshold failure.
+
+- Failing job: https://github.com/tao3k/gerbil-ascent/actions/runs/39036748320/job/117408072545
+- Same-revision successful Scheme job: https://github.com/tao3k/gerbil-ascent/actions/runs/39036748320/job/117408072419
+- Previous successful performance job: https://github.com/tao3k/gerbil-ascent/actions/runs/39033270004/job/117397970787
+
+All three jobs selected four build cores. They restored the same immutable
+SDK archive and declared dependency cache. None restored a compiled ASCENT
+artifact. The revision changed certificate checking, not the build recipe,
+SDK selection, or =program/evidence-dag.ss=. Successful matched jobs exclude
+a deterministic syntax or linking-metadata defect in that unchanged module.
+They do not exclude a timing-dependent build defect.
+
+* Source and log correspondence
+
+The published Linux SDK archive has SHA-256
+=143c691fee5af4f9f631fd339f69a66f562e42e0bfc1d4ee2cda5fa8d35c35ee=.
+Its included =src/std/make.ss= drains pending compiler jobs after building the
+specification; =compile-exe= enables parallel jobs when the build has multiple
+cores. In =src/gerbil/compiler/driver.ss=,
+=compile-executable-module/separate= submits an entire executable compilation
+as one such job. That job runs =gsc -link= with dependency =.scm= files before
+acquiring any per-object locks. Dependency C filenames derive from those
+shared SCM filenames, independently of the executable output name.
+
+The application submitted both =interface/entry= and =interface/develop= in
+one specification. Both reach =program/evidence-dag=. Their link jobs can
+therefore regenerate the same dependency C file concurrently; the later
+object-file locks do not protect this generation/read interval. The failed
+job's interleaved generation output includes that module at 13:32:21.384 and
+13:32:23.613 UTC, surrounding its linking-information error at 13:32:22.462.
+This is a shared-output race in this build invocation, rather than evidence
+that the changed certificate checker produces invalid module code.
+
+* Minimal application fix
+
+Keep library module compilation parallel. Finish its standard build call,
+then build each executable in a separate standard =defbuild-script= call.
+The existing =std/make= completion boundary drains pending jobs before the
+next executable starts. The two =gsc -link= invocations consequently cannot
+regenerate common dependency C files at the same time in this invocation.
+
+No compiler patches, extra scheduler, lock protocol, retry, Linux VM, or new
+SDK release is introduced. The =meta=, =spec=, and =clean= commands still
+receive the complete original specification once. Compile flags, optimization,
+artifact admission, and the executable outputs remain the same. A failed
+phase raises before later executable phases or artifact publication.
+
+Cancellation, resource limits, provenance, runtime semantics, and all semantic,
+formal and performance gates are unchanged. Rust Ascent remains a development
+oracle. Exact-revision CI results are recorded in PR #1 after the push; the
+historical failed attempt remains available above.

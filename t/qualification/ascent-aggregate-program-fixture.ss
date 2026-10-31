@@ -9,9 +9,11 @@
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-count gerbil-ascent-sum
                  gerbil-ascent-min gerbil-ascent-max
-                 gerbil-ascent-mean))
+                 gerbil-ascent-mean)
+        (only-in :gerbil-ascent/program/syntax ascent))
 
 (export ascent-aggregate-fixture-evaluate
+        ascent-aggregate-pattern-evaluate
         ascent-derived-aggregate-program
         ascent-derived-aggregate-fixture-evaluate)
 
@@ -55,25 +57,34 @@
                         (list (apply min values) (apply max values))))))))
     32 32 64)))
 
+(def (ascent-aggregate-pattern-evaluate values)
+  (gerbil-ascent-evaluate-program
+   (ascent
+    (relation number (value) (map list values))
+    (relation extrema-pair (minimum maximum))
+    ((extrema-pair minimum maximum) <--
+     (aggregate (minimum maximum)
+                (lambda (tuples)
+                  (if (null? tuples)
+                    []
+                    (let (numbers (map car tuples))
+                      (list (vector (apply min numbers)
+                                    (apply max numbers))))))
+                (value) (number value)
+                (vector minimum maximum)))
+    (bounds 32 32 64))))
+
 (def (ascent-derived-aggregate-program edges roots)
-  (gerbil-ascent-program
-    (list (gerbil-ascent-relation 'edge 2 edges)
-          (gerbil-ascent-relation 'root 1 (map list roots))
-          (gerbil-ascent-relation 'path 2 [])
-          (gerbil-ascent-relation 'reach-count 2 []))
-    (list (r (a 'path (v 'source) (v 'target))
-             (a 'edge (v 'source) (v 'target)))
-          (gerbil-ascent-rule
-           (list (a 'path (v 'source) (v 'target)))
-           (list (a 'path (v 'source) (v 'middle))
-                 (a 'edge (v 'middle) (v 'target))))
-          (gerbil-ascent-rule
-           (list (a 'reach-count (v 'source) (v 'total)))
-           (list (a 'root (v 'source))
-                 (gerbil-ascent-aggregate
-                  'total 'path (list (v 'source) (v 'target))
-                  [] gerbil-ascent-count))))
-    32 128 160))
+  (ascent
+   (relation edge (from to) edges)
+   (relation root (node) (map list roots))
+   (relation path (from to))
+   (relation reach-count (node total))
+   ((path source target) <-- (edge source target))
+   ((path source target) <-- (path source middle) (edge middle target))
+   ((reach-count source total) <-- (root source)
+    (aggregate total gerbil-ascent-count () (path source target)))
+   (bounds 32 128 160)))
 
 (def (ascent-derived-aggregate-fixture-evaluate edges roots)
   (gerbil-ascent-evaluate-program

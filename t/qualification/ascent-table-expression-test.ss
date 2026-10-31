@@ -4,15 +4,71 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
+        (only-in :std/list/list delete-duplicates/hash)
         (only-in :clan/poo/object .o .mix .ref .call)
         (only-in :clan/poo/trie UIntTrieSet)
+        (only-in :gerbil-ascent/t/scenarios/performance/ascent-table-expression/baseline
+                 ascent-table-expression-baseline ascent-table-expression-point-reference
+                 ascent-table-expression-global-point-reference)
+        (only-in :gerbil-ascent/core/binary-relation
+                 gerbil-ascent-relation-closure-bounded)
         (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype))
 
 (export ascent-table-expression-test)
 
+;; Independent quadratic list oracle; no persistent-trie insertion or merge.
+(def (naive-two-hop edges radix)
+  (def rows (append edges []))
+  (for-each (lambda (left)
+    (for-each (lambda (right)
+      (when (= (modulo left radix) (quotient right radix))
+        (set! rows (cons (+ (* (quotient left radix) radix) (modulo right radix)) rows)))) edges)) edges)
+  (list-sort < (delete-duplicates/hash rows)))
+
 (def ascent-table-expression-test
   (test-suite "ASCENT table expression over native persistent tries"
+    (test-case "bulk-admitted persistent control matches point updates and independent joins"
+      (for-each
+        (lambda (input)
+          (let* ((radix (car input)) (edges (cdr input))
+                 (pairs (.call UIntTrieSet .<-list edges))
+                 (point (ascent-table-expression-point-reference pairs radix))
+                 (bulk (ascent-table-expression-baseline pairs radix))
+                 (naive (naive-two-hop edges radix)))
+            (check-equal? bulk point)
+            (check-equal? bulk naive)
+            ;; Keep the unpartitioned operation-order witness on bounded graphs;
+            ;; the complete 512-edge workload still checks point, bulk and the
+            ;; independent quadratic oracle without truncating any input rows.
+            (when (<= (length edges) 16)
+              (check-equal? (ascent-table-expression-global-point-reference pairs radix) naive))))
+        (list '(8) '(8 10 19 12 35 10) '(8 10 17)
+          (cons 256 (let loop ((node 0) (edges []))
+            (if (= node 256) edges
+              (loop (+ node 1)
+                (cons (+ (* node 256) (modulo (+ node 1) 256))
+                  (cons (+ (* node 256) (modulo (+ node 2) 256)) edges)))))))))
+    (test-case "core and demanded closures preserve independent budget failures"
+      (for-each
+       (lambda (pair-radix)
+         (let* ((first (+ pair-radix 2))
+                (last (+ (* pair-radix 2) 3))
+                (reachable (+ pair-radix 3))
+                (pairs (.call UIntTrieSet .<-list (list first last)))
+                (expression
+                 (.mix gerbil-ascent-table-expression-prototype
+                       (.o (source-pairs pairs) (radix pair-radix))))
+                (expected (list first reachable last)))
+           (check-exception
+            (gerbil-ascent-relation-closure-bounded pairs pair-radix 2) true)
+           (check-equal? (.ref expression 'closure-pairs) expected)
+           (check-exception ((.ref expression 'closure-bounded) 2) true)
+           (let (closure (gerbil-ascent-relation-closure-bounded pairs pair-radix 3))
+             (check-equal? (.ref closure 'pairs) expected)
+             (check-equal? ((.ref closure 'contains?) reachable) #t))
+           (check-equal? (.ref expression 'closure-pairs) expected)))
+       '(8 513)))
     (test-case "indexed composition deduplicates the diamond's two-hop path"
       ;; Radix 8: 1->2=10, 2->3=19, 1->4=12, 4->3=35.
       (let* ((source

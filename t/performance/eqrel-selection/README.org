@@ -1,0 +1,100 @@
+#+title: Equivalence injection admission and keyed traversal
+
+* Gerbil source and production flow
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:390-415= resolves constructor class
+metadata and method implementation before emitting the call expression. It uses
+=using= for class values whose provenance is established. The transferable
+pattern is to prepare a local selection once, then let the writer consume it.
+This supplies expression discipline, not ASCENT's equivalence semantics.
+
+=table/eqrel.ss= now compiles checked column/key constraints into private final
+=coordinate-key= records. False is a normal bound value. Conflicting repeated
+constraints select nothing. Selected members retain the original stored value
+rather than the caller's equal query object. For each left member, forward and
+backward eligibility choose the necessary right spine. When both orientations
+apply, their union retains original right-member order. Each visited pair still
+emits forward before backward, and diagonals still precede cross pairs.
+
+Only matching rows are constructed. Prefix mismatch stops traversal before any
+Cartesian rows. Full export keeps the direct writer without query records.
+Insertion budgets, weighted component merge, count-only staging and frozen
+publication remain under their existing owners. No new runtime configuration,
+Provider capability, dependency or environment variable is introduced.
+
+* Native matched interval
+
+=reference.ss= is the exact =table/eqrel.ss= at
+=6ffe50e48ba47e5a117d4e2dc5973410c8d18bc7=. The two later concurrent certificate
+commits change no benchmark production owner. Public ASP
+=make-benchmark-fixture= generated the fixture before samples. Seven shapes
+run 50 alternating pairs. Each pair prepares two independent component owners
+outside timing. The timed interval performs component merge admission,
+constructs the frontier, runs the selected query and observes frontier count.
+Exact owner counts and ordered selected rows are checked after every pair.
+Complete eager interleaved frontier truth is checked independently before
+sampling, including false endpoints and duplicate no-op injection.
+
+Fixed gates: 256-member point, endpoint, absent and prefix-mismatch shapes require
+CPU <=80% baseline and >=35 wins. Full export, small and duplicate controls
+allow <=105% plus 20us. Allocation is <=105% plus 4096 bytes. ASP pair p95 is
+<=999ms. Direct =##get-bytes-allocated!= uses a fixed buffer; it is not retained
+heap. Sampling processes run alone. Component preparation, total freezing and
+whole solver execution are outside timing.
+
+* Native entry points
+
+Use the existing installed Gerbil library and OpenSSL link environment:
+
+#+begin_src scheme
+;; gxi t/performance/eqrel-selection/build.ss LIBRARY BINARY runner
+;; gxi t/performance/eqrel-selection/build.ss LIBRARY QUALIFIER qualify
+;; BINARY point RECEIPT
+;; BINARY endpoint RECEIPT
+;; BINARY absent RECEIPT
+;; BINARY export RECEIPT
+;; BINARY prefix RECEIPT
+;; BINARY small RECEIPT
+;; BINARY duplicate RECEIPT
+;; QUALIFIER
+#+end_src
+
+The qualifier runs eqrel-view, provider-view and relation-view Suites. Final
+=OK=, successful Case statuses and exit zero are required. A new unit Case
+compares keyed injection output against the independent eager provider through
+successive merges, repeated/reordered keys, group/false values, held frontiers
+and original string identity. Logs, binaries and raw paired receipts stay in
+ignored =.cache/ascent/eqrel-selection/=.
+
+* Isolated native results
+
+Gerbil =1cfb032= / Gambit =ea114fc=; all seven fixed gates pass. Median CPU is
+in microseconds; bytes are the allocation-counter difference for the interval.
+
+| Workflow | Old CPU | New CPU | Old bytes | New bytes | CPU wins |
+|----------+---------+---------+-----------+-----------+----------|
+| Point key | 3647 | 45 | 25216112 | 51024 | 50 |
+| One endpoint | 3631 | 43 | 25240592 | 112112 | 50 |
+| Absent endpoint | 3616 | 41 | 25216016 | 50672 | 50 |
+| Full export, 32 members each | 32 | 32 | 498624 | 498624 | 18 |
+| Prefix mismatch | 3562 | 33 | 25216016 | 50256 | 50 |
+| Small point | 2 | 2 | 1712 | 2064 | 11 |
+| Duplicate injection | 1 | 1 | 816 | 816 | 22 |
+
+Point and endpoint CPU reductions are approximately 98.7% for merge admission
+plus frontier querying. Full export has equal allocation and essentially equal
+CPU. Small point queries add 352 counter bytes; tiny timings do not establish
+a speed improvement. Results do not establish whole solve, total publication,
+RSS or multicore gains.
+
+Final measurements follow extraction of the ordered symmetric member traversal
+into its private visitor owner. Earlier inlined measurements are retained in
+cache; only =-final= receipts describe the delivered implementation.
+
+Final native qualification passes 3 Suites / 41 Cases, including all 512
+three-node injection histories, held total/delta/frontier cuts, compressed
+provider truth, budget refusal/retry, cancellation, callback error order,
+actor/serial publication and detached output spines. Per-Case success, final
+=OK= and exit zero are checked with =tools/assert-test-cases.awk=. Native
+production policy checks the 86-source roster: 0 errors, 29 warnings in the
+integrated checkout. Baseline reference content matches its Git source hash.

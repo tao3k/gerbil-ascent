@@ -1,0 +1,159 @@
+#+TITLE: Admitted dense UF axis transfer qualification
+
+* Scope and source study
+
+The baseline is the previously accepted word-bitmap implementation at
+=c3b4da20755141fa2eaff12fe270756cee15b451=, not its earlier hash-only baseline.
+=reference-trrel-uf.ss= is byte-identical to that commit's UF source. Native
+closure targets compare separate historical/current kernels. Complete engine
+controls retain the earlier evaluator references and share current canonical
+storage helpers; they do not measure a historical whole-engine speedup.
+
+Gerbil =1cfb032= supplies two complementary ownership patterns:
+- =std/vector/extensible.ss= separates native buffer ownership from its logical
+  extent and copies an owned span with =vector-copy!= /=subu8vector-move!=.
+- =gerbil/runtime/util.ss= =append-reverse-until= constructs a selected axis in
+  its consumer's order with =cons=, rather than selecting then copying again.
+  =std/list/list.ss= =group-same= destructively reverses its own constructed
+  bucket spines. That rule cannot be applied to an arbitrary =filter= result:
+  the installed native filter can return the original list unchanged.
+
+A native probe records =FILTER-SHARES=#t=. An attempted destructive reversal
+failed root-population and semantic regression tests and was withdrawn. The
+final implementation never destructively reverses borrowed root selections.
+
+* One admission, traversal and commit contract
+
+A private final =closure-axis= carries a root and its stable dense adjacency.
+=axis-for-each= visits set birth IDs in ascending writer order, merging the
+axis root at its correct position. =axis-weight= uses that same traversal for
+weighted fact preflight. A dense fresh source/sink therefore needs no expanded
+root-list spine for either preflight or commit. Sparse count selections are
+constructed directly in writer order; scalar frontier selections retain their
+legacy order. Count-only SCC intersection separately restores legacy root
+order, including largest-component tie selection and persistent member order.
+
+Once the budget is admitted, a fresh endpoint owns a complete new adjacency:
+its opposite endpoint's already closed adjacency plus that endpoint. Copy the
+native words once, set the certified missing self-axis bit, and install the
+cached degree. Update only the opposite index per component. This removes
+repeated sparse population, bitmap promotion and intermediate vector growth
+from the newly owned index. Scalar frontier construction and count commit use
+the same symmetric copy contract. Existing endpoints keep missing-pair checks.
+
+Copy admission preserves the previous density growth bound. A distant birth
+ID may extend a buffer only when its required payload is <=2 bytes per new
+arc; otherwise scalar insertion remains responsible. The buffer is always
+copied, never shared between mutable adjacency owners. The group registry
+remains shared. Captured cuts retain persistent member spines, never this axis,
+its mutable bitmap or its registry. No allocation or registry installation
+moves before successful fact-budget preflight.
+
+* Fixed experiment
+
+The native baseline, populations, gates and sample counts were fixed before
+sampling. Targets: 512 forward-chain edges (=dense=), 512 reverse-chain edges
+(=reverse-dense=), and 256 forward-chain edges (=chain=). Each requires CPU
+<=90% baseline, >=16/20 wins, and allocated bytes <=80% baseline +8192 bytes.
+Twenty alternating process CPU pairs retain natural GC. Five alternating
+allocation pairs collect outside the VM counter interval. Twenty separate ASP
+=benchmark-run/result= admissions retain p95 <=999ms. All twenty scenarios
+must finish in a single 90-second invocation; no timeout or failed gate is
+loosened. CPU measures user+system time, not elapsed wall time or SMP scaling.
+
+Controls retain <=110% CPU +20us and <=110% allocated bytes +8192 bytes:
+=native-star/native-groups/native-small/dense-cut/cycle/unique/partitioned/
+sparse/grouped/retained/capture/cold/small/packed/adjacent/large/eqrel=.
+Native controls compare genuinely frozen/current UF owners. Complete engine
+controls share live helpers. The fixture preserves independent closure counts,
+physical component counts, exact scalar frontier comparisons in native tests,
+weighted SCC behavior, grouped state and immutable cut checks.
+
+* Reproduction
+
+Use the repository's package prefix and its native Gerbil environment boundary:
+
+#+begin_src sh
+# GERBIL_PATH selects the standard package prefix; std/make owns all compilation.
+export GERBIL_PATH="${GERBIL_PATH:-$PWD/.gerbil}"
+gxi -:max-heap=3G,debug=q t/performance/uf-dense-bulk/build.ss "$GERBIL_PATH/lib"
+mkdir -p .cache/ascent/uf-dense-bulk/receipts
+timeout 90s gxi -:max-heap=3G,debug=q \
+  -e '(add-load-path! (path-expand "lib" (gerbil-path)))' \
+  :gerbil-ascent/t/performance/uf-dense-bulk/runner all \
+  .cache/ascent/uf-dense-bulk/receipts
+#+end_src
+
+Tests remain in =t/qualification/ascent-uf-dense-bulk-test.ss= and the existing
+UF/storage/publication suites. Build and tests use native Gerbil/ASP interfaces;
+no Python harness, custom process scheduler or build-entry test logic is added.
+Concurrent uncommitted interface/evidence changes in the shared workspace are
+excluded from the qualification snapshot and this commit.
+
+* Failed experiments and evidence boundary
+
+Ignored =.cache/ascent/uf-dense-bulk/= retains every attempt separately:
+- =rejected-copy-only=: CPU improved but reverse-chain allocation saved only
+  about 12%, failing the fixed 20% requirement. It overlapped the initial unit
+  test run and supplies no accepted timing samples.
+- =rejected-borrowed-axis=: native regression tests exposed root-list mutation
+  after destructively reversing a filter result. No timings are admitted.
+- =rejected-list-axis=: directly constructed list axes preserved semantics but
+  still failed the reverse-chain allocation gate. No samples enter the final
+  medians.
+
+VM allocation reduction is not a claim about total retained heap or peak RSS.
+The closure still has quadratically many logical facts in the worst case.
+The representation probe separately measures bitmap payload, excluding vector
+headers, sparse hash capacity, persistent members, journals and runtime memory.
+
+* Accepted final results
+
+The isolated owned-source snapshot passes native =just build= in 25.89s.
+Final =just check-policy= also builds successfully in 27.41s, with 42 warnings
+and zero errors. Native =gxtest -v 5= passes fourteen Suites /92 Cases,
+=HARNESS-OK=, final =OK=, no =ERROR/FAIL= and exit zero. After package
+compilation and benchmark refresh, all twenty fixed scenarios pass in one
+90-second invocation with final =OK= and exit zero. All 1758 selected
+production/reference/fixture sources, SSI/SCM, dynamic objects and metadata
+fingerprints match before/after that final measurement. The earlier accepted
+measurement is retained separately under =measurement-before-package=; it
+supplies no samples to the final medians below.
+| Scenario | Median CPU us, old -> new | CPU wins /20 | Median allocated bytes, old -> new |
+|----------+--------------------------+--------------+-----------------------------------|
+| native-star | 1084 -> 1118 | 0 | 4045632 -> 4153616 |
+| native-groups | 3178 -> 3260 | 3 | 7338144 -> 7566752 |
+| native-small | 3 -> 3 | 5 | 9376 -> 9552 |
+| dense-cut | 536 -> 539 | 9 | 4322696 -> 4322696 |
+| reverse-dense | 20972 -> 17522 | 18 | 15050928 -> 7159200 |
+| dense | 21157 -> 18111 | 17 | 14994704 -> 7230496 |
+| chain | 6071 -> 5071 | 19 | 5123896 -> 3007800 |
+| cycle | 2747 -> 2390 | 20 | 2436400 -> 1958032 |
+| unique | 1547 -> 1546 | 9 | 2869280 -> 2869280 |
+| partitioned | 7047 -> 7116 | 9 | 12084816 -> 12084816 |
+| sparse | 942 -> 930 | 14 | 1012680 -> 1012680 |
+| grouped | 9404 -> 9409 | 9 | 5565504 -> 5565504 |
+| retained | 2977 -> 2992 | 8 | 2334440 -> 2334440 |
+| capture | 39 -> 39 | 10 | 256000 -> 256000 |
+| cold | 542 -> 543 | 7 | 1603456 -> 1602944 |
+| small | 98 -> 100 | 9 | 263056 -> 263056 |
+| packed | 540 -> 540 | 9 | 948168 -> 948168 |
+| adjacent | 581 -> 581 | 10 | 991368 -> 991368 |
+| large | 5425 -> 5451 | 7 | 17927552 -> 17927552 |
+| eqrel | 140 -> 140 | 9 | 464272 -> 464272 |
+
+Compared with the previous word-bitmap owner, dense CPU/allocation decrease
+14.4% /51.8%; reverse-dense decrease 16.5% /52.4%; chain decreases
+16.5% /41.3%. Cycle is a control: CPU/allocation decrease 13.0% /19.6%,
+without a separate target-level win requirement. Native sparse star CPU adds
+34us (+3.1%) and allocation adds 107984 bytes (+2.7%). Native grouped CPU
+adds 82us (+2.6%) and allocation adds 228608 bytes (+3.1%). Native small
+adds 176 bytes. Dense freeze adds 3us with unchanged allocation. All controls
+retain their fixed envelopes; small CPU jitter is not an engine improvement.
+
+For 512 edges, forward closure remains 513 roots and 131328 forward arcs.
+Both indexes retain 2512 sparse entries and 260144 bit-encoded arcs. Bitmap
+backing payload decreases 127072 ->117216 bytes (7.8%). In reverse orientation
+it decreases 135960 ->126040 bytes (7.3%); registry capacity stays 2049 slots
+in both orientations. The resource probe also retains 128/256-input counts.
+These capacity savings are distinct from temporary VM allocation savings.

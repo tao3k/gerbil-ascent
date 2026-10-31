@@ -1,0 +1,210 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+;;; Scheme artifact admission; never evaluates model data or DSL verdicts.
+(import :std/encoding/json :std/encoding/hex :std/crypto/digest
+        (only-in :std/io/file call-with-file-reader)
+        :std/misc/ports)
+(export artifact-support-cache artifact-support-interfaces artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-digest artifact-matching-sources? artifact-read-json artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
+(def cache ".cache/ascent/compiled-library/")
+(def (file name) (string-append cache name))
+(def (clock) (time->seconds (current-time)))
+(def (artifact-digest path)
+  ;; Upstream compiled Reader IO streams directly from the file device. Avoid
+  ;; the Gambit port read loop in this source-loaded coordinator; hashing the
+  ;; library must not interpret a byte-copy loop or retain whole executables.
+  (call-with-file-reader path
+    (lambda (reader)
+      (hex-encode (digest-from-reader! (Digest::sha256) reader)))))
+(def (artifact-read-json path)
+  (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
+    (call-with-input-file path read-json)))
+;; BEGIN GENERATED PREPARATION OPTIONS
+(def (artifact-compiler-options-current? file options)
+  (with-catch false
+    (lambda ()
+      (call-with-input-file file
+        (lambda (port)
+          (let (record (read port))
+            (and (eof-object? (read port))
+                 (equal? record (list "ascent-compiler-options/v1" (gerbil-home)
+                              (path-normalize (current-directory)) options)))))))))
+(def (artifact-record-compiler-options! file options)
+  (call-with-output-file [path: file truncate: #t]
+    (lambda (out)
+      (write (list "ascent-compiler-options/v1" (gerbil-home)
+                              (path-normalize (current-directory)) options) out)
+      (newline out))))
+;; END GENERATED PREPARATION OPTIONS
+
+;; Reuse reference interfaces only for an unchanged complete source/resource set.
+;; std/make and the compiler still own dependency checking and compilation.
+(def (artifact-support-resources library)
+  (let (result [])
+    (def (visit path)
+      (if (eq? (file-type path) 'directory)
+        (for-each (lambda (name) (visit (path-expand name path)))
+                  (list-sort string<? (directory-files path)))
+        (set! result (cons (cons path (artifact-digest path)) result))))
+    (visit library)
+    result))
+(def (artifact-support-profile options)
+  (list "ascent-support-graph/v1" (path-normalize (current-directory)) (gerbil-home) options))
+(def (artifact-support-selection? value)
+  (and (list? value) (= (length value) 3) (boolean? (car value))
+       (list? (cadr value)) (andmap string? (cadr value))
+       (list? (caddr value)) (andmap string? (caddr value))))
+;; BEGIN GENERATED PREPARATION MODULES-CURRENT
+(def (artifact-support-modules-current? sources modules)
+  (and (list? modules)
+       (andmap (lambda (module)
+                 (and (string? module) (hash-key? sources (string-append module ".ss")))) modules)))
+;; END GENERATED PREPARATION MODULES-CURRENT
+(def (artifact-support-cache file sources library options)
+  (with-catch false
+    (lambda ()
+      (call-with-input-file file
+        (lambda (port)
+          (let (record (read port))
+            (and (eof-object? (read port)) (list? record) (= (length record) 5)
+                 (equal? (car record) (artifact-support-profile options))
+                 (artifact-support-selection? (cadddr record))
+                 (artifact-support-modules-current? sources (car (cddddr record)))
+                 (artifact-support-admitted? sources (cadr record)
+                   (artifact-support-resources library) (caddr record))
+                 record)))))))
+(def (artifact-support-interfaces record library)
+  (filter (lambda (module)
+            (file-exists? (path-expand (string-append "gerbil-ascent/" module ".ssi") library)))
+          (car (cddddr record))))
+;; BEGIN GENERATED PREPARATION PROJECTION-CACHE
+(def (artifact-support-projection record selection required)
+  (and record (equal? selection (cadddr record))
+       (let* ((modules (car (cddddr record)))
+              (present (list->hash-table (map (lambda (module) (cons module #t)) modules))))
+         (and (andmap (lambda (module) (hash-key? present module)) required)
+              modules))))
+;; END GENERATED PREPARATION PROJECTION-CACHE
+;; BEGIN GENERATED PREPARATION SUPPORT-ADMISSION
+(def (artifact-support-admitted? sources recorded-sources resources recorded-resources)
+  (and (equal? (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))
+               recorded-sources)
+       (equal? resources recorded-resources)))
+(def (artifact-record-support-cache! file sources library options selection modules (previous #f))
+  ;; The caller owns lane.lock. Recompute every resource digest after make;
+  ;; reuse only the encoding of an identical complete record, never its hashes.
+  (let ((next (list (artifact-support-profile options)
+                    (list-sort (lambda (a b) (string<? (car a) (car b))) (hash->list sources))
+                    (artifact-support-resources library) selection modules))
+        (pending (string-append file ".pending")))
+    (if (and (equal? previous next) (file-exists? file))
+      (displayln "BUILD-TEST-LIBRARY support-cache-write=0")
+      (begin
+        (call-with-output-file [path: pending truncate: #t]
+          (lambda (port) (write next port) (newline port)))
+        (rename-file pending file #t)
+        (displayln "BUILD-TEST-LIBRARY support-cache-write=1")))))
+;; END GENERATED PREPARATION SUPPORT-ADMISSION
+
+(def load-json artifact-read-json)
+(def (save-json path value)
+  (call-with-output-file [path: path truncate: #t]
+    (lambda (out) (display (json->string value) out) (newline out))))
+;; Build output and dependency directories are outside the project source tree.
+;; All other directories, including hidden source directories, are inventoried.
+(def artifact-output-directories
+  '(".git" ".cache" ".gerbil" ".data" ".ci" ".devenv" ".direnv"
+    ".lake" "target" "node_modules" ".venv" "__pycache__"))
+(def (artifact-directory! location)
+  (let trim ((path (path-expand location)))
+    (if (and (> (string-length path) 1) (string-suffix? "/" path))
+      (trim (substring path 0 (- (string-length path) 1)))
+      (unless (file-exists? path)
+        (artifact-directory! (path-directory path))
+        (create-directory path)))))
+(def artifact-flow-files
+  '("packages/proofs/quint/prepare.sh" "packages/proofs/quint/check.sh"
+    "packages/proofs/quint/backend.sha256"))
+(def (artifact-sources)
+  (let (result (make-hash-table))
+    (def (visit directory)
+      (for-each (lambda (name)
+        (let (path (if (string=? directory "") name (string-append directory "/" name)))
+          (cond
+           ((eq? (file-type path) 'directory)
+            (unless (member name artifact-output-directories) (visit path)))
+           ;; Gerbil generates the root version manifest during package builds.
+           ((or (and (string-suffix? ".ss" name) (not (string=? path "manifest.ss")))
+                (member path artifact-flow-files))
+            (hash-put! result path (artifact-digest path))))))
+        (directory-files [path: (if (string=? directory "") "." directory) ignore-hidden: 'dot-and-dot-dot])))
+    (visit "")
+    (hash-put! result "justfile" (artifact-digest "justfile"))
+    result))
+(def (artifact-matching-sources? left right)
+  (and (= (hash-length left) (hash-length right))
+       (andmap (lambda (entry) (equal? (cdr entry) (hash-get right (car entry))))
+               (hash->list left))))
+(def (finite-nonnegative? value)
+  (and (real? value) (>= value 0) (< value +inf.0)))
+(def (artifact-main mode)
+  (artifact-directory! (path-expand cache))
+  (let* ((current (artifact-sources))
+         (manifest (file "dsl-closure.json")) (pending (file "dsl-closure-pending.json"))
+         (run-path (file "dsl-closure-run.json")) (freeze (file "dsl-closure-sources.json"))
+         (binary (file "dsl-closure"))
+         (token (getenv "ASCENT_DSL_BUILD_TOKEN" #f)))
+    (cond
+     ((string=? mode "freeze")
+      (let (started (string->number (getenv "ASCENT_DSL_BUILD_STARTED" "")))
+        (unless (and token (not (string=? token "")) (finite-nonnegative? started)
+                     (<= started (clock)))
+          (error "missing or invalid supervised build identity"))
+        (for-each (lambda (path) (when (file-exists? path) (delete-file path))) (list manifest pending))
+        (save-json run-path (hash ("token" token) ("started" started)))
+        (save-json freeze current)
+        (displayln "DSL-SOURCE-FROZEN")))
+     ((string=? mode "bind")
+      (let (run (load-json run-path))
+        (unless (equal? token (hash-ref run "token")) (error "compile staging owner mismatch"))
+        (unless (artifact-matching-sources? current (load-json freeze))
+          (error "source changed during compiled DSL compilation"))
+        (let (digest (artifact-digest binary))
+          (save-json pending
+            (hash ("schema" "ascent.dsl-closure-artifact") ("version" 1)
+                  ("artifactSha256" digest) ("sources" current)
+                  ("buildRun" token) ("buildStarted" (hash-ref run "started"))
+                  ("buildClock" "unix")))
+          (displayln "DSL-ARTIFACT-STAGED " digest))))
+     ((string=? mode "finalize")
+      (let* ((receipt (load-json pending)) (elapsed (- (clock) (hash-ref receipt "buildStarted"))))
+        (unless (equal? token (hash-ref receipt "buildRun")) (error "compile finalization owner mismatch"))
+        (unless (and (artifact-matching-sources? current (hash-ref receipt "sources"))
+                     (equal? (artifact-digest binary) (hash-ref receipt "artifactSha256")))
+          (error "staged compiled artifact changed before finalization"))
+        (unless (finite-nonnegative? elapsed) (error "invalid compiled build elapsed time"))
+        (hash-put! receipt "compilerExitStatus" 0)
+        (hash-put! receipt "buildElapsedSeconds" elapsed)
+        (save-json pending receipt)
+        (rename-file pending manifest #t)
+        (displayln "DSL-ARTIFACT-BOUND " (hash-ref receipt "artifactSha256"))))
+     ((string=? mode "check")
+      (let (receipt (load-json manifest))
+        (unless (and (equal? (hash-get receipt "schema") "ascent.dsl-closure-artifact")
+                     (equal? (hash-get receipt "version") 1)
+                     (equal? (hash-get receipt "compilerExitStatus") 0)
+                     (finite-nonnegative? (hash-get receipt "buildElapsedSeconds")))
+          (error "invalid compiled DSL artifact binding"))
+        (unless (and (artifact-matching-sources? current (hash-ref receipt "sources"))
+                     (equal? (artifact-digest binary) (hash-ref receipt "artifactSha256")))
+          (error "stale or changed compiled DSL artifact"))
+        (displayln "DSL-ARTIFACT-VERIFIED " (hash-ref receipt "artifactSha256"))))
+     (else (error "expected freeze, bind, finalize or check" mode))))
+  (force-output))
+(def (main . args)
+  (with-catch
+   (lambda (failure)
+     (displayln "DSL-ARTIFACT-REJECTED " failure) (force-output) (exit 1))
+   (lambda ()
+     (unless (= (length args) 1) (error "expected one artifact operation"))
+     (artifact-main (car args)))))

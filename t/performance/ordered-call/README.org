@@ -1,0 +1,75 @@
+#+TITLE: One ordered callback calling convention
+
+* Coding Style and source contract
+
+This change follows =docs/coding-style/compiler-patterns.org:Choose an expression
+layer from the transformation it owns=. Gerbil =1cfb032= uses
+=compiler/compile.ss:with-primitive-bind+args= to own ordered operand traversal
+and temporary bindings. =core/ordered-call.ss= gives both ASCENT callback paths
+one hygienic syntax contract: zero-through-four direct argument reads, followed
+by one callback; larger shapes keep ordered =map=/=apply=.
+
+The wrapper selects execution phase. =core/expression-plan.ss= supplies
+=(lambda (frame))= and publishes a reader; =core/rule-bindings.ss= supplies
+=(begin)= and executes within the current environment. Both supply their own
+read expression. Each value is read once in input order before user code runs.
+Private temporary bindings cannot capture caller identifiers. Neither callback
+results nor frames/environments enter a cache.
+
+The previous runtime binding path specialized only up to two arguments, while
+the frame path specialized up to four. Shared dispatch now makes that calling
+convention consistent. The root build adds one production module declaration;
+no tests or scheduler logic enter it.
+
+* Matched native admission
+
+Baseline =fcba3b9517ac33809ea4e47178aa7c0cde4d61f8=:
+- =core/rule-bindings.ss= blob =10c001df7f6b084b50a6d15672d1271a69371028=.
+- =core/expression-plan.ss= blob =0cf01d15c8e4f288eac0c83b5e457506df9a0c41=.
+Both frozen references are byte-for-byte originals. Native old/new code compiles
+with identical flags in one executable. Each workflow constructs an environment
+and frame, resolves/invokes 20000 callbacks and accumulates an independently
+computed checksum. Input zero changes every invocation, preventing cached-value
+shortcuts. Frame control includes cold reader publication. Loop/input-update
+costs are included. Native ASP API drives 50 alternating pairs; synchronous
+allocation and process user+system CPU are measured. Raw samples and generated
+SCM stay in ignored cache/artifact directories.
+
+Three/four binding targets require 20% CPU reduction and 35/50 wins. Two-input,
+generic five-input, four-input frame and zero controls permit 10% + 20us CPU.
+Every scenario permits 10% + 4096 bytes allocation; no gate was relaxed.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| three    |       1603 |        474 |   3841120 |    960912 |       50 |
+| four     |       1894 |        615 |   4801328 |    961120 |       50 |
+| two      |        329 |        344 |    960704 |    960704 |        6 |
+| generic  |       4525 |       4608 |  13441792 |  13441824 |       16 |
+| frame    |        220 |        222 |    961424 |    961424 |        4 |
+| zero     |          1 |          1 |       336 |       336 |       15 |
+
+Two/generic/frame controls have small CPU increases within the declared budget;
+no speedup is claimed for those paths. Results concern callback resolution and
+invocation, not whole-program solve or actor session latency. Macro introduction
+alone is not the performance explanation: eliminating three/four argument lists
+in the previously general runtime path is.
+
+* Compiler and semantic controls
+
+Generated static SCM shows ordered named temporaries and a direct callback
+application for small frame calls, with no transient =map=/=apply= there. The
+general branch retains =map=/=apply=. Source-loaded production readers also
+execute slot/name order and false-value assertions separately from AOT.
+
+Unit tests cover macro hygiene, exactly-once effectful reads, first read failure,
+multiple return values, all zero-through-six binding arities and first missing
+name diagnostics, fresh frame observations, reentrancy, callback mutation after
+input reads, repeated inputs, and exact baseline invalid-slot diagnostics.
+Existing callback-plan, expression-plan and rule-binding Suites run with the
+new syntax-contract Suite through native =std/test=.
+
+Final native qualification: 4 Suites, 31 Cases, final =OK= and exit 0; the Case
+assertion checker passed. Source execution returned =SOURCE-ORDERED-CALL-OK=.
+Policy scan: 30 findings, zero errors. A qualifier compilation rejected a
+concurrent source change outside these core modules; its log remains in the
+cache. A subsequent build passed snapshot admission before the admitted run.

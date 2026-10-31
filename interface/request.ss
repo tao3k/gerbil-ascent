@@ -8,12 +8,15 @@
 
 (export gerbil-ascent-project-request)
 
+;; : (-> RequestIdentity Boolean)
 (def (nonempty-string? value)
   (and (string? value) (> (string-length value) 0)))
 
+;; : (-> RequestBound Boolean)
 (def (positive-exact-integer? value)
   (and (exact-integer? value) (> value 0)))
 
+;; : (-> RequestDeclaration InertEvaluationRequest)
 (def (gerbil-ascent-project-request declaration)
   (let ((bundle (.ref declaration 'mrr-bundle-identity))
         (pack (.ref declaration 'mrr-rule-pack-identity))

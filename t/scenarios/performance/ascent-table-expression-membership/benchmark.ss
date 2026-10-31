@@ -7,7 +7,7 @@
  (target_total . 100us)
  (regression_budget . 400us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "A derived POO relation index answers repeated Agent pair decisions without rescanning materialized pairs.")
  (iterations . 1)
  (unit . "us")

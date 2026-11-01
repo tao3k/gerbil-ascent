@@ -2,6 +2,14 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
+        (only-in :std/list/list append-map)
+        (prefix-in :clan/poo/testing/property support-property.)
+        (prefix-in :clan/poo/testing/property/generator support-generator.)
+        (prefix-in :clan/poo/testing/property/model support-model.)
+        (prefix-in :clan/poo/testing/property/replay support-replay.)
+        (only-in :clan/poo/testing/property/test require-passed)
+        (only-in :gerbil-ascent/candidate/provenance positive-proof-nodes positive-proof-snapshot-generation
+                 proof-node-id proof-node-relation proof-node-row)
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
         (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/provenance-graph
@@ -9,7 +17,8 @@
                  positive-provenance-status positive-provenance-alternatives
                  candidate-open-provenance-maintenance provenance-maintenance-rows
                  candidate-provenance-withdraw! candidate-provenance-preview-withdraw
-                 candidate-provenance-compact provenance-maintenance-size candidate-provenance-heights))
+                 candidate-provenance-compact provenance-maintenance-size candidate-provenance-heights
+                 provenance-maintenance-alternatives))
 (import (rename-in (only-in :gerbil-ascent/t/performance/provenance-index/reference
                            candidate-positive-provenance positive-provenance-status
                            positive-provenance-alternatives positive-provenance-witness)
@@ -19,7 +28,9 @@
                    (positive-provenance-witness reference-witness))
         (only-in :gerbil-ascent/candidate/provenance-graph positive-provenance-witness))
 (import (only-in :gerbil-ascent/program/scheme-language
-                 relational-program relational-admit relational-solve relational-query-name))
+                 relational-program relational-admit relational-solve relational-query-name
+                 relational-open-program-session relational-program-query relational-program-session-run
+                 relational-program-append-source! relational-program-transaction!))
 (import (rename-in (only-in :gerbil-ascent/t/performance/provenance-maintenance/reference
                            candidate-positive-provenance candidate-open-provenance-maintenance
                            candidate-provenance-withdraw! provenance-maintenance-rows)
@@ -69,6 +80,147 @@
   (check-equal? (length actual) (length expected))
   (for-each (lambda (row) (check-equal? (and (member row actual) #t) #t)) expected))
 
+;;; Independent finite support oracle: source occurrences and three fixed rule
+;;; occurrences. The two equal user labels must not identify the same rule.
+(def support-occurrences '((left (0)) (left (1)) (left (0)) (right (0)) (right (1))))
+(def (support-ids mask)
+  (filter (lambda (id) (not (zero? (bitwise-and mask (arithmetic-shift 1 id))))) (iota 5)))
+(def (support-source mask name)
+  (filter-map (lambda (id) (let (entry (list-ref support-occurrences id))
+                            (and (eq? (car entry) name) (cadr entry)))) (support-ids mask)))
+(def (support-sort edges)
+  (def (text value) (with-output-to-string (lambda () (write value))))
+  (list-sort (lambda (a b) (string<? (text a) (text b))) edges))
+(def (support-reference state)
+  (let* ((mask (car state)) (epoch (cadr state))
+         (left (support-source mask 'left)) (right (support-source mask 'right))
+         (sources (map (lambda (id)
+                         (let (entry (list-ref support-occurrences id))
+                           (list entry 'source (list epoch id) []))) (support-ids mask)))
+         (rules
+          (append-map
+           (lambda (position)
+             (filter-map
+              (lambda (x)
+                (and (member (list x) left)
+                     (or (= position 2) (member (list x) right))
+                     (list '(out (0)) 'rule (list position (if (= position 2) 11 10))
+                       (list (list 'left (list x)) (list (if (= position 2) 'left 'right) (list x)))))) '(0 1)))
+           '(0 1 2))))
+    (list (if (null? left) [] '((0))) (support-sort (append sources rules)))))
+(def (support-next state mask)
+  (list mask (+ (cadr state) (if (= (bitwise-and mask (car state)) mask) 0 1))))
+(def support-model
+  (support-model.make-model (lambda () '(31 0)) (lambda (_state _command) #t)
+    (lambda (state command) (let (next (support-next state command)) (values next (support-reference next))))
+    support-reference (lambda (mask) (and (exact-integer? mask) (<= 0 mask 31))) values))
+(def support-generator
+  (support-model.trace-generator support-model
+    (lambda (state random _size)
+      (let ((mask (car state)) (bit (arithmetic-shift 1 (random 5))))
+        (values #t (case (random 4)
+          ((0) mask) ((1) (bitwise-and mask (bitwise-not bit)))
+          ((2) (bitwise-ior mask bit)) (else (random 32))))))
+    support-generator.integer-shrinks 6))
+(def support-domain
+  (support-property.make-specification
+    (lambda (commands) (and (list? commands) (<= (length commands) 6)
+                           (andmap (lambda (n) (and (exact-integer? n) (<= 0 n 31))) commands)))
+    (lambda (commands) (+ (length commands) (foldl + 0 commands)))))
+(def support-codec
+  (support-replay.make-codec '(ascent-grounded-support (occurrences 5) (steps 6) (scope generation)) values values))
+(def (support-labels commands)
+  (let ((state '(31 0)) (prior #f) (labels []))
+    (def (label! name) (unless (memq name labels) (set! labels (cons name labels))))
+    (for-each (lambda (mask)
+      (let ((before (car state)) (next (support-next state mask)))
+        (when (= mask before) (label! 'no-op))
+        (when (< (length (support-ids mask)) (length (support-ids before))) (label! 'withdrawal))
+        (when (> (cadr next) (cadr state)) (label! 'rebuild))
+        (when (and (not (= mask before)) (= (bitwise-and mask before) before)) (label! 'delta-append))
+        (when (and prior (= mask prior) (not (= mask before))) (label! 'aba))
+        (when (= (bitwise-and mask 5) 4) (label! 'duplicate-survivor))
+        (set! prior before) (set! state next))) commands)
+    labels))
+(def (support-program mask)
+  (let ((left (support-source mask 'left)) (right (support-source mask 'right)))
+    (relational-program
+      (relation left (x) left) (relation right (x) right) (relation out (x))
+      (rule (out 0) (left ?x) (right ?x))
+      (rule (out 0) (left ?x) (right ?x))
+      (rule (out 0) (left ?x) (left ?x))
+      (limits 16 64 128))))
+(def (support-spec)
+  (make-reasoning-candidate '((out . 1)) []
+    (list (vector '(out 0) '((left ?x) (right ?x)) 10)
+          (vector '(out 0) '((left ?x) (right ?x)) 10)
+          (vector '(out 0) '((left ?x) (left ?x)) 11))
+    (vector '(out ?x) 12) '(16 64 128)))
+(def (support-observation graph maintenance basis)
+          (let* ((nodes (positive-proof-nodes (positive-provenance-witness graph)))
+                 (by-id (make-hash-table-eqv))
+                 (epoch (positive-proof-snapshot-generation (positive-provenance-witness graph))))
+            (for-each (lambda (node) (hash-put! by-id (proof-node-id node)
+                                      (list (proof-node-relation node) (proof-node-row node)))) nodes)
+            (def (token label)
+              (let* ((name (car label)) (position (cadr label))
+                     (ids (filter (lambda (id) (eq? (car (list-ref support-occurrences id)) name)) (support-ids basis))))
+                (list epoch (list-ref ids (- position 1)))))
+            (let-values (((edges work) (provenance-maintenance-alternatives maintenance)))
+              (let (normalized
+                    (map (lambda (edge)
+                      (list (hash-ref by-id (car edge)) (cadr edge)
+                        (if (eq? (cadr edge) 'source) (token (caddr edge)) (caddr edge))
+                        (map (lambda (id) (hash-ref by-id id)) (cadddr edge)))) edges))
+                (list (provenance-maintenance-rows maintenance) (support-sort normalized))))))
+
+(def (support-trace commands)
+  (support-model.trace-report-matched?
+   (support-model.check-trace support-model commands
+    (lambda (consume)
+      (let* ((state '(31 0)) (basis 31) (graph #f) (maintenance #f) (snapshot #f)
+             (spec (support-spec)) (session (relational-open-program-session (support-program 31))))
+        (def (native) (relational-program-query (relational-program-session-run session) 'out))
+        (def (rebuild!)
+          (let* ((epoch (cadr state)) (mask (car state))
+                 (next-snapshot (reasoning-source-snapshot 'support-scope epoch
+                    (list (list 'left 1 (support-source mask 'left)) (list 'right 1 (support-source mask 'right)))))
+                 (rows (native))
+                 (next-graph (candidate-positive-provenance next-snapshot spec 'supports 'complete rows 2048)))
+            (when graph
+              (unless (not (candidate-verify-positive-provenance next-snapshot spec 'supports 'complete rows graph 2048))
+                (error "old-generation graph accepted")))
+            (set! basis mask) (set! snapshot next-snapshot) (set! graph next-graph)
+            (set! maintenance (candidate-open-provenance-maintenance snapshot spec 'supports 'complete rows graph 2048))))
+        (def (observe _state)
+          (let (observation (support-observation graph maintenance basis))
+            (unless (equal? (car observation) (native)) (error "retained graph rows differ from native DSL"))
+            observation))
+        (rebuild!)
+        (consume
+         (support-model.make-system #f
+          (lambda (_state mask)
+            (let* ((before (car state)) (next (support-next state mask))
+                   (removed (filter (lambda (id) (not (memv id (support-ids mask)))) (support-ids before))))
+              (if (and (not (= mask before)) (= (bitwise-and mask before) before))
+                (for-each (lambda (id)
+                            (let (entry (list-ref support-occurrences id))
+                              (relational-program-append-source! session (car entry) (cadr entry))))
+                          (filter (lambda (id) (not (memv id (support-ids before)))) (support-ids mask)))
+                (relational-program-transaction! session
+                  (list (cons 'left (support-source mask 'left)) (cons 'right (support-source mask 'right)))))
+              (if (= (cadr next) (cadr state))
+                (let ((selectors
+                       (map (lambda (id)
+                         (let* ((name (car (list-ref support-occurrences id)))
+                                (ids (filter (lambda (i) (eq? (car (list-ref support-occurrences i)) name))
+                                             (support-ids basis))))
+                           (list name (let find ((rest ids) (position 1))
+                             (if (= (car rest) id) position (find (cdr rest) (+ position 1))))))) removed)))
+                  (candidate-provenance-withdraw! maintenance selectors))
+                (begin (set! state next) (rebuild!)))
+              (set! state next) (values #f (observe #f)))) observe)))))))
+
 (export scheme-provenance-graph-test scheme-minimum-height-test)
 
 (def (recursive-provenance-spec)
@@ -110,6 +262,66 @@
 
 (def scheme-provenance-graph-test
   (test-suite "Complete grounded provenance and deletion"
+    (test-case "sibling source-cut previews preserve their shared verified parent"
+      (let* ((snapshot (reasoning-source-snapshot 'support-branches 0
+                        (list (list 'left 1 (support-source 31 'left)) (list 'right 1 (support-source 31 'right)))))
+             (spec (support-spec))
+             (graph (candidate-positive-provenance snapshot spec 'supports 'complete '((0)) 2048))
+             (parent (candidate-open-provenance-maintenance snapshot spec 'supports 'complete '((0)) graph 2048)))
+        (let-values (((a a-rows a-work) (candidate-provenance-preview-withdraw parent '((left 1) (left 3))))
+                     ((b b-rows b-work) (candidate-provenance-preview-withdraw parent '((left 2)))))
+          (check-equal? (support-observation graph parent 31) (support-reference '(31 0)))
+          (check-equal? (support-observation graph a 31) (support-reference '(26 0)))
+          (check-equal? (support-observation graph b 31) (support-reference '(29 0)))
+          (candidate-provenance-withdraw! a '((left 2)))
+          (let-values (((compact work) (candidate-provenance-compact a)))
+            (check-equal? (support-observation graph compact 31) (support-reference '(24 0))))
+          (check-equal? (support-observation graph parent 31) (support-reference '(31 0)))
+          (check-equal? (support-observation graph b 31) (support-reference '(29 0))))))
+    (test-case "actual alternatives survive same-head cuts append and restored generations"
+      (check-equal? (support-trace '(30 26 24 25 0 31)) #t)
+      (check-equal? (support-trace '(30 31 30 31 0 31)) #t))
+    (test-case "POO graph revision PBT compares exact grounded alternatives with a finite oracle"
+      (let (report (support-property.check-property support-generator support-trace support-domain
+                     seed: 20261102 cases: 64 size: 6 shrink-budget: 64
+                     policy: (support-property.make-policy name: 'ascent-grounded-support-revisions
+                               labels: support-labels required: '((withdrawal . 1) (rebuild . 1)
+                                 (delta-append . 1) (aba . 1) (duplicate-survivor . 1)))))
+        (displayln "POO-GRAPH-SUPPORT-PBT " (support-property.report-diagnostics report))
+        (when (eq? (support-property.report-status report) 'failed)
+          (support-replay.write-counterexample report support-codec (current-output-port)))
+        (require-passed report)
+        (check-equal? (support-property.report-accepted report) 64)
+        (check-equal? (support-property.report-discarded report) 0)))
+    (test-case "current alternatives are detached bounded and agree before and after compaction"
+      (let* ((snapshot (reasoning-source-snapshot 'support-read 0
+                        (list (list 'left 1 (support-source 31 'left)) (list 'right 1 (support-source 31 'right)))))
+             (spec (support-spec))
+             (graph (candidate-positive-provenance snapshot spec 'supports 'complete '((0)) 2048))
+             (state (candidate-open-provenance-maintenance snapshot spec 'supports 'complete '((0)) graph 2048)))
+        (let-values (((edges work) (provenance-maintenance-alternatives state)))
+          (check-equal? (length edges) 11)
+          ;; A readable projection is not an authenticated full certificate.
+          (check-equal? (candidate-verify-positive-provenance snapshot spec 'supports 'complete '((0)) edges 2048) #f)
+          (for-each
+           (lambda (generation)
+             (let (revised (reasoning-source-snapshot 'support-read generation
+                             (list (list 'left 1 (support-source 30 'left)) (list 'right 1 (support-source 30 'right)))))
+               ;; The head is unchanged, but source content and/or epoch differ.
+               (check-equal? (candidate-verify-positive-provenance revised spec 'supports 'complete '((0)) graph 2048) #f)))
+           '(0 1))
+          (for-each (lambda (budget)
+                      (check-exception (provenance-maintenance-alternatives state budget) true)) (iota (- work 1) 1))
+          (set-car! (caddr (car edges)) 'caller-mutation)
+          (let-values (((again charged) (provenance-maintenance-alternatives state work)))
+            (check-equal? again (positive-provenance-alternatives graph))
+            (check-equal? charged work)))
+        (candidate-provenance-withdraw! state '((left 1)))
+        (let-values (((edges _) (provenance-maintenance-alternatives state))
+                     ((compacted work) (candidate-provenance-compact state)))
+          (let-values (((after _) (provenance-maintenance-alternatives compacted)))
+            (check-equal? after edges)
+            (check-equal? (length edges) 10)))))
     (test-case "withdrawal previews stage independent cuts before owner publication"
       (let* ((snapshot (reasoning-source-snapshot 'preview 1 '((s 1 ((1) (1))))))
              (spec (recursive-provenance-spec))
@@ -257,10 +469,14 @@
                      snapshot spec 'program 'complete '((1)) graph 64)))
         (let-values (((rows work) (candidate-provenance-withdraw! state '((s 1)))))
           (check-equal? rows '((1)))
-          (check-equal? (> work 0) #t))
+          (check-equal? (> work 0) #t)
+          (let-values (((edges inspected) (provenance-maintenance-alternatives state)))
+            (check-equal? (length edges) 3)))
         (let-values (((rows work) (candidate-provenance-withdraw! state '((s 2)))))
           (check-equal? rows [])
-          (check-equal? (> work 0) #t))
+          (check-equal? (> work 0) #t)
+          (let-values (((edges inspected) (provenance-maintenance-alternatives state)))
+            (check-equal? edges [])))
         (let* ((fresh (reasoning-source-snapshot 'deletion 2 '((s 1 ()))))
                (fresh-graph (candidate-positive-provenance
                              fresh spec 'program 'complete [] 64)))

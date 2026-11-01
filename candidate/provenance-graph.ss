@@ -19,14 +19,14 @@
                  candidate-make-provenance-maintenance provenance-maintenance?
                  provenance-maintenance-rows candidate-provenance-withdraw!
                  candidate-provenance-preview-withdraw candidate-provenance-compact
-                 provenance-maintenance-size candidate-provenance-heights))
+                 provenance-maintenance-size candidate-provenance-heights provenance-maintenance-alternatives))
 
 (export candidate-positive-provenance candidate-verify-positive-provenance
         positive-provenance? positive-provenance-status positive-provenance-witness
         positive-provenance-alternatives candidate-open-provenance-maintenance
         provenance-maintenance? provenance-maintenance-rows candidate-provenance-withdraw!
         candidate-provenance-preview-withdraw candidate-provenance-compact
-        provenance-maintenance-size candidate-provenance-heights)
+        provenance-maintenance-size candidate-provenance-heights provenance-maintenance-alternatives)
 
 ;;; Complete finite grounded derivation graph. A fact node may have several
 ;;; alternatives and rule alternatives may refer back to that same node.

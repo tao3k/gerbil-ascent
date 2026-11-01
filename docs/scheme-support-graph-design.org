@@ -86,3 +86,128 @@ evidence and real-model paired measurements remain separate gates. No model call
 preset semantic prompt is introduced by this module.
 
 The [[file:../.cache/ascent/archived-runs/docs/evidence/scheme-support-graph-20261004/receipt.json][source-bound receipt]] records the six passing new Cases and both formal files. Earlier full-gate resource failures remain explicit; this focused pass does not relabel them.
+
+* Current retained alternatives: bounded read-only observation
+
+The Library now exports =provenance-maintenance-alternatives= through the
+existing provenance-graph interface. It returns two values: a detached list of
+currently live grounded alternatives and the charged inspection count. It uses
+the same projection as compaction: the head and every ordered premise must be
+founded, and a removed source-occurrence label is excluded even if its fact
+node remains live through another source. Rule occurrence identity is retained;
+a shared head or shared user-facing rule label does not merge alternatives.
+
+#+begin_src scheme
+(let-values (((alternatives inspected)
+              (provenance-maintenance-alternatives retained 100000)))
+  ;; Each edge remains (head-id kind label ordered-input-ids).
+  ;; Interpret IDs through the original verified graph's witness.
+  alternatives)
+#+end_src
+
+The query traverses the current owner synchronously under the maintenance
+module's existing serialized-mutation contract. Inspection work charges edges
+and visited premises; it is not an allocation-byte or wall-time metric. An
+exhausted bound raises before returning a result and changes no retained state.
+Returned pair spines do not alias the owner's edges or labels. This projection
+is data, not a newly authenticated complete certificate. The original witness
+still owns ID and source-scope interpretation. Complete-certificate verification
+rejects the projection and rejects a stale graph even when its query head rows
+are unchanged. Neither content changes with an unchanged generation nor a new
+generation authorize reuse of an old complete graph.
+
+* Actual support verification, 2026-11-01
+
+The independent oracle enumerates five labelled source occurrences over two
+values and three rule occurrences. Two rules share both head and public rule
+label; the third repeats the same premise. The graph initially has one query
+head, five source alternatives and six rule alternatives. Removing one duplicate
+source occurrence leaves its other occurrence and all grounded rule paths.
+Removing the final supporting occurrence removes the corresponding paths;
+an unsupported recursive cycle does not remain visible.
+
+| Source cut | Query head rows | Ground rule alternatives for that head |
+|------------+-----------------+----------------------------------------|
+| Initial five source occurrences | 1 | 6 |
+| Remove one of the equal left-0 occurrences | 1 | 6 |
+| Remove both left-0 occurrences; retain left-1 | 1 | 3 |
+| Remove every left occurrence | 0 | 0 |
+| Restore the original source in a new graph scope | 1 | 6 |
+
+These are finite graph alternatives, not counts of fully unfolded proof trees.
+
+The existing Scheme DSL Session supplies native answers. Its append entry is
+used for monotone additions and its transaction entry for replacements/cuts.
+Session owns the actual evaluation strategy; invoking append does not assert
+that every operation necessarily takes a particular delta fast path. The
+existing verified graph owner handles positive subcuts with stable occurrence
+selectors. Additions and restoration rebuild and verify a new graph scope;
+they do not reanimate retired tokens or claim old grounding coverage is complete.
+
+POO's existing model/generator/shrink/replay protocol compares normalized
+actual edges with an independent finite enumeration after every command.
+Normalization removes local node numbering but preserves source occurrence and
+birth generation, rule position and label, repeated premises and premise order.
+Only the outer alternative order is normalized; this is not raw graph-ID
+isomorphism or an engine-emitted derivation event stream. Full graphs are still
+constructed by checked rule replay and checked against native query results.
+
+The property uses seed =20261102= (a fixed seed, not an execution date), 64
+accepted six-step roots, zero discards and a 64-proposal shrink bound. Coverage
+includes withdrawal (62 roots), append (30), rebuild (40), duplicate survivor
+(29) and ABA (4). Required coverage is enforced by POO. Deterministic traces
+also retain same-head alternatives across complete withdrawal and restoration.
+A sibling-preview check compares both branches and their shared parent with
+the same oracle, then further withdraws/compacts one branch and confirms that
+the sibling and parent remain unchanged.
+
+Lean =StableSourceSupport= proves exact visible-edge membership, preservation
+of both same-head supports and exclusion of revoked source labels. The existing
+source-subcut grounding premises remain necessary; the filter itself does not
+prove that arbitrary caller-supplied liveness is founded. New printed laws use
+only existing =propext=; no axiom or =sorry= is added.
+
+The existing Quint ProofPrefix model checks complete-graph read epochs and
+complete ordered rule alternatives at observation time, including two source
+revisions and possible restoration. Its positive =PublishedGrounded= check
+includes these conditions. The original four negative controls remain active;
+there is no new claim of dedicated mutation sensitivity for every added property.
+The complete-certificate scope rule is separate from the retained subcut view,
+which remains interpreted against its original verified graph plus retirements.
+
+The final focused native checks pass 34 cases: graph/height-root suite 18,
+support-cut 3, support-height 4 and positive proof 9. Lean passes through the
+locked process Guard; Quint passes its positive check and four expected
+counterexamples, =cache=0=. Preparation rebuilt four production modules with
+unchanged resource guards. Prior successful runs followed by stronger assertions,
+reader/parenthesis errors and the initial Quint list/set type error are retained
+under =.data/ascent-actual-support-20261101/=. These are bounded warm local
+correctness checks, not complete package, cold-build or performance acceptance.
+Upstream sources are untouched; SDK repair remains deferred and the empty-bucket
+policy stays default-off.
+
+* Return to the Dusa paper: local v3
+
+The local authority is =.data/finite-choice-study/2405.19040v3.html=, not a
+newly fetched older edition. Section 6.2 prioritizes singleton deductions before
+choices; Section 6.3 leaves constrained-algorithm nondeterministic completeness
+open. Section 7.1
+explains that Dusa's functional AVL maps add costs beyond the constant-time hash
+assumption in the prefix-firing model. These are paper statements, not claims
+about an uninspected current upstream implementation.
+
+ASCENT-specific inference from this round: sharing a closed set of head rows
+is insufficient for sharing provenance. The sibling-preview regression verifies
+an existing Library mechanism for sharing the verified parent graph while
+isolating source cuts. Source growth needs renewed grounding coverage, and
+support multiplicity remains observable even when answers coincide. This is a
+concrete re-entry into the paper's state-sharing/cost questions, without adding
+choice syntax, a new search framework or a performance claim. No Dusa/miniDusa
+implementation code was copied or translated.
+
+* References for this follow-up
+
+Chris Martens, Robert J. Simmons and Michael Arntzenius.
+/Finite-Choice Logic Programming/, arXiv:2405.19040v3 (2024), Sections 6.2, 6.3
+and 7.1. [[file:../.data/finite-choice-study/2405.19040v3.html][Local frozen paper]],
+[[https://arxiv.org/html/2405.19040v3][publication identifier]].

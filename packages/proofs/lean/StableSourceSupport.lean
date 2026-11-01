@@ -73,4 +73,41 @@ theorem restriction_preserves (rules : List (Rule Fact)) (current future live : 
   · intro rule member
     exact (List.mem_filter.mp (show rule ∈ rules.filter
       (fun rule => decide (live rule.head ∧ Holds live rule.body)) from member)).1
+/-- Labels include source tokens or rule occurrence identities. Projection
+filters whole alternatives; it never identifies edges by their shared head. -/
+def supportVisible {Label Head Premise : Type}
+    (headLive : Head → Bool) (premiseLive : Premise → Bool) (allowed : Label → Bool)
+    (edge : Label × Head × List Premise) : Bool :=
+  headLive edge.2.1 && allowed edge.1 && edge.2.2.all premiseLive
+
+def visibleAlternatives {Label Head Premise : Type}
+    (headLive : Head → Bool) (premiseLive : Premise → Bool) (allowed : Label → Bool)
+    (edges : List (Label × Head × List Premise)) :=
+  edges.filter (supportVisible headLive premiseLive allowed)
+
+theorem exact_visible_membership {Label Head Premise : Type}
+    (headLive : Head → Bool) (premiseLive : Premise → Bool) (allowed : Label → Bool)
+    (edges : List (Label × Head × List Premise)) (edge : Label × Head × List Premise) :
+    edge ∈ visibleAlternatives headLive premiseLive allowed edges ↔
+      edge ∈ edges ∧ supportVisible headLive premiseLive allowed edge = true := by
+  simp [visibleAlternatives]
+
+theorem same_head_keeps_both_supports {Label Head Premise : Type}
+    (headLive : Head → Bool) (premiseLive : Premise → Bool) (allowed : Label → Bool)
+    (a b : Label) (head : Head) (left right : List Premise)
+    (first : supportVisible headLive premiseLive allowed (a, head, left) = true)
+    (second : supportVisible headLive premiseLive allowed (b, head, right) = true) :
+    visibleAlternatives headLive premiseLive allowed [(a, head, left), (b, head, right)] =
+      [(a, head, left), (b, head, right)] := by
+  simp [visibleAlternatives, first, second]
+
+theorem revoked_source_edge_absent {Label Head Premise : Type}
+    (headLive : Head → Bool) (premiseLive : Premise → Bool) (allowed : Label → Bool)
+    (edges : List (Label × Head × List Premise)) (edge : Label × Head × List Premise)
+    (revoked : allowed edge.1 = false) :
+    edge ∉ visibleAlternatives headLive premiseLive allowed edges := by
+  simp [visibleAlternatives, supportVisible, revoked]
+
+#print axioms same_head_keeps_both_supports
+#print axioms revoked_source_edge_absent
 end Ascent.StableSourceSupport

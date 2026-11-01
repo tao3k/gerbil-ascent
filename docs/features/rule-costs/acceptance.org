@@ -1521,3 +1521,58 @@ is retained. All new native, Lean and Quint logs, the complete Quint run with
 expected counterexamples, source hashes and the existing portable replay are
 retained under =.data/ascent-empty-correctness-20261101/=. No upstream source,
 Python binding/implementation, replacement framework or CI wait is added.
+
+* Actual grounded provenance follow-up
+
+The Library now exposes a bounded, detached observation of current grounded
+alternatives through =provenance-maintenance-alternatives=. Observation and
+compaction use the same ordered live-edge predicate. This is a read of the
+existing graph owner, not a new evidence/search framework or an authenticated
+certificate. It preserves distinct rule occurrences and source labels even
+when their heads or public labels coincide. Exhaustion raises without changing
+state; returned labels and premise spines cannot mutate the retained owner.
+
+The existing provenance Suite compares actual normalized support edges with an
+independent finite source/rule enumerator. The graph's query rows also agree
+with the existing Scheme DSL Session across source transactions and append.
+Same-head rules, equal user labels, duplicate source occurrences and repeated
+premises remain distinguishable. The 64-root POO property uses seed =20261102=,
+size six and 64 shrink proposals, accepts every root with zero discards, and
+enforces withdrawal, append, rebuild, duplicate-survivor and ABA coverage.
+Source growth/restoration receives a freshly verified graph scope. Positive
+subcuts use the original verified graph plus stable occurrence retirements;
+these views are not relabelled as complete certificates for new snapshots.
+
+Native checks also reject stale full graphs after source-content changes at
+the same generation and after generation changes, despite unchanged head rows.
+A projection cannot pass the full-certificate verifier. Sibling withdrawal
+previews preserve their shared parent and each other after one branch undergoes
+further withdrawal and compaction. An unsupported cycle has no observed active
+alternatives after its final grounded source is removed.
+
+The final focused checks pass 34 current source-Suite cases against rebuilt
+native dependencies: provenance/graph 18, support-cut 3, support-height 4 and
+positive proof 9. The existing independent matrix corpus and historical
+withdrawal controls remain active. Lean StableSourceSupport passes its locked
+Guard; new visible-edge laws use only existing =propext=. Quint ProofPrefix
+passes the strengthened positive invariant and four existing expected mutation
+controls, =cache=0=. No claim is made that the existing mutations independently
+exercise every new invariant. Preparation rebuilt four native production modules
+under the original resource guards. Whole-package, cold-build, arbitrary
+provenance language, source extraction and performance admission remain separate.
+
+The detailed interface/binding contract and scope are in
+[[file:../../scheme-support-graph-design.org][Grounded support graph design]]. Source snapshots,
+all successful and failed command logs, the initial reader/parenthesis errors,
+the corrected Quint list/set type error, complete checker receipts and native
+results are retained under =.data/ascent-actual-support-20261101/=. Earlier
+successful Suite runs remain retained when later assertions strengthen the
+source; no unchanged failing workload is rerun to select a passing result.
+Upstream and dependency pins are untouched. Native allocation/performance
+admission remains false and the empty-bucket policy stays default-off.
+
+After the bounded correctness checks, paper research resumes from the existing
+local =.data/finite-choice-study/2405.19040v3.html=. The initial external v1
+lookup is superseded as the version authority. The design note records the v3
+sections and the sibling-preview implementation check; no upstream evaluator
+code, new choice syntax or new framework is introduced.

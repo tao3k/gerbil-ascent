@@ -13,7 +13,8 @@
 (export candidate-make-provenance-maintenance provenance-maintenance?
         provenance-maintenance-rows candidate-provenance-withdraw!
         candidate-provenance-preview-withdraw candidate-provenance-compact
-        provenance-maintenance-size candidate-provenance-heights)
+        provenance-maintenance-size candidate-provenance-heights
+        provenance-maintenance-alternatives)
 (defstruct provenance-maintenance (rows-table roots edges sources alive removed))
 
 ;;; Every phase reads the membership it owns, including tentative withdrawal
@@ -21,6 +22,31 @@
 ;; : (forall (n) (-> NodeMembership n Boolean))
 ;; : (-> NodeMembership NodeId Boolean)
 (def (live-node? membership id) (hash-get membership id))
+
+;;; One projection for compaction and observation. Preserve edge order and
+;;; distinct source/rule alternatives; a live head alone is insufficient.
+(def (live-support-edges state probe!)
+  (let ((alive (provenance-maintenance-alive state))
+        (removed (provenance-maintenance-removed state)))
+    (filter (lambda (edge)
+              (probe!)
+              (and (live-node? alive (car edge))
+                   (not (and (eq? (cadr edge) 'source) (hash-get removed (caddr edge))))
+                   (andmap (lambda (id) (probe!) (live-node? alive id)) (cadddr edge))))
+            (provenance-maintenance-edges state))))
+
+;;; Detached current alternatives, not a new authenticated certificate. The
+;;; original witness owns node identities and source-generation binding.
+;; : (-> ProvenanceMaintenance Nat (Values GroundedAlternatives Nat))
+(def (provenance-maintenance-alternatives state (max-steps 100000))
+  (unless (and (provenance-maintenance? state) (exact-integer? max-steps) (> max-steps 0))
+    (error "invalid provenance observation"))
+  (let (steps 0)
+    (def (probe!)
+      (set! steps (+ 1 steps))
+      (when (> steps max-steps) (error "provenance observation budget exceeded")))
+    (let (edges (live-support-edges state probe!))
+      (values (candidate-copy-pairs edges) steps))))
 
 ;;; Counts describe retained graph owners, not allocator or resident memory.
 ;; : (-> ProvenanceMaintenance (Values Nat Nat Nat))
@@ -45,14 +71,7 @@
     (def (probe!)
       (set! steps (+ steps 1))
       (when (> steps max-steps) (error "provenance compaction budget exceeded")))
-    (let* ((edges
-             (filter (lambda (edge)
-                       (probe!)
-                       (and (hash-get alive (car edge))
-                            (not (and (eq? (cadr edge) 'source)
-                                      (hash-get removed (caddr edge))))
-                            (andmap (lambda (id) (probe!) (live-node? alive id)) (cadddr edge))))
-                     (provenance-maintenance-edges state)))
+    (let* ((edges (live-support-edges state probe!))
            (roots (filter (lambda (id) (probe!) (live-node? alive id))
                           (provenance-maintenance-roots state))))
       (hash-for-each (lambda (id row)

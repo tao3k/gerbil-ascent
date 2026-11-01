@@ -411,3 +411,107 @@ empty-bucket reuse remains default-off with performance admission false.
   local arXiv 2405.19040v3 (21 November 2024), §§3.2, 6.2–6.3, 7.1;
   [[https://doi.org/10.1145/3704849][DOI 10.1145/3704849]], POPL 2025.
 - [[file:features/rule-costs/acceptance.org][Native rule-cost and provenance acceptance records]].
+
+* Native common-prefix matching: first old atom
+:PROPERTIES:
+:CUSTOM_ID: native-first-old-prefix
+:END:
+
+The next Dusa-v3-derived step enters the actual positive matcher, rather than
+source-list comparison. The existing first-fresh partition evaluates later
+delta pivots with old prefix lanes. For a rule with at least three atoms, pivots
+one and two can share the same first old atom even though their suffix lanes
+differ. Rebuilding that first atom's successful bindings is avoidable; exploring
+both suffixes remains necessary. This is scheduling reuse, not the addition of
+finite-choice language semantics or a claim that all revisits are redundant.
+
+** Ownership, validity and publication
+
+The serial evaluator creates one private prefix state for one rule in one round.
+Only the already checked pure scalar canonical Set route is eligible, with
+first-fresh partitioning and no execution-control checkpoints. Parallel,
+cancellation, custom-provider, callback and unsupported routes keep their existing
+traversal. The state is neither attached to the immutable compiled plan nor
+retained across Session source transactions or sibling Sessions.
+
+The entry binds the exact compiled plan, old-row reader identity and both all
+and delta versions of the first relation. A hit restores only slots freshly
+written by that first atom, in original occurrence order. The first atom has
+no incoming variable bindings. Literal and repeated-variable constraints are
+checked when building the entry; rejected rows do not acquire a binding. Full
+support rows are retained alongside slot values. Empty entries have the same
+version/owner boundary as successful entries. The version reader must report
+nonnegative exact integer versions; changing row contents without advancing its
+owner version violates the existing native index contract.
+
+Every suffix still executes for each prefix binding and its selected pivot.
+No head-based deduplication is added. The entry publishes only after the complete
+prefix traversal and its continuations return normally. An exception does not
+publish partial matches. Engine disposal at each rule/round is an additional
+invalidation boundary, beyond explicit version checks. This first-atom step
+does not share two-atom joins, match states across rules, closed Session forks,
+or source occurrence IDs between independently rebuilt graphs.
+
+** Independent controls and formal scope
+
+The native kernel compares ordered multi-head emissions with both the original
+uncached traversal and an independent finite triple enumerator. The full head
+retains hidden support variables; a second projected head exposes same-head
+alternatives without merging their derivations. A repeated-row fixture also
+checks list-level occurrence multiplicity. The runtime canonical Set path need
+not contain duplicate tuples for the lower-level list contract to preserve them.
+
+POO's existing trace generator, shrinking and replay exercise source-only,
+delta-only, equal-size, withdrawal, empty, restoration and no-op cuts. One stable
+old-row reader is used throughout a trace, so owner changes cannot conceal a
+missing version check. Deliberately freezing either source or delta version
+fails the independent oracle on fixed negative controls. Different readers with
+equal version numbers rebuild; distinct state owners leave held sibling results
+unchanged. The test also rejects checkpointed use of this private state.
+
+Lean =IndexedPositiveTraversal= proves ordered replay of successful environments
+for any suffix, exact selection under the two-version validity premise, and
+restoration of represented prefix slots while newer suffix slots remain dirty.
+This composes with the existing traversal refinement: it does not constitute
+source extraction of the new native branch or a graph-ID isomorphism proof.
+Quint =ProviderFrontier= strengthens the existing support invariant with both-lane
+cut selection and full support tuples, including empty and sibling cuts. It is a
+finite value model, not a proof of native callback purity or numeric-version
+maintenance. Existing mutation controls remain; none is represented as a new
+mutation campaign specifically covering every added invariant.
+
+** Work accounting and retained failures
+
+For the unchanged recursive chain fixture, candidate matches fall from 48 to 42;
+the six restored first-atom bindings account exactly for the difference. Complete
+witnesses remain eight and admitted rows seven. Its equal-size source revision
+falls from 25 to 22 candidates, retaining four witnesses and four admitted rows.
+Restoring the chain restores the first receipt. Formerly dead repeated candidates
+fall from 26 to 20 on the chain and from 13 to 10 on the revised cut; the two
+productive revisits on the chain remain. Tests retain the historical counts as
+conservation equations, rather than weakening the expected semantic results.
+
+New counters distinguish prefix tests, build-input rows, saved slots, replayed
+states and restored slots. On the chain they are 5, 9, 18, 6 and 12 respectively;
+on the revised cut they are 3, 6, 12, 3 and 6. Index build/extend input counts and
+physical probe counts are unchanged on these cuts. Candidate/partial observations
+count executed matching, not restored bindings; complete-witness observations
+still include the supporting first row. These counters are not a complete
+allocator/instruction accounting: record allocation, reversing and owner/version
+comparison costs prohibit inferring net performance from fewer candidates.
+
+The initial PBT failure shrank to =#(3 1)=. Diagnosis found that this installed
+=std/list/list append-map= reverses each returned chunk. The independent oracle
+now uses an explicit order-preserving fold; the native matcher was unchanged by
+that correction. The counterexample and replay remain retained. The initial DSL
+diagnostic also failed its historical dead-visit count (20 versus 26), before
+its conservation assertion accounted for the six replayed bindings. A sandbox
+preparation attempt failed at the watchdog's =ps= permission boundary; the same
+original guards ran with process-observation permission. All attempts remain
+under =.data/ascent-matching-prefix-20261101/=.
+
+The paper authority remains local =2405.19040v3=, especially §§6.1–6.3 and 7.1,
+with the full reference above. No upstream code is copied, translated or modified.
+No choice syntax, Python binding or replacement framework is introduced. Native
+allocation accounting remains deferred; performance is unqualified, and the
+separate empty-bucket policy remains default-off.

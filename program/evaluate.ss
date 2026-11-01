@@ -32,6 +32,7 @@
                  gerbil-ascent-result-observation)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
+                 make-positive-prefix-state
                  gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?
                  current-positive-plan-cost positive-plan-cost-admit! positive-plan-cost-begin!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
@@ -799,7 +800,19 @@
                                            (vector-ref delta-size relation))
                                       position (find (+ position 1))))))))
                      (positive-plan (vector-ref rule 5))
-                     (frame (vector-ref rule 6)))
+                     (frame (vector-ref rule 6))
+                     ;; One rule/round owns this matching state. It cannot flow
+                     ;; into another round, source revision, Session or branch.
+                     ;; Only later pivots share the first old atom; every suffix
+                     ;; is still expanded and emits its full original support.
+                     (prefix-state
+                      (and checked-scalar-fields? scalar-set-plans? disjoint-sets?
+                           (not (current-ascent-execution-control))
+                           (>= (length positions) 3)
+                           (let (relation (vector-ref (vector-ref (car (vector-ref positive-plan 1)) 0) 0))
+                             (make-positive-prefix-state positive-plan
+                               (lambda () (cons (vector-ref all-version relation)
+                                                (vector-ref delta-version relation))))))))
                  (let ((rows-access (if ordered-execution? callback-rows indexed-rows))
                        (parts-access (and (not ordered-execution?) (row-indexes-visit-parts indexes)))
                        (old-access (and disjoint-sets? (row-indexes-old-rows indexes))))
@@ -809,7 +822,7 @@
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
                         positive-plan frame pivot rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access
-                        (and (current-positive-plan-cost) (list stratum round (vector-ref rule 3))))
+                        (and (current-positive-plan-cost) (list stratum round (vector-ref rule 3))) prefix-state)
                        (visit-body body pivot 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))

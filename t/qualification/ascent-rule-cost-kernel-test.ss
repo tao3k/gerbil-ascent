@@ -13,6 +13,51 @@
         (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle finite-domain-closure))
 (export ascent-rule-cost-kernel-test)
 (def (read-count cost name) (cdr (assq name (positive-plan-cost-snapshot cost))))
+(def (prefix-plan)
+  (gerbil-ascent-compile-positive-plan
+   (list (vector 1 '((variable . x) (variable . y) (variable . z) (variable . w)))
+         (vector 2 '((variable . x))))
+   (map (lambda (terms) (vector 'atom (vector 0 terms [] [] [])))
+        '(((variable . x) (variable . x)) ((variable . y) (variable . z))
+          ((variable . z) (variable . w))))))
+(def (prefix-reference command)
+  ;; Independent ordered enumeration: std/list/list append-map reverses each
+  ;; returned chunk in this installed version, so it is not an ordered oracle.
+  (def (ordered-map f rows) (foldr (lambda (row tail) (append (f row) tail)) [] rows))
+  (let* ((all (mask-rows (vector-ref command 0))) (delta (mask-rows (vector-ref command 1)))
+         (old (filter (lambda (row) (not (member row delta))) all)))
+    (ordered-map (lambda (pivot)
+      (def (lane depth) (cond ((< depth pivot) old) ((= depth pivot) delta) (else all)))
+      (ordered-map (lambda (a) (ordered-map (lambda (b) (ordered-map (lambda (c)
+        (if (and (= (car a) (cadr a)) (= (cadr b) (car c)))
+          (list (cons 1 (list (car a) (car b) (cadr b) (cadr c))) (list 2 (car a))) []))
+        (lane 2))) (lane 1))) (lane 0))) '(0 1 2))))
+(def (prefix-observe plan command state (shared-old #f))
+  (let* ((all (mask-rows (vector-ref command 0))) (delta (mask-rows (vector-ref command 1)))
+         (old (filter (lambda (row) (not (member row delta))) all)) (output []))
+    (def (rows atom frame delta? terms) (if delta? delta all))
+    (def (old-rows atom frame terms checkpoint!) old)
+    (for-each (lambda (pivot)
+      (gerbil-ascent-run-positive-plan! plan (make-vector 4 'dirty) pivot rows
+        (lambda (head row) (set! output (cons (cons (vector-ref head 0) row) output)))
+        #f #f (or shared-old old-rows) #f state)) '(0 1 2))
+    (reverse output)))
+(def (prefix-property commands (fault #f))
+  (let* ((plan (prefix-plan)) (previous (vector 0 0)) (source-version 0) (delta-version 0)
+         (state (make-positive-prefix-state plan (lambda ()
+                  (cons (if (eq? fault 'source) 0 source-version)
+                        (if (eq? fault 'delta) 0 delta-version))))))
+    ;; Keep this owner identity stable across the generated trace, so source-
+    ;; only and delta-only revisions must invalidate by version, not by closure.
+    (def (old-reader atom frame terms checkpoint!)
+      (let (delta (mask-rows (vector-ref previous 1)))
+        (filter (lambda (row) (not (member row delta))) (mask-rows (vector-ref previous 0)))))
+    (andmap (lambda (command)
+      (unless (= (vector-ref previous 0) (vector-ref command 0)) (set! source-version (+ source-version 1)))
+      (unless (= (vector-ref previous 1) (vector-ref command 1)) (set! delta-version (+ delta-version 1)))
+      (set! previous command)
+      (let ((expected (prefix-reference command)) (actual (prefix-observe plan command state old-reader)))
+        (and (equal? actual expected) (equal? (prefix-observe plan command #f) expected)))) commands)))
 (def (fixture)
   (gerbil-ascent-compile-positive-plan
     (list (vector 2 '((variable . x) (variable . y)))
@@ -75,6 +120,8 @@
 (def revision-domain (make-cut-domain 8))
 (def revision-codec
   (replay.make-codec '(ascent-empty-bucket (nodes 0 1) (masks 16) (steps 8) (scope version key)) values values))
+(def prefix-codec
+  (replay.make-codec '(ascent-first-old-prefix (nodes 0 1) (masks 16) (steps 8) (scope source delta owner)) values values))
 (def (revision-labels commands)
   (let ((previous (vector 0 0)) (before #f) (labels (cut-labels commands)))
     (for-each
@@ -235,6 +282,73 @@
             (and (ormap (lambda (command) (= (vector-ref command 1) 0)) commands) 'empty-delta)))))
 (def ascent-rule-cost-kernel-test
   (test-suite "Native positive-plan cost charge points"
+    (test-case "POO matching-prefix replay retains ordered supports through source and delta revisions"
+      (let (report (property.check-property revision-generator prefix-property revision-domain
+                    seed: 20261103 cases: 64 size: 8 shrink-budget: 64
+                    policy: (property.make-policy name: 'ascent-first-old-prefix labels: revision-labels
+                              required: '((no-op . 1) (source-only-revision . 1) (withdrawal . 1) (aba . 1)))))
+        (displayln "POO-PREFIX-PBT " (property.report-diagnostics report))
+        (when (eq? (property.report-status report) 'failed)
+          (replay.write-counterexample report prefix-codec (current-output-port)))
+        (require-passed report)
+        (check-equal? (property.report-accepted report) 64)
+        (check-equal? (property.report-discarded report) 0)))
+    (test-case "first old prefix reuses matching but preserves all suffixes and same-head supports"
+      (let* ((plan (prefix-plan)) (cut (vector 15 1))
+             (state (make-positive-prefix-state plan (lambda () '(0 . 0))))
+             (base (make-positive-plan-cost)) (reused (make-positive-plan-cost)))
+        (check-equal? (call-with-positive-plan-cost base (lambda () (prefix-observe plan cut #f)))
+                      (call-with-positive-plan-cost reused (lambda () (prefix-observe plan cut state))))
+        (check-equal? (read-count reused 'candidate-rows) (- (read-count base 'candidate-rows) 3))
+        (check-equal? (read-count reused 'complete-witnesses) (read-count base 'complete-witnesses))
+        (check-equal? (read-count reused 'head-proposals) (read-count base 'head-proposals))
+        (check-equal? (read-count reused 'prefix-state-replays) 1)
+        (check-equal? (read-count reused 'prefix-build-input-rows) 3)
+        (check-equal? (read-count reused 'prefix-slot-stores) 1)
+        (check-equal? (read-count reused 'prefix-slot-restores) 1)))
+    (test-case "prefix owners isolate siblings and version both empty and nonempty revisions"
+      ;; Deliberately stale version readers must fail the independent oracle.
+      (check-equal? (prefix-property (list (vector 9 1) (vector 3 1)) 'source) #f)
+      (check-equal? (prefix-property (list (vector 9 1) (vector 9 8)) 'delta) #f)
+      ;; Replay the original envelope as emitted before this property received
+      ;; its own codec, then check the same payload with the dedicated codec.
+      (check-equal? (replay.read-counterexample revision-codec
+        (open-input-string "#(property-counterexample 1 (ascent-empty-bucket (nodes 0 1) (masks 16) (steps 8) (scope version key)) (#(3 1)))")
+        revision-domain prefix-property) #t)
+      (check-equal? (replay.read-counterexample prefix-codec
+        (open-input-string "#(property-counterexample 1 (ascent-first-old-prefix (nodes 0 1) (masks 16) (steps 8) (scope source delta owner)) (#(3 1)))")
+        revision-domain prefix-property) #t)
+      (check-equal? (prefix-property (list (vector 1 1) (vector 1 0) (vector 8 0)
+                                         (vector 8 8) (vector 1 0))) #t)
+      (let* ((plan (prefix-plan)) (a-version 0) (b-version 0)
+             (a (make-positive-prefix-state plan (lambda () (cons a-version 0))))
+             (b (make-positive-prefix-state plan (lambda () (cons b-version 0))))
+             (held (prefix-observe plan (vector 15 1) a)))
+        (check-equal? (prefix-observe plan (vector 8 0) b) (prefix-reference (vector 8 0)))
+        ;; Even erroneous cross-owner state handoff cannot reuse another
+        ;; reader's bindings merely because its version numbers coincide.
+        (check-equal? (prefix-observe plan (vector 15 8) b) (prefix-reference (vector 15 8)))
+        (set! a-version 1)
+        (check-equal? (prefix-observe plan (vector 1 0) a) (prefix-reference (vector 1 0)))
+        (check-equal? held (prefix-reference (vector 15 1)))
+        (check-equal? (prefix-observe plan (vector 8 0) b) (prefix-reference (vector 8 0)))
+        (check-exception (gerbil-ascent-run-positive-plan! plan (make-vector 4 #f) 1 inputs
+                           (lambda args #f) (lambda () #f) #f (lambda args []) #f a) error?)))
+    (test-case "matching-prefix replay retains repeated supporting row occurrences"
+      (let* ((plan (prefix-plan)) (state (make-positive-prefix-state plan (lambda () '(0 . 0))))
+             (cost (make-positive-plan-cost)))
+        (def (old-reader . args) '((1 1) (1 1)))
+        (def (observe state)
+          (let (output [])
+            (for-each (lambda (pivot)
+              (gerbil-ascent-run-positive-plan! plan (make-vector 4 'dirty) pivot
+                (lambda args '((1 1)))
+                (lambda (head row) (set! output (cons (cons (vector-ref head 0) row) output)))
+                #f #f old-reader #f state)) '(1 2))
+            output))
+        (check-equal? (call-with-positive-plan-cost cost (lambda () (observe state))) (observe #f))
+        (check-equal? (read-count cost 'prefix-state-replays) 2)
+        (check-equal? (length (observe state)) 12)))
     (test-case "POO revision PBT preserves owner layout lane and ordered support occurrences"
       (let (report (property.check-property revision-generator
                      (lambda (commands) (and (scoped-cut-property commands #f) (scoped-cut-property commands #t)))

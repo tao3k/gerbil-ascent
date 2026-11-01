@@ -1605,3 +1605,50 @@ snapshots and checker traces are retained in =.data/ascent-dusa-dsl-20261101/=
 and prior failure archives remain untouched. Performance is unqualified,
 empty-bucket reuse stays default-off, and upstream/pins are unchanged. No
 whole-package, cold-checkout, remote-CI or arbitrary-language claim is made.
+
+* Actual first-old-prefix matching reuse
+
+The [[file:../../scheme-relational-dsl-design.org::#native-first-old-prefix][native prefix audit]] records the rule/round ownership and validity argument.
+Later first-fresh pivots reuse successful first-old-atom bindings; every suffix
+and full support still executes. Admission is limited to the existing serial
+pure checked scalar Set route without execution-control checkpoints. The state
+checks plan/reader ownership and both source/delta versions, and is discarded at
+the rule/round boundary rather than becoming a retained Session cache.
+
+On the frozen chain task: candidates 48 -> 42, complete witnesses 8 -> 8,
+admitted rows 7 -> 7; the six replayed bindings balance the old candidate count.
+On its equal-size revision: candidates 25 -> 22, witnesses 4 -> 4, rows 4 -> 4.
+Chain repeated candidates without a completion fall 26 -> 20; two productive
+revisits remain. Prefix-test/build-row/slot-save/replay/slot-restore counters are
+5/9/18/6/12 for the chain and 3/6/12/3/6 for its revision. Index maintenance is
+unchanged on these tasks. New counters do not measure every allocation or
+comparison, so no wall-time, allocation or net-cost benefit is accepted.
+
+The native ordered oracle, original traversal comparison, source/delta negative
+controls and POO shrinking/replay are in the existing kernel Suite. Session and
+actual provenance regression Suites remain separate gates; replayed graph supports
+are not relabelled as solver-emitted edge events. Lean proves ordered binding
+replay and prefix restoration; Quint checks both-lane cut selection with complete
+support tuples. Exact final receipts and retained failures are archived under
+=.data/ascent-matching-prefix-20261101/=. The audit distinguishes the oracle's
+initial chunk-order error, its shrunk replay, the historical dead-count assertion
+failure and the sandbox watchdog permission failure. No failure is discarded.
+Upstream/pins remain unchanged; performance remains unqualified. The paper
+reference is /Finite-Choice Logic Programming/, local arXiv 2405.19040v3,
+DOI =10.1145/3704849=, §§6.1–6.3 and 7.1.
+
+The final owner-guarded native build passes all 112 cases across seven Suites:
+kernel 17, DSL 11, positive plan 33, Session deletion 26, actual provenance graph
+18, support cut 3 and support height 4. The new prefix PBT accepts all 64 roots,
+seed =20261103=, maximum eight steps and 64 shrink proposals, with zero discards.
+It observes source-only revisions in 58 traces, delta-only in 19, equal-size
+revisions in 11, withdrawal in 49 and ABA restoration in 21. Existing Suite PBT
+is included in the case count. Lean's final Guard reaps its child with zero
+additional helper threads; the printed replay/revision laws use only =propext=.
+Quint ProviderFrontier completes all 15 obligations with =cache=0=, including
+the existing expected counterexamples. The native prefix property additionally
+replays the exact initially emitted envelope and the dedicated prefix codec.
+The initial serializer reused the existing empty-bucket codec; both original
+artifact identity and corrected property identity are retained in tests.
+These are focused warm local receipts, not clean-checkout, whole-package,
+remote-CI or performance acceptance. Original watchdog/heap budgets are unchanged.

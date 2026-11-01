@@ -151,7 +151,10 @@
         (check-equal? rejected 0)
         (let (chain? (equal? edges '((0 1) (1 2) (2 3))))
           (check-equal? productive (if chain? 2 0))
-          (check-equal? dead (if chain? 26 13))
+          ;; Every first edge matches in this fixture. Replayed bindings replace
+          ;; exactly those formerly repeated candidate visits, not suffix work.
+          (check-equal? (+ dead (count-of (positive-plan-cost-snapshot cost) 'prefix-state-replays))
+                        (if chain? 26 13))
           (when chain?
             ;; The same answer prefix has no completion in round 1 but does
             ;; in round 2. A cached prefix failure cannot survive suffix delta.
@@ -224,7 +227,9 @@
             (lambda (reuse?)
              (let (cost (run-recursive edges '(0 1 2 3) #t reuse?))
              (displayln "RULE-COST empty-reuse=" reuse? " recursive edges=" edges " receipt=" cost)
-             (check-equal? (count-of cost 'candidate-rows) (if (equal? edges first) 48 25))
+             ;; Keep the frozen pre-reuse counts as a conservation control.
+             (check-equal? (+ (count-of cost 'candidate-rows) (count-of cost 'prefix-state-replays))
+                           (if (equal? edges first) 48 25))
              (check-equal? (count-of cost 'complete-witnesses) (if (equal? edges first) 8 4))
              (check-equal? (count-of cost 'admitted-rows) (if (equal? edges first) 7 4))
              (check-equal? (count-of cost 'physical-index-probes)

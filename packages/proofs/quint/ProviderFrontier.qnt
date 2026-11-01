@@ -53,7 +53,23 @@ module ProviderFrontier {
     val selected = if (Mutation == "omit-small-probe" and cached.size() < 32) Set() else Probe(cached,key)
     selected == Probe(current,key)
   })
-  val ProbeSupportExact = Nodes.forall(key => {
+  // Two independently owned cuts model source/delta revision, withdrawal,
+  // restoration and a sibling. A cache key must bind both lanes; this checks
+  // complete support tuples rather than projected endpoint equality alone.
+  pure def ReplayedOld(source: Set[(int,int)], delta: Set[(int,int)],
+      savedSource: Set[(int,int)], savedDelta: Set[(int,int)]): Set[(int,int)] =
+    if (source == savedSource and delta == savedDelta)
+      savedSource.exclude(savedDelta) else source.exclude(delta)
+  val PrefixReplayExact = {
+    val cuts = Set(q.total, q.pending, q.delta, Set())
+    cuts.forall(source => cuts.forall(delta => cuts.forall(savedSource => cuts.forall(savedDelta => {
+      val selected = ReplayedOld(source,delta,savedSource,savedDelta)
+      selected == source.exclude(delta) and
+      Supports(selected,delta,source) == Supports(source.exclude(delta),delta,source) and
+      Supports(selected,source.exclude(delta),delta) == Supports(source.exclude(delta),source.exclude(delta),delta)
+    }))))
+  }
+  val ProbeSupportExact = PrefixReplayExact and Nodes.forall(key => {
     val selected = Probe(q.total,key)
     Supports(q.inputs,selected,q.total) ==
       Supports(q.inputs,q.total,q.total).filter(t => t._2 == key)

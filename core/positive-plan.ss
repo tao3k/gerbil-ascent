@@ -14,6 +14,7 @@
         (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
+        make-positive-prefix-state
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
         gerbil-ascent-index-value gerbil-ascent-emit-heads!
         make-positive-plan-cost positive-plan-cost-snapshot positive-plan-cost-visits
@@ -26,7 +27,7 @@
 ;;; a new suffix can legitimately revisit an unchanged prefix.
 (defstruct native-plan-cost (counts prefixes started? visits) final: #t)
 (def (make-positive-plan-cost (record-prefixes? #t) (record-visits? #f))
-  (make-native-plan-cost (make-vector 25 0)
+  (make-native-plan-cost (make-vector 30 0)
                         (and record-prefixes? (make-hash-table)) #f (and record-visits? [])))
 ;;; Diagnostic values are detached on read; no callback observes a live frame.
 (def (positive-plan-cost-visits cost)
@@ -78,8 +79,9 @@
          repeated-complete-witnesses same-plan-complete-revisits cross-plan-complete-revisits
          index-build-input-rows index-extend-input-rows physical-index-probes old-membership-input-rows
          empty-cell-tests empty-key-comparisons empty-cell-hits empty-cell-writes empty-cell-entries
-         empty-version-comparisons empty-field-stores)
-       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24)))
+         empty-version-comparisons empty-field-stores
+         prefix-state-tests prefix-build-input-rows prefix-slot-stores prefix-state-replays prefix-slot-restores)
+       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29)))
 (def (cost-prefix! cost kind index signature rows owner)
   (alet (seen (native-plan-cost-prefixes cost))
     (let* ((key (list kind signature rows))
@@ -442,7 +444,22 @@
 ;;       ;; => void after admitting the matching heads
 ;;       ```
 ;;     %
-(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f) (parts-access #f) (old-rows-access #f) (scope #f))
+;;; Private state belongs to one rule's serial pivot group, never a Session,
+;;; compiled plan or shared declaration. The version reader closes over its
+;;; engine's all/delta owner; both versions are needed even for an empty old lane.
+(defstruct native-prefix-state (plan version slots reader cut records) final: #t)
+(def (make-positive-prefix-state plan version)
+  (unless (and (gerbil-ascent-pure-positive-plan? plan) (procedure? version)
+               (pair? (vector-ref plan 1)))
+    (error "prefix state requires a pure positive plan and version reader"))
+  (let (terms (vector-ref (car (vector-ref plan 1)) 1))
+    (make-native-prefix-state plan version
+      (filter-map (lambda (term) (and (eq? (car term) 'fresh) (cdr term))) terms) #f #f #f)))
+(def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f) (parts-access #f) (old-rows-access #f) (scope #f) (prefix-state #f))
+  (when prefix-state
+    (unless (and (native-prefix-state? prefix-state)
+                 (eq? plan (native-prefix-state-plan prefix-state)) (not checkpoint!))
+      (error "prefix state requires its owning plan and an uninterrupted traversal")))
   ;; The compiled extent covers every read/write, including failed candidates.
   ;; Reject an invalid caller frame before lookup, callbacks or partial writes.
   (unless (and (vector? frame) (>= (vector-length frame) (vector-ref plan 2)))
@@ -461,7 +478,7 @@
     (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                           frame (if has-pivot? delta-at 0) has-pivot?
                           0 rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost [] [] (and cost plan) scope)))
+                          cost [] [] (and cost plan) scope prefix-state)))
 
 (def (emit-complete-heads! heads frame emit-row! cost signature witness owner)
   (when cost (cost-prefix! cost 'complete 11 signature witness owner))
@@ -472,16 +489,16 @@
 ;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness owner scope)
+(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness owner scope prefix-state)
   ;; Syntax owns the candidate protocol; no continuation closure per row.
   ;; Observe the remaining action tail after user code, at the original boundary.
   (defrule (resume next-depth next-signature next-witness)
     (visit-positive-atoms! (cdr atoms) heads frame pivot has-pivot? next-depth
                           rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost next-signature next-witness owner scope))
-  (defrule (accept matched? row action)
+                          cost next-signature next-witness owner scope prefix-state))
+  (defrule (accept matched? row action reused?)
     (let ((matched matched?) (next-signature signature) (next-witness witness))
-      (cost-add! cost 0)
+      (unless reused? (cost-add! cost 0))
       (when cost
         ;; Slot identities alpha-normalize variables by first occurrence.
         ;; Include full supporting rows, not stale suffix frame contents.
@@ -489,13 +506,14 @@
           (cons (list (vector-ref (vector-ref action 0) 0)
                       (vector-ref action 1)) signature))
         (set! next-witness (cons row witness))
+        (unless reused?
         (let (repeat (cost-prefix! cost 'candidate 6 next-signature next-witness owner))
           (when (native-plan-cost-visits cost)
             (native-plan-cost-visits-set! cost
               (cons (list scope (if has-pivot? pivot -1) depth (and matched #t)
                           (if (native-plan-cost-prefixes cost) repeat 'unrecorded)
-                          (reverse next-witness)) (native-plan-cost-visits cost)))))
-        (when matched
+                          (reverse next-witness)) (native-plan-cost-visits cost))))))
+        (when (and matched (not reused?))
           (cost-add! cost 1)
           (cost-prefix! cost 'partial 5 next-signature next-witness owner)))
       (when checkpoint! (checkpoint!))
@@ -511,12 +529,44 @@
        (else
         (let* ((delta? (gerbil-ascent-delta-lane depth pivot has-pivot?))
                (old? (gerbil-ascent-old-lane depth pivot has-pivot? (and old-rows-access #t))))
+        (if (and prefix-state (= depth 0) old?)
+          (let* ((cut ((native-prefix-state-version prefix-state)))
+                 (slots (native-prefix-state-slots prefix-state)))
+            (cost-add! cost 25)
+            (unless (and (pair? cut) (exact-integer? (car cut)) (exact-integer? (cdr cut))
+                         (>= (car cut) 0) (>= (cdr cut) 0))
+              (error "prefix state requires source and delta versions"))
+            (if (and (eq? old-rows-access (native-prefix-state-reader prefix-state))
+                     (equal? cut (native-prefix-state-cut prefix-state)))
+              (for-each
+               (lambda (record)
+                 (cost-add! cost 28)
+                 (for-each (lambda (slot value) (cost-add! cost 29)
+                             (vector-set! frame slot value)) slots (cdr record))
+                 (accept #t (car record) action #t))
+               (native-prefix-state-records prefix-state))
+              (let ((records [])
+                    (rows (old-rows-access (vector-ref action 0) frame (vector-ref action 2) #f)))
+                ;; Canonical scalar Set admission supplies explicit proper rows.
+                ;; Publish only after the complete prefix and every continuation
+                ;; return normally; an exception cannot leave a partial cache.
+                (for-each
+                 (lambda (row)
+                   (cost-add! cost 26)
+                   (let (matched (match-row! (vector-ref action 1) row frame))
+                     (when matched
+                       (set! records (cons (cons row (map (lambda (slot)
+                         (cost-add! cost 27) (vector-ref frame slot)) slots)) records)))
+                     (accept matched (and cost row) action #f))) rows)
+                (native-prefix-state-records-set! prefix-state (reverse records))
+                (native-prefix-state-reader-set! prefix-state old-rows-access)
+                (native-prefix-state-cut-set! prefix-state cut))))
         (unless (and (not old?) parts-access
                   (parts-access (vector-ref action 0) frame delta? (vector-ref action 2)
                     (lambda (prefix left right)
                       (accept ((or (vector-ref action 4) (vector-ref action 3))
                                prefix left right frame)
-                              (and cost (append prefix (list left right))) action))))
+                              (and cost (append prefix (list left right))) action #f))))
           (let (rows (if old?
                       (old-rows-access (vector-ref action 0) frame (vector-ref action 2) checkpoint!)
                       (rows-access (vector-ref action 0) frame
@@ -526,18 +576,18 @@
                (let candidates ((remaining rows))
                  (unless (null? remaining)
                    (accept (match-row! (vector-ref action 1) (car remaining) frame)
-                           (and cost (car remaining)) action)
+                           (and cost (car remaining)) action #f)
                    (candidates (cdr remaining)))))
               ((gerbil-ascent-row-parts? rows)
                (gerbil-ascent-for-each-row-parts
                 (lambda (prefix left right)
                   (accept ((vector-ref action 3) prefix left right frame)
-                          (and cost (append prefix (list left right))) action)) rows))
+                          (and cost (append prefix (list left right))) action #f)) rows))
               (else
                (gerbil-ascent-for-each-row
                 (lambda (row)
                   (accept (match-row! (vector-ref action 1) row frame)
-                          (and cost row) action)) rows)))))))))))
+                          (and cost row) action #f)) rows))))))))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms
 ;;; read proved frame slots; the general path preserves expression callbacks.

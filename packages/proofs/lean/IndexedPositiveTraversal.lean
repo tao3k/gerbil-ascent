@@ -927,4 +927,56 @@ theorem compiled_vector_key_refines {n : Nat} (terms : List (Term Value))
       simp only [found, Option.bind_some]
       exact vector_action_value frame vector vectorRep action bounded
 
+/-- Matching a fixed prefix once retains ordered successful environments,
+including duplicate supporting occurrences. Every suffix is still evaluated. -/
+def prefixBindings (terms : List (Term Value)) (rows : List (List Value)) : List (Env Value) :=
+  rows.filterMap (fun row => AtomicBinding.bind terms row [])
+
+theorem replay_prefix_exact (terms : List (Term Value)) (rows : List (List Value))
+    (suffix : Env Value → List Output) :
+    (prefixBindings terms rows).flatMap suffix =
+      rows.flatMap (fun row => match AtomicBinding.bind terms row [] with
+        | none => [] | some env => suffix env) := by
+  induction rows with
+  | nil => rfl
+  | cons row rows ih =>
+    simp only [prefixBindings, List.filterMap_cons, List.flatMap_cons] at *
+    cases AtomicBinding.bind terms row [] <;> simp_all
+
+/-- A valid entry is bound to both source and delta versions. On a miss the
+current prefix is recomputed; a formerly empty entry has no special privilege. -/
+def selectedPrefix (savedCut currentCut : Nat × Nat) (saved current : List (Env Value)) :=
+  if savedCut = currentCut then saved else current
+
+theorem revision_exact (savedCut currentCut : Nat × Nat) (saved current : List (Env Value))
+    (valid : savedCut = currentCut → saved = current) :
+    selectedPrefix savedCut currentCut saved current = current := by
+  by_cases same : savedCut = currentCut
+  · simp [selectedPrefix, same, valid same]
+  · simp [selectedPrefix, same]
+
+/-- Restore precisely the first atom's freshly assigned slots. Newer suffix
+slots may remain dirty, as required by the existing traversal refinement. -/
+def restorePrefix (count : Nat) (saved dirty : Frame Value) : Frame Value :=
+  fun index => if index < count then saved index else dirty index
+
+theorem restored_prefix_represents (names : List Nat) (env : Env Value)
+    (saved dirty : Frame Value) (rep : Represents names env saved) :
+    Represents names env (restorePrefix names.length saved dirty) := by
+  apply represents_prefix names env saved _ rep
+  intro index bound
+  simp [restorePrefix, bound]
+
+theorem new_suffix_preserved (terms : List (Term Value)) (rows : List (List Value))
+    (first second : Env Value → List Output) :
+    ((prefixBindings terms rows).flatMap first, (prefixBindings terms rows).flatMap second) =
+      (rows.flatMap (fun row => match AtomicBinding.bind terms row [] with
+        | none => [] | some env => first env),
+       rows.flatMap (fun row => match AtomicBinding.bind terms row [] with
+        | none => [] | some env => second env)) := by
+  rw [replay_prefix_exact, replay_prefix_exact]
+
+#print axioms replay_prefix_exact
+#print axioms revision_exact
+
 end Ascent.IndexedPositiveTraversal

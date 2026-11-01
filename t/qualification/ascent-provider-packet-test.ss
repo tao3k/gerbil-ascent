@@ -7,7 +7,7 @@
  :gerbil-ascent/table/provider
  (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
  (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows)
- (only-in :gerbil-ascent/t/performance/index-entry-benchmark measure paired)
+ (only-in :gerbil-ascent/t/performance/index-entry-benchmark measure measure-pair paired)
  (only-in :gerbil-ascent/table/funs gerbil-ascent-index-row-snapshot/arity)
  :gerbil-ascent/t/performance/provider-packet/fixture)
 (export ascent-provider-packet-test)
@@ -24,6 +24,7 @@
       (check-equal? (>= (cdr (assq 'gc-count observation)) 4) #t)
       (check-equal? (>= (cdr (assq 'preparation-gcs observation)) 1) #t)
       (check-equal? (length (cdr (assq 'processors observation))) 8)
+      (check-equal? (length (cdr (assq 'call-byte-ranges observation))) 8)
       (check-equal? (>= bytes 0) #t)
       (check-equal? (>= cpu 0) #t)
       (check-equal? (>= wall 0) #t)))
@@ -41,6 +42,20 @@
      (check-equal? (map cadr (cdr (assq 'sample-diagnostics receipt)))
        (map (lambda (n) (if (even? n) 'AB 'BA)) (iota 50)))
      (check-equal? (cdr (assq 'performance-admitted? receipt)) #f)))
+  (test-case "retention diagnostic preserves measured calls and projects between arms"
+   (for-each (lambda (retain?)
+     (let ((events []) (raw (vector 'actual)))
+       (let-values (((packets roots)
+         (measure-pair
+           (lambda () (set! events (cons 'A events)) raw)
+           (lambda () (set! events (cons 'B events)) raw)
+           2 #t
+           (lambda (value)
+             (unless (eq? value raw) (error "raw result lost before projection"))
+             (set! events (cons 'project events)) (vector-ref value 0)) retain?)))
+         (check-equal? (reverse events) '(A A project B B project))
+         (check-equal? (map (lambda (packet) (vector-ref packet 0)) packets) '(actual actual))
+         (check-equal? (length roots) (if retain? 2 0))))) '(#f #t)))
   (test-case "trusted receiver sources are sealed but descendants remain extensible"
    (for-each
     (lambda (provider)

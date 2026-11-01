@@ -1252,3 +1252,107 @@ the rejected carry-over campaign, rejected benefit result, fixed-vector probe,
 and failed postprocessing commands. A source-reader parenthesis rejection was
 corrected before either workload campaign and remains in the tool transcript.
 No failed observation or unknown allocation cause is replaced by a zero.
+
+* Position-effect attribution: retention, metadata and native counters
+
+This follow-up is diagnostic, not a new benefit qualification. The frozen
+three-cut recursive task, finite-domain oracle, four warmup pairs, 50 alternating
+pairs, four complete calls per arm, 1 GiB/90 second diagnostic bound and existing
+acceptance gates remain unchanged. No failed sample is removed. No production
+reuse policy is changed; empty-bucket reuse remains opt-in.
+
+** First-result lifetime is not a necessary cause
+
+A shared compiled measurement call site projects actual result rows outside the
+clock and checks them with the existing oracle after both measurements. A weak
+identity table tracks the first result list and its three POO results. Retained
+controls observe four live keys; released controls observe zero at every second
+arm boundary. This verifies actual reachability, rather than relying on setting
+a variable to false. The projection preserves actual finished state and rows;
+it does not substitute oracle answers.
+
+The allocation split survives release. Retained shared-site medians are about
+114.73 MB first and 19.51 MB second; released medians are about 117.37 MB first
+and 19.52 MB second. The original two-site diagnostic instead shows about
+19.5 MB first and 115.7 MB second. Thus retention alone cannot explain the
+remaining effect, and measurement layout can reverse its direction.
+
+** Metadata observations localize work without proving its cause
+
+The public POO slot-read observer delivers exactly 61,716 reads per arm in
+each of the first two sampled pairs. Histograms, including compound slot keys,
+are equal. The observer stores keys and counts, without retaining receivers or
+read values. Equal delivered reads do not establish equal internal metadata
+allocation or equal cost per read.
+
+Coarse byte boundaries around the unchanged declaration and solve calls
+localize most excess to declaration construction. An individual declaration
+interval reaches 388,073,600 counter bytes; normal declaration intervals are
+about 2.917 MB. Solve intervals also contain occasional 39--41 MB spikes.
+Observation itself can affect these values: these are localizations, not an
+unmodified execution benchmark or a proof of unnecessary rule matching.
+
+A temporary probe around private declaration-shape registry publication reports
+no publication interval above 1 MB over a complete 50-pair diagnostic. Its source
+and receipt are retained, and the production probe is removed before native
+qualification. This rejects publication as the observed large interval in that
+instrumented run; it does not exonerate every metadata lookup or validation.
+
+** Counter controls and rejected runtime hypotheses
+
+Known workloads calibrate the installed native getter. One million cons cells
+report exactly 48,000,340 statistics bytes in both positions with either one or
+two pre-measurement collections. Immediate continuation and small independent
+POO-object controls do not reproduce the large split. Doubling pre-measurement
+collections on the real task does not remove the effect and is not adopted.
+
+The installed SDK's allocation entry-point assembly and matching upstream
+Gambit source show that its counter includes movable heap and stack occupied
+regions and still-object accounting. It is not a pure count of allocated
+object payload. Small decreases across collection boundaries are retained in
+the raw chronology. These observations do not explain the much larger
+within-operation spikes and are not grounds for rescaling the gate's bytes.
+
+Allocation-only and equality-priming interventions, plus their no-priming
+control, do not identify equality priming as a unique cause: all three lose the
+large positional split in that instrumented build. Earlier observer traces
+still show large jumps between adjacent delivered slot reads. This is evidence
+of instrumentation/runtime-state sensitivity, not evidence that the effect is
+fixed. The standard entry continues to use one pre-measurement collection and
+no equality priming. Diagnostic runtime hints are observations only.
+
+** Admission and retained failures
+
+No further policy A/B campaign is run at this stage: the requested causal
+prerequisite is unresolved. Pooled A/A or B/B acceptance is not complete
+stability, and no additional performance claim is admitted. Remaining work is
+to attribute the large declaration intervals to specific internal operations
+without confusing observer perturbation with a fix.
+
+Raw receipts, scripts, SDK counter evidence and logs are retained locally under
+=.data/ascent-position-20261101/=. The archive includes the initial diagnostic
+projection's cyclic-slot rejection, failed summary commands, rejected GC and
+equality hypotheses, and the removed production probe. The corrected projection
+uses an ordinary lexical name and preserves the frozen oracle. These are
+bounded local native diagnostics with warm dependencies, not a cold-build,
+whole-Library or remote CI qualification. There is no Python semantic path,
+new experiment framework or CI wait.
+
+The native dependency preparation completes with =BUILD-TEST-LIBRARY-OK= in
+34.84 seconds after restoring the production source. An attempted run of an
+old installed Suite fails with a wrong-arity call: it embeds the former
+three-argument internal measurement ABI. The standard preparation contract
+rebuilds Suite dependencies and expects GxTest to read Suite source; it does
+not refresh that historical Suite artifact. This failed invocation is archived
+separately. Qualification therefore uses the existing source-Suite entry with
+the rebuilt installed dependencies, without substituting the stale Suite or
+relaxing the test's exception expectations.
+
+All three current source Suites pass naturally against rebuilt native
+dependencies: provider/measurement contracts nine cases (18 seconds), cost
+kernel/PBT/replay twelve cases (17 seconds), and frozen DSL/oracle/revision ten
+cases (21 seconds). The added diagnostic contract checks exact call and
+projection order and explicit retention roots. It does not claim that a
+returned empty root list alone proves collection; the weak-key workflow
+controls supply that separate evidence. Final source SHA-256 checks match all
+five recorded files. Full logs, including the stale-Suite failure, are archived.

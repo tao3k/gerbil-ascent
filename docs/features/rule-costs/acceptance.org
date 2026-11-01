@@ -1103,3 +1103,152 @@ dependencies, Homebrew OpenSSL =pkg-config= metadata exposed if needed, and
 performance gate fails; raw receipts are written before refusal. None of the
 failed or unreviewed attempts is counted as zero repetition, free maintenance,
 unused-budget savings or a passed experiment.
+
+* 2026-11-01: fixed-budget measurement diagnosis
+
+This increment changes measurement and its qualification, not rule semantics,
+index policy, DSL tasks or the opt-in default. There are exactly two workload
+campaigns: one instrumented carry-over diagnostic and one collected-start
+comparison. Each retains the three original cuts, independent finite oracle,
+four warmup pairs, 50 measured alternating pairs, four complete calls per arm,
+three fresh solves per call, =1000/10000/12000= solver limits, 1 GiB scenario heap
+and 90-second scenario deadline. The original control and benefit gates are
+unchanged. There is no loop selecting the best timing run.
+
+The original index-entry measurement performed one collection before the whole
+series. Warmup, independent result judging, reporting and prior arms could
+therefore leave different garbage/heap states for the next arm. Parallel
+=let-values= initializers also did not express the intended sequential order.
+Measured calls now use =let*-values=; a native contract check observes the actual
+108 synthetic calls, including warmup, and checks every measured AB/BA pair.
+
+Every arm records total process CPU, wall time, GC CPU/wall/count, CPU minus GC
+for attribution only, minor/major faults, last-GC heap/live observations, a
+nonallocating byte counter alongside the original statistics counter, and the
+statistics getter's allocation and tail wall time. The main CPU gate still
+uses total measured CPU: GC is never subtracted to manufacture a win. Raw
+chronological diagnostics and the original reverse-accumulated metric arrays
+are both retained.
+
+* Carry-over evidence and limits of attribution
+
+The carry-over diagnostic is =55e601ab-d530-44c2-8bd2-bd3e5d77593e=. All three
+scenarios completed and were rejected by their original gates. In A/A, the
+identical old/new arms experienced seven versus 17 measured collections.
+CPU/GC-CPU correlations were 0.981 and 0.995. B/B likewise experienced seven
+versus 17 collections, with correlations 0.997 and 0.999. This directly exposes
+GC phase coupling and GC-related CPU tails; it does not identify a particular
+POO cache or OS scheduler as the unique cause.
+
+The allocation/statistics tail cannot explain the large drift on its own.
+The statistics getter reports 208 bytes per read. Its tail typically consumes
+1--3 microseconds per complete call. Statistics-derived allocation exceeds the
+direct byte-counter result by exactly 324 bytes per complete call in this
+diagnostic, whereas control-arm allocation medians differ by hundreds of
+thousands of bytes. Replacing the getter alone would not remove that drift.
+Major page-fault counts are zero; minor faults and GC-related heap activity
+remain observable, rather than silently classified as matching work.
+
+* One collected-start comparison, including preparation cost
+
+The existing =t/performance/paired-study.ss= already normalizes each arm with
+=##gc= before timing. The empty-bucket study now uses that same native
+precondition. Other index-entry scenarios keep their previous default.
+Collections caused inside the complete operation remain charged. The
+precondition's CPU, wall time and collection count are recorded separately;
+the unchanged 90-second deadline covers it too. Preparation allocation is not
+separately quantified, so no all-inclusive allocation-saving claim is made.
+
+POO source identity is checked through the existing =compute-precedence-list!=
+and =object-revision= APIs. The same sealed index and storage receivers, with
+their C4 sources, serve both arms. All recorded source revisions remain
+=((0 0 0) (0 0))=. Across each scenario's 800 recorded call boundaries, every
+processor ID is zero. This does not prove continuous thread affinity between
+boundaries, but it provides no evidence of boundary migration. No processor
+count, affinity setting, dependency pin, receiver implementation or cache layer
+is changed to obtain a result.
+
+The comparison is =715c407e-40b9-4f21-b51e-6d7e9fd34790=. Every scenario
+completed all pairs. A/A and B/B pass the original CPU/allocation control gates;
+the reuse scenario fails the unchanged benefit gate. All measured operation
+GC counts are zero in this particular collected-start run; the native contract
+test separately forces collections inside an operation and checks that they
+remain charged. This is not a general claim that the solver never collects.
+
+| Scenario | CPU A/B, microseconds | Wall A/B, microseconds | VM allocated bytes A/B | CPU/wall wins for B | Original gate |
+|----------+----------------------+------------------------+------------------------+---------------------+---------------|
+| A/A | 8578.25 / 8752.25 | 9060.00 / 9110.00 | 116840832 / 116840832 | 20/23 of 50 | Pass |
+| B/B | 8651.75 / 8785.50 | 22544.50 / 24312.00 | 117362192 / 117361824 | 24/23 of 50 | Pass |
+| Disabled/enabled | 10660.75 / 9481.00 | 46131.75 / 39206.50 | 115265056 / 115264928 | 32/26 of 50 | Reject |
+
+The observed CPU median difference is about 11.1 percent, below 15 percent.
+Both win counts also miss 35/50. The wall median alone is insufficient for
+acceptance. There is no promotion to a general speedup or default enablement.
+
+For completeness, combining each individual sample's preparation cost with its
+operation cost, then taking medians, gives the following values. These are not
+sums of separately computed medians. Preparation is amortized over that arm's
+four complete calls; its cost is not declared free.
+
+| Scenario | CPU including preparation A/B, microseconds | Wall including preparation A/B, microseconds |
+|----------+---------------------------------------------+----------------------------------------------|
+| A/A | 16470.75 / 16529.00 | 17289.00 / 17402.00 |
+| B/B | 16859.50 / 17165.00 | 48836.00 / 49112.75 |
+| Disabled/enabled | 19755.75 / 18236.50 | 83665.50 / 74921.50 |
+
+These inclusive observations do not meet a 15-percent improvement either.
+They describe the diagnostic protocol's collected start, not the latency of
+an unmodified application that does not force a collection before each arm.
+
+* Remaining position effect: pooled controls are not complete stability
+
+Passing the existing aggregate control gates must not hide a remaining
+position-dependent allocation effect. Within A/A, median VM allocation is
+about 21.62 MB when an arm executes first and 116.84 MB when it executes
+second. The effect appears on both labels, while processor boundaries and POO
+source revisions are unchanged. Last-GC live observations for adjacent arms
+are both about 128 MB. The original pair implementation retains the first
+arm's full result until the second completes and the unchanged oracle checks
+both; this is an asymmetric starting condition, not evidence of eliminated
+rule work. The measurements do not establish that result retention alone
+explains the full allocation difference.
+
+A bounded synthetic diagnostic using the same native measurement helper and
+four allocations of a 262144-element vector reports identical byte counts in
+the two arms: 2097588 statistics bytes and 2097248 direct bytes per call, with
+zero measured collections. Thus the getter/helper does not generically create
+that large first/second discrepancy for a known allocation workload. This
+narrows the unresolved effect to the complete workflow, retained state and/or
+native allocation accounting; it does not prove a specific POO invalidation
+or matching defect. No counter rescaling or sample deletion is applied.
+
+Wall-minus-process-CPU residuals also remain large in B/B and the reuse
+scenario despite zero measured GC. They cannot all be charged to GC, and
+these counters alone cannot distinguish scheduler delay, blocking or runtime
+accounting. Consequently even a passing pooled control is not described as
+complete measurement stability. The policy remains default-off, and the
+remaining 26 dead-end prefix visits are not claimed to have disappeared.
+
+* 2026-11-01 receipts and native qualification
+
+The three compiled suites pass naturally: provider/measurement contracts eight
+cases, native cost kernel/PBT/replay 12 cases, and frozen DSL/oracle/revision
+checks ten cases. The added test rejects a zero repetition budget before any
+callback, checks exact invocation/order counts, and forces four in-operation
+collections without excluding them from observations. Existing POO contracts,
+C4 extension/packet refusal and historical shrunk replay stay in the same
+suites. No Python implementation, new experiment runner or CI wait is added.
+
+The complete comparison source manifest has 1,180 entries. A post-run SHA-256
+comparison against the working tree has zero mismatches. Both workload
+campaigns naturally return nonzero for rejected gates, after the controller's
+source check; no =STUDY-OK= is asserted. These are focused local native checks
+with warm installed dependencies, not cold-build, whole-Library or remote CI
+qualification.
+
+All raw study directories, diagnostic source snapshot, Scheme postprocessor
+and logs are retained under =.data/ascent-measurement-20261101/=. This includes
+the rejected carry-over campaign, rejected benefit result, fixed-vector probe,
+and failed postprocessing commands. A source-reader parenthesis rejection was
+corrected before either workload campaign and remains in the tool transcript.
+No failed observation or unknown allocation cause is replaced by a zero.

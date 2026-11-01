@@ -7,11 +7,40 @@
  :gerbil-ascent/table/provider
  (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
  (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows)
+ (only-in :gerbil-ascent/t/performance/index-entry-benchmark measure paired)
  (only-in :gerbil-ascent/table/funs gerbil-ascent-index-row-snapshot/arity)
  :gerbil-ascent/t/performance/provider-packet/fixture)
 (export ascent-provider-packet-test)
 (def ascent-provider-packet-test
  (test-suite "Provider packet admission"
+  (test-case "measurement preserves call counts order and in-call GC charges"
+   (let (calls 0)
+    (check-exception (measure (lambda () (set! calls (+ calls 1))) 0 #t) error?)
+    (check-equal? calls 0)
+    (let-values (((value bytes cpu wall observation)
+                  (measure (lambda () (set! calls (+ calls 1)) (##gc) 'complete) 4 #t)))
+      (check-equal? value 'complete)
+      (check-equal? calls 4)
+      (check-equal? (>= (cdr (assq 'gc-count observation)) 4) #t)
+      (check-equal? (>= (cdr (assq 'preparation-gcs observation)) 1) #t)
+      (check-equal? (length (cdr (assq 'processors observation))) 8)
+      (check-equal? (>= bytes 0) #t)
+      (check-equal? (>= cpu 0) #t)
+      (check-equal? (>= wall 0) #t)))
+   (let* ((visits [])
+          (old (lambda () (set! visits (cons 'A visits)) 'same))
+          (new (lambda () (set! visits (cons 'B visits)) 'same))
+          (receipt (paired "ordering-contract" old new
+                     (lambda (a b) (unless (and (eq? a 'same) (eq? b 'same)) (error "measurement result changed")))
+                     1 'observe)))
+     (check-equal? (length visits) 108)
+     ;; The first eight calls are the unchanged four warmup pairs. Every
+     ;; measured pair has an explicit sequential AB or BA evaluation order.
+     (check-equal? (list-tail (reverse visits) 8)
+       (apply append (map (lambda (n) (if (even? n) '(A B) '(B A))) (iota 50))))
+     (check-equal? (map cadr (cdr (assq 'sample-diagnostics receipt)))
+       (map (lambda (n) (if (even? n) 'AB 'BA)) (iota 50)))
+     (check-equal? (cdr (assq 'performance-admitted? receipt)) #f)))
   (test-case "trusted receiver sources are sealed but descendants remain extensible"
    (for-each
     (lambda (provider)

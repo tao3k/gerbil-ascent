@@ -226,8 +226,32 @@ theorem different_owner_rejected (before after : Scope) (different : before ≠ 
     (version : Nat) (key : Key) : mayReuse before after version version key key = false := by
   simp [mayReuse, different]
 
+theorem changed_generation_rejected (scope : Scope) (key : Key) (before after : Nat)
+    (changed : before ≠ after) : mayReuse scope scope before after key key = false := by
+  simp [mayReuse, changed]
+
+/-- Restoring the same rows does not restore a certificate from an old epoch. -/
+theorem aba_generation_rejected (scope : Scope) (key : Key) (version : Nat) :
+    mayReuse scope scope version (version + 2) key key = false := by
+  simp [mayReuse]
+
+theorem lane_boundary (owner version : Nat) (layout : List Nat) (key : Key) :
+    mayReuse (owner, (false, layout)) (owner, (true, layout)) version version key key = false := by
+  simp [mayReuse]
+
+/-- Eliding an empty bucket preserves every other ordered support occurrence,
+including distinct supports whose emitted head values happen to be equal. -/
+theorem elide_empty_bucket (earlier later : List (List Row)) (bucket : List Row)
+    (emit : Row → List Proof) (empty : bucket = []) :
+    (earlier ++ [bucket] ++ later).flatMap (fun rows => rows.flatMap emit) =
+      (earlier ++ later).flatMap (fun rows => rows.flatMap emit) := by
+  simp [empty, List.flatMap_append]
+
 #print axioms exact_empty_reuse
 #print axioms empty_has_no_continuation
 #print axioms different_delta_rejected
+#print axioms aba_generation_rejected
+#print axioms lane_boundary
+#print axioms elide_empty_bucket
 end EmptyBucket
 end Ascent.CachePublication

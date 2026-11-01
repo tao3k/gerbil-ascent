@@ -167,6 +167,22 @@
     (positive-plan-cost-snapshot cost)))
 (def ascent-rule-cost-test
   (test-suite "Native DSL plan costs and explicit prefix reuse"
+    (test-case "fresh DSL source revisions preserve complete ordered witness observations"
+      (for-each
+       (lambda (edges)
+         (def (observe reuse?)
+           (let* ((program (recursive-declaration edges)) (cost (make-positive-plan-cost #t #t))
+                  (result (call-with-positive-plan-cost cost
+                            (lambda () (gerbil-ascent-evaluate-program program empty-bucket-reuse?: reuse?)))))
+             (check-recursive edges '(0 1 2 3) result)
+             (list (positive-plan-cost-visits cost)
+                   (count-of (positive-plan-cost-snapshot cost) 'complete-witnesses)
+                   (map (lambda (name) ((.ref result 'rows-of) name)) '(edge path answer)))))
+         ;; Matching head Sets alone would miss a lost hidden witness. Compare
+         ;; every detached native candidate/support observation in order too.
+         (check-equal? (observe #f) (observe #t)))
+       '(((0 1) (0 2) (1 3) (2 3)) ((0 2) (2 3)) ()
+         ((0 1) (0 2) (1 3) (2 3)))))
     (test-case "empty bucket reuse is explicit and refuses unsupported engine routes"
       (let (program (recursive-declaration '((0 1))))
         (check-exception (gerbil-ascent-evaluate-program program empty-bucket-reuse?: 'force) error?)

@@ -1408,3 +1408,116 @@ upstream/vendor/installed SDK sources and packaging patches are unchanged.
 This deferral does not admit the affected allocation measurements or alter the
 original task, oracle, budget or gates. Native repair and rebuilt-runtime
 verification are prerequisites for resuming the benefit comparison.
+
+* Library correctness follow-up: scoped empty buckets and ordered supports
+
+Upstream repair remains deferred. This follow-up strengthens the existing
+Scheme/POO verification of the Library's opt-in empty-bucket policy; it changes
+no production rule, index implementation, execution option or dependency pin.
+The default remains off. Native allocation/performance admission remains false
+because the recorded SDK accounting defect is unresolved. No timing benefit,
+new performance campaign or complete stability is claimed.
+
+** Independent POO model and native scope checks
+
+The existing kernel Suite adds a POO model-based property using the original
+two-node finite source/delta commands. It creates two independent physical
+owners, probes both all/delta lanes and selects each of the two column layouts
+with both keys. Owner B stays at generation zero with a distinct fixed row
+cut; POO checks initial observations as well as every command result and state.
+This exercises different owners at the same initial generation, not just
+separate labels for one owner. Source and delta generations advance independently
+when their respective ordered cuts change; an ABA restores rows without
+restoring an old generation.
+
+Each input row occurs twice. The native compiled plan emits identical
+zero-column heads for matching rows, so comparing only head Sets would lose
+support information. The independent reference uses direct ordered filtering
+and list construction, without native indexes or the native matcher. For every
+scope/key observation it checks repeated buckets, every head proposal in order
+and the detached full-row supporting occurrence stream. Both disabled and
+enabled policies must agree with that reference. An empty certificate may
+elide only a complete empty selection; successful supporting occurrences are
+not collapsed or reused as an empty failure.
+
+The new property uses POO's existing source-guarded model, generator, policy,
+shrinker and portable replay interfaces, not a separate runner. Its fixed
+seed is =20261101=, with 128 accepted traces, size eight, zero discards and the
+unchanged 64-proposal shrink bound. Required effective coverage is enforced:
+
+| Classification in the new scoped property | Accepted root traces |
+|-------------------------------------------+----------------------|
+| Asymmetric column-layout presence | 77 |
+| Source-only revision | 110 |
+| Delta-only revision | 38 |
+| Withdrawal | 96 |
+| ABA | 42 |
+| Equal-size source revision | 18 |
+| No-op | 128 |
+
+Labels overlap and count root traces, not repeated observations. The existing
+128-trace revision property and historical 64-trace property also pass; these
+are separate property checks, not 320 distinct generated histories or additional
+Suite cases. The historical shrunk stale-version envelope =(#(4 0) #(1 0))=
+now also replays against the new scoped property in both policy modes. There
+was no new native mutation campaign or newly shrunk counterexample this time.
+
+** Scheme DSL and provenance boundary
+
+The existing DSL Suite adds diamond-source cuts, branch withdrawal, complete
+withdrawal and restoration. Fresh enabled and disabled solves both pass the
+unchanged independent finite-domain closure oracle. Their ordered candidate/
+support observations, complete-witness counts and public rows are equal.
+Existing exhaustive two-node cases and retained-Session source-replacement
+checks remain intact. Session empty-bucket reuse remains unsupported; this
+follow-up does not enable it or conflate fresh solves with retained engines.
+
+The duplicate-row property checks value-level supporting occurrence order and
+multiplicity at the index/kernel boundary, before any engine Set admission.
+It does not claim that the Set engine admits duplicate source facts. The fresh
+DSL tests separately cover the pure scalar Set route with distinct supporting
+paths. Neither establishes raw proof-DAG isomorphism, pointer identity or
+arbitrary source-occurrence IDs.
+Caller-supplied callbacks, cancellation and unsupported/custom routes retain
+their existing admission refusals. Fixtures obey the owner's row-version
+publication contract; arbitrary in-place edits with an unchanged version are
+not an admitted revision protocol.
+
+** Lean and Quint checks
+
+The existing Lean =CachePublication.EmptyBucket= namespace adds generation-change
+and ABA rejection, an explicit lane boundary, and =elide_empty_bucket=. The last
+law preserves the complete ordered =flatMap= emission stream before and after
+a known-empty bucket, including distinct supports with equal head values.
+The focused file passes through the locked LeanPoo process Guard with its
+original 1 GiB, heartbeat and wall limits. No new axiom or =sorry= is introduced;
+reported dependencies remain existing Lean axioms. This is an abstract ordered
+support law, not a new extraction proof for the entire native evaluator.
+
+The existing Quint CachePublication model adds independent delta replacement
+and restoration, with observation-time generation and presence retained after
+later changes. A restored empty delta cannot borrow the generation-zero cell.
+The scope domain also includes another column layout. =EmptyHitSound= now
+checks source emptiness, delta emptiness and the delta certificate's use epoch.
+The same group passes one positive Safety check and eight expected mutation
+counterexamples, including omitted version, owner and key checks: nine
+obligations, =cache=0=, one worker and =ALL-QUINT-CHECK-OK=. Checker domains,
+existing depth bounds and process limits are not relaxed.
+
+** Receipts and retained failures
+
+Native dependency preparation returns =BUILD-TEST-LIBRARY-OK= in 34.58 seconds
+with zero production modules rebuilt. Current source Suites against the native
+dependencies pass naturally: kernel/PBT/replay 13 cases, DSL/oracle 11 cases
+and provider/contract/C4/measurement ten cases, for 34 Suite cases total.
+The PBT checks are inside that count. Lean returns zero with its direct child
+reaped and no additional helper threads; Quint's receipt records all nine
+obligations complete. These are focused warm local checks, not whole-Library,
+cold-build, package, remote CI or native SDK repair qualification.
+
+The first Lean attempt rejects a reserved binder name (=prefix=). The binder
+is renamed, with proof premises and resource limits unchanged; that failure log
+is retained. All new native, Lean and Quint logs, the complete Quint run with
+expected counterexamples, source hashes and the existing portable replay are
+retained under =.data/ascent-empty-correctness-20261101/=. No upstream source,
+Python binding/implementation, replacement framework or CI wait is added.

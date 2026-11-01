@@ -125,6 +125,91 @@
                 (vector-set! delta 0 fresh) (vector-set! dsizes 0 (length fresh))
                 (vector-set! dversions 0 (+ 1 (vector-ref dversions 0))))
               (values state (observe state)))) observe)))))))
+;;; Scope controls use the existing finite commands and POO model protocol.
+;;; Owner B remains independent at generation zero; layouts select either
+;;; column. Duplicate occurrences deliberately emit equal zero-column heads.
+(def (occurrence-rows mask) (let (rows (mask-rows mask)) (append rows rows)))
+(def (scoped-reference command)
+  (append-map
+   (lambda (owner)
+     (append-map
+      (lambda (lane)
+        (let (rows (if (= owner 0)
+                      (occurrence-rows (vector-ref command (if lane 1 0)))
+                      (if lane [] (occurrence-rows 6))))
+          (append-map
+           (lambda (column)
+             (map (lambda (key)
+                    (let (bucket (filter (lambda (row) (= (list-ref row column) key)) rows))
+                      (list bucket bucket (map (lambda (_row) []) bucket) (map list bucket)))) '(0 1)))
+           '(0 1)))) '(#f #t))) '(0 1)))
+(def scoped-model
+  (model.make-model (lambda () (vector 0 0)) (lambda (_state _command) #t)
+    (lambda (_state command) (values command (scoped-reference command)))
+    scoped-reference cut-command? values))
+(def (scoped-labels commands)
+  (append (revision-labels commands)
+    (if (ormap (lambda (command)
+                 (let (source (vector-ref command 0))
+                   (not (eq? (zero? (bitwise-and source 3)) (zero? (bitwise-and source 5)))))) commands)
+      '(asymmetric-layout) [])))
+(def (scoped-cut-property commands reuse?)
+  (model.trace-report-matched?
+   (model.check-trace scoped-model commands
+    (lambda (consume)
+      (let* ((owners
+              (map (lambda (owner)
+                     (let* ((all (vector (if (= owner 0) [] (occurrence-rows 6))))
+                            (delta (vector [])) (sizes (vector (length (vector-ref all 0))))
+                            (dsizes (vector 0)) (versions (vector 0)) (dversions (vector 0))
+                            (indexes (gerbil-ascent-make-row-indexes all delta sizes dsizes versions dversions
+                                       (vector gerbil-ascent-hash-index-provider))))
+                       (vector all delta sizes dsizes versions dversions indexes))) '(0 1)))
+             (plans
+              (append-map
+               (lambda (column)
+                 (map (lambda (key)
+                        (let* ((literal (cons 'literal key))
+                               (terms (if (= column 0) (list literal '(variable . y))
+                                          (list '(variable . y) literal)))
+                               (atom (vector 0 terms (list column) [] (list literal)))
+                               (heads (list (vector 1 []))) (body (list (vector 'atom atom)))
+                               (plan (gerbil-ascent-compile-positive-plan heads body)))
+                          (vector heads body '(0) 0 (vector 0) plan))) '(0 1))) '(0 1))))
+        (for-each (lambda (owner) (row-indexes-plan-rules! (vector-ref owner 6) plans #t reuse?)) owners)
+        (def (observe _state)
+          (append-map
+           (lambda (owner)
+             (let (access (row-indexes-rows (vector-ref owner 6)))
+               (append-map
+                (lambda (lane)
+                  (map
+                   (lambda (rule)
+                     (let* ((plan (vector-ref rule 5)) (action (car (vector-ref plan 1)))
+                            (frame (make-vector (vector-ref plan 2) #f))
+                            (first (access (vector-ref action 0) frame lane (vector-ref action 2)))
+                            (second (access (vector-ref action 0) frame lane (vector-ref action 2)))
+                            (cost (make-positive-plan-cost #t #t)) (emitted []))
+                       (call-with-positive-plan-cost cost
+                         (lambda ()
+                           (gerbil-ascent-run-positive-plan! plan frame (if lane 0 -1) access
+                             (lambda (_head row) (set! emitted (cons row emitted))))))
+                       (list first second (reverse emitted)
+                         (map (lambda (visit) (list-ref visit 5)) (positive-plan-cost-visits cost))))) plans)) '(#f #t)))) owners))
+        (consume
+         (model.make-system #f
+          (lambda (state command)
+            (let (owner (car owners))
+              (for-each
+               (lambda (lane)
+                 (let* ((rows (occurrence-rows (vector-ref command (if lane 1 0))))
+                        (data (vector-ref owner (if lane 1 0)))
+                        (size (vector-ref owner (if lane 3 2)))
+                        (version (vector-ref owner (if lane 5 4))))
+                   (unless (equal? rows (vector-ref data 0))
+                     (vector-set! data 0 rows) (vector-set! size 0 (length rows))
+                     (vector-set! version 0 (+ 1 (vector-ref version 0)))))) '(#f #t)))
+            (values state (observe state))) observe)))))))
 (def cut-codec
   (replay.make-codec '(ascent-empty-bucket (nodes 0 1) (masks 16) (steps 4) (scope version key)) values values))
 (def (cut-labels commands)
@@ -150,6 +235,23 @@
             (and (ormap (lambda (command) (= (vector-ref command 1) 0)) commands) 'empty-delta)))))
 (def ascent-rule-cost-kernel-test
   (test-suite "Native positive-plan cost charge points"
+    (test-case "POO revision PBT preserves owner layout lane and ordered support occurrences"
+      (let (report (property.check-property revision-generator
+                     (lambda (commands) (and (scoped-cut-property commands #f) (scoped-cut-property commands #t)))
+                     revision-domain seed: 20261101 cases: 128 size: 8 shrink-budget: 64
+                     policy: (property.make-policy name: 'ascent-scoped-empty-supports
+                               labels: scoped-labels
+                               required: '((no-op . 1) (source-only-revision . 1) (delta-only-revision . 1)
+                                           (withdrawal . 1) (aba . 1) (equal-size-revision . 1)
+                                           (asymmetric-layout . 1)))))
+        (displayln "POO-SCOPED-SUPPORT-PBT " (property.report-diagnostics report))
+        (when (eq? (property.report-status report) 'failed)
+          (displayln "POO-SCOPED-COUNTEREXAMPLE-BEGIN")
+          (replay.write-counterexample report revision-codec (current-output-port))
+          (displayln "POO-SCOPED-COUNTEREXAMPLE-END"))
+        (require-passed report)
+        (check-equal? (property.report-accepted report) 128)
+        (check-equal? (property.report-discarded report) 0)))
     (test-case "POO state-dependent revision PBT retains shrink and portable replay"
       (let (report (property.check-property revision-generator cut-property revision-domain
                      seed: 20261101 cases: 128 size: 8 shrink-budget: 64
@@ -187,7 +289,11 @@
       (check-equal?
        (replay.read-counterexample cut-codec
         (open-input-string "#(property-counterexample 1 (ascent-empty-bucket (nodes 0 1) (masks 16) (steps 4) (scope version key)) (#(4 0) #(1 0)))")
-        cut-domain cut-property) #t))
+        cut-domain cut-property) #t)
+      (check-equal?
+       (replay.read-counterexample cut-codec
+        (open-input-string "#(property-counterexample 1 (ascent-empty-bucket (nodes 0 1) (masks 16) (steps 4) (scope version key)) (#(4 0) #(1 0)))")
+        cut-domain (lambda (commands) (and (scoped-cut-property commands #f) (scoped-cut-property commands #t)))) #t))
     (test-case "independent finite oracle rejects invented support and outside-domain input"
       (check-equal? (finite-domain-closure '(0 1) '((p) (q))
                       '(((p x) (q x)) ((q x) (p x)))) '((p) (q)))

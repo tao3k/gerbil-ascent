@@ -3,7 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Retained source snapshots, failure recovery, and timeout admission.
-(import (only-in "source-snapshot.ss" gerbil-ascent-source-snapshot
+(import (only-in :gerbil-ascent/core/positive-plan current-positive-prefix-budget)
+        (only-in "source-snapshot.ss" gerbil-ascent-source-snapshot
                  gerbil-ascent-prepare-source-log-snapshot source-snapshot-program
                  source-snapshot-rows)
         (only-in :clan/poo/object .o .ref)
@@ -36,6 +37,15 @@
                                  measure-rule-times?: (measure-rule-times? #f))
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
+  ;; Capture the optional retention policy once. Recovery/revision cannot
+  ;; silently change it when invoked outside the caller's dynamic extent.
+  (def prefix-budget (current-positive-prefix-budget))
+  (def (fresh-engine . args)
+    (parameterize ((current-positive-prefix-budget prefix-budget))
+      (apply gerbil-ascent-make-engine-state args)))
+  (def (updated-engine . args)
+    (parameterize ((current-positive-prefix-budget prefix-budget))
+      (apply gerbil-ascent-make-updated-engine-state args)))
   (def (copy-source-rows rows)
     ;; Own both the outer list and every row pair before an engine can observe
     ;; them. Nested host values remain shared and need a separate contract.
@@ -94,7 +104,7 @@
          (replay-on-timeout? #f)
          (replacement-active? #f)
          (last-result #f)
-         (engine (gerbil-ascent-make-engine-state initial-program #f #f
+         (engine (fresh-engine initial-program #f #f
                                           measure-rule-times?))
          (engine-analysis (engine-state-analysis engine))
          (engine-schema (engine-state-schema engine))
@@ -145,7 +155,7 @@
       (set! engine #f)
       (let* ((cut (prepare-source-cut rows))
              (candidate (source-snapshot-program cut))
-             (fresh (gerbil-ascent-make-engine-state candidate
+             (fresh (fresh-engine candidate
                                               engine-analysis engine-schema
                                               measure-rule-times?))
              (restored-result (and initialized? ((engine-state-run fresh)))))
@@ -289,11 +299,11 @@
         (let* ((cut (prepare-source-cut prospective))
                (candidate (source-snapshot-program cut))
                (fresh (if initialized?
-                       (gerbil-ascent-make-updated-engine-state
+                       (updated-engine
                         committed candidate committed-result
                         engine-analysis engine-schema measure-rule-times? cut
                         (and engine ((engine-state-publication engine))))
-                       (gerbil-ascent-make-engine-state candidate engine-analysis engine-schema measure-rule-times?)))
+                       (fresh-engine candidate engine-analysis engine-schema measure-rule-times?)))
                (result ((engine-state-run fresh))))
           (unless (.ref result 'finished)
             (error "batch source replacement did not complete"))
@@ -358,7 +368,7 @@
                      (let* ((cut (prepare-source-cut next-pending))
                             (candidate (source-snapshot-program cut))
                             (fresh
-                             (gerbil-ascent-make-engine-state
+                             (fresh-engine
                               candidate engine-analysis engine-schema
                               measure-rule-times?)))
                        (adopt-engine! fresh cut)))

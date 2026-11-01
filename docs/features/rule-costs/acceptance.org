@@ -1652,3 +1652,80 @@ The initial serializer reused the existing empty-bucket codec; both original
 artifact identity and corrected property identity are retained in tests.
 These are focused warm local receipts, not clean-checkout, whole-package,
 remote-CI or performance acceptance. Original watchdog/heap budgets are unchanged.
+
+* Unified factorized prefix DAG and scientific DSL decisions
+
+The [[file:../../scheme-relational-dsl-design.org::#scientific-dsl-prefix-dag][scientific DSL / prefix DAG audit]] prints the unchanged language contract,
+paper lessons, three resolved design decisions, source ownership and formal/native
+correspondence. The first-atom cache branch is replaced by one engine-local DAG
+of checked canonical prefix schemas and bounded factorized matching transitions.
+Its input bindings and local owned all/delta cut are explicit. Every caller's
+incoming support and rule occurrence stay outside retained entries.
+
+The five-field plan, public DSL, physical index algorithm, Session transaction
+and dependency-closure algorithm, and provenance graph semantics are retained.
+The existing checker independently revalidates source descriptors before DAG
+interning; two alpha-renamed four-atom rules share four nodes. Index exposes an
+owner-bound cut; Session captures the chosen capacity through recovery/revision.
+Unsupported/callback/parallel/checkpoint routes keep their original execution.
+The separate empty-bucket option stays default-off.
+
+Retained payload capacity is explicit, measured in defined logical units, not
+native allocator bytes or public fact counts. Default zero streams without
+materialization. Capacity refusal releases pending retention and continues the
+same traversal; it does not drop/restart suffix work. Stale local lanes release
+all charged entries. The ledger excludes total engine/index/schema/temporary
+memory, and no general heap or total-cost theorem is claimed.
+
+On a frozen two-rule, four-atom revision fixture, shared capacity 0/8/32/256/4096
+produces candidate counts 316/313/271/226/226 and final retained units
+0/8/26/114/114. Every capacity emits 52 complete witnesses and 104 head proposals.
+Splitting the same total capacity between independent rule workspaces produces
+316/316/306/262/262 candidates and retained units 0/0/32/90/90. Thus the 256-unit
+shared run avoids 36 candidate matches relative to the separate-workspace control
+while retaining 24 more logical units. This is a matching/space tradeoff, not
+net performance acceptance. No wall-time comparison or native allocation claim
+is made, and no new default materialization is enabled.
+
+The new POO property uses seed =20261104=, 64 accepted roots, eight-step traces,
+64 shrink proposals and zero discards. Each root combines independently generated
+source/delta revisions for two relation owners and checks all five capacities
+against an independent ordered four-way enumerator. Required coverage records
+left/right source revision in 58/58 traces and left/right delta revision in 21/19.
+Fixed negative controls deliberately omit a nonfirst source or delta revision and
+must disagree with that oracle. Existing shrunk one-atom artifacts still replay.
+Malformed slot descriptors reject, interrupted pending retention releases, and
+held sibling results survive cyclic Session withdrawal/restoration at capacities
+0/8/4096. The four-premise graph case compares every normalized source/rule edge
+through actual Sessions and rejects old graphs after source generation changes.
+
+Lean =IndexedPositiveTraversal= passes the locked Guard after explicit ordered
+factorization and injective-renaming proofs. New factorization/observation laws
+use existing =propext= and =Quot.sound=; renaming uses =propext=, with no admitted
+holes/new axioms. Quint =SessionTransaction= checks memo building, completion,
+capacity refusal, invalidation, read fallback and cancellation without publishing
+Session results; all five existing obligations complete with =cache=0=. Existing
+mutation controls are not represented as new independent coverage for every memo
+invariant. SysML strict structure and five positive/fourteen negative objects
+check the architectural contracts, not Scheme execution.
+
+Focused native qualification totals 144 Suite cases: kernel 20, DSL 13, positive
+plan 33, selected activation 5, positive components 21, Session deletion 26,
+provenance graph 19, support cut 3 and support height 4. PBT roots are inside the
+Suite count. The final warm preparation rebuilds 25 modules under unchanged
+resource guards; these are not whole-package, cold-checkout or remote-CI receipts.
+
+All attempts are retained in =.data/ascent-prefix-dag-20261101/=. Initial Lean
+failures include a reserved binder and two explicit induction gaps, corrected
+without changing proof premises or limits. The first new Session fixture was
+rejected for revising before initial solve; the next used the raw result API on
+a checked solution wrapper. Both fixture errors were corrected through the
+existing contract/API, without changing source rows or relaxing any assertion.
+No failure is discarded. Upstream/dependency pins are untouched, no Python
+implementation or replacement framework is added, and performance stays unqualified.
+
+An additional integrated native DSL/index control runs the same recursive chain
+at retention capacities 0 and 256: candidate matches 48 -> 36, complete witnesses
+8 -> 8 and admitted rows 7 -> 7. The valid variable-capture discriminator keeps
+eight distinct schema nodes, whereas alpha-renaming shares four. These strengthen
+integration/equivalence boundaries without enabling materialization by default.

@@ -21,7 +21,15 @@ module SessionTransaction {
     Words.forall(rows => OrderedLogEqual(base,additions,rows) == (rows == base.concat(Reverse(additions))))))
   type State = {generation: int, source: Cut, result: Set[int], phase: str, base: int, pending: Cut, candidate: Set[int], complete: bool}
   var q: State
-  action init = q' = {generation: 0, source: (0,0,0), result: Set(), phase: "idle", base: -1, pending: (0,0,0), candidate: Set(), complete: false}
+  // One factorized transition, separate from the Session publication owner.
+  // Bits abstract an incoming binding and local source/delta cuts, not addresses.
+  pure def MemoRows(key: int, source: int, delta: int): Set[int] =
+    if (source == 1 and delta == 0) Set(key) else Set()
+  type Memo = {phase: str, key: int, source: int, delta: int, rows: Set[int], used: int, budget: int,
+               readKey: int, readSource: int, readDelta: int, observed: Set[int]}
+  var memo: Memo
+  action init = all {memo' = {phase: "empty", key: 0, source: 0, delta: 0, rows: Set(), used: 0, budget: 0,
+                              readKey: 0, readSource: 0, readDelta: 0, observed: Set()}, q' = {generation: 0, source: (0,0,0), result: Set(), phase: "idle", base: -1, pending: (0,0,0), candidate: Set(), complete: false}}
   action Begin = {nondet cut = Cuts.oneOf(); all {q.phase == "idle", q' = {...q, pending: cut, base: q.generation, phase: "solving", candidate: Set(), complete: false}}}
   action Solve = all {q.phase == "solving", q' = {...q,
     candidate: if (Mutation == "global") GlobalResultOf(q.pending)
@@ -32,11 +40,37 @@ module SessionTransaction {
     q' = {...q, generation: q.generation+1, source: q.pending, result: q.candidate, phase: "idle"}}
   action Abort = all {q.phase != "idle", q' = {...q, phase: "idle", complete: false, candidate: Set()}}
   action EarlyPublish = all {Mutation == "early", q.phase == "solving", q' = {...q, source: q.pending}}
-  action step = any {Begin, Solve, Commit, Abort, ExternalCommit, EarlyPublish}
+  action transactionStep = any {Begin, Solve, Commit, Abort, ExternalCommit, EarlyPublish}
+  action BuildMemo = {
+    nondet capacity = Set(0,8,10).oneOf()
+    val rows = MemoRows(q.source._1,q.source._2,q.source._3)
+    val charge = 7 + 3 * rows.size()
+    all {memo.phase != "building", memo' = {...memo,
+      key: q.source._1, source: q.source._2, delta: q.source._3,
+      rows: if (charge <= capacity) rows else Set(), budget: capacity,
+      phase: if (charge <= capacity) "building" else "stream",
+      used: if (charge <= capacity) charge else 0}}
+  }
+  action FinishMemo = all {memo.phase == "building", memo' = {...memo,
+    phase: if (memo.key == q.source._1 and memo.source == q.source._2 and memo.delta == q.source._3) "complete" else "empty",
+    rows: if (memo.key == q.source._1 and memo.source == q.source._2 and memo.delta == q.source._3) memo.rows else Set(),
+    used: if (memo.key == q.source._1 and memo.source == q.source._2 and memo.delta == q.source._3) memo.used else 0}}
+  action CancelMemo = all {memo.phase == "building", memo' = {...memo, phase: "empty", rows: Set(), used: 0}}
+  action ReadMemo = {
+    val hit = memo.phase == "complete" and memo.key == q.source._1 and memo.source == q.source._2 and memo.delta == q.source._3
+    all {memo' = {...memo, readKey: q.source._1, readSource: q.source._2, readDelta: q.source._3,
+      observed: if (hit) memo.rows else MemoRows(q.source._1,q.source._2,q.source._3)}}
+  }
+  action step = any {all {transactionStep, memo' = memo},
+                    all {any {BuildMemo, FinishMemo, CancelMemo, ReadMemo}, q' = q}}
+  val MemoBudget = memo.used >= 0 and memo.used <= memo.budget and
+    ((memo.phase == "empty" or memo.phase == "stream") implies (memo.used == 0 and memo.rows == Set()))
+  val MemoReadExact = memo.observed == MemoRows(memo.readKey,memo.readSource,memo.readDelta)
+  val MemoCompletedExact = memo.phase == "complete" implies memo.rows == MemoRows(memo.key,memo.source,memo.delta)
   val TypeOK = all {q.generation >= 0, Cuts.contains(q.source), Cuts.contains(q.pending), q.result.subseteq(Set(1)), q.candidate.subseteq(Set(1)),
     q.base >= -1, Set("idle","solving","ready").contains(q.phase), Set(true,false).contains(q.complete)}
   val ExplorationBound = q.generation <= GenerationCutoff
-  val AtomicSnapshot = q.result == ResultOf(q.source) and OrderedSourceExact
+  val AtomicSnapshot = q.result == ResultOf(q.source) and OrderedSourceExact and MemoBudget and MemoReadExact and MemoCompletedExact
   temporal NoStaleCommit = (Commit implies q.base == q.generation).orKeep(q).always()
   temporal AbortPreservesSnapshot = (Abort implies (q.generation,q.source,q.result).next() == (q.generation,q.source,q.result)).orKeep(q).always()
 

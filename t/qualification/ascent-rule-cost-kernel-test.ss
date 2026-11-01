@@ -13,6 +13,11 @@
         (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle finite-domain-closure))
 (export ascent-rule-cost-kernel-test)
 (def (read-count cost name) (cdr (assq name (positive-plan-cost-snapshot cost))))
+;;; Deliberate owned-cut fixture; production cuts come from program/index.
+(def (make-prefix-fixture plan version (budget 10000))
+  (let (owner (list 'prefix-fixture-owner))
+    (make-positive-prefix-state (list plan)
+      (lambda (_relation) (make-positive-prefix-cut owner (version))) budget)))
 (def (prefix-plan)
   (gerbil-ascent-compile-positive-plan
    (list (vector 1 '((variable . x) (variable . y) (variable . z) (variable . w)))
@@ -44,7 +49,7 @@
     (reverse output)))
 (def (prefix-property commands (fault #f))
   (let* ((plan (prefix-plan)) (previous (vector 0 0)) (source-version 0) (delta-version 0)
-         (state (make-positive-prefix-state plan (lambda ()
+         (state (make-prefix-fixture plan (lambda ()
                   (cons (if (eq? fault 'source) 0 source-version)
                         (if (eq? fault 'delta) 0 delta-version))))))
     ;; Keep this owner identity stable across the generated trace, so source-
@@ -280,8 +285,137 @@
                                      (and (> (bitwise-and source 12) 0) (= (bitwise-and delta 12) 0)))))) commands)
                  'different-lane-buckets)
             (and (ormap (lambda (command) (= (vector-ref command 1) 0)) commands) 'empty-delta)))))
+;;; Two alpha-renamed rules over independently revised relation owners. Each
+;;; four-atom body retains a full support tuple and a same-head projection.
+(def (multi-plan renamed?)
+  (gerbil-ascent-compile-positive-plan
+    (list (vector 2 (if renamed? '((variable . a) (variable . b) (variable . c) (variable . d) (variable . e))
+                                '((variable . x) (variable . y) (variable . z) (variable . w) (variable . t))))
+          (vector 3 (if renamed? '((variable . a)) '((variable . x)))))
+    (map (lambda (relation terms) (vector 'atom (vector relation terms [] [] []))) '(0 1 0 1)
+      (if renamed? '(((variable . a) (variable . b)) ((variable . b) (variable . c))
+                     ((variable . c) (variable . d)) ((variable . d) (variable . e)))
+                   '(((variable . x) (variable . y)) ((variable . y) (variable . z))
+                     ((variable . z) (variable . w)) ((variable . w) (variable . t)))))))
+(def (ordered-flat-map f xs) (foldr (lambda (x tail) (append (f x) tail)) [] xs))
+(def (multi-reference command)
+  (def (lane depth pivot)
+    (let* ((relation (modulo depth 2)) (all (mask-rows (vector-ref command (* 2 relation))))
+           (delta (mask-rows (vector-ref command (+ 1 (* 2 relation))))))
+      (cond ((< depth pivot) (filter (lambda (row) (not (member row delta))) all))
+            ((= depth pivot) delta) (else all))))
+  (ordered-flat-map (lambda (rule)
+    (ordered-flat-map (lambda (pivot)
+      (ordered-flat-map (lambda (a)
+        (ordered-flat-map (lambda (b)
+          (ordered-flat-map (lambda (c)
+            (ordered-flat-map (lambda (d)
+              (if (and (= (cadr a) (car b)) (= (cadr b) (car c)) (= (cadr c) (car d)))
+                (list (list rule 2 (list (car a) (cadr a) (cadr b) (cadr c) (cadr d)))
+                      (list rule 3 (list (car a)))) [])) (lane 3 pivot))) (lane 2 pivot)))
+            (lane 1 pivot))) (lane 0 pivot))) '(0 1 2 3))) '(0 1)))
+(def (multi-property traces (fault #f) (metrics? #f) (split? #f) (receipt! #f))
+  (let ((commands (map (lambda (a b) (vector (vector-ref a 0) (vector-ref a 1)
+                                             (vector-ref b 0) (vector-ref b 1))) (car traces) (cadr traces))))
+    (andmap (lambda (budget)
+      (let* ((plans (list (multi-plan #f) (multi-plan #t))) (previous (vector 0 0 0 0))
+             (versions (vector 0 0 0 0)) (owner (list 'multi-owner))
+             (cost (and metrics? (make-positive-plan-cost #f)))
+             (cut (lambda (relation) (make-positive-prefix-cut owner
+                 (cons (vector-ref versions (* 2 relation)) (vector-ref versions (+ 1 (* 2 relation)))))))
+             (state (make-positive-prefix-state (if split? (list (car plans)) plans) cut
+                      (if split? (quotient budget 2) budget)))
+             (other (if split? (make-positive-prefix-state (list (cadr plans)) cut (quotient budget 2)) state)))
+        (def (rows atom frame delta? terms)
+          (mask-rows (vector-ref previous (+ (* 2 (vector-ref atom 0)) (if delta? 1 0)))))
+        (def (old atom frame terms checkpoint!)
+          (let ((all (rows atom frame #f terms)) (delta (rows atom frame #t terms)))
+            (filter (lambda (row) (not (member row delta))) all)))
+        (and (= (positive-prefix-state-node-count state) 4)
+          (andmap (lambda (command)
+            (for-each (lambda (i) (unless (or (= (vector-ref command i) (vector-ref previous i))
+                                    (and (eq? fault 'source) (= i 2)) (and (eq? fault 'delta) (= i 3)))
+                        (vector-set! versions i (+ 1 (vector-ref versions i))))) '(0 1 2 3))
+            (set! previous command)
+            (let (output [])
+              (for-each (lambda (plan rule)
+                (for-each (lambda (pivot)
+                  (let (visit (lambda () (gerbil-ascent-run-positive-plan! plan (make-vector 5 'dirty) pivot rows
+                    (lambda (head row) (set! output (cons (list rule (vector-ref head 0) row) output)))
+                    #f #f old #f (if (= rule 0) state other))))
+                    (if cost (call-with-positive-plan-cost cost visit) (visit)))) '(0 1 2 3))) plans '(0 1))
+              (and (equal? (reverse output) (multi-reference command))
+                   (<= 0 (+ (positive-prefix-state-used state) (if split? (positive-prefix-state-used other) 0)) budget)))) commands)
+          (if metrics? (begin
+            (when receipt! (receipt! budget (read-count cost 'candidate-rows)))
+            (displayln "MULTI-DAG split=" split? " budget=" budget " used="
+                       (+ (positive-prefix-state-used state) (if split? (positive-prefix-state-used other) 0))
+                       " cost=" (positive-plan-cost-snapshot cost))
+            (or (< budget 256) (> (read-count cost 'prefix-state-replays) 0))) #t)))) '(0 8 32 256 4096))))
+(def multi-generator (generator.generator-sequence (list revision-generator revision-generator)))
+(def multi-domain
+  (property.make-specification
+    (lambda (traces) (and (list? traces) (= (length traces) 2)
+                         (andmap (lambda (trace) (and (list? trace) (<= (length trace) 8)
+                                                     (andmap cut-command? trace))) traces)
+                         (= (length (car traces)) (length (cadr traces)))))
+    (lambda (traces) (+ (length (car traces)) (foldl (lambda (trace total)
+       (+ total (foldl (lambda (command n) (+ n (vector-ref command 0) (vector-ref command 1))) 0 trace))) 0 traces)))))
+(def (multi-labels traces)
+  (filter values (list
+    (and (memq 'source-only-revision (revision-labels (car traces))) 'left-source)
+    (and (memq 'delta-only-revision (revision-labels (car traces))) 'left-delta)
+    (and (memq 'source-only-revision (revision-labels (cadr traces))) 'right-source)
+    (and (memq 'delta-only-revision (revision-labels (cadr traces))) 'right-delta))))
+(def multi-codec (replay.make-codec '(ascent-prefix-dag (relations 2) (steps 8) (slots 5) (budgets 0 8 32 256 4096)) values values))
 (def ascent-rule-cost-kernel-test
   (test-suite "Native positive-plan cost charge points"
+    (test-case "prefix DAG rejects unvalidated slots and releases interrupted pending retention"
+      (let* ((plan (multi-plan #f)) (renamed (multi-plan #t))
+             (bad (vector-copy plan)) (actions (map vector-copy (vector-ref plan 1))))
+        (vector-set! bad 1 actions)
+        (vector-set! (car actions) 1 '((fresh . 4) (fresh . 1)))
+        (check-exception (make-positive-prefix-state (list plan bad)
+                           (lambda (_) #f) 256) error?)
+        (check-equal? (positive-prefix-state-node-count
+                       (make-positive-prefix-state (list plan renamed) (lambda (_) #f) 256)) 4)
+        ;; Identifying x and y is variable capture, not alpha-renaming. Both
+        ;; programs are valid, but none of their ordered prefixes may intern.
+        (let (captured (gerbil-ascent-compile-positive-plan
+              (list (vector 2 '((variable . x) (variable . x) (variable . z) (variable . w) (variable . t))))
+              (map (lambda (relation terms) (vector 'atom (vector relation terms [] [] []))) '(0 1 0 1)
+                '(((variable . x) (variable . x)) ((variable . x) (variable . z))
+                  ((variable . z) (variable . w)) ((variable . w) (variable . t))))))
+          (check-equal? (positive-prefix-state-node-count
+                         (make-positive-prefix-state (list plan captured) (lambda (_) #f) 256)) 8)))
+      (let* ((plan (prefix-plan)) (state (make-prefix-fixture plan (lambda () '(0 . 0)))))
+        (check-exception (gerbil-ascent-run-positive-plan! plan (make-vector 4 'dirty) 1
+                           (lambda args '((1 1))) (lambda args (error "intentional suffix interruption"))
+                           #f #f (lambda args '((1 1))) #f state) error?)
+        (check-equal? (positive-prefix-state-used state) 0)
+        (check-equal? (prefix-observe plan (vector 15 1) state) (prefix-reference (vector 15 1)))))
+    (test-case "multi-atom sharing executes fewer matches and detects nonfirst stale lanes"
+      (let ((traces (list (list (vector 15 1) (vector 15 1)) (list (vector 15 1) (vector 3 1))))
+            (delta-traces (list (list (vector 15 1) (vector 15 1)) (list (vector 15 1) (vector 15 2)))))
+        (let ((shared (make-hash-table-eqv)) (separate (make-hash-table-eqv)))
+          (check-equal? (multi-property traces #f #t #f (lambda (budget count) (hash-put! shared budget count))) #t)
+          (check-equal? (multi-property traces #f #t #t (lambda (budget count) (hash-put! separate budget count))) #t)
+          (check-equal? (hash-ref shared 0) (hash-ref separate 0))
+          (check-equal? (< (hash-ref shared 256) (hash-ref separate 256)) #t)
+          (check-equal? (< (hash-ref shared 4096) (hash-ref separate 4096)) #t))
+        (check-equal? (multi-property traces 'source) #f)
+        (check-equal? (multi-property delta-traces 'delta) #f)))
+    (test-case "POO multi-atom DAG preserves alpha-renamed rule supports under bounded retention"
+      (let (report (property.check-property multi-generator multi-property multi-domain
+                    seed: 20261104 cases: 64 size: 8 shrink-budget: 64
+                    policy: (property.make-policy name: 'ascent-prefix-dag labels: multi-labels
+                              required: '((left-source . 1) (left-delta . 1) (right-source . 1) (right-delta . 1)))))
+        (displayln "POO-MULTI-PREFIX-PBT " (property.report-diagnostics report))
+        (when (eq? (property.report-status report) 'failed)
+          (replay.write-counterexample report multi-codec (current-output-port)))
+        (require-passed report)
+        (check-equal? (property.report-accepted report) 64)
+        (check-equal? (property.report-discarded report) 0)))
     (test-case "POO matching-prefix replay retains ordered supports through source and delta revisions"
       (let (report (property.check-property revision-generator prefix-property revision-domain
                     seed: 20261103 cases: 64 size: 8 shrink-budget: 64
@@ -295,7 +429,7 @@
         (check-equal? (property.report-discarded report) 0)))
     (test-case "first old prefix reuses matching but preserves all suffixes and same-head supports"
       (let* ((plan (prefix-plan)) (cut (vector 15 1))
-             (state (make-positive-prefix-state plan (lambda () '(0 . 0))))
+             (state (make-prefix-fixture plan (lambda () '(0 . 0))))
              (base (make-positive-plan-cost)) (reused (make-positive-plan-cost)))
         (check-equal? (call-with-positive-plan-cost base (lambda () (prefix-observe plan cut #f)))
                       (call-with-positive-plan-cost reused (lambda () (prefix-observe plan cut state))))
@@ -321,8 +455,8 @@
       (check-equal? (prefix-property (list (vector 1 1) (vector 1 0) (vector 8 0)
                                          (vector 8 8) (vector 1 0))) #t)
       (let* ((plan (prefix-plan)) (a-version 0) (b-version 0)
-             (a (make-positive-prefix-state plan (lambda () (cons a-version 0))))
-             (b (make-positive-prefix-state plan (lambda () (cons b-version 0))))
+             (a (make-prefix-fixture plan (lambda () (cons a-version 0))))
+             (b (make-prefix-fixture plan (lambda () (cons b-version 0))))
              (held (prefix-observe plan (vector 15 1) a)))
         (check-equal? (prefix-observe plan (vector 8 0) b) (prefix-reference (vector 8 0)))
         ;; Even erroneous cross-owner state handoff cannot reuse another
@@ -335,7 +469,7 @@
         (check-exception (gerbil-ascent-run-positive-plan! plan (make-vector 4 #f) 1 inputs
                            (lambda args #f) (lambda () #f) #f (lambda args []) #f a) error?)))
     (test-case "matching-prefix replay retains repeated supporting row occurrences"
-      (let* ((plan (prefix-plan)) (state (make-positive-prefix-state plan (lambda () '(0 . 0))))
+      (let* ((plan (prefix-plan)) (state (make-prefix-fixture plan (lambda () '(0 . 0))))
              (cost (make-positive-plan-cost)))
         (def (old-reader . args) '((1 1) (1 1)))
         (def (observe state)

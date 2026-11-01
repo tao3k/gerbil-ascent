@@ -1,6 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :gerbil-ascent/core/positive-plan current-positive-prefix-budget))
 (import (only-in :std/test check-equal? check-exception test-case test-suite)
         (only-in :std/list/list append-map)
         (prefix-in :clan/poo/testing/property support-property.)
@@ -262,6 +263,61 @@
 
 (def scheme-provenance-graph-test
   (test-suite "Complete grounded provenance and deletion"
+    (test-case "factorized DAG source revisions preserve exact four-premise rule alternatives"
+      (def (program left right)
+        (relational-program
+          (relation left (a b) left) (relation right (a b) right) (relation out (x))
+          (rule (out 0) (left ?a ?b) (right ?b ?c) (left ?c ?d) (right ?d ?e))
+          (rule (out 0) (left ?u ?v) (right ?v ?w) (left ?w ?x) (right ?x ?y))
+          (limits 128 256 512)))
+      (def spec
+        (make-reasoning-candidate '((out . 1)) []
+          (list (vector '(out 0) '((left ?a ?b) (right ?b ?c) (left ?c ?d) (right ?d ?e)) 10)
+                (vector '(out 0) '((left ?u ?v) (right ?v ?w) (left ?w ?x) (right ?x ?y)) 10))
+          (vector '(out ?x) 12) '(128 256 512)))
+      (def (flat f xs) (foldr (lambda (x tail) (append (f x) tail)) [] xs))
+      (def (expected left right)
+        (append
+          (apply append (map (lambda (name rows)
+            (map (lambda (row position) (list (list name row) 'source (list name position) []))
+                 rows (iota (length rows) 1))) '(left right) (list left right)))
+          (flat (lambda (position)
+            (flat (lambda (a) (flat (lambda (b) (flat (lambda (c) (flat (lambda (d)
+              (if (and (= (cadr a) (car b)) (= (cadr b) (car c)) (= (cadr c) (car d)))
+                (list (list '(out (0)) 'rule (list position 10)
+                  (list (list 'left a) (list 'right b) (list 'left c) (list 'right d)))) [])) right)) left)) right)) left)) '(0 1))))
+      (def (normalize graph)
+        (let (by-id (make-hash-table-eqv))
+          (for-each (lambda (node) (hash-put! by-id (proof-node-id node)
+            (list (proof-node-relation node) (proof-node-row node))))
+            (positive-proof-nodes (positive-provenance-witness graph)))
+          (support-sort (map (lambda (edge)
+            (list (hash-ref by-id (car edge)) (cadr edge) (caddr edge)
+                  (map (lambda (id) (hash-ref by-id id)) (cadddr edge))))
+            (positive-provenance-alternatives graph)))))
+      (let* ((left0 '((0 0) (0 1))) (right0 '((0 0) (1 1)))
+             (session (parameterize ((current-positive-prefix-budget 4096))
+                        (relational-open-program-session (program left0 right0))))
+             (sibling (parameterize ((current-positive-prefix-budget 4096))
+                        (relational-open-program-session (program left0 right0))))
+             (held (relational-program-session-run sibling)) (old-graph #f) (generation 0))
+        (for-each (lambda (cut)
+          (let* ((left (car cut)) (right (cadr cut)))
+            (relational-program-transaction! session (list (cons 'left left) (cons 'right right)))
+            (let* ((rows (relational-program-query (relational-program-session-run session) 'out))
+                   (snapshot (reasoning-source-snapshot 'dag-support generation
+                               (list (list 'left 2 left) (list 'right 2 right))))
+                   (graph (candidate-positive-provenance snapshot spec 'dag 'complete rows 32768 4096)))
+              (check-equal? (positive-provenance-status graph) 'complete)
+              (check-equal? (normalize graph) (support-sort (expected left right)))
+              (check-equal? (candidate-verify-positive-provenance snapshot spec 'dag 'complete rows graph 32768 4096) #t)
+              (when old-graph
+                (check-equal? (candidate-verify-positive-provenance snapshot spec 'dag 'complete rows old-graph 32768 4096) #f))
+              (set! old-graph graph) (set! generation (+ generation 1)))
+            (check-equal? (relational-program-query held 'out) '((0)))
+            (check-equal? (relational-program-query (relational-program-session-run sibling) 'out) '((0)))))
+          (list (list left0 right0) (list '((0 0) (0 1) (1 0)) right0)
+                (list '((0 0) (0 1) (1 0)) '((0 1) (1 0))) (list left0 right0)))))
     (test-case "sibling source-cut previews preserve their shared verified parent"
       (let* ((snapshot (reasoning-source-snapshot 'support-branches 0
                         (list (list 'left 1 (support-source 31 'left)) (list 'right 1 (support-source 31 'right)))))

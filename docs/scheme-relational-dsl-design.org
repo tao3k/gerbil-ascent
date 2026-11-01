@@ -515,3 +515,392 @@ with the full reference above. No upstream code is copied, translated or modifie
 No choice syntax, Python binding or replacement framework is introduced. Native
 allocation accounting remains deferred; performance is unqualified, and the
 separate empty-bucket policy remains default-off.
+
+* Multi-atom matching architecture: semantic design before refactoring
+:PROPERTIES:
+:CUSTOM_ID: multi-atom-matching-architecture
+:END:
+
+Historical status: initial design study against source =6d99b909=; the later
+scientific-DSL section records the implemented bounded refactoring. At that
+initial study the native implementation still
+has the first-old-atom special case described above. The following architecture
+is a refactoring target, not an implemented multi-atom matcher, an accepted
+performance optimization or a new public DSL. This study does not modify native
+execution, Python interfaces, dependency pins or upstream sources.
+
+** The scientific question is a factorization of evaluation
+
+The question is not how many adjacent atoms can receive individual caches. It
+is whether matching can factor into a checked shared prefix relation and its
+independent continuations while preserving the complete observable contract.
+Correct answers alone are insufficient: hidden supporting variables, rule
+occurrences, multiplicity where observable, order where promised, lifecycle
+completion and invalidation must remain explicit.
+
+For a positive ordered body with atoms A[0] through A[n-1], let T[j] be its
+frozen total lane, D[j] its exact fresh lane, and O[j] = T[j] minus D[j]. The
+existing first-fresh partition assigns a complete support to pivot p:
+
+#+begin_example
+W[p] = O[0] join ... join O[p-1] join D[p] join T[p+1] join ... join T[n-1]
+P[i] = O[0] join ... join O[i-1]
+#+end_example
+
+P[i] is the reusable matching state for any pivot at or beyond i with the same
+prefix dependencies and binding/support schema. Every W[p] continuation still
+runs. A new suffix row creates new combinations with old P[i], even if that
+prefix was previously unproductive. An old failed suffix is not a certificate
+that a prefix is permanently useless. If a relation occurs in both prefix and
+suffix, a change to it is also a prefix dependency change.
+
+This equation describes a positive fixed-cut join. It does not authorize
+reordering callbacks, hoisting negation or aggregates, changing a recursive
+schedule, or adding finite-choice semantics. Prefix matching completion,
+round quiescence, component least-fixed-point completion and complete public
+query publication are four different claims. Dusa's local propagation closure
+is another semantic context, not an interchangeable name for all four.
+
+** Separate the schema, state, schedule and observation
+
+| Owner | Target responsibility | Must not own |
+|-------+-----------------------+--------------|
+| Existing compiler and translation validator | Immutable prefix DAG, canonical relation identities, binding maps, support layout, checked purity and node dependencies | Mutable matching tables or accepted Session sources |
+| Existing engine/index owner | Frozen input cuts and engine-owned matching frontiers using existing exact indexes | A global mutable memo keyed only by printed rule text |
+| Existing delta scheduler | First-fresh support partition and demand for each prefix/continuation | Treating equal projected heads as interchangeable supports |
+| Existing Session/update-selection/reuse owners | Accepted source cuts, affected-component invalidation, completed capsules and atomic result publication | Workflow search policy or a new choice/fork API |
+| Existing provenance owner | Grounded support interpretation and withdrawal behavior | Treating a matched binding or source filename as an authenticated proof |
+
+The current first-atom state mixes traversal, binding storage and validity in
+one branch of =visit-positive-atoms!=. Repeating that branch at each depth would
+multiply special cases rather than establish these owners. The intended refactor
+replaces that special case with one prefix-state interpretation; it does not
+retain the old mechanism next to a new multi-atom mechanism.
+
+Its constructor also accepts a version-reader procedure. The native call site
+supplies an engine-owned closure, but the numeric values alone cannot establish
+the provenance of a dependency cut. The refactored boundary should obtain an
+owned frozen dependency descriptor from the existing engine/index owner, not
+promote an arbitrary reader hook to a validity certificate. The direct primitive
+tests' version readers are deliberate model inputs with explicit premises.
+
+** What a reusable prefix contains
+
+A prefix schema identifies the ordered admitted atoms, canonical relation IDs,
+term constraints, variable/bound-slot maps, required index keys, supported effects
+and full supporting-row layout. Names alone do not establish relation identity.
+A schema equivalence across rules requires a checked alpha-renaming map and
+compatible input types/scopes; textual resemblance or the same number of slots
+is insufficient. The validator must independently reconstruct this mapping.
+
+A prefix record contains a represented binding environment and the ordered
+supporting row occurrences that produced it. Its implementation may use immutable
+parent links to share support spines; this is a representation choice, not a
+license to discard hidden variables or merge different derivations. A cross-rule
+shared prefix does not merge rule occurrence identities: each continuation adds
+its own rule occurrence and heads. Live-variable projection requires a separate
+provenance preservation argument and is not a default part of this design.
+
+Current native matching observes row tuples; the existing alternative graph
+additionally distinguishes source occurrence labels through checked replay.
+A new prefix representation must supply a correspondence to those existing
+identities, not fabricate solver edge events or infer graph isomorphism from
+matching Set answers. Until that correspondence is checked, native query parity
+and graph replay parity must be reported separately.
+
+A prefix cut binds the schema, provider/reader owner, immutable input snapshot,
+selected lane kind and every prefix relation's all/delta revisions. A single
+first-relation version pair cannot validate a two-atom join. Equal cardinality,
+an unchanged maximum version, and an ABA-restored row set are not valid substitutes
+for complete dependency identity. Repeated uses of a relation share its owner
+revision, but still retain distinct atom positions in the support layout.
+
+A suffix-only dependency change may reuse an unchanged P[i], but never the old
+continuation result merely because P[i] is unchanged. A prefix dependency change
+must invalidate P[i] and dependent nodes or apply a separately proved incremental
+join update. Blindly transferring an old failed lookup to a new delta is unsafe.
+The initial semantic target uses exact invalidation; an incremental update law
+is a distinct proof obligation, not an assumed benefit of persistence.
+
+** Materialization and persistence are policies, not semantics
+
+A compiled prefix DAG makes sharing opportunities explicit across both delta
+pivots and equivalent rule prefixes. It does not require eager materialization
+of every node. A multi-atom frontier may be much larger than any source relation;
+finite input alone does not make that memory use acceptable. Dusa v3 §7.1 itself
+describes a time/space tradeoff and logarithmic functional-map costs.
+
+The architecture therefore separates an exact streaming interpreter from an
+exact materializing interpreter of the same checked prefix schema. Nodes with
+multiple consumers are candidates for materialization, not automatic admissions.
+A retained frontier needs an explicit resource policy and accounting. Silent
+hardcoded size caps, charging intermediate matches as public derived facts, or
+widening existing query budgets would change the task rather than validate it.
+A bounded fallback must stream the same computation without dropping supports;
+actual resource exhaustion must retain the existing incomplete/failure semantics.
+
+Persistence means completed immutable prefix cuts may be shared; it does not
+mean mutable builder state is shared. A builder owns private pending records and
+publishes a complete cut only against its captured dependencies. A source change
+during construction invalidates that publication. Prefix publication and query
+publication have different commit points: a completed independent prefix can in
+principle remain valid when a later suffix is canceled, but that canceled query
+cannot publish a completed answer. The present first-atom implementation waits
+for continuations too; changing this behavior needs an explicit lifecycle proof.
+
+There is no new public branch operation in this proposal. Existing independent
+Sessions, prospective source transactions and read-only provenance previews are
+sufficient to exercise isolation. Immutable sharing and independent mutable
+frontiers must be demonstrated physically before claiming shared state between
+Sessions. Sharing a declaration or retaining a result is not that demonstration.
+
+** Refactoring boundary in this repository
+
+- =core/positive-plan.ss= and =core/positive-certificate.ss=: one checked prefix
+  representation and its interpretation, replacing the first-atom exception.
+- =gerbil-ascent-positive-plan-with-outputs=, =program/component-worker.ss= and
+  =program/activation.ss=: preserve the same body/schema when projecting heads
+  or creating engine-local frames. New metadata must survive every constructor.
+- =program/evaluate.ss=: request a prefix frontier through the existing first-fresh
+  scheduler rather than independently reconstructing old joins for every pivot.
+- =program/index.ss=: retain exact existing index ownership/versioning; a prefix
+  table is a join result, not a second physical index/provider implementation.
+- =program/session.ss=, =program/update-selection.ss= and =program/reuse.ss=:
+  retain current transaction authority and dependency invalidation. No global
+  prefix cache or compatibility dispatch is introduced.
+- Existing provenance tests/owner: define and check the support correspondence
+  before treating any hidden-variable projection as an optimization.
+
+The current positional plan has five fields, and the certificate checks that
+shape. Output projection and component-worker constructors reconstruct it.
+Changing only the compiler or attaching an unvalidated side table would leave
+those owners inconsistent. The internal representation change must update all
+constructors, validation and focused activation/projection tests together. No
+Search V1/V2 modules, alternate evaluator framework or new DSL syntax is needed.
+
+** Distinct verification duties
+
+| Layer | Required claim | Necessary discriminator |
+|-------+----------------+-------------------------|
+| SysML in =dev/sysml/= | Ownership, dependencies, completion and publication responsibilities | Second-prefix revision, wrong owner, partial sharing, skipped suffix, lost support and canceled publication reject |
+| Lean | Arbitrary finite ordered multi-atom join factorization and continuation equivalence, dirty-frame representation, alpha-mapping and full-support preservation | Literal/repeated-variable constraints, duplicate occurrences, zero-width projections and arbitrary suffixes |
+| Quint | Transition safety of building/completing/invalidating cuts and isolated transactions, first-fresh exact support partition | Miss a nonfirst dependency, retain old empty state, publish partial state, alias mutable branches or skip a new suffix |
+| Independent native finite-domain oracle | Full query and normalized support observations for finite tasks | Four-atom body with a two-atom prefix used by pivots two/three and by two rules |
+| POO native PBT | Actual Scheme plan/index/Session traces with shrinking and replay | Independent source/delta changes on multiple relations, equal-size replacement, ABA, branch isolation, cancellation and failure recovery |
+| Native work and resource receipts | Matching reduction plus checks, key comparisons, records, index maintenance, retained memory and full entry cost | Fixed tasks/budgets, controls and all failures; no performance admission from fewer candidates |
+
+Existing one-atom Lean/Quint/PBT results do not discharge these multi-atom duties.
+In particular the current Quint =ReplayedOld= is a value-level model, not a
+multi-dependency construction/publication automaton. Existing 112 native cases
+are historical current-implementation receipts, not validation of this proposal.
+
+** Explicit design decisions and open acceptance conditions
+
+The design target is a checked prefix DAG with explicit full-support state, not
+a stack of depth-specific memo tables. Scope sharing first follows schema and
+cut equivalence; retention across Session revisions is allowed only with its
+own invalidation/ownership proof. General host callbacks remain outside the
+reusable fragment. Logical completion remains separate from matching completion.
+
+Three acceptance conditions remain genuinely open: the exact native mapping of
+prefix support records to current provenance occurrences; a bounded materialization
+policy that does not silently change the public budgets; and a checked alpha-map
+for cross-rule sharing. These are design obligations to resolve, not reasons to
+call the current one-atom mechanism a complete architecture. No production
+representation or reuse scope is changed by this design study.
+
+The accompanying [[file:../dev/sysml/README.org][SysML contract study]] makes the ownership/publication slice
+executable with the installed tool. It separates current source owners, proposed
+elements and false native/performance admission flags. Its finite fixtures are
+not a theorem about all joins and do not consume or issue native proof receipts.
+
+References: Martens, Simmons and Arntzenius, /Finite-Choice Logic Programming/,
+local =.data/finite-choice-study/2405.19040v3.html=, §§6.1–6.3 and 7.1,
+DOI =10.1145/3704849=. No upstream evaluator implementation was copied or
+translated. The paper motivates prefix accounting and local propagation; this
+specific Scheme architecture and its validation obligations are our proposal.
+
+* Scientific DSL contract and factorized prefix DAG refactoring
+:PROPERTIES:
+:CUSTOM_ID: scientific-dsl-prefix-dag
+:END:
+
+This section supersedes the initial architecture study's three open decisions
+for the checked scalar positive fragment. The former first-atom implementation
+is replaced, not layered underneath another matcher. General source extraction,
+arbitrary callbacks, numerical semiring provenance and performance acceptance
+remain outside the claims below.
+
+** What is scientific about this DSL
+
+The language is an embedded relational Library with separate construction,
+admission, denotational meaning, execution and update contracts. Scheme program
+construction may use host computation; that does not make arbitrary host callbacks
+pure or terminating rule operators. Admitted positive rules denote the least
+fixed point of their immediate-consequence operator. Finite domains/height and
+bounded execution are explicit premises; binding safety alone is not termination.
+Existing stratified negation, reduction and lattice contracts retain their own
+semantics and are not silently admitted into prefix sharing.
+
+The existing syntax expresses that contract without a new choice construct:
+
+#+begin_src scheme
+(relational-program
+  (relation edge (from to) edges)
+  (relation path (from to))
+  (rule (path ?x ?y) (edge ?x ?y))
+  (rule (path ?x ?z) (edge ?x ?y) (path ?y ?z))
+  (limits 1000 10000 12000))
+#+end_src
+
+An optimization is an implementation of the same admitted language, not a second
+language definition. It must preserve the query contract, supporting alternatives,
+resource-failure meaning and Session publication boundary. Source facts, matched
+bindings, derived rows and proof alternatives are distinct objects.
+
+** What Dusa v3 contributes, and what it does not establish here
+
+- Sections 6.1–6.2 motivate maintaining matching consequences and distinguishing
+  propagation work from a later branch decision. ASCENT retains positive delta
+  evaluation; it does not import a finite-choice search protocol.
+- Section 7.1's prefix-firing cost semantics motivates inspecting the complete
+  rule prefix, rather than only emitted heads or token counts. The paper's
+  comparison of edge/path with path/path recursion is a useful DSL modeling
+  question even without adding choice.
+- Memoizing deductions trades time for space. Functional AVL maps also have
+  logarithmic costs. Neither a DAG nor persistence gives a free speedup.
+- Shared immutable roots and mutable progress have different ownership. The
+  Library must distinguish matching completion, fixed-point completion and
+  public result publication. Example 6.3 and the completeness conjecture prevent
+  treating deduce-then-choose as an unconditional termination/completeness theorem.
+
+These lessons come from the local paper, not copied evaluator code. Our bounded
+factorized transitions do not memoize every prefix firing, so McAllester's
+asymptotic bound is not claimed for this implementation.
+
+** Decision 1: provenance correspondence follows the actual alternative graph
+
+The existing graph uses one fact identity per relation/row in a completed cut.
+Distinct source occurrences become separate source alternatives labelled by
+relation and position; rule alternatives retain rule position, user label and
+ordered premise fact IDs. Equal user labels do not erase rule occurrences.
+This is a recursive alternative graph, not an enumeration of all proof trees.
+
+A reusable transition therefore stores only the current atom's supporting row
+and newly written slots. It never caches its caller's incoming support spine,
+a prior graph's node IDs, source labels or a completed rule's heads. Each replay
+attaches the row to the current incoming support and resumes that rule's own
+continuation. Same bindings reached through two supports still execute twice;
+sharing matching does not merge those supports. Source aliases continue to be
+interpreted by the existing graph owner after the completed native result.
+
+The new four-premise graph fixture uses two alpha-renamed rule occurrences with
+the same label and head. An independent finite enumerator compares every normalized
+source/rule alternative across growth, same-size revision and restoration; an
+old graph rejects against the next source generation. A sibling Session and its
+held result remain unchanged. Native full-support tuple emissions are separately
+compared in the kernel. The graph remains checked replay, not solver-emitted
+edge events or a fabricated graph-ID isomorphism.
+
+** Decision 2: factorize materialization instead of buffering whole joins
+
+A fully materialized P[i] can have Cartesian growth. The selected representation
+is a DAG of matching transitions. A node's immutable schema is its parent prefix,
+canonical relation identity, slot terms and exact key layout. A retained entry
+is indexed by all incoming bound-slot values; its data is the current atom's
+successful rows and fresh-slot values. Prefix evaluation composes these transitions
+through the existing ordered DFS continuation. No public intermediate relation,
+second evaluator or extra storage/index provider is introduced.
+
+This changes the validity argument from a monolithic P[i] table: an entry reads
+its incoming environment and its local relation's all/delta cut. Upstream
+revisions are handled by preceding transitions and current incoming bindings.
+If they leave the same binding, the local transition may remain reusable, because
+no old upstream support is stored inside it. If the local relation changes,
+its node lane releases every old entry before accepting the new owner/cut.
+A later suffix always executes; its old failure is never stored as prefix failure.
+
+The explicit =current-positive-prefix-budget= is captured when constructing an
+engine, and a Session retains that policy across recovery/revision. Default zero
+selects the existing streaming route. Positive capacities are opt-in correctness
+experiments; they are not a performance admission. They do not alter input,
+derived or output fact limits, watchdogs, deadlines or the native heap guard.
+
+The capacity is defined in logical retention units: each entry reserves
+=6 + incoming-slot-count=, and each successful retained row reserves
+=2 + fresh-slot-count=. These are specified weights for stored entry/slot/row
+references, not Gambit allocator bytes. Immutable scalar payloads are borrowed;
+schema metadata, index memory, temporary traversal storage and total process
+memory are separate accounting obligations. No byte/heap bound follows from this
+ledger alone.
+
+On capacity refusal, pending retention is released and the same traversal keeps
+streaming. It neither restarts matching nor truncates a continuation. Only a
+complete normally returned entry publishes; exceptions release that builder's
+pending units. Independently completed entries remain owned by the engine.
+Checkpointed, canceled and parallel routes retain their existing execution path.
+No shared mutable Session frontier or new branch/fork operation is introduced.
+
+** Decision 3: canonical slots provide the cross-rule map
+
+The checked compiler already assigns slots by first variable occurrence. For an
+ordered pure positive prefix, alpha-renamed source variables therefore have the
+same fresh/bound descriptors. Before constructing a DAG, each participating plan
+is independently revalidated from its source atom/head descriptors with the
+existing translation checker. The intern key includes parent node ID, canonical
+relation ID, slot terms, selected columns and lowered key terms. It never uses
+printed variable names or equal slot counts as an equivalence proof.
+
+Two four-atom alpha-renamed plans produce four shared schema nodes, not eight.
+A malformed fresh-slot descriptor rejects before DAG construction. Each rule keeps
+its original outputs and occurrence context. Permuting clauses, identifying two
+variables, changing relation scope, or projecting hidden variables is not an
+allowed alpha-renaming. The Lean injective-renaming law is independent of the
+compiler's mutable symbol table; the native checker tests its actual boundary.
+The native negative fixture also compiles a valid variable-identifying rule:
+its prefix schemas remain separate, producing eight nodes with the original.
+
+The five-field positive plan representation is retained. The DAG is an explicit
+engine-owned execution workspace derived from checked plans, not extra unvalidated
+fields or a side cache attached to global immutable plans. Consequently existing
+head projection and component-local namespace constructors need no representation
+rewrite; their original projection and component tests remain required.
+
+** What changed and what deliberately remains
+
+| Area | Refactoring decision | Reason |
+|------+----------------------+--------|
+| =core/positive-plan.ss= | Replace the first-atom branch with one canonical prefix DAG and bounded factorized transition interpretation | Supports arbitrary old-prefix depths and cross-rule sharing with one mechanism |
+| =program/index.ss= | Expose an owner-bound local all/delta cut | Uses the existing index namespace and revision authority; no arbitrary version-reader certificate |
+| =program/evaluate.ss= | Build one workspace per eligible engine; feed existing first-fresh scheduling | New suffixes and recursive rounds retain their original support partition |
+| =program/session.ss= | Capture the selected capacity for all engine/recovery constructors | Transaction/revision semantics stay with the existing Session |
+| DSL syntax, admission/type/domain rules | Retain | Execution sharing does not require changing the language or finite-choice semantics |
+| Physical indexes and storage providers | Retain | A matching transition is not a second index implementation |
+| Session dependency closure, atomic publication, failure recovery | Retain | Existing invalidation and accepted-source authority already have the right ownership |
+| Provenance graph and source occurrence labels | Retain; add direct correspondence tests | Its fact/source/rule distinction is necessary and already expressive |
+| Component projection, activation and output constructors | Retain their plan shape; rerun controls | No new plan field needs propagation or compatibility dispatch |
+
+** Model-to-code correspondence and present limits
+
+| Obligation | SysML | Lean | Quint | Native discriminator |
+|------------+-------+------+-------+----------------------|
+| Current support, no inherited caller path | =TransitionRead.callerSupportCached= must be false | =FactorizedDAG.factorization= and =provenance_projection= preserve ordered premise spines | Session/memo publication owners stutter independently | Full tuple emissions plus normalized four-premise graph alternatives |
+| Alpha-equivalent prefixes | =canonicalSchemaEqual= and pure-operator guard | =renamed_binding= for injective variable identities | Schema/key equality is an abstraction premise | Four shared nodes and rejected malformed slots |
+| Local source/delta validity and incoming environment | =TransitionRead= versus the separate whole-prefix =ReuseDecision= | Deterministic binding and compositional factorization | Memo captures local cuts/key and checks them before completion/read | Two independently revised relation owners; nonfirst-source/delta stale-version negative controls |
+| Bounded retention with exact fallback | =RetentionPolicy=; no public fact-budget change | =retention_exact=, reservation/release bounds | Building/complete/stream states, capacity refusal, cancellation and row release | Capacities 0/8/32/256/4096 produce identical ordered support emissions and obey the ledger |
+| Session isolation/publication | =BranchPublication= | Pure frame/restoration laws, not a full Session extraction | Existing transaction mutations plus memo lifecycle | Cyclic revisions, sibling/held results and existing transaction failure controls |
+
+The finite SysML fixtures are architecture checks, not runtime observations.
+Quint abstracts cuts as small values and one transition; its existing mutation
+controls do not independently falsify every new memo invariant. Lean proves the
+stated semantic models without new axioms or admitted holes; it does not extract
+all Scheme code. These boundaries remain explicit even when all focused checks
+pass. General heap admission and performance remain false.
+
+The integrated native DSL/index test separately reduces the unchanged recursive
+chain from 48 candidate matches to 36 at capacity 256, retaining eight complete
+witnesses and seven admitted rows. This is distinct from the direct four-atom
+matcher fixture. Materialization currently covers checked scalar old-prefix
+transitions; initial total traversals, selected delta/suffix lanes, actors and
+unsupported routes keep streaming. The common schema/interpreter is not a claim
+that every lane or every Dusa prefix firing is memoized.

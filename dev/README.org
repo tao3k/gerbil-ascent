@@ -1,4 +1,7 @@
 * Explicit development tools
+The optional [[file:sysml/README.org][SysML matching architecture study]] owns design contracts only;
+its model checks do not establish native matching or performance acceptance.
+
 The root =gerbil.pkg= declares production dependencies only. This directory
 owns ASP's build-policy, test and benchmark dependency. ASP retains its POO
 dependency without selecting a revision; the production dependency graph

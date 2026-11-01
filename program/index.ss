@@ -13,7 +13,7 @@
                  gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
                  gerbil-ascent-shared-index-rows)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key
-                 gerbil-ascent-index-key/terms gerbil-ascent-index-value positive-plan-cost-index!)
+                 gerbil-ascent-index-key/terms gerbil-ascent-index-value positive-plan-cost-index! make-positive-prefix-cut)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
                  gerbil-ascent-physical-index-single-rows)
@@ -22,9 +22,9 @@
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
                            gerbil-ascent-index-row-snapshot/arity)
                    (gerbil-ascent-index-key row-key)))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules!)
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut)
 
-(defstruct row-indexes (rows advance! plan! visit-parts old-rows))
+(defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut))
 
 ;;; Public metadata adapters feed one synchronous, owner-controlled collector.
 ;;; Physical state admission precedes traversal; unused metadata stays borrowed.
@@ -194,7 +194,7 @@
      (error "ASCENT empty index owner has no lookup consumer"))
    (lambda (index rows (reverse-order? #f)) (void))
    (lambda (visit! (small-exact? #f) (empty-reuse? #f))
-     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f #f))
+     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f #f (lambda (_) (error "empty index owner has no prefix cut"))))
 
 (defstruct physical-index-entry (version lookup shared? witness))
 (defstruct (empty-bucket-entry physical-index-entry) (empty-version empty-key) final: #t)
@@ -228,6 +228,7 @@
         (sharing? (for/fold (found? #f) (provider (in-vector index-providers))
                     (or found? (gerbil-ascent-curried-index-provider? provider))))
         (ordered-all #f) (ordered-delta #f)
+        (prefix-owner (list 'ascent-prefix-index-owner))
         (delta-members #f) (exact-small? #f) (reuse-empty? #f))
       ;; One empty bucket certificate per existing entry, never a prefix-failure
       ;; table. Entry ownership separates all/delta lanes and column layouts.
@@ -478,4 +479,7 @@
                      physical-index-entry-lookup-set!
                      physical-index-entry-version-set!)))
                cache)))))
-    (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows)))
+    (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
+      (lambda (relation)
+        (make-positive-prefix-cut prefix-owner
+          (cons (vector-ref all-version relation) (vector-ref delta-version relation)))))))

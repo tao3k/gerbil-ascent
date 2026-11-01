@@ -979,4 +979,102 @@ theorem new_suffix_preserved (terms : List (Term Value)) (rows : List (List Valu
 #print axioms replay_prefix_exact
 #print axioms revision_exact
 
+namespace FactorizedDAG
+abbrev MatchState (V : Type) := Env V × List (List V)
+abbrev Atom (V : Type) := List (Term V) × List (List V)
+
+def step (atom : Atom Value) (input : MatchState Value) : List (MatchState Value) :=
+  atom.2.filterMap fun row => (AtomicBinding.bind atom.1 row input.1).map
+    fun env => (env, row :: input.2)
+
+def walk : List (Atom Value) → MatchState Value → List (MatchState Value)
+  | [], input => [input]
+  | atom :: rest, input => (step atom input).flatMap (walk rest)
+
+/-- Ordered, multiplicity-preserving factorization, including complete premise
+spines. An arbitrary suffix still runs for every matched incoming support. -/
+theorem factorization (initialAtoms suffix : List (Atom Value)) (input : MatchState Value) :
+    walk (initialAtoms ++ suffix) input = (walk initialAtoms input).flatMap (walk suffix) := by
+  induction initialAtoms generalizing input with
+  | nil => simp [walk]
+  | cons atom rest ih =>
+    simp only [List.cons_append, walk, List.flatMap_assoc]
+    exact congrArg (fun continuation => (step atom input).flatMap continuation) (funext ih)
+
+theorem provenance_projection (initialAtoms suffix : List (Atom Value)) (input : MatchState Value)
+    (observe : MatchState Value → Output) :
+    (walk (initialAtoms ++ suffix) input).map observe =
+      ((walk initialAtoms input).flatMap (walk suffix)).map observe := by
+  rw [factorization]
+
+/-- Variable identities may be renamed injectively. This law is independent
+of the compiler's symbol table and does not identify distinct relations. -/
+def renameEnv (rename : Nat → Nat) (env : Env Value) : Env Value :=
+  env.map fun entry => (rename entry.1, entry.2)
+def renameTerm (rename : Nat → Nat) : Term Value → Term Value
+  | .variable name => .variable (rename name)
+  | .literal value => .literal value
+  | .wildcard => .wildcard
+
+theorem renamed_lookup (rename : Nat → Nat) (injective : Function.Injective rename)
+    (name : Nat) (env : Env Value) :
+    lookup (rename name) (renameEnv rename env) = lookup name env := by
+  induction env with
+  | nil => rfl
+  | cons entry rest ih =>
+    change (if rename name = rename entry.1 then some entry.2
+      else lookup (rename name) (renameEnv rename rest)) =
+      (if name = entry.1 then some entry.2 else lookup name rest)
+    rw [ih]
+    simp only [injective.eq_iff]
+
+theorem renamed_binding (rename : Nat → Nat) (injective : Function.Injective rename)
+    (terms : List (Term Value)) (row : List Value) (env : Env Value) :
+    AtomicBinding.bind (terms.map (renameTerm rename)) row (renameEnv rename env) =
+      (AtomicBinding.bind terms row env).map (renameEnv rename) := by
+  induction terms generalizing row env with
+  | nil => cases row <;> rfl
+  | cons term rest ih =>
+    cases row with
+    | nil => cases term <;> rfl
+    | cons value tail =>
+      cases term with
+      | wildcard => simpa [renameTerm, AtomicBinding.bind] using ih tail env
+      | literal expected =>
+        by_cases same : expected = value
+        · simpa [renameTerm, AtomicBinding.bind, same] using ih tail env
+        · simp [renameTerm, AtomicBinding.bind, same]
+      | «variable» name =>
+        simp only [List.map_cons, renameTerm, AtomicBinding.bind,
+                   renamed_lookup rename injective]
+        cases found : lookup name env with
+        | none => simpa [renameEnv] using ih tail ((name, value) :: env)
+        | some previous =>
+          by_cases same : previous = value
+          · simpa [same] using ih tail env
+          · simp [same]
+
+/-- Retention refusal selects the complete streaming computation, not a
+truncated list. It changes storage admission, never the answer budget. -/
+def select (entry : Option (List (MatchState Value))) (stream : List (MatchState Value)) :=
+  entry.getD stream
+
+theorem retention_exact (entry : Option (List (MatchState Value))) (stream : List (MatchState Value))
+    (complete : ∀ saved, entry = some saved → saved = stream) : select entry stream = stream := by
+  cases entry with
+  | none => rfl
+  | some saved => exact complete saved rfl
+
+omit [DecidableEq Value] in
+theorem reserve_bounded (used cost budget : Nat) (fits : used + cost ≤ budget) :
+    used + cost ≤ budget := fits
+omit [DecidableEq Value] in
+theorem release_bounded (used own budget : Nat) (bounded : used ≤ budget) :
+    used - own ≤ budget := Nat.le_trans (Nat.sub_le used own) bounded
+
+#print axioms factorization
+#print axioms renamed_binding
+#print axioms provenance_projection
+end FactorizedDAG
+
 end Ascent.IndexedPositiveTraversal

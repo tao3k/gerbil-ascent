@@ -170,6 +170,43 @@
     (positive-plan-cost-snapshot cost)))
 (def ascent-rule-cost-test
   (test-suite "Native DSL plan costs and explicit prefix reuse"
+    (test-case "native DSL and owned indexes connect bounded multi-prefix execution"
+      (let* ((edges '((0 1) (1 2) (2 3)))
+             (plain (parameterize ((current-positive-prefix-budget 0))
+                      (run-recursive edges '(0 1 2 3))))
+             (retained (parameterize ((current-positive-prefix-budget 256))
+                         (run-recursive edges '(0 1 2 3)))))
+        (displayln "DSL-DAG plain=" plain " materialized=" retained)
+        (check-equal? (< (count-of retained 'candidate-rows) (count-of plain 'candidate-rows)) #t)
+        (check-equal? (count-of retained 'complete-witnesses) (count-of plain 'complete-witnesses))
+        (check-equal? (count-of retained 'admitted-rows) (count-of plain 'admitted-rows))
+        (check-equal? (> (count-of retained 'prefix-state-replays) 0) #t)))
+    (test-case "bounded DAG Sessions preserve cyclic revision and sibling isolation"
+      (def (check-solution edges solution)
+        (let (expected (finite-domain-closure '(0 1 2 3)
+                        (list (cons 'edge edges) '(path) '(answer)) recursive-rules))
+          (for-each (lambda (name)
+            (let ((actual (relational-program-query solution name)) (want (cdr (assq name expected))))
+              (check-equal? (length actual) (length want))
+              (check-equal? (andmap (lambda (row) (and (member row want) #t)) actual) #t)))
+            '(edge path answer))))
+      (for-each (lambda (budget)
+        (let* ((initial '((0 1) (1 2) (2 0)))
+               (program (recursive-declaration initial))
+               (session (parameterize ((current-positive-prefix-budget budget))
+                          (relational-open-program-session program)))
+               (sibling (parameterize ((current-positive-prefix-budget budget))
+                          (relational-open-program-session program)))
+               (held (relational-program-session-run sibling)))
+          (check-solution initial (relational-program-session-run session))
+          ;; Revisions execute outside the original parameterization. Session
+          ;; must retain its chosen policy while keeping source cuts isolated.
+          (for-each (lambda (edges)
+            (relational-program-replace-source! session 'edge edges)
+            (check-solution edges (relational-program-session-run session))
+            (check-solution initial held)
+            (check-solution initial (relational-program-session-run sibling)))
+            (list initial '((0 1) (1 2)) [] initial '((0 2) (2 1) (1 0)))))) '(0 8 4096)))
     (test-case "fresh DSL source revisions preserve complete ordered witness observations"
       (for-each
        (lambda (edges)

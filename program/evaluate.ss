@@ -32,12 +32,12 @@
                  gerbil-ascent-result-observation)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
-                 make-positive-prefix-state
+                 make-positive-prefix-state current-positive-prefix-budget
                  gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?
                  current-positive-plan-cost positive-plan-cost-admit! positive-plan-cost-begin!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "scheme-checked.ss" relational-scalar?)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut)
         (only-in "types.ss" gerbil-ascent-fact-limit?)
         (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
@@ -250,18 +250,20 @@
              (rule-plans (vector-ref analysis 2))
              ;; Only trusted scalar field predicates certify stable equality
              ;; without scanning unchecked source values or invoking user code.
+             (stable-scalar-schema?
+              (andmap
+               (lambda (relation)
+                 (let (predicates (.ref relation 'field-predicates))
+                   (and (or (zero? (.ref relation 'arity)) (pair? predicates))
+                        (andmap (lambda (predicate)
+                          (or (eq? predicate relational-scalar?) (eq? predicate exact-integer?))) predicates))))
+               relations))
              (checked-scalar-fields?
-              (and (not session?) (not reuse) (= workers 1) (not canceled?)
-                   (andmap
-                    (lambda (relation)
-                      (let (predicates (.ref relation 'field-predicates))
-                        (and (or (zero? (.ref relation 'arity)) (pair? predicates))
-                             (andmap (lambda (predicate)
-                                       (or (eq? predicate relational-scalar?)
-                                           (eq? predicate exact-integer?))) predicates))))
-                    relations)))
+              (and (not session?) (not reuse) (= workers 1) (not canceled?) stable-scalar-schema?))
+             (prefix-scalar-fields?
+              (and (> (current-positive-prefix-budget) 0) (= workers 1) (not canceled?) stable-scalar-schema?))
              (scalar-set-plans?
-              (and (or checked-scalar-fields? (current-positive-plan-cost))
+              (and (or checked-scalar-fields? prefix-scalar-fields? (current-positive-plan-cost))
                    (gerbil-ascent-update-eligible? program)
                    (andmap (lambda (plans)
                              (andmap (lambda (rule)
@@ -315,9 +317,19 @@
                        ;; callback trace. Pure checked Set rules can therefore
                        ;; partition witnesses by their first fresh occurrence
                        ;; even when the conservative field gate chose ordering.
-                       (and checked-scalar-fields? scalar-set-plans?))
+                       (and (or checked-scalar-fields? prefix-scalar-fields?) scalar-set-plans?))
                    (andmap gerbil-ascent-canonical-set-storage-provider?
                            (vector->list storage-providers))))
+             ;; One factorized prefix DAG per engine, with bounded private
+             ;; lane materialization. Completed entries survive only exact owned
+             ;; cuts; Session rebuilds receive a fresh owner and workspace.
+             (prefix-workspace
+              (and (> (current-positive-prefix-budget) 0)
+                   prefix-scalar-fields? scalar-set-plans? disjoint-sets?
+                   (make-positive-prefix-state
+                    (map (lambda (rule) (vector-ref rule 5))
+                         (apply append (vector->list all-active)))
+                    (row-indexes-prefix-cut indexes) (current-positive-prefix-budget))))
              (_routed-sources
               (unless ordered-execution?
                 (gerbil-ascent-route-view-sources! rule-plans view-relation? view-state)))
@@ -801,18 +813,7 @@
                                       position (find (+ position 1))))))))
                      (positive-plan (vector-ref rule 5))
                      (frame (vector-ref rule 6))
-                     ;; One rule/round owns this matching state. It cannot flow
-                     ;; into another round, source revision, Session or branch.
-                     ;; Only later pivots share the first old atom; every suffix
-                     ;; is still expanded and emits its full original support.
-                     (prefix-state
-                      (and checked-scalar-fields? scalar-set-plans? disjoint-sets?
-                           (not (current-ascent-execution-control))
-                           (>= (length positions) 3)
-                           (let (relation (vector-ref (vector-ref (car (vector-ref positive-plan 1)) 0) 0))
-                             (make-positive-prefix-state positive-plan
-                               (lambda () (cons (vector-ref all-version relation)
-                                                (vector-ref delta-version relation))))))))
+)
                  (let ((rows-access (if ordered-execution? callback-rows indexed-rows))
                        (parts-access (and (not ordered-execution?) (row-indexes-visit-parts indexes)))
                        (old-access (and disjoint-sets? (row-indexes-old-rows indexes))))
@@ -822,7 +823,8 @@
                      (if positive-plan
                        (gerbil-ascent-run-positive-plan!
                         positive-plan frame pivot rows-access emit-row! (and (current-ascent-execution-control) (lambda () (ascent-execution-checkpoint! 1 0))) parts-access old-access
-                        (and (current-positive-plan-cost) (list stratum round (vector-ref rule 3))) prefix-state)
+                        (and (current-positive-plan-cost) (list stratum round (vector-ref rule 3)))
+                        (and (not (current-ascent-execution-control)) prefix-workspace))
                        (visit-body body pivot 0 []
                          (lambda (environment)
                            (gerbil-ascent-emit-heads! heads environment emit-row!)))))

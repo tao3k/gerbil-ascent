@@ -1401,3 +1401,10 @@ metadata/contract observations and remaining limitations are in
 All task receipts, failed probe/admission/summary commands and raw native
 observations are retained under =.data/ascent-declaration-20261101/=. No Python
 consumer, replacement framework, stack-padding workaround or CI wait is added.
+
+On 2026-11-01 the user deferred upstream SDK repair because of its current
+cost. The defect and reproducible evidence remain recorded in the linked audit;
+upstream/vendor/installed SDK sources and packaging patches are unchanged.
+This deferral does not admit the affected allocation measurements or alter the
+original task, oracle, budget or gates. Native repair and rebuilt-runtime
+verification are prerequisites for resuming the benefit comparison.

@@ -18,6 +18,25 @@ The existing 50-pair benefit gates are unchanged. No policy A/B campaign is
 admitted with this counter. Native runtime repair and qualification remain
 necessary before the requested same-budget benefit comparison.
 
+* Disposition: upstream repair deferred
+
+On 2026-11-01, the user deferred upstream repair because its current cost is
+too high. This is a recorded native dependency defect, not an active SDK repair
+task or a completed fix. No upstream checkout, vendor source, installed SDK or
+SDK packaging patch is to be changed as part of this deferral.
+
+The diagnosis, binary identity, reproducer and all failures remain available
+for a later upstream repair. ASCENT receives no stack-shape workaround or
+counter adjustment. Independent Library correctness work can continue; the
+affected allocation-based benefit comparison remains unqualified. Existing
+semantic test passes do not establish that the native accounting is repaired.
+
+When upstream repair is resumed, its native regression and rebuilt-runtime
+verification must first establish correct cross-section accounting. Only then
+can the frozen task, independent oracle, original budget and original gates
+be used for a new benefit comparison. Historical defective-counter receipts
+remain preserved separately from any future repaired-runtime results.
+
 * Evidence from the frozen task
 
 Each task-based diagnostic preserves four warmup pairs, 50 alternating pairs,

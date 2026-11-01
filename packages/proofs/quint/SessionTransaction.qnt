@@ -7,6 +7,18 @@ module SessionTransaction {
   pure val Cuts = tuples(Set(0,1),Set(0,1),Set(0,1))
   pure def ResultOf(cut: Cut): Set[int] = if (cut._1 == 1 or (cut._2 == 1 and cut._3 == 0)) Set(1) else Set()
   pure def GlobalResultOf(cut: Cut): Set[int] = if ((cut._1 == 1 or cut._2 == 1) and cut._3 == 0) Set(1) else Set()
+  // Ordered source admission includes multiplicity, not only Set membership.
+  pure def Reverse(xs: List[int]): List[int] = xs.foldl(List(), (acc,x) => List(x).concat(acc))
+  pure def OrderedLogEqual(base: List[int], additions: List[int], rows: List[int]): bool = {
+    val compared = base.foldl((true,rows), (state,row) =>
+      if (not(state._1)) state else if (state._2.length() == 0) (false,state._2)
+      else (row == state._2.nth(0), state._2.slice(1,state._2.length())))
+    compared._1 and compared._2 == Reverse(additions)
+  }
+  pure val Words = Set(List(),List(0),List(1),List(0,0),List(0,1),List(1,0))
+  val OrderedSourceExact = Words.forall(base => Words.forall(additions =>
+    OrderedLogEqual(base,additions,base.concat(Reverse(additions))) and
+    Words.forall(rows => OrderedLogEqual(base,additions,rows) == (rows == base.concat(Reverse(additions))))))
   type State = {generation: int, source: Cut, result: Set[int], phase: str, base: int, pending: Cut, candidate: Set[int], complete: bool}
   var q: State
   action init = q' = {generation: 0, source: (0,0,0), result: Set(), phase: "idle", base: -1, pending: (0,0,0), candidate: Set(), complete: false}
@@ -24,7 +36,7 @@ module SessionTransaction {
   val TypeOK = all {q.generation >= 0, Cuts.contains(q.source), Cuts.contains(q.pending), q.result.subseteq(Set(1)), q.candidate.subseteq(Set(1)),
     q.base >= -1, Set("idle","solving","ready").contains(q.phase), Set(true,false).contains(q.complete)}
   val ExplorationBound = q.generation <= GenerationCutoff
-  val AtomicSnapshot = q.result == ResultOf(q.source)
+  val AtomicSnapshot = q.result == ResultOf(q.source) and OrderedSourceExact
   temporal NoStaleCommit = (Commit implies q.base == q.generation).orKeep(q).always()
   temporal AbortPreservesSnapshot = (Abort implies (q.generation,q.source,q.result).next() == (q.generation,q.source,q.result)).orKeep(q).always()
 

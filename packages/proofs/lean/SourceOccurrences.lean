@@ -55,4 +55,51 @@ theorem bounded_accepted (old next : Cut Source Evidence)
     (edges premises roots budget : Nat) (fit : edges + premises + roots ≤ budget) :
     publishBounded old next old.generation edges premises roots budget = next := by
   simp [publishBounded, fit, accepted_publication]
+namespace OrderedLog
+variable {Item : Type} [DecidableEq Item]
+
+/-- An independent ordered-list model of source comparison. Repeated values
+remain repeated occurrences; failure does not inspect a later base cell. -/
+def equalLog : List Item → List Item → List Item → Bool
+  | [], additions, rows => decide (rows = additions.reverse)
+  | _ :: _, _, [] => false
+  | first :: rest, additions, row :: rows =>
+      decide (first = row) && equalLog rest additions rows
+
+theorem ordered_log_exact (base additions rows : List Item) :
+    equalLog base additions rows = true ↔ rows = base ++ additions.reverse := by
+  induction base generalizing rows with
+  | nil => simp [equalLog]
+  | cons first rest ih =>
+    cases rows with
+    | nil => simp [equalLog]
+    | cons row rows =>
+      simp only [equalLog, Bool.and_eq_true, decide_eq_true_eq, ih, List.cons_append, List.cons.injEq]
+      constructor
+      · rintro ⟨same, tail⟩; exact ⟨same.symm, tail⟩
+      · rintro ⟨same, tail⟩; exact ⟨same.symm, tail⟩
+
+def inspected : List Item → List Item → Nat
+  | [], _ => 0
+  | _ :: _, [] => 1
+  | first :: rest, row :: rows => if first = row then 1 + inspected rest rows else 1
+
+theorem first_mismatch_stops (first row : Item) (rest rows : List Item)
+    (different : first ≠ row) : inspected (first :: rest) (row :: rows) = 1 := by
+  simp [inspected, different]
+
+theorem inspections_bounded (base rows : List Item) : inspected base rows ≤ base.length := by
+  induction base generalizing rows with
+  | nil => simp [inspected]
+  | cons first rest ih =>
+    cases rows with
+    | nil => simp [inspected]
+    | cons row rows =>
+      by_cases same : first = row
+      · simpa [inspected, same, Nat.add_comm] using Nat.add_le_add_left (ih rows) 1
+      · simp [inspected, same]
+
+#print axioms ordered_log_exact
+#print axioms first_mismatch_stops
+end OrderedLog
 end Ascent.SourceOccurrences

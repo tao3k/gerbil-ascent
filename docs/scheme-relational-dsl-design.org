@@ -306,3 +306,108 @@ procedures are trusted adapters with bounded claims.
 - [[file:llm-reasoning-library-plan.org][LLM reasoning Library implementation discussion]]
 
 The [[file:scheme-design-framework.org][design framework matrix]] maps each guarantee to its owner, discriminator and remaining acceptance obligation.
+
+* Dusa v3 audit: closure, sharing and repeated prefixes
+:PROPERTIES:
+:CUSTOM_ID: dusa-v3-closure-sharing
+:END:
+
+This audit uses the local =.data/finite-choice-study/2405.19040v3.html=
+(SHA256 =31082deb329cbce570bea6b180f6fdf1c688ba1a2f5d261082c81cc1ce8c06b6=).
+It studies the paper's algorithms independently; no upstream implementation is
+copied or translated. The positive Scheme DSL remains the implementation scope.
+
+** Scientific distinctions that constrain the DSL
+
+Dusa's deduce-then-choose strategy (§§3.2, 6.2) prioritizes nontrivial singleton
+evolution before unresolved alternatives. ASCENT's positive least fixed point,
+local propagation closure, and completion of a finite-choice model are different
+semantic claims. A Session timeout, cancellation or refusal certifies neither
+closure nor inconsistency. Finite alternatives at a head do not imply a finite
+reachable domain. Example 6.3 also shows that this scheduling bias can diverge
+where another schedule reaches finite failure; the constrained algorithm's
+nondeterministic completeness in §6.3 remains conjectural in this edition.
+
+For the existing DSL, explicit completion and finite-domain/resource premises
+are therefore more defensible than an implicit promise that every rule program
+terminates. Arbitrary host procedures remain trusted adapters; their effects,
+stability and termination cannot be inferred from relational notation. A safe
+reuse argument needs stable admitted operators and complete dependency/revision
+identity, not merely equal public query rows.
+
+Section 7.1's prefix-firing accounting assumes suitable memoization and distinguishes
+hash-table assumptions from the functional AVL-map implementation's logarithmic
+access cost. Counting fewer logical visits does not by itself establish lower
+wall time, total maintenance work or allocation.
+
+** What the current implementation actually shares
+
+=program/session.ss= returns its completed =last-result= on a clean run after
+lifecycle guards. =program/evaluate.ss= runs the retained matcher only when dirty.
+Source roots and previously returned snapshots can therefore be retained without
+re-solving a clean Session. Neither fact establishes persistent sharing of every
+matching intermediate across independently opened Sessions or across rules.
+
+The native positive plan uses a depth-first traversal with reusable frames.
+Physical indexes and membership witnesses have row-version ownership; arbitrary
+prefix bindings are not globally memoized. An old prefix must sometimes meet a
+new suffix/delta, and different grounded alternatives may support the same head.
+Head deduplication cannot erase those provenance distinctions. Cross-rule prefix
+factoring would require a separate safety argument about variable scope, operator
+effects, delta ownership and support reconstruction; it is not implemented here.
+
+The current isolation test opens three Sessions over one declaration. Append,
+replacement and restoration are checked against the independent finite-domain
+oracle while held results remain unchanged. This verifies isolation, not a new
+fork API or physical sharing of closed matcher state. The existing provenance
+Suite separately checks sibling withdrawal previews, same-head alternatives,
+duplicate source occurrences, stale graph rejection and unsupported cycles.
+Its normalized graph oracle checks replayed grounded supports tied to native DSL
+rows, not solver-emitted edge events or raw graph-ID isomorphism.
+
+** Minimal safe change: stop an already-rejected source comparison
+
+The nonempty-additions path of =gerbil-ascent-source-log-equal?= previously used
+=foldl=: equality checks stopped after a mismatch, but the remaining base headers
+were still traversed. It now returns at the first mismatch. Admission of owned,
+proper persistent source spines and publication ordering are unchanged. Comparison
+still means exactly =rows = base ++ reverse(additions)=, including order,
+duplicates and false values. Query-set equality is insufficient because source
+occurrences remain observable in provenance. The empty-additions path is unchanged.
+
+This removes source-comparison traversal, not rule-prefix matching. No cache,
+Session fork, choice syntax, Python consumer or replacement evaluator is added.
+The Lean ordered-list model proves exact comparison, one inspected cell at an
+initial mismatch and a bound by base length. Its logical-cell count is not an
+extracted native instruction or allocation count. Quint exhaustively compares
+216 finite triples plus constructed equal cases; its fold is a value model,
+not an early-exit runtime measurement. Existing Session mutation controls remain,
+without a claim that they independently discriminate every new comparator law.
+
+** Verification and remaining admission
+
+The focused warm native preparation rebuilt 31 production modules under existing
+guards. Seven Suites pass 69 cases: ordered logs 5, source snapshots 4, source
+materialization 9, Session deletion 26, provenance graph 18, support cuts 3 and
+support heights 4. The new native POO property checks 128 accepted roots with
+zero discards (seed 20261101, size 16, shrink budget 64). Required labels cover
+first mismatch 53, later mismatch 34, equal log 34, nonempty additions 118 and
+false rows 125. The independent comparison oracle constructs the full logical
+list instead of replaying the optimized traversal. Existing graph PBT and
+revision/provenance controls are rerun within the Suite count.
+
+=just check-lean-file SourceOccurrences.lean= passes the locked Guard; the two
+printed new laws use only existing =propext=. =just _check-quint SessionTransaction=
+passes with =cache=0=: one positive obligation and four expected counterexamples.
+Resource limits are unchanged. Raw logs, sources, checker receipts and hashes
+are retained in =.data/ascent-dusa-dsl-20261101/=. These are focused local checks,
+not whole-package, clean-checkout, cold-build or performance qualification.
+Upstream is untouched, native allocation accounting remains unresolved, and
+empty-bucket reuse remains default-off with performance admission false.
+
+** References
+
+- Chris Martens, Robert J. Simmons and Michael Arntzenius, /Finite-Choice Logic Programming/,
+  local arXiv 2405.19040v3 (21 November 2024), §§3.2, 6.2–6.3, 7.1;
+  [[https://doi.org/10.1145/3704849][DOI 10.1145/3704849]], POPL 2025.
+- [[file:features/rule-costs/acceptance.org][Native rule-cost and provenance acceptance records]].

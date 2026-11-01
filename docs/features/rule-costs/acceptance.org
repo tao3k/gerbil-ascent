@@ -1576,3 +1576,32 @@ local =.data/finite-choice-study/2405.19040v3.html=. The initial external v1
 lookup is superseded as the version authority. The design note records the v3
 sections and the sibling-preview implementation check; no upstream evaluator
 code, new choice syntax or new framework is introduced.
+
+* Dusa v3: scoped source-comparison improvement
+
+The [[file:../../scheme-relational-dsl-design.org::#dusa-v3-closure-sharing][DSL audit]] separates deduce-before-branch, finite-domain completion,
+persistent source/result ownership and actual join-intermediate sharing. It uses
+the local v3 paper and records its completeness and complexity qualifications.
+No choice syntax or upstream implementation is imported.
+
+The only runtime change stops ordered source-log comparison at the first
+mismatch instead of walking the rest of an already-rejected base. Exact order,
+multiplicity, false values and the proper owned source-spine premise remain.
+It is not a claim of eliminated matcher prefixes or a new persistent Session
+fork. Native POO PBT compares with independent concatenation; recursive DSL
+Sessions are checked with the finite-domain oracle across append, replacement
+and restoration, while held results and sibling Sessions stay unchanged.
+
+Focused warm preparation rebuilds 31 modules and completes in 68.83 seconds.
+All seven native Suites pass 69 cases, including 128-root ordered-log PBT with
+zero discards and the existing actual-provenance/graph PBT. Lean SourceOccurrences
+passes its locked Guard (3.84 seconds); printed new laws use only =propext=.
+Quint SessionTransaction completes all five obligations with =cache=0=, retaining
+four expected mutation counterexamples. Model laws do not measure native work.
+No new validation failure was observed in this round. An initial archive command
+used zsh's special =path= variable and lost command lookup; it is recorded and
+corrected with an ordinary variable without rerunning any validation. Complete logs, source
+snapshots and checker traces are retained in =.data/ascent-dusa-dsl-20261101/=
+and prior failure archives remain untouched. Performance is unqualified,
+empty-bucket reuse stays default-off, and upstream/pins are unchanged. No
+whole-package, cold-checkout, remote-CI or arbitrary-language claim is made.

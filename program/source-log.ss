@@ -38,9 +38,11 @@
 ;;     %
 (def (gerbil-ascent-source-log-equal? base additions rows)
   (if (null? additions) (equal? base rows)
-    ;; foldl carries only a candidate suffix or #f. A rejected prefix keeps
-    ;; skipping equality checks; no base headers or tuple states are allocated.
-    (let (tail (foldl (lambda (row remaining)
-                       (and (pair? remaining) (equal? row (car remaining))
-                            (cdr remaining))) rows base))
-      (and tail (equal? (reverse additions) tail)))))
+    ;; A rejected prefix already determines inequality. Stop walking its
+    ;; remaining source headers; only an exact base can reach the additions.
+    ;; Owned proper spines are the same admission premise as before.
+    (let prefix ((rest base) (remaining rows))
+      (if (null? rest)
+        (equal? (reverse additions) remaining)
+        (and (pair? remaining) (equal? (car rest) (car remaining))
+             (prefix (cdr rest) (cdr remaining)))))))

@@ -7,12 +7,35 @@
  :gerbil-ascent/table/provider
  (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
  (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows)
- (only-in :gerbil-ascent/t/performance/index-entry-benchmark measure measure-pair paired)
+ (only-in :gerbil-ascent/t/performance/index-entry-benchmark measure measure-pair paired allocation-interval-verdict)
  (only-in :gerbil-ascent/table/funs gerbil-ascent-index-row-snapshot/arity)
  :gerbil-ascent/t/performance/provider-packet/fixture)
 (export ascent-provider-packet-test)
 (def ascent-provider-packet-test
  (test-suite "Provider packet admission"
+  (test-case "native allocation diagnosis separates address gaps from unknown transitions"
+   ;; Counterexamples contain identical section counts and no contract facts.
+   ;; Moving a stack to a distant address must not masquerade as useful work;
+   ;; a real collection or missing observation must not become a clean zero.
+   (let* ((mib 1048576) (start (* 1024 mib))
+          (snapshot
+           (lambda (stack-start ledger stack-index assigned)
+             (vector (+ 4294967296 ledger 256) 4294967296 ledger 0 256 0 0 0
+                     19 stack-index assigned 1 1024 stack-start (- stack-start 128) (- stack-start 64))))
+          (before (snapshot start 0 0 20))
+          (normal (snapshot start mib 0 24))
+          (far (snapshot (* 800 mib) (+ (* 448 mib) 4096) 21 24))
+          (reverse (snapshot (* 1536 mib) (+ (* -1024 mib) 4096) 21 24)))
+     (check-equal? (allocation-interval-verdict before normal mib 10 10) 'within-region-bound)
+     (check-equal? (allocation-interval-verdict before far mib 10 10) 'cross-region-address-gap)
+     (check-equal? (allocation-interval-verdict before reverse mib 10 10) 'cross-region-address-gap)
+     (check-equal? (allocation-interval-verdict before far mib 10 11) 'collection-boundary)
+     (check-equal? (allocation-interval-verdict before (snapshot start (* 448 mib) 21 24) mib 10 10)
+                   'unexplained-ledger)
+     (check-equal? (allocation-interval-verdict before (snapshot start mib 0 19) mib 10 10)
+                   'unreviewed-transition)
+     (check-exception (allocation-interval-verdict before (make-vector 16 0) mib 10 10) error?)
+     (check-exception (allocation-interval-verdict before far mib 11 10) error?)))
   (test-case "measurement preserves call counts order and in-call GC charges"
    (let (calls 0)
     (check-exception (measure (lambda () (set! calls (+ calls 1))) 0 #t) error?)

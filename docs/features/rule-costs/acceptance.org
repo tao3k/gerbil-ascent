@@ -1356,3 +1356,48 @@ projection order and explicit retention roots. It does not claim that a
 returned empty root list alone proves collection; the weak-key workflow
 controls supply that separate evidence. Final source SHA-256 checks match all
 five recorded files. Full logs, including the stale-Suite failure, are archived.
+
+* Reproduced native accounting cause of the declaration spikes
+
+The follow-up now has a reproducible cause for the large allocation component:
+Gambit's stack migration can subtract a new-section pointer from the old
+section's start and charge the address distance as occupied words. Matching
+source and the running SDK executable's disassembly confirm this branch.
+All 201 large phase intervals in the address trace, including warmup, match
+that address-gap mechanism. Independent classification of the 2,400 measured
+intervals identifies 199 address-gap anomalies; all 199 intervals above 10 MB
+have this verdict. A source-preserved native reproduction against the latest
+rebuilt helper independently produces the same 199 anomalies.
+
+Root-constructor boundaries place the spikes inside validation, while ordinary
+construction remains small. Lookup wrappers, tail/non-tail controls and equal
+empty probes demonstrate that stack instrumentation can change the reported
+allocation substantially without removing validation. These are diagnostic
+perturbations, not acceptable Library performance fixes. CPU/wall measurements
+from the partly overlapping stack/lookup diagnostics are excluded; no campaign
+is repeated to select favorable timing. This attribution does not establish
+complete measurement stability or explain every historical timing effect.
+
+The existing benchmark now classifies native snapshots without replacing gate
+bytes. It distinguishes collection boundaries, unreviewed transitions, within-
+bound observations, cross-region address gaps and unexplained ledger changes.
+Malformed/missing snapshots are errors; a within-bound verdict does not admit
+accounting correctness. Positive and negative address-gap counterexamples,
+GC boundaries and missing observations are covered in the existing provider
+Suite. No production engine or POO contract is changed.
+
+Native dependency preparation succeeds in 11.14 seconds. Current source Suites
+against rebuilt native dependencies pass naturally: provider/measurement ten
+cases (6 seconds), kernel/PBT/replay twelve cases (3 seconds), and frozen
+DSL/oracle/revision ten cases (5 seconds). These are focused warm local checks,
+not cold-build, whole-package, Lean/Quint or remote CI qualification. The SDK
+accounting failure remains present and is not turned into a passing policy
+measurement. No new benefit comparison is admitted before runtime repair and
+qualification; the original budget and benefit gates remain unchanged.
+
+The English source-preserved reproducer, installed-binary identity, separated
+metadata/contract observations and remaining limitations are in
+[[file:declaration-allocation.org][Declaration allocation: native stack accounting diagnosis]].
+All task receipts, failed probe/admission/summary commands and raw native
+observations are retained under =.data/ascent-declaration-20261101/=. No Python
+consumer, replacement framework, stack-padding workaround or CI wait is added.

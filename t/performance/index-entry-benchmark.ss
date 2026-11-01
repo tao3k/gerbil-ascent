@@ -15,7 +15,41 @@
                    (gerbil-ascent-evaluate-program old-evaluate))
         :gerbil-ascent/t/performance/index-entry/fixture)
 (export main measure measure-pair paired empty-workflow empty-parity
-        continuation-calibration metadata-calibration movable-calibration prime-equality-state!)
+        continuation-calibration metadata-calibration movable-calibration prime-equality-state!
+        allocation-interval-verdict)
+;;; Read-only native snapshots are diagnostic inputs, never replacement gate
+;;; bytes. Positions 0..7 decompose the counter; 8..12 describe sections;
+;;; 13..15 are stack-start, frame and break addresses. No-GC intervals bound
+;;; legitimate section occupation independently of object/contract contents.
+;;; A within-bound verdict is NOT an accounting or performance admission.
+(def (allocation-interval-verdict before after section-bytes gc-before gc-after)
+  (def (snapshot? value)
+    (and (vector? value) (= (vector-length value) 16)
+         (andmap (lambda (i)
+                   (let (n (vector-ref value i))
+                     (and (real? n) (integer? n) (<= (abs n) 9007199254740991)))) (iota 16))
+         (= (vector-ref value 0)
+            (apply + (map (cut vector-ref value <>) (iota 7 1))))
+         (andmap (lambda (i) (>= (vector-ref value i) 0)) (iota 5 8))
+         (andmap (lambda (i) (> (vector-ref value i) 0)) '(13 14 15))))
+  (unless (and (snapshot? before) (snapshot? after)
+               (exact-integer? section-bytes) (> section-bytes 0)
+               (real? gc-before) (integer? gc-before) (>= gc-before 0)
+               (real? gc-after) (integer? gc-after) (>= gc-after gc-before))
+    (error "invalid native allocation diagnostic snapshot"))
+  (let* ((sections (- (vector-ref after 10) (vector-ref before 10)))
+         (ledger (- (vector-ref after 2) (vector-ref before 2)))
+         ;; Both semispaces and both existing active regions are included.
+         ;; This intentionally loose bound is a diagnostic, not a new gate.
+         (bound (* 2 section-bytes (+ sections 2)))
+         (address-gap (* 2 (- (vector-ref before 13) (vector-ref after 13)))))
+    (cond
+      ((not (= gc-before gc-after)) 'collection-boundary)
+      ((or (< sections 0) (not (= (vector-ref before 1) (vector-ref after 1)))) 'unreviewed-transition)
+      ((<= (abs ledger) bound) 'within-region-bound)
+      ((and (not (= (vector-ref before 9) (vector-ref after 9)))
+            (<= (abs (- ledger address-gap)) bound)) 'cross-region-address-gap)
+      (else 'unexplained-ledger))))
 ;;; Diagnostic calibration only, never substitutes for the frozen rule task.
 ;;; Both return an immediate integer, so no result graph survives into arm two.
 (def (continuation-calibration)

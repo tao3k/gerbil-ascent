@@ -1,0 +1,292 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Declaration allocation spikes: native stack accounting diagnosis
+#+LANGUAGE: en
+
+* Finding and scope
+
+The recorded Gambit runtime charges a difference between addresses in two
+separate stack sections as occupied words. This explains the large allocation
+spikes and their sensitivity to call position and instrumentation layout.
+The fault is in the native counter's stack-transition path. Contract validation
+triggers that path; these observations do not establish that POO performs
+hundreds of MB of additional object allocation or redundant rule matching.
+
+No Library rule, query, contract, provenance, dependency pin or reuse default
+is changed. No counter is corrected, rescaled or subtracted for acceptance.
+The existing 50-pair benefit gates are unchanged. No policy A/B campaign is
+admitted with this counter. Native runtime repair and qualification remain
+necessary before the requested same-budget benefit comparison.
+
+* Evidence from the frozen task
+
+Each task-based diagnostic preserves four warmup pairs, 50 alternating pairs,
+four complete three-cut calls per arm, the existing independent finite-domain
+oracle, 1 GiB and 90 seconds. Fourteen factor/localization campaigns were run,
+once per diagnostic condition, followed by one source-preserved reproduction.
+These are not repeated attempts to obtain a passing performance sample.
+The one-vector calibration and postprocessing are separate from task campaigns.
+
+The plain address trace contains 2,448 declaration/solve intervals including
+warmup. All 201 intervals above 10 MB coincide with a stack-section change;
+their ledger jump is explained by twice the old/new stack-start address gap,
+plus ordinary section occupation. For example:
+
+| Observation | Value |
+|-------------+-------|
+| Interval | warmup call 1, cut 0, solve |
+| Reported bytes | 359,961,360 |
+| Previous-section ledger increase | 360,710,272 |
+| Newly assigned sections | 1 |
+| Stack section | 0 to 129 |
+| Twice stack-start address gap | 360,710,144 |
+| Ledger minus address gap | 128 |
+
+A measured declaration interval similarly reports 371,103,584 bytes with four
+newly assigned sections. Its ledger increase is 371,851,536; the address gap
+accounts for 369,098,752, leaving 2,752,784 ordinary bytes. The recorded section
+size is 131,072 words (1 MiB). A small number of new sections cannot account
+for hundreds of MB of occupation. The address relationship is checked on raw
+snapshots, not fitted from pooled label medians.
+
+The separate component probe sums every counter component exactly. At all
+3,672 phase markers, the ordinary getter differs from the component total by
+exactly -128 bytes, consistent with its different stack frame. Consequently the
+native decomposition reproduces the counter, rather than substituting another
+allocation metric. This does not make the counter's accounting correct.
+
+* Distinguishing metadata lookup, validation and probe disturbance
+
+A wrapper around the existing inert-program constructor calls the original
+constructor and root validator without editing descriptors or bypassing checks.
+Its boundaries separate construction from root validation. Across 1,224 roots,
+construction has a 51,280-byte median and 123,944-byte maximum. Validation has
+a 2,676,512-byte median and contains the large intervals. These are diagnostic
+counter values, not corrected object-allocation costs.
+
+Read-only wrappers around actual native POO lookup entry points preserve their
+arguments, return values and original invocation. The component layout captures
+104,784 nested lookup intervals in the first eight measured whole calls. The
+largest inclusive interval is 38,416 bytes. Coverage counters are 3,552,189 for
+=.ref=, 572,832 for the default cached entry, 1,219,104 for the full cached entry,
+and zero for the inline route. These counts may include nesting. This is not a
+claim that all internal routes were intercepted or that lookup cost is zero.
+
+Those wrappers change the stack shape and suppress many spikes. Therefore the
+absence of a large interval inside that instrumented lookup path cannot alone
+exonerate metadata operations. Likewise, an intercepted native table allocator
+observes 146,404 requests with maximum requested size 16, but internal direct
+calls are outside its demonstrated coverage. Neither observation replaces the
+native address and binary evidence.
+
+The same constructor-control source is used for plain, tail-call, non-tail-call
+and body-wrapper conditions. Plain, tail and body-wrapper pooled allocation
+medians remain around 117 MB. A non-tail return frame changes the median to
+about 19.5 MB while retaining validation. This is a probe-induced stack effect,
+not a Library optimization. Empty probes write the same number of vector cells
+at the same boundaries as component probes. All layouts and failures remain
+in the archive; no preferred layout is promoted into the policy benchmark.
+
+The stack-control and metadata-lookup campaigns partly overlapped in separate
+processes, a diagnostic scheduling error. Their CPU/wall times are excluded
+from comparative conclusions, and they are not rerun to select favorable
+results. No timing benefit is claimed from any campaign in this follow-up.
+
+* Installed binary and source identity
+
+The SDK is Gerbil 1cfb032 / Gambit ea114fc; the recorded native executable's
+SHA-256 is =9326ad2d248692b94a83cea1e9c7f3240c31fd7c258006ef918ac6af37db68f0=.
+Its =gambit.h= hash is
+=8257ff05aadb634e2ef2532f7e1a21608a828c4adae35cf88276b78e7efff1e5=.
+The running executable is inspected, not only a source checkout or static archive.
+
+In matching Gambit commit =ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f=,
+=lib/mem.c= handles reaching the previous break frame by making a new break
+frame, changing =fp= to the new section's allocation pointer, then calling
+=stack_msection_stop_using= with the old section's start and that new pointer.
+The helper adds their difference to =words_prev_msections=. Pointer subtraction
+across different allocated sections is invalid; the recorded machine code
+performs the address subtraction and charges it as occupied words.
+
+The installed executable confirms that path. At =0x1003e5e2c= it loads the new
+stack pointer into =x4=; at =0x1003e5e38= it subtracts that pointer from =x6=,
+the previously saved old stack start. It adds the shifted result to the ledger
+at processor offset =0x398=. The branch reaching the previous break frame leads
+into this block. The raw disassembly and ABI offsets are retained. No installed
+runtime, native instruction or global counter is patched.
+
+A read-only check of the local newer Gambit source at =3d42cc5b= also finds
+the same transition in =lib/_mem/allocation-limits.inc=, lines 204--268; that
+file has no working-tree diff. This is source inspection, not qualification of
+that newer runtime. Merely selecting it does not demonstrate an accounting fix.
+The allocation finding does not explain all historical CPU/wall variability.
+
+* Source-preserved native reproducer
+
+This uses the existing native =paired= helper, frozen =empty-workflow= and
+=empty-parity= oracle. It adds no experiment framework. It requires the recorded
+SDK and the normal installed ASCENT test dependencies. A prepared local prefix
+is not a cold-build or clean-package qualification. On a clean checkout, use
+the repository's ordinary dependency/preparation entry first; do not use a
+source overlay to substitute for native dependencies.
+
+Save/extract the three named source blocks below. The native code only reads SDK
+state and writes preallocated vectors; it performs no allocation or collection.
+These private SDK fields are a diagnosis aid, not a new Library interface.
+Addresses in the local receipt are process-local diagnostic data.
+
+#+begin_src sh
+set -eu
+task_sdk=/opt/homebrew/opt/gerbil-scheme@0.19/current
+task_prefix="${GERBIL_PATH:-$PWD/.gerbil}"
+mkdir -p "$PWD/.data"
+task_probe="$(mktemp -d "$PWD/.data/declaration-allocation-repro.XXXXXX")"
+sed -n '/^;; BEGIN COUNTER$/,/^;; END COUNTER$/p' docs/features/rule-costs/declaration-allocation.org > "$task_probe/counter.scm"
+sed -n '/^;; BEGIN TRACE$/,/^;; END TRACE$/p' docs/features/rule-costs/declaration-allocation.org > "$task_probe/trace.ss"
+sed -n '/^;; BEGIN REPLAY$/,/^;; END REPLAY$/p' docs/features/rule-costs/declaration-allocation.org > "$task_probe/replay.ss"
+# Keep the normal preparation/watchdog/heap configuration.
+GERBIL_PATH="$task_prefix" just prepare-test-library
+timeout --kill-after=3s 90s "$task_sdk/bin/gsc" "-:~~=$task_sdk,max-heap=1G,debug=q" -dynamic "$task_probe/counter.scm"
+# Use a fresh directory: GSC numbers successive dynamic objects .o1, .o2, ... .
+env -u GERBIL_LOADPATH GERBIL_PATH="$task_prefix" GERBIL_LOADPATH="$task_prefix/lib" \
+  timeout --kill-after=3s 90s gxi -:max-heap=1G,debug=q \
+  "$task_probe/trace.ss" "$task_probe/counter.o1" "$task_probe/trace.sexp"
+env -u GERBIL_LOADPATH GERBIL_PATH="$task_prefix" GERBIL_LOADPATH="$task_prefix/lib" \
+  timeout --kill-after=3s 90s gxi -:max-heap=1G,debug=q \
+  "$task_probe/replay.ss" "$task_probe/trace.sexp" "$task_probe/verdict.sexp"
+#+end_src
+
+Use the ordinary qualified =gxi= wrapper for the same SDK. It binds Gerbil's
+home and Gambit's library paths; invoking the bare SDK executable without
+those bindings fails module admission before running the task.
+
+#+name: counter
+#+begin_src scheme
+;; BEGIN COUNTER
+(define ascent-native-layout!
+  (c-lambda (scheme-object int) void
+#<<c
+___processor_state ps = ___PSTATE;
+___F64 part[16];
+int n;
+part[1] = ps->mem.bytes_allocated_minus_occupied_;
+part[2] = 2.0 * ps->mem.words_prev_msections_ * ___WS;
+part[3] = 2.0 * (ps->hp - ps->mem.alloc_heap_start_) * ___WS;
+part[4] = 2.0 * (ps->mem.alloc_stack_start_ - ps->fp) * ___WS;
+part[5] = ((___F64) ps->mem.words_still_objs_) * ___WS;
+part[6] = ((___F64) ps->mem.words_still_objs_deferred_) * ___WS;
+part[7] = ((___F64) ___VMSTATE_FROM_PSTATE(ps)->mem.occupied_words_still_) * ___WS;
+part[0] = part[1]+part[2]+part[3]+part[4]+part[5]+part[6]+part[7];
+part[8] = ps->mem.heap_msection_->index;
+part[9] = ps->mem.stack_msection_->index;
+part[10] = ___VMSTATE_FROM_PSTATE(ps)->mem.nb_msections_assigned_;
+part[11] = ___VMSTATE_FROM_PSTATE(ps)->mem.nb_msections_stacks_;
+part[12] = ___VMSTATE_FROM_PSTATE(ps)->mem.the_msections_->nb_sections;
+part[13] = (double) (uintptr_t) ps->mem.alloc_stack_start_;
+part[14] = (double) (uintptr_t) ps->fp;
+part[15] = (double) (uintptr_t) ps->stack_break;
+for (n=0; n<16; n++) { ___F64VECTORSET(___arg1,___FIX(___arg2+n),part[n]); }
+c
+))
+;; END COUNTER
+#+end_src
+
+#+name: trace
+#+begin_src scheme
+;; BEGIN TRACE
+(import :gerbil/runtime/gambit
+        (only-in :gerbil-ascent/t/performance/index-entry-benchmark
+                 paired empty-workflow empty-parity))
+(export main)
+(def (main library output)
+  (load library)
+  (let* ((snapshot! (eval 'ascent-native-layout!)) (calls 0) (count 0)
+         (ticks (make-f64vector (* 408 9 16) 0.0)))
+    (def (mark stage)
+      (when (>= count (* 408 9)) (error "phase budget exceeded"))
+      (snapshot! ticks (* count 16)) (set! count (+ count 1)))
+    (def (operation)
+      (set! calls (+ calls 1)) (empty-workflow #f mark))
+    (let (metrics (paired "native-stack-accounting" operation operation
+                         empty-parity 4 'observe #t))
+      (unless (and (= calls 408) (= count (* 408 9)))
+        (error "frozen task budget differs" calls count))
+      (call-with-output-file output
+        (lambda (out)
+          (write (list (cons 'calls calls) (cons 'count count)
+                       (cons 'components (f64vector->list ticks))
+                       (cons 'metrics metrics)) out) (newline out))))))
+;; END TRACE
+#+end_src
+
+Components 0--7 are total, base, previous regions, current heap, current stack,
+still, deferred still and VM still bytes. Fields 8--12 are heap-section index,
+stack-section index, assigned sections, assigned stack sections and available
+sections. Fields 13--15 are stack start, frame and break addresses. Markers
+repeat before declaration, after declaration and after solve for each cut.
+
+For a no-GC interval, compare ledger delta (field 2) with twice the change in
+stack-start address (field 13), and with the number of new sections (field 10).
+=allocation-interval-verdict= in the existing benchmark classifies this evidence
+without changing bytes or accepting a measurement. Collection boundaries and
+unknown transitions retain separate verdicts; missing/malformed snapshots fail.
+A within-region-bound verdict alone does not establish counter correctness.
+
+* Replay checker
+
+The checker excludes the eight warmup calls and conservatively marks every
+interval in a measured arm with a GC as a collection boundary. It never labels
+unreviewed transitions as clean. The original trace and the source-preserved
+reproducer both yield 199 address-gap verdicts among 2,400 measured intervals;
+all 199 measured intervals above 10 MB have that verdict. The remaining 2,201
+are only within a loose region bound, not independently certified correct.
+A completed decoder is not a counter or performance admission.
+
+#+begin_src scheme
+;; BEGIN REPLAY
+(import :std/iter
+        (only-in :gerbil-ascent/t/performance/index-entry-benchmark allocation-interval-verdict))
+(export main)
+(def (get xs key) (cdr (assq key xs)))
+(def (main path output)
+  (let* ((record (call-with-input-file path read)) (v (list->vector (get record 'components)))
+         (samples (list->vector (get (get record 'metrics) 'sample-diagnostics)))
+         (counts (make-hash-table-eq)) (large 0) (address 0))
+    (unless (and (= (get record 'calls) 408) (= (get record 'count) 3672)
+                 (= (vector-length samples) 50) (= (vector-length v) (* 3672 16)))
+      (error "incomplete frozen trace"))
+    (for (call (iota 400 8))
+      (let* ((sample (list-ref (vector-ref samples (quotient (- call 8) 8))
+                       (if (< (modulo (- call 8) 8) 4)
+                         (if (eq? (cadr (vector-ref samples (quotient (- call 8) 8))) 'AB) 2 3)
+                         (if (eq? (cadr (vector-ref samples (quotient (- call 8) 8))) 'AB) 3 2))))
+             (epoch (get sample 'gc-epoch)) (gcs (get sample 'gc-count)))
+        (for (cut (iota 3))
+          (for (phase '(0 1))
+            (let* ((i (+ (* call 9) (* cut 3) phase))
+                   (before (list->vector (map (lambda (j) (vector-ref v (+ (* 16 i) j))) (iota 16))))
+                   (after (list->vector (map (lambda (j) (vector-ref v (+ (* 16 (+ i 1)) j))) (iota 16))))
+                   (verdict (allocation-interval-verdict before after 1048576 epoch (+ epoch gcs))))
+              (hash-update! counts verdict (lambda (n) (+ n 1)) 0)
+              (when (> (abs (- (vector-ref after 0) (vector-ref before 0))) 10000000)
+                (set! large (+ large 1))
+                (when (eq? verdict 'cross-region-address-gap) (set! address (+ address 1)))))))))
+    (let (receipt (list (cons 'intervals 2400) (cons 'verdicts (hash->list counts))
+                       (cons 'over-10MB large) (cons 'address-gap-explained address)
+                       (cons 'performance-admitted? #f)))
+      (call-with-output-file output (lambda (out) (write receipt out) (newline out)))
+      (displayln receipt))))
+;; END REPLAY
+#+end_src
+
+* Archive and limitations
+
+Raw receipts, source snapshots, probes, all failed tool/summary commands,
+calibration and installed-binary evidence are retained under
+=.data/ascent-declaration-20261101/=. Failed commands include the host =gsc=
+name resolving to another program, SDK root/prototype/link issues during probe
+construction, and a summary exceeding the Scheme argument limit. Corrections
+only fix probe construction/postprocessing; task outcomes are never edited.
+The fifteen workloads completed with their frozen oracle; they are diagnostics,
+not a statistically qualified policy comparison. The known-bad accounting is
+kept as a failure, not replaced by zero or an adjusted favorable number.

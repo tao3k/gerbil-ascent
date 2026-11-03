@@ -233,7 +233,39 @@ against public POO =9c7cb947=, whose existing PR CI passed. Its source identity
 bindings are synchronized without changing theorem or runtime bodies.
 Core's unavailable LeanPoo revision also requires the user-authorized public
 =v0.1.2= release. The fresh dependency build, native Core build, complete
-210-job Lean inventory and complete 486-case Quint inventory passed. Full Core
-native semantics remain in progress. Nothing from that isolated proposal is
-claimed as published or integrated into ASCENT yet; =gerbil.pkg= still records
+210-job Lean inventory and complete 486-case Quint inventory passed. The full
+196-file Core native run failed its original gates for
+=gitea-postgresql-publication=, =module-declaration-1000= and
+=module-declaration-10000=. Its subsequent selected-module phase did not run.
+The proposal is not accepted, published or integrated into ASCENT; =gerbil.pkg= still records
 the existing pinned Core revision until that boundary is accepted.
+
+* Smaller dependency-availability repair, awaiting authorization
+
+POO =30733c3= is still an existing public GitHub object. The failure concerns
+ordinary clone reachability, not missing Scheme source on the local disk.
+The frozen =gxpkg= implementation uses ordinary =git clone -q= and then checks
+out the requested revision. A native Git file-transport control (without local
+hardlink object copying) returned 128 without an advertised reference. Adding
+only =refs/tags/source-30733c3= allowed a fresh clone and checkout of that same
+revision, retaining tree =ce1b8fbdf3feaf26c7b053c988f5d87afdefb14a=.
+
+Creating this tag would preserve the currently tested Core/POO implementation
+instead of integrating the unaccepted POO upgrade. The proposed tag does not
+exist remotely; it has not been created. User authorization is pending because
+previous publication approval covered existing PRs, not a new public tag.
+The source-tag operation would not create a Release or modify a branch.
+
+* Default Justfile build environment
+
+An ordinary =just build= with only the isolated =GERBIL_PATH= first failed at
+=std/make pkg-config-libs openssl=. The earlier Justfile supplied a link path
+but omitted the matching pkg-config path. The existing common environment now
+resolves its already-selected Homebrew OpenSSL provider once, supplies both
+=LIBRARY_PATH= and =PKG_CONFIG_PATH=, and reuses Core's standard
+=env -u SDKROOT COMPILER_PATH=/usr/bin=. The long list of unrelated environment
+clears is removed. No build/test runner, CPU setting or thread setting was added.
+
+The same ordinary =just build= then completed naturally, including both linked
+outputs, with the original SDK and machine-default parallelism. This establishes
+entrypoint correctness; concurrent activity prevents a performance claim.

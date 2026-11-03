@@ -3,11 +3,13 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-# Preserve PATH and native compiler configuration. Gerbil/Gambit own compiler
-# selection; this entry does not force cc or inject another SDK's linker flags.
-# Resolve the active OpenSSL library after clearing unrelated compiler flags.
+# Keep compiler flags with package options; route Darwin tools through the SDK.
+# Resolve the existing OpenSSL provider once for both linking and pkg-config.
+openssl_prefix := if os() == "macos" { `brew --prefix openssl@3` } else { "" }
 gerbil_environment := if os() == "macos" {
-    "env -u CFLAGS -u CPPFLAGS -u LDFLAGS -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u LIBRARY_PATH -u NIX_CFLAGS_COMPILE -u NIX_LDFLAGS -u DEVELOPER_DIR -u SDKROOT LIBRARY_PATH=\"$(brew --prefix openssl@3)/lib\""
+    ("env -u SDKROOT COMPILER_PATH=/usr/bin"
+     + " LIBRARY_PATH=\"" + openssl_prefix + "/lib\""
+     + " PKG_CONFIG_PATH=\"" + openssl_prefix + "/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}\"")
 } else { "env" }
 gerbil_command := gerbil_environment + " gerbil"
 # Select the package prefix without changing the caller's tool search path.

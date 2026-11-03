@@ -305,20 +305,19 @@
 ;;; Validation completes before metadata publication; values enter only later.
 (def (compile-key-projection logical physical)
   (let (width (length logical))
-    ;; This runs once per cached plan, not per inserted row. Retain the first
-    ;; logical occurrence when repeated columns refer to the same physical key.
-    (let (positions (make-hash-table))
-      (for-each (lambda (column position)
-                  (unless (hash-get positions column) (hash-put! positions column position)))
-                logical (iota (length logical)))
-      (def (position-of column) (hash-get positions column))
+    ;; This private metadata scan runs once per cached plan, never per row.
+    ;; Preserve the first occurrence without an ordinal hash or entry objects;
+    ;; the original sparse/small allocation gates cover this boundary.
+    (def (position-of column)
+      (let (tail (member column logical =))
+        (and tail (- width (length tail)))))
     (let gather ((remaining physical) (left width) (selected []) (prefix []))
       (if (zero? left)
         (make-key-projection (list->vector (reverse! prefix))
                             (column-writes (reverse! selected)) (make-vector width #f))
         (let (position (and (pair? remaining) (position-of (car remaining))))
           (unless position (error "logical index is not a physical prefix" logical physical))
-          (gather (cdr remaining) (- left 1) (cons position selected) (cons (car remaining) prefix))))))))
+          (gather (cdr remaining) (- left 1) (cons position selected) (cons (car remaining) prefix)))))))
 
 (def (same-physical-prefix? physical snapshot)
   (let ((remaining physical) (width (vector-length snapshot)))

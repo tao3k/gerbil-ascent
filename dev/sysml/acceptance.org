@@ -269,3 +269,40 @@ clears is removed. No build/test runner, CPU setting or thread setting was added
 The same ordinary =just build= then completed naturally, including both linked
 outputs, with the original SDK and machine-default parallelism. This establishes
 entrypoint correctness; concurrent activity prevents a performance claim.
+
+* Index projection regression repair and allocation-counter evidence
+
+The warning-repair refactor introduced a temporary ordinal hash table in
+=table/index-sharing.ss:compile-key-projection=. Replace that private lookup
+with the SDK's native =member= comparator and tail position. First-occurrence
+and numeric equality semantics remain unchanged; no row-time state or callback
+is added. This removes the temporary table and its entries rather than changing
+any admission threshold. The ordinary =just test-file
+ t/qualification/ascent-index-program-test.ss= completed naturally.
+
+The complete original =just performance-index-sharing= study passed all five
+scenarios (wide, sparse, small, scalar, empty), each with the original 50 paired
+samples and controls. Receipt: =review-index-sharing-member.log= and study
+=c4d34fbe-1f96-4f07-a602-a2265ff323e0=. The changed candidate's sparse allocation
+was 2,033,744 bytes, compared with the retained failed candidate's 2,049,600;
+small was 84,640 rather than 85,728. These are observations across the two
+source revisions, not a controlled percentage speedup claim. Original reference
+comparison: sparse CPU 5,904 to 1,285 microseconds; small CPU 38.375 to 39.25
+microseconds. Small is admitted by its original bounded-overhead contract, not
+claimed as a speedup. This study is not a production throughput measurement.
+
+The separate lifecycle performance contract remains failed. A diagnostic on
+the frozen SDK allocated a 10,000,000-byte u8vector, collected while retaining
+it, sampled =##get-bytes-allocated!=, released it, collected, then sampled again.
+The raw snapshots were 70,475,944 and 60,532,024: delta -9,943,920 bytes.
+=frozen-kernel.scm= at the fixed Gambit revision ea114fc forwards this primitive
+to =___bytes_allocated=. That C function includes current
+=occupied_words_still= in its return value; freeing still objects can lower it.
+=##process-statistics= slot 7 uses the same function. Slot 16 is a latest-GC
+snapshot, so substituting it would omit allocation after the last collection.
+Neither is silently promoted to a universally cumulative allocation metric.
+The independent diagnostic and exact-source copies are retained in the local
+acceptance artifacts. The SDK and original rejection of negative deltas remain
+unchanged. A valid cumulative measurement and allocator-level source refinement
+are still open; the existing Lean rejection laws do not prove this SDK counter
+monotonic. No abstract proof or successful index study closes that obligation.

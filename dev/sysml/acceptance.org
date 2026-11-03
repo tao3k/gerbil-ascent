@@ -306,3 +306,48 @@ acceptance artifacts. The SDK and original rejection of negative deltas remain
 unchanged. A valid cumulative measurement and allocator-level source refinement
 are still open; the existing Lean rejection laws do not prove this SDK counter
 monotonic. No abstract proof or successful index study closes that obligation.
+
+* Remaining original performance-gate failures
+
+The unchanged Justfile gates =performance-uf-plan=,
+=performance-uf-initialization=, =performance-uf-compact-query=,
+=performance-uf-selector-init= and =performance-uf-owner-plans= all completed
+naturally with =STUDY-OK= after the projection repair. Earlier membership and
+query studies remain separate receipts; they were not substituted for these
+five full studies.
+
+The original =just performance= 1000-sample Suite was also executed, not skipped
+because the lifecycle contract had failed. It failed: table-expression's
+candidate P95 was 10.455 ms and exceeded its original fixture budget. Its full
+1024-pair semantic comparison and 512-input global point witness succeeded.
+The reference's 1000 samples consumed 102.874431 wall seconds; the candidate's
+consumed 12.061390 seconds. The complete Suite then reached its unchanged
+180-second parent deadline while ten-thousand-appends was executing (exit 124).
+Thirteen scenario Cases completed successfully before that exit; remaining
+Cases/modules were not counted as passes. These wall times do not constitute
+production service throughput or closure of the tail-latency obligation.
+Receipt: =review-performance-full-final.log=. No timeout, workload or threshold
+was changed, and no unchanged rerun was used to claim acceptance.
+
+* Current-source semantic recheck
+
+After the index projection repair, the existing =just test= completed naturally
+with 179 modules, 1,487 Cases, 95 batches and 12 workers. Its test execution
+stage took 200 seconds; this excludes preparation and is not a cold-build or
+speedup claim. All 95 raw batch logs recorded =VM-RUNTIME processors=1=, with
+no other processor count. Original limits and Case inventory were retained.
+Receipt: =review-semantics-refactor-final.log=; batch directory
+=d61c4dfb-012e-42e0-875f-44647e031dcc=. No additional external core/thread or PATH
+setting was supplied: only the existing isolated =GERBIL_PATH= selected the
+validated dependencies. The complete performance failure is independent of
+this semantic acceptance and remains reported above.
+
+* Current-source policy and formal recheck
+
+The ordinary =just check-policy= completed naturally with zero findings and zero
+errors. The unchanged =just check-formal= also completed naturally with
+=ALL-FORMAL-CHECK-OK=, retaining its locked Lean Guard, positive checks,
+500 negative controls and source comparisons. Receipts:
+=review-policy-refactor-final.log= and =review-formal-refactor-final.log=.
+These results establish the existing obligations only; the remaining
+allocator/cache/SCC/runtime extraction obligations listed above remain open.

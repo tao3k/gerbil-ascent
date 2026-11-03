@@ -5,26 +5,40 @@
 ;;; Bounded, inert rule proposals against a caller-owned snapshot.
 ;;; A receipt is an observation of one candidate, not source admission.
 ;;; Shared bounded proposal data and source snapshot value types.
+
 (import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
         (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode))
 
-(export make-reasoning-snapshot reasoning-snapshot?
-        reasoning-snapshot-identity
-        reasoning-snapshot-generation reasoning-snapshot-digest
-        reasoning-snapshot-relations
-        reasoning-snapshot-content-digest reasoning-snapshot-valid?
-        reasoning-bounded-data?
-        make-reasoning-diagnostic reasoning-diagnostic?
-        reasoning-diagnostic-code
-        reasoning-diagnostic-path reasoning-diagnostic-detail
-        make-reasoning-candidate reasoning-candidate-relations
-        reasoning-candidate-facts reasoning-candidate-rules
-        reasoning-candidate-query reasoning-candidate-limits
-        make-candidate-rejection candidate-rejection?
-        candidate-rejection-diagnostic
-        +max-relations+ +max-rules+ +max-input-facts+
-        +max-derived-facts+ +max-output-facts+)
+(export
+  make-reasoning-snapshot
+  reasoning-snapshot?
+  reasoning-snapshot-identity
+  reasoning-snapshot-generation
+  reasoning-snapshot-digest
+  reasoning-snapshot-relations
+  reasoning-snapshot-content-digest
+  reasoning-snapshot-valid?
+  reasoning-bounded-data?
+  make-reasoning-diagnostic
+  reasoning-diagnostic?
+  reasoning-diagnostic-code
+  reasoning-diagnostic-path
+  reasoning-diagnostic-detail
+  make-reasoning-candidate
+  reasoning-candidate-relations
+  reasoning-candidate-facts
+  reasoning-candidate-rules
+  reasoning-candidate-query
+  reasoning-candidate-limits
+  make-candidate-rejection
+  candidate-rejection?
+  candidate-rejection-diagnostic
+  +max-relations+
+  +max-rules+
+  +max-input-facts+
+  +max-derived-facts+
+  +max-output-facts+)
 
 (defstruct reasoning-snapshot (identity generation digest relations))
 (defstruct reasoning-diagnostic (code path detail))
@@ -32,9 +46,13 @@
 (defstruct candidate-rejection (diagnostic))
 
 (def +max-relations+ 64)
+
 (def +max-rules+ 64)
+
 (def +max-input-facts+ +inf.0)
+
 (def +max-derived-facts+ +inf.0)
+
 (def +max-output-facts+ +inf.0)
 
 ;; : (forall (row) (-> SourceId Nat (Relations row) Digest))
@@ -111,22 +129,30 @@
             relations))))))
 
 ;;; Module publication contract; candidate data contracts above are unchanged.
+
 (import (only-in :clan/poo/object .o .cc)
         (only-in :clan/poo/mop Type.)
         (only-in :clan/poo/type Record)
         (only-in :yuanxu/object-types/contracts YuanxuContract.))
+
 (export CandidateScopeContract)
+
 (def CandidateOperation (.cc Type. '.element? procedure?))
+
 (def CandidateScopeContract
-  (.cc YuanxuContract. identity: 'ascent/candidate-scope proto: (.o)
-       value-contract: (Record inspect: (list CandidateOperation)
-                              snapshot: (list CandidateOperation)
-                              attempt: (list CandidateOperation)
-                              capture: (list CandidateOperation)
-                              verify: (list CandidateOperation)
-                              closure: (list CandidateOperation)
-                              count: (list CandidateOperation)
-                              stratify: (list CandidateOperation)
-                              withhold: (list CandidateOperation)
-                              compare: (list CandidateOperation)
-                              open-withdrawal: (list CandidateOperation))))
+  (.cc YuanxuContract.
+    identity: 'ascent/candidate-scope
+    proto: (.o)
+    value-contract:
+    (Record
+      inspect: (list CandidateOperation)
+      snapshot: (list CandidateOperation)
+      attempt: (list CandidateOperation)
+      capture: (list CandidateOperation)
+      verify: (list CandidateOperation)
+      closure: (list CandidateOperation)
+      count: (list CandidateOperation)
+      stratify: (list CandidateOperation)
+      withhold: (list CandidateOperation)
+      compare: (list CandidateOperation)
+      open-withdrawal: (list CandidateOperation))))

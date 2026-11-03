@@ -4,6 +4,7 @@
 
 ;;; Public POO declarations for ASCENT rules. No table state lives
 ;;; in these objects; each evaluation owns its own relation storage.
+
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric validate)
         (only-in :gerbil-ascent/table/provider
@@ -30,25 +31,27 @@
                  GerbilAscentFragmentContract
                  GerbilAscentProgramContract))
 
-(export gerbil-ascent-relation
-        gerbil-ascent-lattice
-        gerbil-ascent-variable
-        gerbil-ascent-wildcard
-        gerbil-ascent-literal
-        gerbil-ascent-expression
-        gerbil-ascent-pattern
-        gerbil-ascent-atom
-        gerbil-ascent-guard
-        gerbil-ascent-generator
-        gerbil-ascent-binding
-        gerbil-ascent-negation
-        gerbil-ascent-aggregate
-        gerbil-ascent-clause-plan
-        gerbil-ascent-bound-membership
-        gerbil-ascent-rule
-        gerbil-ascent-fragment
-        gerbil-ascent-program gerbil-ascent-construct-inert-program
-        gerbil-ascent-construct-inert-fragment)
+(export
+  gerbil-ascent-relation
+  gerbil-ascent-lattice
+  gerbil-ascent-variable
+  gerbil-ascent-wildcard
+  gerbil-ascent-literal
+  gerbil-ascent-expression
+  gerbil-ascent-pattern
+  gerbil-ascent-atom
+  gerbil-ascent-guard
+  gerbil-ascent-generator
+  gerbil-ascent-binding
+  gerbil-ascent-negation
+  gerbil-ascent-aggregate
+  gerbil-ascent-clause-plan
+  gerbil-ascent-bound-membership
+  gerbil-ascent-rule
+  gerbil-ascent-fragment
+  gerbil-ascent-program
+  gerbil-ascent-construct-inert-program
+  gerbil-ascent-construct-inert-fragment)
 
 ;;; A private inert construction flow has no supplied procedures or escaping
 ;;; children. Its root contract recursively checks the complete POO object tree.
@@ -100,16 +103,27 @@
     (lambda (fragment) (validate GerbilAscentFragmentContract fragment))))
 
 (def Relation. (.ref GerbilAscentRelationContract 'proto))
+
 (def Lattice. (.ref GerbilAscentLatticeContract 'proto))
+
 (def Term. (.ref GerbilAscentTermContract 'proto))
+
 (def Atom. (.ref GerbilAscentAtomContract 'proto))
+
 (def Guard. (.ref GerbilAscentGuardContract 'proto))
+
 (def Generator. (.ref GerbilAscentGeneratorContract 'proto))
+
 (def Binding. (.ref GerbilAscentBindingContract 'proto))
+
 (def Negation. (.ref GerbilAscentNegationContract 'proto))
+
 (def Aggregate. (.ref GerbilAscentAggregateContract 'proto))
+
 (def Rule. (.ref GerbilAscentRuleContract 'proto))
+
 (def Fragment. (.ref GerbilAscentFragmentContract 'proto))
+
 (def Program. (.ref GerbilAscentProgramContract 'proto))
 
 ;;; Clause lowering has one open receiver axis. The evaluator consumes the

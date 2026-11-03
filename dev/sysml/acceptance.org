@@ -92,7 +92,7 @@ is not a throughput or preparation-cost improvement.
 | Native production build | Passed | =review-build.log=; original SDK and entrypoint |
 | Whole-library ASP policy | Zero findings and zero errors | =review-policy-design-final.log=; final c755 parser, native COMPLETE marker |
 | Full Scheme semantics | 179 modules, 1,487 Cases, 95 batches, 199 seconds, natural exit 0 | =review-semantics-final.log=; 12 workers; all 95 raw worker logs confirm processors=1 |
-| Rust/PyO3 Rust mode | 96 tests passed | =review-rust-tests-prefix-corrected.log=; later small build/test changes require a final refresh |
+| Rust/PyO3 Rust mode | 96 tests passed, natural exit 0 | =review-rust-sdk-accepted-gsr.log=; current integration commit and accepted GSR |
 | Strict Clippy, SDK feature domain | Passed, -D warnings | =review-clippy-sdk-domain.log=; all targets except external-program crate |
 | Strict Clippy, Scheme feature domain | Passed, -D warnings | =review-clippy-scheme-domain.log=; includes external-program crate and PyO3; domain union covers every workspace crate |
 | Rust formatting | Passed | =review-rust-fmt-corrected.log=; generated import and Lean emitter synchronized |
@@ -100,9 +100,9 @@ is not a throughput or preparation-cost improvement.
 | OpenSysML | 40 architectural objects; seven adapter tests | =review-design-network-final.log= and =review-design-unit-network-final.log=; architecture evidence only |
 | Release process and InstancePool bindings | Failed: 37 passed, 92 failed, none skipped | =review-bindings-both-paths-final.log=; sandbox transport refusals, two stale oracle prefixes, stale binding input, and real InstancePool startup timeouts remain separate causes |
 | InstancePool native startup diagnostic | Failed outside sandbox at the original 60-second context-bind deadline | =instance-startup-unsandboxed-diagnostic.log=; package capture 4.80 seconds, VM setup 4.02 seconds, context bind 60.00 seconds; not acceptance or a throughput measurement |
-| Mandatory default process binding domain | In progress on accepted GSR | =review-bindings-required-accepted-gsr.log=; unchanged complete CI command, 12 threads, zero retries |
+| Mandatory default process binding domain | 76/76 passed, natural exit 0 | =review-bindings-required-accepted-gsr.log=; complete CI command, 12 threads, zero retries |
 | Original performance gates and production matrix | Not accepted yet | No wall-time, allocation or parallel benefit admitted |
-| Exact-head ASCENT CI | Pending publication and verification | Historical PR CI is not current-cohort acceptance |
+| Exact-head ASCENT CI | Published integration =e75797ef=; formal, formal-conformance, repository and design checks passed; dependency consumers failed before tests | Frozen Core dependency names an unavailable POO commit; no semantic/performance pass inferred |
 
 The prerequisites remove ASCENT's duplicate archive/cache implementation and
 its white-box tests of those deleted internals. The deleted =scheme-artifact-test.ss= also contained 24 white-box publication,
@@ -195,3 +195,45 @@ Cancellation, budget exhaustion, source replacement rollback and provenance
 remain part of full semantic and runtime acceptance. Their limits and original
 performance thresholds are unchanged. CI success alone does not establish a
 speedup, a cold-build improvement or complete Scheme source refinement.
+
+* Human-readable Scheme and native drivers
+
+The user requested readable Scheme indentation. =init.ss= now lists one module
+per line; the eight domains' =interface=, =objects=, =types=, =func= and =config=
+entries separate fields, nested objects, contracts and long import/export lists.
+The 41-file reflow was applied independently to the preserved working tree and
+the isolated publication checkout. Native Scheme reading compared all 82
+before/after files and found identical expression data. Fourteen generated
+source regions retain their exact bytes. Typed comment/declaration adjacency
+is preserved; the final whole-library ASP check has zero findings and errors.
+The complete post-format formal gate again passed 81 positive checks,
+500 negative controls and 95 exact source comparisons.
+
+This is formatting evidence. Reader locations naturally follow the new source;
+reader equality is not a universal macro, callback or VM equivalence proof.
+The original semantic, cancellation, resource and provenance gates still apply.
+
+Local commands use existing Justfile entrypoints and defaults. Core's Justfile
+already supplies =num_cpus()= and macOS =env -u SDKROOT COMPILER_PATH=/usr/bin=.
+Explicit per-call CPU/thread overrides and duplicate PATH/compiler cleanup are
+not required. The existing default evaluates to 12 on this host. Earlier
+receipts retain their actual settings and are not relabeled as default-machine
+performance. An isolated =GERBIL_PATH= selects only the dependency prefix.
+
+* Reproducible dependency gap
+
+The first published integration's Linux jobs all stopped during dependency
+installation: Yuanxu =85a969c= names POO =30733c3=, which a fresh public clone
+cannot check out. A locally imported Git object had hidden this missing
+transitive dependency. This is an acceptance gap, not a semantic timeout.
+The SDK was unchanged and those failed runs were retained.
+
+An isolated existing Core PR #19 checkout is testing a dependency-only repair
+against public POO =9c7cb947=, whose existing PR CI passed. Its source identity
+bindings are synchronized without changing theorem or runtime bodies.
+Core's unavailable LeanPoo revision also requires the user-authorized public
+=v0.1.2= release. The fresh dependency build, native Core build, complete
+210-job Lean inventory and complete 486-case Quint inventory passed. Full Core
+native semantics remain in progress. Nothing from that isolated proposal is
+claimed as published or integrated into ASCENT yet; =gerbil.pkg= still records
+the existing pinned Core revision until that boundary is accepted.

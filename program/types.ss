@@ -4,6 +4,7 @@
 
 ;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
+
 (import "declaration-contract.ss"
         (only-in :std/list/list delete-duplicates/hash)
         (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
@@ -18,31 +19,41 @@
         (only-in :gerbil-ascent/table/storage
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
-(export ProgramScopeContract canonical-value-check-current?
-        gerbil-ascent-fact-limit?
-        gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
-        gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
-        gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
-        gerbil-ascent-make-aggregate-value gerbil-ascent-check-owned-aggregate-value
-        gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
-        gerbil-ascent-make-program-value gerbil-ascent-check-source-handles
-        gerbil-ascent-projection-tree-current? gerbil-ascent-check-projection-program
-        gerbil-ascent-relation-with-rows
-        gerbil-ascent-relation-with-role gerbil-ascent-rule-with-origin
-        gerbil-ascent-make-session-value
-        GerbilAscentRelationContract
-        GerbilAscentLatticeContract
-        GerbilAscentTermContract
-        GerbilAscentAtomContract
-        GerbilAscentGuardContract
-        GerbilAscentGeneratorContract
-        GerbilAscentBindingContract
-        GerbilAscentNegationContract
-        GerbilAscentAggregateContract
-        GerbilAscentRuleContract
-        GerbilAscentFragmentContract
-        GerbilAscentProgramContract
-        GerbilAscentSessionContract)
+(export
+  ProgramScopeContract
+  canonical-value-check-current?
+  gerbil-ascent-fact-limit?
+  gerbil-ascent-make-term-value
+  gerbil-ascent-make-atom-value
+  gerbil-ascent-check-owned-term-value
+  gerbil-ascent-check-owned-atom-value
+  gerbil-ascent-make-rule-value
+  gerbil-ascent-check-owned-rule-value
+  gerbil-ascent-make-aggregate-value
+  gerbil-ascent-check-owned-aggregate-value
+  gerbil-ascent-make-relation-value
+  gerbil-ascent-check-owned-relation-value
+  gerbil-ascent-make-program-value
+  gerbil-ascent-check-source-handles
+  gerbil-ascent-projection-tree-current?
+  gerbil-ascent-check-projection-program
+  gerbil-ascent-relation-with-rows
+  gerbil-ascent-relation-with-role
+  gerbil-ascent-rule-with-origin
+  gerbil-ascent-make-session-value
+  GerbilAscentRelationContract
+  GerbilAscentLatticeContract
+  GerbilAscentTermContract
+  GerbilAscentAtomContract
+  GerbilAscentGuardContract
+  GerbilAscentGeneratorContract
+  GerbilAscentBindingContract
+  GerbilAscentNegationContract
+  GerbilAscentAggregateContract
+  GerbilAscentRuleContract
+  GerbilAscentFragmentContract
+  GerbilAscentProgramContract
+  GerbilAscentSessionContract)
 
 (def declared-value-shapes (make-hash-table test: eq? weak-keys: #t))
 
@@ -63,6 +74,7 @@
 (def (gerbil-ascent-make-term-value prototype tag payload)
   (remember-value-shape! 'term
     (.o (:: @ prototype) kind: tag value: payload)))
+
 (def (gerbil-ascent-make-atom-value prototype relation-name atom-terms lower)
   (remember-value-shape! 'atom
     (.o (:: self prototype) ascent-clause-kind: 'atom
@@ -439,6 +451,7 @@
 ;;; The constructor copies and checks labels before closing over them.
 (def +fragment-exports+
   (slot-contract 'ascent/fragment-exports procedure?))
+
 (def +source-handles+
   (slot-contract 'ascent/source-handles
                  (lambda (value)
@@ -465,7 +478,6 @@
       max-input-facts: +fact-budget+
       max-derived-facts: +fact-budget+
       max-output-facts: +fact-budget+))
-
 
 ;;; POO slots memoize their first value. Advance the declaration cursor only
 ;;; as far as each request needs, retaining the original first-force order.
@@ -520,12 +532,14 @@
 (def projection-program-current?
   (canonical-value-check-current? GerbilAscentProgramContract
     '(relations rules source-handles max-input-facts max-derived-facts max-output-facts)))
+
 (def (gerbil-ascent-make-program-value prototype relation-values rule-values handles input-limit derived-limit output-limit)
   (remember-value-shape! 'program
     (.o (:: @ prototype) relations: relation-values rules: rule-values
         source-handles: (gerbil-ascent-check-source-handles relation-values handles)
         max-input-facts: input-limit
         max-derived-facts: derived-limit max-output-facts: output-limit)))
+
 (def (gerbil-ascent-projection-tree-current? program)
   (and (declared-value-shape? 'program program)
        (projection-program-current?) (relation-protocol-current?) (relation-metadata-current?)
@@ -543,6 +557,7 @@
                             (list? body)
                             (andmap (lambda (clause)
                               (or (owned-atom-fields? clause) (owned-aggregate-fields? clause))) body))))) rules)))))
+
 (def (gerbil-ascent-check-projection-program program)
   (validate GerbilAscentProgramContract program))
 
@@ -571,10 +586,13 @@
        (.o .append-source!: (.cc Type. .element?: procedure?)
            .source-replacement: (.cc Type. .element?: procedure?)
            .run: (.cc Type. .element?: procedure?))))
+
 (def session-metadata-current?
   (canonical-metadata-current? GerbilAscentSessionContract '(.append-source! .source-replacement .run)))
+
 (def session-protocol-current?
   (canonical-validation-current? GerbilAscentSessionContract '(.append-source! .source-replacement .run)))
+
 (def (gerbil-ascent-make-session-value append! replace! replace-all! run! timeout!)
   (let (value (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
                 .append-source!: append! .source-replacement: replace!
@@ -587,10 +605,13 @@
 ;;; The Module publishes these existing native operations. Engine state and
 ;;; candidate values retain their own contracts; publication is not execution.
 (def ProgramScopeContract
-  (.cc YuanxuContract. identity: 'ascent/program-scope
-       proto: (.o)
-       value-contract: (Record relation: (list +procedure+)
-                              program: (list +procedure+)
-                              evaluate: (list +procedure+)
-                              open-session: (list +procedure+)
-                              solve: (list +procedure+))))
+  (.cc YuanxuContract.
+    identity: 'ascent/program-scope
+    proto: (.o)
+    value-contract:
+    (Record
+      relation: (list +procedure+)
+      program: (list +procedure+)
+      evaluate: (list +procedure+)
+      open-session: (list +procedure+)
+      solve: (list +procedure+))))

@@ -4,7 +4,9 @@
 ;;; Sole Module declaration. Native Scheme exports belong to func.ss.
 (.def Core
   identity: 'core
-  core: (.o requires: (.o )
-            scope-contract: CoreScopeContract
-            exports: CoreAPI)
+  core:
+  (.o
+    requires: (.o)
+    scope-contract: CoreScopeContract
+    exports: CoreAPI)
   features: (.o))

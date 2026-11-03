@@ -1,6 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
 (import "declaration.ss"
         :gerbil-ascent/program/api
         :gerbil-ascent/program/syntax
@@ -8,10 +9,12 @@
         :gerbil-ascent/program/scheme-checked
         :gerbil-ascent/rules/source
         (only-in :clan/poo/object .ref))
-(export (import: :gerbil-ascent/program/api)
-        (import: :gerbil-ascent/program/syntax)
-        (import: :gerbil-ascent/program/higher-order)
-        (import: :gerbil-ascent/program/scheme-checked)
+
+(export
+  (import: :gerbil-ascent/program/api)
+  (import: :gerbil-ascent/program/syntax)
+  (import: :gerbil-ascent/program/higher-order)
+  (import: :gerbil-ascent/program/scheme-checked)
         ascent-rule-module define-program
         make-declared-program recorded-rule-explanation)
 

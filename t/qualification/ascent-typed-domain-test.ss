@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/program/operator relational-op-source relational-op-project relational-op-compile)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation)
         (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/scheme-language relational-admit relational-solve relational-query-name)

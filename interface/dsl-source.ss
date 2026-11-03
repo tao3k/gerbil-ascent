@@ -3,16 +3,17 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Text entry into the existing upstream DSL lowering pipeline. This does
 ;;; not expose a general top-level Scheme evaluator or downstream imports.
-(import (only-in "closed-source.ss" ascent-closed-dsl-parts)
+(import (only-in "../rules/closed-source.ss" ascent-closed-dsl-parts)
         :gerbil/expander
         (only-in :gerbil/runtime/init gerbil-load-expander!)
         :gerbil-ascent/program/syntax
-        :gerbil-ascent/program/interface
+        :gerbil-ascent/program/api
         (only-in :clan/poo/object .ref)
         (only-in :gerbil/runtime/gambit current-readtable
                  readtable-eval-allowed?-set readtable-sharing-allowed?-set))
 (export ascent-load-dsl-sources)
 
+;; : (-> String DslDatum)
 (def (read-dsl text)
   (unless (and (string? text) (<= (u8vector-length (string->utf8 text)) 65536))
     (error "DSL source byte bound"))
@@ -37,6 +38,7 @@
             (visit form 0))
           form)))))
 
+;; : (-> Predicate String)
 (def (predicate-kind predicate)
   (cond ((eq? predicate symbol?) "symbol")
         ((or (eq? predicate exact-integer?) (eq? predicate integer?)) "integer")
@@ -47,16 +49,18 @@
 ;; Keep syntax imports in a parent context. Each invocation gets a fresh child
 ;; so generated bindings and definition state never leak across Programs.
 (def dsl-syntax-context #f)
+;; : (-> SyntaxContext)
 (def (make-dsl-context)
   (gerbil-load-expander!)
   (unless dsl-syntax-context
     (let (context (make-top-context))
       (parameterize ((current-expander-context context))
         (core-expand '(import :gerbil/core :gerbil-ascent/program/syntax
-                              :gerbil-ascent/program/interface)))
+                              :gerbil-ascent/program/api)))
       (set! dsl-syntax-context context)))
   (make-top-context dsl-syntax-context))
 
+;; : (-> [String] (Values Program Descriptors Exports Explain Bindings))
 (def (ascent-load-dsl-sources texts)
   (unless (and (list? texts) (<= 1 (length texts) 16)
                (andmap string? texts)

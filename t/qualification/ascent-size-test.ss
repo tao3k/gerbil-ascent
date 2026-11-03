@@ -1,7 +1,7 @@
 ;;; Empty-frontier pruning must preserve observable engine behavior.
 (import (only-in :std/test test-suite check-equal? test-case)
         (only-in :clan/poo/object .ref .o)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule gerbil-ascent-program
                  gerbil-ascent-guard gerbil-ascent-generator
@@ -73,8 +73,8 @@
            ((.ref new '.append-source!) 'edge edge)
            (same ((.ref old '.run)) ((.ref new '.run))))
          '((1 2) (2 3) (1 2) (3 0)))
-        ((.ref old '.replace-source!) 'edge '((0 4)))
-        ((.ref new '.replace-source!) 'edge '((0 4)))
+        ((.ref old '.source-replacement) 'edge '((0 4)))
+        ((.ref new '.source-replacement) 'edge '((0 4)))
         (same ((.ref old '.run)) ((.ref new '.run)))))
     (test-case "custom index Provider callbacks retain their exact count"
       (let* ((calls 0) (builds 0)

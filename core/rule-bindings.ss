@@ -3,8 +3,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Runtime operations over admitted terms and evaluation-local environments.
-(import (only-in "ordered-call.ss" dispatch-ordered-call))
-(import :gerbil-ascent/program/execution-control)
+(import (only-in :clan/poo/support/base lambda-match)
+        (only-in "ordered-call.ss" dispatch-ordered-call))
+(import :gerbil-ascent/core/execution-control)
 (export gerbil-ascent-expression-value gerbil-ascent-bind-row gerbil-ascent-head-row
         gerbil-ascent-binding-values gerbil-ascent-call-with-bindings
         gerbil-ascent-extend-pattern)
@@ -99,7 +100,7 @@
        (def value (car values))
        (defrule (advance next-bindings)
          (loop (cdr patterns) (cdr values) next-bindings))
-       (match term
+       ((lambda-match
          (['wildcard . _] (advance bindings))
          (['fresh-variable . name]
           ;; Checked plans prove this name absent, including prior terms.
@@ -123,7 +124,7 @@
              (lambda (previous)
                (and (equal? (cdr previous) value)
                     (advance bindings))))
-            (else (advance (cons (cons name value) bindings))))))))))
+            (else (advance (cons (cons name value) bindings)))))) term)))))
 
 ;; : (forall (v) (-> [Term] [(Pair Symbol v)] [v]))
 ;; : (-> Terms Environment Row)

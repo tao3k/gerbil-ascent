@@ -6,7 +6,7 @@
     benchmark-fixture-ref benchmark-fixture-contract-pass? benchmark-run/result)
   (only-in :gerbil/expander core-resolve-library-module-path)
   (only-in :clan/poo/object .ref)
-  (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation
+  (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation
     gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable)
   (only-in :gerbil-ascent/t/performance/expression-plan/input expression-program)
   (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)

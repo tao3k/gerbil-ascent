@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test test-suite check-equal? test-case)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface gerbil-ascent-relation gerbil-ascent-program
+        (only-in :gerbil-ascent/program/api gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
@@ -52,7 +52,7 @@
           (compare right left)
           (check-equal? (rowsof right 'item) '((1) (1)))
           (check-equal? (eq? (rowsof first 'item) (rowsof right 'item)) #f))
-        (for-each (lambda (engine) ((.ref engine '.replace-source!) 'item '((2) (3)))) (list old new))
+        (for-each (lambda (engine) ((.ref engine '.source-replacement) 'item '((2) (3)))) (list old new))
         (let ((left ((.ref old '.run))) (right ((.ref new '.run))))
           (compare right left)
           (check-equal? (rowsof right 'item) '((2) (3)))

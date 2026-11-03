@@ -11,7 +11,7 @@
         (only-in :clan/poo/mop element?)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentFragmentContract)
-        (only-in :gerbil-ascent/program/objects
+        (only-in :gerbil-ascent/program/func
                  gerbil-ascent-fragment gerbil-ascent-program
                  gerbil-ascent-relation gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-guard
@@ -28,7 +28,7 @@
                  relational-program-replace-source!
                  relational-program-transaction!
                  relational-program-session-run relational-program-query)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-replace-source!))

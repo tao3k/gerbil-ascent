@@ -5,7 +5,7 @@
 ;;; Included by the real semantic and performance modules. Fixture creation
 ;;; and all user callbacks are outside declaration timing.
 (import (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-expression gerbil-ascent-pattern
                  gerbil-ascent-atom gerbil-ascent-generator

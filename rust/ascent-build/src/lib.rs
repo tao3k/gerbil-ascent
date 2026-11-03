@@ -1,140 +1,87 @@
-//! Package orchestration; the upstream compiler owns graph and archive semantics.
-mod cache;
+//! Native package and archive consumption. Gerbil and its Rust integration library own build state.
 mod graph;
-mod input;
 #[cfg(feature = "instances")]
 mod instance_resources;
-mod ledger;
-mod observer;
-mod policy;
 #[cfg(feature = "python-sources")]
 mod python_instances;
 #[cfg(feature = "python-sources")]
 mod python_sources;
-
 #[cfg(feature = "python-sources")]
 pub use python_sources::stage_python_sources;
 
 use gerbil_scheme_aot_build::{
-    ProgramArchiveObserver, ProgramArchiveOperation, ProgramArchiveRequest,
+    CargoDirectiveKind, ProgramArchiveObservation, ProgramArchiveObserver, ProgramArchiveRequest,
     build_program_archive_observed, discover_gambit_gsc_from_env,
-    observe_program_archive_operation, source_workspace,
 };
+use sha2::{Digest, Sha256};
 use std::{
-    env,
+    env, fs,
+    io::Read,
     path::{Path, PathBuf},
 };
 
-/// Build the consumer archive using the pinned upstream compiler.
+/// Consume the package through its native build entry and the Rust integration library archive API.
 /// # Errors
-/// Preserves compiler failures and rejects incomplete or changed-input observations.
+/// Propagates native build, compiler, Rust integration library and link failures.
 pub fn build() -> Result<(), String> {
     let root = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").ok_or("missing package directory")?)
         .join("../..")
         .canonicalize()
         .map_err(|e| e.to_string())?;
-    let configured = env::var_os("GERBIL_PATH").map_or_else(|| root.join(".gerbil"), PathBuf::from);
-    let prefix = if configured.is_absolute() {
-        configured
-    } else {
-        root.join(configured)
-    };
     let out = PathBuf::from(env::var_os("OUT_DIR").ok_or("missing OUT_DIR")?);
-    inputs(&root);
-    let shared = cache::Lease::acquire(&out)?;
-    let observer = observer::Observer::new(
-        &out,
-        &shared
-            .archive
-            .parent()
-            .ok_or("missing shared root")?
-            .join("inputs"),
-        &prefix.join("lib/static"),
-        shared.wait_ns,
-    )?;
-    let result = construct(&root, &prefix, &out, &shared, &observer);
-    let admission = observer.finish(result.is_ok());
-    // Retain the compiler's original error even when the receipt also rejects.
-    result.and(admission)
-}
-fn construct(
-    root: &Path,
-    prefix: &Path,
-    out: &Path,
-    shared: &cache::Lease,
-    observer: &observer::Observer,
-) -> Result<(), String> {
-    graph::prepare(root, prefix, shared, observer)?;
+    let graph = out.join("program");
+    let runtime = graph::prepare(&root, &graph)?;
     let gsc = discover_gambit_gsc_from_env()?;
-    for source in [
-        &shared.graph.join("program.json"),
-        &shared.graph.join("program__exe.scm"),
-        &gsc,
-    ] {
-        observer.observe_source_input(source);
-    }
     let receipt = build_program_archive_observed(
         ProgramArchiveRequest {
-            manifest: &shared.graph.join("program.json"),
+            manifest: &graph.join("program.json"),
             gsc: &gsc,
             archive_name: "ascent_hybrid",
             linker_name: "ascent_hybrid",
-            out_dir: &shared.archive,
+            out_dir: &out.join("archive"),
         },
-        observer,
+        &CargoInputs,
     )?;
-    observe_program_archive_operation(
-        observer,
-        ProgramArchiveOperation {
-            phase: "private-archive",
-            operation: "copy detached archive",
-            subject: None,
-        },
-        || shared.publish(out, &receipt),
-    )?;
+    for directive in &receipt.cargo_directives {
+        match directive.kind {
+            CargoDirectiveKind::RustcLinkSearch => {
+                println!("cargo:rustc-link-search={}", directive.value);
+            }
+            CargoDirectiveKind::RustcLinkLib => {
+                println!("cargo:rustc-link-lib={}", directive.value);
+            }
+        }
+    }
+    // The protocol binds the produced program bytes, not another directory inventory.
+    let mut input = fs::File::open(&receipt.archive_file).map_err(|e| e.to_string())?;
+    let mut hash = Sha256::new();
+    let mut buffer = [0_u8; 16384];
+    loop {
+        let count = input.read(&mut buffer).map_err(|e| e.to_string())?;
+        if count == 0 {
+            break;
+        }
+        hash.update(&buffer[..count]);
+    }
+    println!(
+        "cargo:rustc-env=ASCENT_NATIVE_PROGRAM_SHA256={:x}",
+        hash.finalize()
+    );
     #[cfg(feature = "instances")]
     if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
-        instance_resources::prepare(&gsc, &receipt, prefix, out, observer)?;
+        instance_resources::prepare(&runtime, &gsc, &receipt, &graph, &out)?;
     }
-    graph::identify(root, prefix, out, &gsc, observer)
+    drop(runtime);
+    Ok(())
 }
 
-fn inputs(root: &std::path::Path) {
-    for key in [
-        "GERBIL_HOME",
-        "GERBIL_PATH",
-        "GERBIL_LOADPATH",
-        "GERBIL_GXI",
-        "GERBIL_GSC",
-        "SDKROOT",
-        "PKG_CONFIG_PATH",
-    ] {
-        println!("cargo:rerun-if-env-changed={key}");
+// Forward the Rust integration library's actual consumed inputs to Cargo; retain no parallel index.
+struct CargoInputs;
+impl ProgramArchiveObserver for CargoInputs {
+    fn observe(&self, event: ProgramArchiveObservation<'_>) {
+        eprintln!("{event}");
     }
-    // Directory dependencies include additions/removals, not just existing files.
-    // These are the package source roots, excluding build outputs and test trees.
-    for source in [
-        "build.ss",
-        "build-modules.ss",
-        "gerbil.pkg",
-        "bindings",
-        "core",
-        "table",
-        "program",
-        "applications",
-        "candidate",
-        "temporal",
-        "interface",
-        "rules",
-        "t/qualification/evidence-api-module.ss",
-    ] {
-        println!("cargo:rerun-if-changed={}", root.join(source).display());
-    }
-    let workspace = source_workspace();
-    for source in ["build.ss", "gerbil.pkg", "scheme"] {
-        println!(
-            "cargo:rerun-if-changed={}",
-            workspace.join(source).display()
-        );
+    fn observe_source_input(&self, path: &Path) {
+        println!("cargo:rerun-if-changed={}", path.display());
     }
 }

@@ -8,7 +8,7 @@
                  gerbil-ascent-source-cut-update)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         :gerbil-ascent/program/session
         :gerbil-ascent/program/actor-session)
 (export ascent-actor-session-test)

@@ -5,7 +5,7 @@
         (only-in :clan/poo/mop validate)
         :gerbil-ascent/program/operator
         (prefix-in :gerbil-ascent/t/performance/operator-publication/reference old-)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-rule
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-fragment gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-literal gerbil-ascent-guard
                  gerbil-ascent-construct-inert-program gerbil-ascent-construct-inert-fragment)

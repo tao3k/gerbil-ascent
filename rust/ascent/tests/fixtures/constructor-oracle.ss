@@ -1,6 +1,6 @@
 ;;; Existing Scheme constructors and evaluator are the independent oracle.
-(import :gerbil-ascent/rules/interface
-        (only-in :gerbil-ascent/interface/rule-module rule-module-program)
+(import :gerbil-ascent/rules/func
+        (only-in :gerbil-ascent/rules/source rule-module-program)
         (only-in :clan/poo/object .ref))
 (include "evidence-source.ss")
 (include "constructor-lattice.ss")

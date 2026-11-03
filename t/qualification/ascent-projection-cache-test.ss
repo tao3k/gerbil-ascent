@@ -1,5 +1,5 @@
 (import :std/test
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         (only-in :gerbil-ascent/program/types gerbil-ascent-projection-tree-current?)
         (only-in :gerbil-ascent/interface/projection-cache ascent-projection-program)
         (only-in :clan/poo/object .o .ref))

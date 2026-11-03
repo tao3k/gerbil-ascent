@@ -9,7 +9,7 @@
                  relational-admission-report-diagnostic relational-diagnostic-code
                  relational-solve relational-query-name))
 (import (only-in :clan/poo/object .o .ref .putslot! uninstantiate-object! object-instance $constant-slot-spec $thunk-slot-spec)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-rule
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-literal)
         (only-in :gerbil-ascent/program/scheme-checked relational-source)
         (only-in :gerbil-ascent/program/scheme-snapshot relational-snapshot-program)

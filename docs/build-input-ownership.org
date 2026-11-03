@@ -1,0 +1,108 @@
+#+title: ASCENT ABI Build Input Ownership
+#+language: en
+#+filetags: :build:ownership:core:qualification:
+
+* Failure and actual compiler behavior
+
+The Root Bazel build at ASCENT =4715fa0a= failed when Gambit tried to create C
+beside an imported =clan__poo__support__base.scm= in a read-only dependency.
+Gerbil's installed =compile-exe= driver resolves static Scheme through its
+native import closure and generates C/objects beside those selected files.
+Existing objects do not make a read-only input directory a valid write extent.
+The compiler and its sources are unchanged by this repair.
+
+ASCENT added ABI targets after obtaining its init-owned library spec. Those
+additional executable roots were outside Core's test-program static-input
+extent. Declaring a library spec therefore did not protect their borrowed
+inputs. This is an ownership gap, not a reason to chmod a dependency, duplicate
+its directory or issue an approval for a different source snapshot.
+
+* Boundaries of the repair
+
+=build.ss= still consumes the exact init-owned library spec. It derives ABI
+entry filenames from its existing =exe:= targets and calls
+=call-with-static-link-inputs= only for compile commands. Clean/spec commands
+remain outside that discovery. No second ABI inventory or module selection is
+introduced. Ordinary native Make still owns compilation, ordering and reuse.
+
+=bindings/build-entry.ss= walks these roots using Core's existing
+=for-each-build-module= and Gerbil's =core-import-module=. It passes the actual
+contexts and existing owned module identities to =module-native-static-inputs=.
+Core's =call-with-native-static-inputs= retains source/origin guards, creates a
+private writable extent for the selected borrowed Scheme, drains outstanding
+compiler jobs after failure and restores the loader path on every exit.
+The native traversal deduplicates shared module identities and does not execute
+runtime module bodies or discover unselected peer files.
+
+The runtime =bindings/artifact.ss= is unchanged. Its existing digest and build
+identity consumers do not acquire compiler preparation through this repair.
+
+The extent spans both ABI link commands, allowing their native object reuse.
+It contains borrowed compiler inputs, not copied dependency installations or
+cached admission conclusions. ASCENT's source snapshot/receipt checks remain
+in place; no dependency lock or source-currentness assertion is removed.
+
+* Focused evidence and limits
+
+The isolated source copy starts at ASCENT =4715fa0a= with this repair. It uses
+the existing local Core qualification runtime and locked gerbil-poo
+=e080849458e37cc33a4e63582540ffc25cda0ba6=. Core has uncommitted proof/refactor
+work in that qualification cohort: this is not exact-head remote CI evidence.
+ASCENT outputs and borrowed dependency libraries occupy separate directories.
+The normal =just build= succeeds with two compiler jobs and the installed
+Gerbil; generated borrowed C/objects resolve under Core's temporary extent.
+The resulting =libascent= is an arm64 Mach-O shared library and
+=ascent-develop= an arm64 Mach-O executable. The original receipt is produced.
+
+The default =just test-file t/qualification/static-link-inputs-test.ss= passes
+in five seconds, including MODULE-OK, HARNESS-OK and final OK. Its one Case
+covers successful cleanup, original exception identity, failed-action cleanup,
+staged-source tampering rejection, loader-path restoration and unselected
+branch laziness. It changes only temporary test inputs, never installed
+library sources. Raw build/test logs remain outside source control.
+
+ASCENT's currently declared Core =1934955= predates these static-input APIs.
+That dependency pin is deliberately not promoted by this local repair.
+Core #19 at =eec2dc8= still has Linux/macOS scale and macOS bootstrap failures;
+the prior full-CI prerequisite for product dependency promotion is not met.
+Consequently this patch requires the newer Core API cohort for validation and
+must not be represented as a released standalone-package or Root-CI closure.
+No provider configuration, inference semantics, production budget or Gerbil
+compiler implementation is changed.
+
+The second =just build= on the same source and output prefix also exits zero.
+Its log contains no native module compile or executable compile jobs; the
+existing secondary-link dispatch reports =admitted-outputs=0=. This supports
+native Make hot reuse for this cohort, not a general latency claim. Both the
+cold and hot invocations retain the same source and artifact receipt owner.
+
+* Final source receipt
+
+After moving preparation into the existing =bindings/build-entry.ss= (and
+restoring =bindings/artifact.ss= byte-for-byte), the normal cold rebuild and
+same-source hot build both exit zero. The final hot log has zero compiler job
+entries. The strengthened focused test passes in four seconds and checks the
+exact =staged native compiler input changed= diagnostic, rather than accepting
+any error as evidence of source rejection.
+
+Initial isolated-environment attempts failed before compiling ASCENT: first a
+missing Core package manifest, then the inherited Nix pkg-config search path
+could not find Homebrew OpenSSL. Native =gxpkg link= and package =gerbil build=
+created the package record; the standard =PKG_CONFIG_LIBDIR= selected the actual
+installed OpenSSL metadata. No manifest was fabricated, no package was
+uninstalled, and no production environment variable or compatibility route was
+added. These setup failures are distinct from the original read-only link error.
+
+The source fix and test are present in the existing ASCENT working tree,
+uncommitted. Its previously dirty migration audit is preserved. Core dependency
+promotion and Root Bazel/remote-CI qualification remain outstanding; successful
+local linking does not discharge those gates.
+
+* Current ownership boundary
+
+The output replay and artifact-directory mechanisms described in the historical
+receipts above have been removed. The native borrowed-static-input extent is
+still owned by Yuanxu. Binary targets and compilation now remain entirely in
+=build.ss= and the standard Gerbil/integration library flow. See
+[[file:init-build-ownership.org][Build Ownership Audit]] for the current implementation and verification
+limits. Earlier timings and status markers apply only to their original source.

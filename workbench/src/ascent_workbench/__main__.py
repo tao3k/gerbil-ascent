@@ -7,10 +7,12 @@ import sys
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("formal", "interface-tests"))
+    parser.add_argument("command", choices=("formal", "interface-tests", "design"))
     args, rest = parser.parse_known_args()
     if args.command == "formal":
         from .formal import main as run
+    elif args.command == "design":
+        from .design import main as run
     else:
         from .interface_tests import main as run
     sys.argv = [sys.argv[0], *rest]

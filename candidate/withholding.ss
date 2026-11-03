@@ -16,6 +16,7 @@
 ;;; may occur in ANY selected body. Groundings are caller claims: this checks
 ;;; removal/preservation, not rule validity, confidence or real-world truth.
 ;;; All duplicates of selected heads are removed; source row order is retained.
+;; : (-> Snapshot Natural Groundings Snapshot)
 (def (reasoning-withhold-source-snapshot source generation groundings)
   (def (reject code path detail)
     (raise (make-candidate-rejection (make-reasoning-diagnostic code path detail))))

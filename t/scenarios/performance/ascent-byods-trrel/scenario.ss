@@ -8,11 +8,11 @@
                  benchmark-receipt-pass?
                  benchmark-run/result)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/table/interface
+        (only-in :gerbil-ascent/table/func
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-trrel-storage-provider
                  gerbil-ascent-trrel-uf-storage-provider)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation
                  gerbil-ascent-program
                  gerbil-ascent-evaluate-program))

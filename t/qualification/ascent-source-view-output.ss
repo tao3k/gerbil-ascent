@@ -4,7 +4,7 @@
 ;;; Executed as source, independently of the native test library. This catches
 ;;; imports that compile away but fail in the interpreter's runtime loader.
 (import :gerbil-ascent/core/relation-view :gerbil-ascent/table/trrel-uf
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-trrel-uf-storage-provider)

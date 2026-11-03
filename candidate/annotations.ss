@@ -16,6 +16,19 @@
 ;;; alternative rules and duplicate source occurrences add separately.
 ;;; Counts are private until a complete synchronous round is unchanged.
 ;; : (-> Snapshot InspectedCandidate Digest Status Rows Nat Nat Nat Nat PositiveCounts)
+
+;; candidate-positive-counts
+;; : (-> Snapshot RuleSpec Digest Symbol Rows Natural Natural Natural Natural PositiveCounts)
+;; | doc m%
+;;     Count only a complete verified provenance graph; refusal retains its noncomplete status.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (candidate-positive-counts snapshot spec digest status rows 1000)
+;;     ;; => bounded counts with the verification status retained
+;;     ```
+;;   %
 (def (candidate-positive-counts snapshot spec digest native-status native-rows
                                 max-steps (max-work 100000) (count-limit 1000000)
                                 (edge-limit 4096))

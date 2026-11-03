@@ -70,75 +70,20 @@ implementation. General =open_sources= retains its upstream DSL contract.
 Consumers must explicitly select the inert contract and bind all source bytes;
 the new entry point does not qualify arbitrary Scheme or macro expansion.
 
-* Compiled syntax resources
+* Native build ownership
 
-Embedded DSL entries initialize the upstream expander and use its ordinary
-=eval-syntax= / =current-expander-context= protocol. ASCENT does not replace
-=##expand-source= or force the runtime's private raw-Scheme parameter. Generated
-metadata handling and dynamic loading remain with the installed Gerbil runtime.
-The executable entry explicitly imports the public Evidence facades, so the
-upstream linker includes their runtime constructors and higher-order execution
-dependencies in its builtin closure. Declaring a module in the build inventory
-alone does not link it into that executable.
+The root =build.ss= declares =libascent= and =ascent-develop=. Build them with
+=gerbil build= and run source tests with =gerbil test=. Gerbil and Yuanxu own
+source projection, dependency resolution, output currentness and compilation.
 
-=bindings/artifact.ss= records the generated =.ssi= and =.scm= closure and
-asks upstream =__find-library-module= which compiled module it selects.
-Resolution respects load-path order: within each directory the loader selects
-the final contiguous generation starting at =.o1=, stopping at the first gap;
-otherwise it selects that directory's =.scm= before trying a later directory.
-A larger orphan generation is not a substitute for a missing =.o1=.
+ASCENT has no =libascent.json= publisher, output-generation scanner, private
+resource catalogue, compiler-output replay, or receipt-driven rebuild planner.
+The C ABI is consumed through the functions in =ascent.h= and the produced
+shared library. It does not require a Scheme resource sidecar.
 
-On source-identity rejection, the build removes dynamic generations, generated
-Scheme phases and =.ssxi.ss= optimization metadata only for its declared ASCENT
-modules before the existing upstream clean/rebuild. Native
-=make-clean= owns declared interface/static outputs; old dynamic generations
-and obsolete generated phases are outside those outputs. The compiler caches
-optimization metadata across batch compilations, so that metadata must also
-belong to the current source identity. Preserving old resources could select
-an older binary beside newly generated Scheme. This invalidation leaves SDK/dependency files and
-unrelated module names alone; generation ownership is tested separately.
-
-The receipt preserves every real filename and byte hash through the selected
-compiled generation. Gambit linker symbols contain the actual =.oN= filename;
-renaming a binary to =.o1= changes loader identity without changing its symbol.
-=compiledResourceOrigins= binds the selected module, producer path, compiled
-SHA and generated-source SHA. Packaging publishes recorded bytes and keeps the
-origin observation; it does not compile, rename or fabricate generations.
-ABI repackaging stages an exact resource tree before replacing the previous
-tree: old unrecorded higher generations must not survive in a reused directory.
-A resource failure during staging preserves the previous tree and Library.
-The API extension builder already requires a new output directory.
-
-On the same filesystem, ABI and API packaging retain ordinary hard links to
-canonical positive =.oN= generations. These are regular files, not symbolic
-loader aliases: removing the producer name leaves the published bytes intact.
-Native compilation must append a new generation or unlink an invalidated name
-before replacing it; an in-place write is outside this ownership contract.
-Metadata, the Library and the API extension are independently copied. Packaging
-never changes permissions or signing attributes of a shared generation.
-The receipt records actual transfer counts; cross-volume or unsupported linking
-falls back to a checked byte copy. Other I/O failures propagate.
-
-Every resource is checked against its recorded SHA before transfer, after
-transfer and before publication. Shared writable aliases are not absolute
-immutability: consumers must bind their resource ownership and reject later
-SHA drift, and must not chmod a shared inode as if it were an independent copy.
-Copy fallback correctness does not establish its cold-loading performance on
-another filesystem or a portable wheel qualification.
-
-Artifact initialization uses the native syntax-path contract separately from
-the caller's =max_request_bytes=. Public requests always retain that ceiling,
-including a caller-supplied =configure-syntax= request. Source-scope and fact
-limits remain applied through the same native request transport.
-
-Every inventoried generated module requires compiled code. A missing module,
-source-only resolution, or missing first generation raises =CompiledResourceError=
-before a receipt can be published. The two =interface/entry= generated resources
-are explicitly classified in =sourceOnlyResources=: the =exe:= target links
-that driver into the Library and does not produce dynamic modules for it.
-Their generated-source hashes remain in the complete resource inventory.
-
-Native inventory tests exercise gaps, absent first generations and search-path
-precedence. Python packaging tests exercise binary bytes and drift rejection.
-Actual DSL loading and complete downstream consumer qualification remain
-separate gates, under their existing budgets and execution environment.
+The Rust Scheme archive consumes the SDK's program graph and archive APIs.
+Optional isolated owners use the SDK expander closure and SDK package
+publication directly. They do not recursively scan installed libraries, merge
+SDK/application resource trees, or rewrite Gerbil's =load-module=. Loader paths
+come from the SDK-verified package. No old artifacts API or compatibility alias
+is retained.

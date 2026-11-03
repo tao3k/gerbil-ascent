@@ -3,6 +3,11 @@
 // Whole-source choice precedes construction; failure never retries another route.
 module ClosedDslLowering {
   const Mutation: str
+  // Same finite role cases as the production permission kernel.
+  pure def declaration_source(role: str): bool =
+    Mutation == "roleSource" or role == "input" or role == "mixed"
+  pure def declaration_head(role: str): bool =
+    Mutation == "roleHead" or role == "derived" or role == "mixed"
   var phase: str
   var recognized: bool
   var route: str
@@ -47,4 +52,10 @@ module ClosedDslLowering {
   val WholeChoice = route != "closed" or recognized
   val NoRetry = attempts <= 1
   val FailurePrivate = not(rejected) or not(owner)
+  val RoleSourceExact = phase == "reader" or (declaration_source("input") and
+    not(declaration_source("derived")) and declaration_source("mixed"))
+  val RoleHeadExact = phase == "reader" or (not(declaration_head("input")) and
+    declaration_head("derived") and declaration_head("mixed"))
+  val RoleUnknownClosed = phase == "reader" or (not(declaration_source("unknown")) and
+    not(declaration_head("unknown")))
 }

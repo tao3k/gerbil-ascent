@@ -4,7 +4,9 @@
 
 
 ;;; Whole-program composition, admission diagnostics and one-shot solve state.
-(import (only-in "objects.ss" gerbil-ascent-program)
+(import (only-in "func.ss" gerbil-ascent-program)
+        (only-in "scheme-checked.ss" RelationalDeclarationError? RelationalDeclarationError-code
+                 RelationalDeclarationError-path relational-rule-origin)
         (only-in "types.ss" GerbilAscentFragmentContract)
         (only-in "scheme-snapshot.ss" relational-snapshot-program)
         (only-in "scheme-query.ss" make-relational-solution)
@@ -16,10 +18,11 @@
 (export relational-compose relational-admit relational-admit/report relational-solve
         relational-admission-report? relational-admission-report-admission
         relational-admission-report-diagnostic relational-diagnostic?
-        relational-diagnostic-code relational-diagnostic-path relational-diagnostic-detail)
+        relational-diagnostic-code relational-diagnostic-path relational-diagnostic-detail
+        relational-diagnostic-origin)
 
 (defstruct relational-admission (run))
-(defstruct relational-diagnostic (code path detail))
+(defstruct relational-diagnostic (code path detail origin))
 (defstruct relational-admission-report (admission diagnostic))
 
 ;;; Composition is inert. Admission checks the assembled schema and rules
@@ -108,17 +111,28 @@
   (let (path '(program))
     (with-catch
      (lambda (failure)
+       (when (RelationalDeclarationError? failure)
+         (set! path (RelationalDeclarationError-path failure)))
        (make-relational-admission-report
         #f
         (make-relational-diagnostic
          (cond
+          ((RelationalDeclarationError? failure) (RelationalDeclarationError-code failure))
           ((and (pair? path) (eq? (car path) 'rule))
            (if (eq? (caddr path) 'body)
              'invalid-body 'invalid-head))
           ((equal? path '(program dependencies))
            'invalid-dependencies)
           (else 'invalid-program))
-         path (exception->string failure))))
+         path (exception->string failure)
+         (and (pair? path) (eq? (car path) 'rule)
+              (with-catch (lambda (_) #f)
+                (lambda ()
+                  (let* ((rule (list-ref (.ref program 'rules) (cadr path)))
+                         (origin (relational-rule-origin rule)))
+                    (and (vector? origin) (= (vector-length origin) 2)
+                         (if (eq? (caddr path) 'head) (vector-ref origin 0)
+                           (list-ref (vector-ref origin 1) (cadddr path)))))))))))
      (lambda ()
        (make-relational-admission-report
         (relational-admit

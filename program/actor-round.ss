@@ -39,7 +39,7 @@
 ;;; Failure stops admission and drains assigned tasks before joining the pool.
 ;; run-task
 ;; : (forall (task atom row) (-> Thread RoundKey task (Execute task atom row) TaskOutcome))
-;; : (-> Thread RoundKey Task Execute (Or Symbol (Pair Symbol Any)))
+;; : (-> Thread RoundKey Task Execute (Or Symbol (Pair Symbol TaskFailure)))
 ;; | doc m%
 ;;     A fresh batch and checkpoint window belong to this assignment. Share
 ;;     one continuation so both task failure and refused credit unwind dynamic

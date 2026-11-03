@@ -11,7 +11,7 @@
         (only-in :gerbil-ascent/t/qualification/ascent-upstream-examples-fixture
                  ascent-fibonacci-example-program
                  ascent-context-flow-example-program)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program))
 
 (def fibonacci-fixture

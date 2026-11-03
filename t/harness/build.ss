@@ -4,23 +4,27 @@
 ;;; Build only. Upstream Gerbil owns test discovery and execution.
 (import (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         :gerbil/expander
-        (only-in :std/make make make-clean)
+        (only-in :std/make make)
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
         :std/iter
         (only-in :std/list/list delete-duplicates/hash)
         (only-in :std/list/list-builder with-list-builder)
         :std/os/flock :std/os/device
         "library-spec.ss"
-        (only-in "../../bindings/artifact.ss" artifact-invalidated-modules clean-compiled-resources!)
         (only-in :std/string/path path-default-extension)
         (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-native-import-closure)
         (only-in "artifact-admission.ss" artifact-support-cache artifact-support-interfaces artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 ;; BEGIN GENERATED PREPARATION IMPORT
-        (only-in "../../build-modules.ss" gerbil-ascent-library-spec gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)
+        (only-in "../../build.ss" gerbil-ascent-compiler-options)
+        (only-in :clan/poo/object .get) "../../init.ss"
 ;; END GENERATED PREPARATION IMPORT
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
+(def (gerbil-ascent-library-spec)
+  ((.get gerbil-ascent.init.exports std-make-spec) '("init")))
+(def (gerbil-ascent-library-modules) (map cadr (gerbil-ascent-library-spec)))
+
 (def package-library (path-expand "lib" (gerbil-path)))
 (def test-cache (path-expand ".cache/ascent/compiled-library"))
 (def (with-test-lane thunk)
@@ -52,7 +56,7 @@
                     (and (not (string-suffix? "-test.ssi" module))
                          (file-exists? (string-append (path-strip-extension module) ".ss")))))
            (collect (path-strip-extension module))))))
-    (for (tree (if all-outputs? '("t" "bindings" "build-modules.ssi")
+    (for (tree (if all-outputs? '("t" "bindings" "init.ssi")
                    '("t/qualification" "t/performance")))
       (visit tree))))
 
@@ -103,8 +107,9 @@
     ;; Source Suites remain source inputs to GxTest; only their dependencies
     ;; are compiled here. Preparation time is reported separately in CI.
     (let* ((phase (current-jiffy))
-           (production-current?
-             (null? (artifact-invalidated-modules (current-directory) (gerbil-ascent-build-input-modules))))
+           ;; The ABI receipt cannot authorize native interface reuse.
+           ;; Project current source; Gerbil alone decides compiled reuse.
+           (production-current? #f)
            (roots (preparation-projection-roots (gerbil-ascent-library-modules)
                     modules tests source-consumers production-current?)))
       (set! production-interfaces-admitted? production-current?)
@@ -188,15 +193,6 @@
       ;; Only requested compiled consumers compile; ordinary semantic Suites are
       ;; discovered and loaded by the standard Gerbil test entry.
       (let (phase (current-jiffy))
-        ;; make tracks source/dependency timestamps, not changed compiler flags.
-        ;; A changed profile invalidates installed test outputs, including
-        ;; unrequested old Suites; make still owns all actual compilation.
-        (unless (artifact-compiler-options-current? options-file gerbil-ascent-compiler-options)
-          (let (stale (delete-duplicates/hash
-                       (preparation-stale-compiler-modules #f (gerbil-ascent-library-modules)
-                                                           all (cached-support-modules #t))))
-            (make-clean stale srcdir: (current-directory) libdir: library)
-            (clean-compiled-resources! (path-expand "gerbil-ascent" library) stale)))
         ;; std/make imports carriers again to identify and check dependencies.
         ;; Reuse admitted interfaces there too, but never as compiler inputs:
         ;; Gerbil's driver binds current-compile-context for actual builds.
@@ -239,7 +235,6 @@
         (artifact-main "freeze")
         (prepare-test-library!
          '("t/qualification/scheme-closure-contract-test.ss"
-           "t/qualification/scheme-artifact-test.ss"
            "t/qualification/scheme-provenance-graph-test.ss"
            "t/qualification/scheme-higher-order-test.ss"
            "t/qualification/ascent-index-lifecycle-test.ss"

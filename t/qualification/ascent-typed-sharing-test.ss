@@ -5,7 +5,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate)
         (only-in :gerbil-ascent/program/types GerbilAscentProgramContract)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation)
         :gerbil-ascent/program/higher-order
         (rename-in (only-in :gerbil-ascent/t/performance/typed-sharing/reference
           relational-relation-type relational-typed-source relational-typed-union

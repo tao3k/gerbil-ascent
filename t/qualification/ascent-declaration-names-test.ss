@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :std/error Error-message Error-irritants)
         (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-fragment)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-fragment)
         (rename-in (only-in :gerbil-ascent/t/performance/declaration-names/reference gerbil-ascent-program gerbil-ascent-fragment)
           (gerbil-ascent-program old-program) (gerbil-ascent-fragment old-fragment))
         :gerbil-ascent/t/performance/declaration-names/fixture)

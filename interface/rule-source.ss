@@ -3,8 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; The installed engine reads inert ASCENT declarations. No import, eval,
 ;;; macro expansion, compiler, or caller-supplied Scheme callback is involved.
-(import :std/encoding/json
-        (only-in :gerbil/runtime/gambit
+(import (only-in :gerbil/runtime/gambit
                  current-readtable readtable-eval-allowed?-set
                  readtable-sharing-allowed?-set))
 (export ascent-read-rule-sources)

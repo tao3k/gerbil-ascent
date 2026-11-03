@@ -1,8 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :clan/poo/object :gerbil-ascent/program/objects :gerbil-ascent/core/relation-view
-        (only-in :gerbil-ascent/table/interface gerbil-ascent-eqrel-storage-provider
+(import :clan/poo/object :gerbil-ascent/program/func :gerbil-ascent/core/relation-view
+        (only-in :gerbil-ascent/table/func gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-trrel-uf-storage-provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state
                  gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze

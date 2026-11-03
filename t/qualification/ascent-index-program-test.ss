@@ -14,9 +14,9 @@
                  ascent-composite-index-fixture-program
                  ascent-lattice-index-fixture-program
                  ascent-index-alist-provider)
-        (only-in :gerbil-ascent/table/interface
+        (only-in :gerbil-ascent/table/func
                  gerbil-ascent-hash-index-provider)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program gerbil-ascent-relation
                  gerbil-ascent-program gerbil-ascent-rule gerbil-ascent-atom
                  gerbil-ascent-variable gerbil-ascent-literal

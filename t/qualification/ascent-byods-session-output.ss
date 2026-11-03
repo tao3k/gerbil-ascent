@@ -4,12 +4,12 @@
 
 (import (only-in :gerbil-ascent/t/qualification/ascent-session-corpus
                  ascent-session-qualification)
-        (only-in :gerbil-ascent/table/interface
+        (only-in :gerbil-ascent/table/func
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-trrel-storage-provider
                  gerbil-ascent-trrel-uf-storage-provider)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-open-session)
         (only-in :gerbil-ascent/program/syntax ascent))
 

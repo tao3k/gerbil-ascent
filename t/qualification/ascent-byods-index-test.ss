@@ -4,17 +4,17 @@
 
 (import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .ref .o)
-        (only-in :gerbil-ascent/program/objects
+        (only-in :gerbil-ascent/program/func
                  gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-literal gerbil-ascent-variable
                  gerbil-ascent-pattern gerbil-ascent-guard
                  gerbil-ascent-negation gerbil-ascent-wildcard)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-alist-provider)
-        (only-in :gerbil-ascent/table/interface
+        (only-in :gerbil-ascent/table/func
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-eqrel-storage-provider)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!

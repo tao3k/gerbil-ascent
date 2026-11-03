@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :clan/poo/object :gerbil-ascent/program/objects
+(import :clan/poo/object :gerbil-ascent/program/func
         (only-in :std/error Error? Error-message)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
@@ -53,7 +53,7 @@
      (lambda (i)
        (let (rows (if (even? i) '((0)) []))
          (cond
-          ((eq? scenario 'replay) ((.ref session '.replace-source!) 'blocked rows))
+          ((eq? scenario 'replay) ((.ref session '.source-replacement) 'blocked rows))
           ((eq? scenario 'rejected)
            (unless
              (with-catch
@@ -61,10 +61,10 @@
                 (and (Error? failure)
                      (equal? (Error-message failure) "ASCENT replacement result was not accepted")))
               (lambda ()
-                ((.ref session '.replace-sources!) (list (cons 'blocked rows)) (lambda (_) #f))
+                ((.ref session '.source-replacements) (list (cons 'blocked rows)) (lambda (_) #f))
                 #f))
              (error "rejected source cut did not retain its diagnostic")))
-          (else ((.ref session '.replace-sources!) (list (cons 'blocked rows)))))
+          (else ((.ref session '.source-replacements) (list (cons 'blocked rows)))))
          (projection session relations)))
      (iota 4))))
 

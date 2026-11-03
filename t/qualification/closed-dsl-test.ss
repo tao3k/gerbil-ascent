@@ -2,14 +2,14 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander :std/test :clan/poo/object
-        :gerbil-ascent/program/interface
-        (only-in :gerbil-ascent/interface/closed-source ascent-closed-dsl-parts)
-        (only-in :gerbil-ascent/interface/closed-evidence ascent-closed-evidence-scope)
+        :gerbil-ascent/program/api
+        (only-in :gerbil-ascent/rules/closed-source ascent-closed-dsl-parts)
+        (only-in :gerbil-ascent/rules/closed-evidence ascent-closed-evidence-scope)
         (only-in :gerbil-ascent/rules/declaration rule-module-program rule-module-bindings rule-module-explain))
 (def (check! actual expected) (unless (equal? actual expected) (error "closed lowering mismatch" actual expected)))
 (def (macro-part form)
   (parameterize ((current-expander-context (make-top-context)))
-    (core-expand '(import :gerbil/core :gerbil-ascent/program/syntax :gerbil-ascent/program/interface))
+    (core-expand '(import :gerbil/core :gerbil-ascent/program/syntax :gerbil-ascent/program/api))
     (eval-syntax form #t)))
 (def (with-facts part facts)
   (gerbil-ascent-program
@@ -124,7 +124,7 @@
              (b (scope "make-audit" []))
              (reference
               (parameterize ((current-expander-context (make-top-context)))
-                (core-expand '(import :gerbil/core :gerbil-ascent/rules/interface))
+                (core-expand '(import :gerbil/core :gerbil-ascent/rules/func))
                 (eval-syntax `(let () ,form (make-audit)) #t))))
         (check! (eq? a b) #f)
         (check! (eq? (rule-module-program a) (rule-module-program b)) #f)

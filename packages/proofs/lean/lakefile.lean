@@ -9,11 +9,11 @@ package «gerbil-ascent-proof» where
 
 require LeanPoo from git
   "https://github.com/tao3k/lean-poo.git"
-  @ "6aae50a9867c12191abb2180fdf031b3a8f55060"
+  @ "v0.1.2"
 
 @[default_target]
 lean_lib AscentProof where
-  roots := #[`OwnerAdmission, `LookupCost, `CompilerCost, `PreparationWork, `DescriptorKeys, `DescriptorStream, `DescriptorKernel, `SchemeDescriptor, `RustDescriptor, `CachePublication, `ActorEnvelope, `SccState, `ExecutionPolicy, `ExecutionRendering, `ScheduledExecution, `CompiledCertificate, `PhysicalBuckets, `RayonPublication, `ClosedDslLowering, `MinimumHeight, `StableSourceSupport, `SourceOccurrences, `OrderedMapping, `AscentProof, `DerivationCounts, `CanonicalIndex, `Withholding, `ExecutionFeedback, `UnsanitizedPaths, `ProofDag, `BoundedSpine, `TerminalTraversal, `NumericReduction, `CountReduction, `CertificateMaterial, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
+  roots := #[`DslDeclarations, `OwnerAdmission, `LookupCost, `CompilerCost, `PreparationWork, `DescriptorKeys, `DescriptorStream, `DescriptorKernel, `SchemeDescriptor, `RustDescriptor, `CachePublication, `ActorEnvelope, `SccState, `ExecutionPolicy, `ExecutionRendering, `ScheduledExecution, `CompiledCertificate, `PhysicalBuckets, `RayonPublication, `ClosedDslLowering, `MinimumHeight, `StableSourceSupport, `SourceOccurrences, `OrderedMapping, `AscentProof, `DerivationCounts, `CanonicalIndex, `Withholding, `ExecutionFeedback, `UnsanitizedPaths, `ProofDag, `BoundedSpine, `TerminalTraversal, `NumericReduction, `CountReduction, `CertificateMaterial, `AtomicBinding, `CappedArithmetic, `DependencyInvalidation, `DescriptorScope,
              `FiniteFlowPacking, `PoloniusInitialization, `ProviderRectangles, `ProviderRouting, `CurriedDictionary, `ProviderEncoding, `ProviderAdmission, `ProviderIteration, `LatticeProjection, `StrictDependencies, `PendingKeys, `LatticeAdmission, `PipeCapture, `FunctionalDependency, `EquivalenceComponents, `DirectedFrontier,
              `ScopedWitness, `BranchScopedWitness, `ScopedComposition, `ScopedReachabilityMask, `ScopedQuery, `MovieCastQuery, `MaterializedMovieQuery, `RetainedInference, `FeedbackConformance, `FiniteHeight, `FiniteOperators, `LexicalLowering,
              `BitmapWorklist, `GraphWorklist, `PositiveNonmembership,

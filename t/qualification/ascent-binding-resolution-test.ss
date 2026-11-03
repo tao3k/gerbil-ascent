@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :clan/poo/object .ref) :gerbil-ascent/program/operator-descriptor
- :gerbil-ascent/program/operator-lowering :gerbil-ascent/program/objects
+ :gerbil-ascent/program/operator-lowering :gerbil-ascent/program/func
  :gerbil-ascent/t/performance/binding-resolution/fixture)
 (export ascent-binding-resolution-test)
 (def ascent-binding-resolution-test

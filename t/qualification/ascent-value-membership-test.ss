@@ -8,9 +8,10 @@
                  yuanxu-classification-evidence)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider GerbilAscentIndexProviderContract)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-guard
+        (only-in :gerbil-ascent/program/func gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-guard
                  gerbil-ascent-construct-inert-program)
-        (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract GerbilAscentGuardContract
+        (only-in :clan/poo/slot-observation call-with-slot-read-observer)
+        (only-in :gerbil-ascent/program/types canonical-value-check-current? GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract GerbilAscentGuardContract
                  GerbilAscentSessionContract gerbil-ascent-make-session-value
                  GerbilAscentRelationContract GerbilAscentProgramContract gerbil-ascent-make-relation-value gerbil-ascent-make-rule-value gerbil-ascent-make-atom-value))
 (export ascent-value-membership-test)
@@ -166,7 +167,7 @@
                        (lambda (contract _candidate)
                          (set! seen (cons (.ref contract 'identity) seen)) [])))))
         (for-each (lambda (slot) (check-equal? (.ref session slot) operation))
-          '(.append-source! .replace-source! .replace-sources! .run .run-timeout))
+          '(.append-source! .source-replacement .source-replacements .run .run-timeout))
         (check-equal? (element? GerbilAscentSessionContract session) #t)
         (check-equal? (yuanxu-validation-evidence-accepted?
                        (yuanxu-contract-admit GerbilAscentSessionContract session context)) #t)
@@ -536,6 +537,45 @@
         (check-equal? (and (memq 'ascent/term-kind seen) #t) #t)
         (check-equal? (and (memq 'ascent/value seen) #t) #t)
         (check-equal? (car seen) 'ascent/term)))
+    (test-case "shared revision sources retain every observable classifier demand"
+      (let* ((root GerbilAscentProgramContract)
+             (fields (.ref root 'responsibilities))
+             (budget (.ref fields 'max-input-facts))
+             (current? (canonical-value-check-current? root
+                         '(max-input-facts max-derived-facts max-output-facts)))
+             (demands 0))
+        (check-equal? (eq? budget (.ref fields 'max-derived-facts)) #t)
+        (check-equal? (eq? budget (.ref fields 'max-output-facts)) #t)
+        (call-with-slot-read-observer
+          (lambda (_read) (void))
+          (lambda () (check-equal? (current?) #t))
+          before: (lambda (receiver key)
+            (when (and (eq? receiver budget) (eq? key '.classify))
+              (set! demands (+ demands 1)))))
+        (check-equal? demands 3)))
+    (test-case "repeated protocol cache misses remain distinct POO demands and revoke reuse"
+      (let* ((root GerbilAscentTermContract)
+             (admit (.ref root '.admit))
+             (current? (canonical-value-check-current? root '(kind value)))
+             (demands 0))
+        (try
+          (check-equal? (current?) #t)
+          (hash-remove! (object-instance root) '.admit)
+          (call-with-slot-read-observer
+            (lambda (_read) (void))
+            (lambda ()
+              (check-equal? (current?) #f)
+              (check-equal? (current?) #f))
+            before: (lambda (receiver key)
+              (when (and (eq? receiver root) (eq? key '.admit))
+                (set! demands (+ demands 1)))))
+          (check-equal? demands 2)
+          ;; Ordinary rematerialization creates a NEW method closure. The old
+          ;; guard must remain revoked; only fresh preparation captures it.
+          (check-equal? (procedure? (.ref root '.admit)) #t)
+          (check-equal? (current?) #f)
+          (check-equal? ((canonical-value-check-current? root '(kind value))) #t)
+          (finally (hash-put! (object-instance root) '.admit admit)))))
     (test-case "missing metadata cache entries take complete public admission"
       (let* ((term (gerbil-ascent-variable 'x))
              (kind (.ref (.ref GerbilAscentTermContract 'responsibilities) 'kind))

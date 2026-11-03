@@ -7,7 +7,7 @@
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components)
         (only-in :gerbil-ascent/t/qualification/ascent-graph-fixture
                  ascent-reference-graph-components)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-program-summary)
         (only-in :gerbil-ascent/program/syntax ascent))
 

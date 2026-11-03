@@ -6,7 +6,7 @@
         (for-syntax :gerbil/runtime/system)
         (only-in :gerbil/runtime/init gerbil-load-expander!)
         (only-in :gerbil/runtime/repl replx)
-        :gerbil-ascent/program/syntax :gerbil-ascent/program/interface
+        :gerbil-ascent/program/syntax :gerbil-ascent/program/api
         :gerbil-ascent/interface/engine-api)
 (export main)
 
@@ -35,7 +35,7 @@
     (else
      (eval-syntax '(import :std/interactive
                           :gerbil-ascent/program/syntax
-                          :gerbil-ascent/program/interface
+                          :gerbil-ascent/program/api
                           :gerbil-ascent/interface/engine-api))
      (match args
        ([] (replx))

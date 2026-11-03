@@ -1,6 +1,13 @@
 * Explicit development tools
-The optional [[file:sysml/README.org][SysML matching architecture study]] owns design contracts only;
-its model checks do not establish native matching or performance acceptance.
+The optional [[file:sysml/workflow.org][SysML/Org engineering workflow]] allocates design, Lean/Quint,
+Scheme correspondence and performance obligations. =just check-design= checks
+its architectural contracts and the existing matching fixtures; model checks
+do not establish Scheme source refinement or performance acceptance.
+OpenSysML belongs to the existing independent =ascent-workbench= Python package's
+=design= development dependency group. Install it explicitly with
+=uv sync --project workbench --only-group design --locked=; the production package
+does not acquire this dependency or trigger its service. Checks use its Python
+API directly, not a shell wrapper around the CLI.
 
 The root =gerbil.pkg= declares production dependencies only. This directory
 owns ASP's build-policy, test and benchmark dependency. ASP retains its POO

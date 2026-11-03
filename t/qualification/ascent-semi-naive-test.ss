@@ -1,10 +1,10 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :clan/poo/object .ref)
- :gerbil-ascent/program/interface :gerbil-ascent/program/evaluate
+ :gerbil-ascent/program/api :gerbil-ascent/program/evaluate
  :gerbil-ascent/core/positive-plan :gerbil-ascent/program/index
  :gerbil-ascent/table/provider :gerbil-ascent/program/actor-round
- (only-in :gerbil-ascent/program/objects gerbil-ascent-construct-inert-program)
+ (only-in :gerbil-ascent/program/func gerbil-ascent-construct-inert-program)
  (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)
  (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
  (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-rules)

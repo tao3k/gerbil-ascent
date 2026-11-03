@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Hygienic source forms lower to the existing POO contracts and evaluator.
-(import "objects.ss"
+(import "func.ss"
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate)
         (only-in "types.ss" GerbilAscentFragmentContract)

@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :clan/poo/object :gerbil-ascent/program/objects
+(import :std/test :clan/poo/object :gerbil-ascent/program/func
         (only-in :std/error Error? Error-message)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (rename-in (only-in :gerbil-ascent/t/performance/source-materialization/reference-evaluate
@@ -112,7 +112,7 @@
            (check (list-sort (lambda (a b) (or (< (car a) (car b))
                                               (and (= (car a) (car b)) (< (cadr a) (cadr b)))))
                     ((.ref result 'rows-of) 'edges)) => '((0 1) (0 2) (1 2)))
-           ((.ref engine '.replace-source!) 'height '((0 2) (0 5)))
+           ((.ref engine '.source-replacement) 'height '((0 2) (0 5)))
            (check ((.ref ((.ref engine '.run)) 'rows-of) 'height) => '((0 5)))
            (check ((.ref result 'rows-of) 'height) => '((0 3)))))
        (list frozen-engine gerbil-ascent-make-engine)))))

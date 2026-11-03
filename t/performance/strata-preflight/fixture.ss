@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .o .ref)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-rule-strata)
         (rename-in (only-in :gerbil-ascent/t/performance/strata-preflight/reference-semantics gerbil-ascent-rule-strata)
                    (gerbil-ascent-rule-strata old-strata))

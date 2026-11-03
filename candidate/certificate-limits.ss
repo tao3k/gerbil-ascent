@@ -19,6 +19,7 @@
 (defstruct certificate-material (rows cells))
 (def (make-certificate-material-budget)
   (make-certificate-material 0 0))
+;; : (-> MaterialBudget Row Boolean)
 (def (certificate-material-reserve! budget row)
   (let (width (bounded-list-length row +max-certificate-row-arity+))
     (and width
@@ -82,9 +83,25 @@
 ;;; A visitor may exhaust a nested work/material budget. Its return value is
 ;;; irrelevant (duplicate insertion may return false without exhausting it).
 ;;; False means stopped, including when the last visitor caused refusal.
+
+;; certificate-for-each-while
+;; : (forall (a) (-> (-> Boolean) (-> a Void) [a] Boolean))
+;; : (-> StopPredicate ItemVisitor Items Boolean)
+;; | doc m%
+;;     Check the stop predicate before every item and once after the final visit.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (certificate-for-each-while (lambda () #t) void '())
+;;     ;; => #t
+;;     ```
+;;   %
 (def (certificate-for-each-while proceed? visit items)
-  (let walk ((remaining items))
-    (cond
-     ((not (proceed?)) #f)
-     ((null? remaining) #t)
-     (else (visit (car remaining)) (walk (cdr remaining))))))
+  (let (continuing? #t)
+    (do ((remaining items (cdr remaining)))
+        ((begin
+           (set! continuing? (if (proceed?) #t #f))
+           (or (not continuing?) (null? remaining)))
+         continuing?)
+      (visit (car remaining)))))

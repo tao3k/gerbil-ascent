@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test test-suite check-equal? test-case)
         (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule gerbil-ascent-guard)
         (only-in :gerbil-ascent/program/evaluate
@@ -45,7 +45,7 @@
            (let* ((width (+ 16 cycle)) (source (edges width)))
              (for-each
               (lambda (engine)
-                ((.ref engine '.replace-source!) 'edge
+                ((.ref engine '.source-replacement) 'edge
                   (if (even? cycle) source (reverse source)))
                 ((.ref engine '.run-timeout) 0))
               (list old new))

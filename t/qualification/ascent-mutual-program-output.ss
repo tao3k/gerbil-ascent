@@ -5,7 +5,7 @@
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-mutual-program-fixture
                  ascent-mutual-program ascent-mutual-evaluate)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-run)

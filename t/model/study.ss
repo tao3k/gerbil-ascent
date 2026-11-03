@@ -15,7 +15,6 @@
         (only-in :gerbil-ascent/t/qualification/ascent-positive-nonmembership-test ascent-positive-nonmembership-test))
 (export main)
 (import (only-in :gerbil-ascent/t/harness/artifact-admission artifact-main))
-(import (only-in :gerbil-ascent/t/qualification/scheme-artifact-test scheme-artifact-test))
 (import (only-in :gerbil-ascent/t/model/response-projection prediction-main))
 (import (only-in :gerbil-ascent/t/qualification/ascent-timeout-test ascent-timeout-test))
 
@@ -109,7 +108,6 @@
   (let* ((entries
           (list
                 (cons "t/qualification/scheme-closure-contract-test.ss" scheme-closure-contract-test)
-                (cons "t/qualification/scheme-artifact-test.ss" scheme-artifact-test)
                 (cons "t/qualification/scheme-provenance-graph-test.ss" scheme-provenance-graph-test)
                 (cons "t/qualification/scheme-higher-order-test.ss" scheme-higher-order-test)
                 (cons "t/qualification/ascent-index-lifecycle-test.ss" ascent-index-lifecycle-test)

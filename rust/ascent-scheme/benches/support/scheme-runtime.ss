@@ -1,7 +1,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/runtime/gambit :std/iter
-        :gerbil-ascent/program/objects :gerbil-ascent/program/session
+        :gerbil-ascent/program/func :gerbil-ascent/program/session
         :gerbil-ascent/program/actor-session
         (only-in :clan/poo/object .ref))
 (export main program edges truth row<?)

@@ -16,7 +16,7 @@ class RayonControlScope(unittest.TestCase):
     def check_change(self, changed):
         command = next(line.strip() for line in (ROOT / '.github/workflows/build-cost.yml').read_text().splitlines()
                        if line.strip().startswith('git diff --exit-code "$reference" HEAD --'))
-        files = ['program/rust-execution.ss', 'program/objects.ss', 'core/rule.ss',
+        files = ['program/rust-execution.ss', 'program/func.ss', 'core/rule.ss',
                  'rust/ascent/src/execution/matching.rs', 'rust/ascent-scheme/src/lib.rs',
                  'rust/Cargo.lock', 'rust/Cargo.toml', 'gerbil.pkg', 'dev/gerbil.pkg', 'bindings/c/bridge.h']
         with tempfile.TemporaryDirectory() as directory:
@@ -54,7 +54,7 @@ class RayonControlScope(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_frontend_bridge_and_dependency_changes_still_reject(self):
-        for path in ['program/objects.ss', 'core/rule.ss', 'bindings/c/bridge.h',
+        for path in ['program/func.ss', 'core/rule.ss', 'bindings/c/bridge.h',
                      'rust/ascent-scheme/src/lib.rs', 'rust/Cargo.lock', 'rust/Cargo.toml',
                      'gerbil.pkg', 'dev/gerbil.pkg']:
             with self.subTest(path=path):
@@ -69,6 +69,6 @@ class RayonControlScope(unittest.TestCase):
              '(for-each displayln (gerbil-ascent-library-modules))'],
             cwd=ROOT, capture_output=True, text=True, timeout=180, check=True)
         modules = result.stdout.splitlines()
-        self.assertIn('program/interface', modules)
+        self.assertIn('program/api', modules)
         self.assertIn('candidate/finite-evidence', modules)
         self.assertNotIn('program/rust-execution', modules)

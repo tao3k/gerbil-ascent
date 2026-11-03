@@ -4,7 +4,7 @@
 (import (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-program)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (rename-in (only-in :gerbil-ascent/t/performance/storage-batch/reference-evaluate
                            gerbil-ascent-make-engine)

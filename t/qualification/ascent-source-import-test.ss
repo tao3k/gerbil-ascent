@@ -7,7 +7,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-program)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate
                  ascent-result-reference-make-engine)
         (only-in :gerbil-ascent/t/harness/test striped-module-files source-test-interface source-test-batches source-live-ratio source-vm-command single-thread-vm-command preparation-batches-bounded?)
@@ -48,12 +48,6 @@
         (check-equal? (take wrapped 3) (take command 3))
         (check-equal? (drop wrapped 4) (drop command 4))
         (check-equal? (string-suffix? "(native-main)" (list-ref wrapped 3)) #t)))
-    (test-case "linked source VM preserves heap native GxTest argv and processor assertion"
-      (let* ((command '("gxi" "-:max-heap=2048M" "-e" "(native-main)" "-v" "5" "suite.ss"))
-             (linked (source-vm-command command "/package/bin/ascent-develop")))
-        (check-equal? (take linked 3) '("/package/bin/ascent-develop" "-:max-heap=2048M" "--eval-plain"))
-        (check-equal? (drop linked 3) (drop (single-thread-vm-command command) 3))
-        (check-equal? (source-vm-command command #f) (single-thread-vm-command command))))
     (test-case "ordinary Darwin GC targets preserve hard heaps and isolated work"
       (let* ((profiled (source-test-interface "batched" "2G"))
              (ordinary "t/qualification/scheme-relational-test.ss")
@@ -64,13 +58,13 @@
         (check-equal? (source-live-ratio profiled ordinary #f) 50)
         (check-equal? (source-live-ratio profiled heavy #f) 50)
         (for-each (lambda (ratio)
-          (let (actual (source-vm-command command #f ratio))
+          (let (actual (source-vm-command command ratio))
             (check-equal? (cadr actual)
               (string-append "-:max-heap=2048M,live-ratio=" (number->string ratio)))
             (check-equal? (drop actual 4) (drop command 4))
             (check-equal? (string-suffix? "(native-main)" (list-ref actual 3)) #t))) '(50 80))
-        (check-exception (source-vm-command '("gxi" "-e" "(native-main)") #f 80) true)
-        (check-exception (source-vm-command command #f 0) true)))
+        (check-exception (source-vm-command '("gxi" "-e" "(native-main)") 80) true)
+        (check-exception (source-vm-command command 0) true)))
     (test-case "observed wide source batches are rejected before child admission"
       (let (files (map (lambda (i) (string-append "module-" (number->string i))) (iota 15)))
         (check-equal? (preparation-batches-bounded? (list files) 174 12) #f)

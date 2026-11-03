@@ -41,8 +41,8 @@
     ;; A rejected prefix already determines inequality. Stop walking its
     ;; remaining source headers; only an exact base can reach the additions.
     ;; Owned proper spines are the same admission premise as before.
-    (let prefix ((rest base) (remaining rows))
-      (if (null? rest)
-        (equal? (reverse additions) remaining)
-        (and (pair? remaining) (equal? (car rest) (car remaining))
-             (prefix (cdr rest) (cdr remaining)))))))
+    (let (remaining rows)
+      (and (andmap (lambda (row)
+                     (and (pair? remaining) (equal? row (car remaining))
+                          (begin (set! remaining (cdr remaining)) #t))) base)
+           (equal? (reverse additions) remaining)))))

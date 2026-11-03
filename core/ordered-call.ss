@@ -8,6 +8,8 @@
 ;;; retain the ordered map/apply protocol. No callback value is cached.
 (export dispatch-ordered-call)
 
+;;; Boundary: Each read completes before the next operand is inspected.
+;;; Invariant: The procedure runs only after every selected operand is bound.
 (defrules ordered-call-values ()
   ((_ procedure (input read) (value ...) ())
    (procedure value ...))
@@ -15,6 +17,18 @@
    (let* ((input argument) (next read))
      (ordered-call-values procedure (input read) (value ... next) (rest ...)))))
 
+;; dispatch-ordered-call
+;; : (-> WrapperSyntax ProcedureSyntax InputsSyntax ReaderSyntax Syntax)
+;; | doc m%
+;;     Expand ordered reads once before invocation; larger arities preserve map/apply order.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (dispatch-ordered-call (begin) + '() (slot slot))
+;;     ;; => 0
+;;     ```
+;;   %
 (defrules dispatch-ordered-call ()
   ((_ (wrap ...) procedure inputs (input read))
    (match inputs

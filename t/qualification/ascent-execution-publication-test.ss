@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :clan/poo/object :gerbil-ascent/program/objects
+(import :std/test :clan/poo/object :gerbil-ascent/program/func
         :gerbil-ascent/t/performance/engine-publication/fixture
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (prefix-in :gerbil-ascent/t/performance/engine-publication/reference old-)

@@ -41,8 +41,11 @@
 ;;; Physical engine dispatch gives custom receivers fresh column/key list
 ;;; headers and row spines. Field values preserve identity and remain shared.
 ;;; Validated custom lookup packets are detached before rule callbacks run.
+;; : (forall (a) (-> a Boolean))
 (def (index-columns? columns)
   (and (list? columns) (andmap (lambda (n) (and (exact-integer? n) (>= n 0))) columns)))
+;;; Boundary: Providers receive the current admitted immutable row snapshot.
+;;; Invariant: A provider never gains authority to insert or omit logical source facts.
 (.defgeneric (gerbil-ascent-index-provider-build provider (rows :~ list?) (columns :~ index-columns?))
   slot: .build-index)
 ;;; Extend receives only newly admitted rows, preserving index cache reuse.

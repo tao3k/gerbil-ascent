@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/program/interface
+(import (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-aggregate gerbil-ascent-program

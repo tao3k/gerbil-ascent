@@ -6,7 +6,7 @@
         (only-in :gerbil-ascent/program/scheme-query make-relational-solution)
         (only-in :std/list/list take)
         (only-in :std/test check-equal? check-exception test-suite test-case)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  relational-op-function relational-op-fix
                  relational-op-union relational-op-project
                  relational-op-join relational-op-source

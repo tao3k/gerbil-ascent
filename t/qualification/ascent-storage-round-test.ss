@@ -1,11 +1,11 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :clan/poo/object :gerbil-ascent/program/objects
+(import :std/test :clan/poo/object :gerbil-ascent/program/func
         :gerbil-ascent/t/performance/storage-round/fixture
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (prefix-in :gerbil-ascent/t/performance/storage-round/reference-evaluate old-)
-        (only-in :gerbil-ascent/table/interface gerbil-ascent-set-storage-provider gerbil-ascent-hash-index-provider)
+        (only-in :gerbil-ascent/table/func gerbil-ascent-set-storage-provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage make-storage-readiness
                  gerbil-ascent-storage-engine-state gerbil-ascent-storage-engine-extension
                  gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!

@@ -7,6 +7,7 @@
 
 ;; Encoding is independent of execution. Every node retains its actual native
 ;; value, including opaque values and cycles; references belong to one result.
+;; : (-> SchemeValue RetainedValues Boolean ValueGraph)
 (def (ascent-value-graph root retained (owned? #f))
   (let ((seen (make-hash-table-eq)) (nodes []) (serial (hash-length retained)))
     (def (walk value)
@@ -54,6 +55,7 @@
 
 ;; Native predicates and contracts validate decoded inputs, not Python.
 ;; Compound references are resolved by the owning session, never globally.
+;; : (-> ValueInput Resolver (Maybe Graphs) SchemeValue)
 (def (ascent-value-input value resolve (graphs #f))
   (if (and (hash-table? value) (hash-key? value "type"))
     (let ((kind (hash-ref value "type")) (item (hash-ref value "value" #f)))
@@ -81,6 +83,7 @@
 
 ;; Owned structural values cross as typed graphs, with an allocation pass before
 ;; wiring edges. Arbitrary objects can only cross by an owner-checked reference.
+;; : (-> ValueGraph (Maybe Cache) SchemeValue)
 (def (ascent-input-graph graph (cache #f))
   (unless (equal? (hash-ref graph "format") "native-value-graph.v1")
     (error "invalid owned graph format"))

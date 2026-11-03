@@ -124,6 +124,19 @@
 ;; Sparse point roots retain at most ceil(|facts|/8)*|points| bitmap bytes.
 ;; Queue membership coalesces new bits; each successful propagation admits only
 ;; fresh facts. Logical charging is independent of physical representation size.
+
+;; gerbil-ascent-finite-flow
+;; : (-> FactDomain PointDomain Seeds Edges Blockers Natural Cancel FlowResult)
+;; | doc m%
+;;     Evaluate admitted finite masks with the original fact budget and cancellation checkpoints.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-finite-flow '() '() '() '() '() 0)
+;;     ;; => an empty finite-flow result
+;;     ```
+;;   %
 (def (gerbil-ascent-finite-flow fact-domain point-domain seeds edges blockers budget
                                 (canceled? (lambda () #f)))
   (unless (and (integer? budget) (exact? budget) (>= budget 0) (procedure? canceled?))
@@ -176,6 +189,19 @@
 ;; : (-> FactDomain PointDomain PointMaskRows LogicalBudget FrozenView)
 ;; Adapt an ordinary keyed lattice cut without retaining an expanded tuple log.
 ;; Integers are immutable; byte roots are fresh and never escape the view.
+
+;; gerbil-ascent-freeze-finite-masks
+;; : (-> FactDomain PointDomain Rows Natural FrozenMasks)
+;; | doc m%
+;;     Validate all masks and logical cardinality before publishing detached finite roots.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-freeze-finite-masks '() '() '() 0)
+;;     ;; => a frozen empty mask view
+;;     ```
+;;   %
 (def (gerbil-ascent-freeze-finite-masks fact-domain point-domain rows budget)
   (unless (and (list? rows) (exact-integer? budget) (>= budget 0))
     (error "invalid ASCENT finite mask publication"))

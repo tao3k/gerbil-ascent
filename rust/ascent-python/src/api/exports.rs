@@ -4,7 +4,6 @@ use pyo3::{
     types::{PyModule, PyModuleMethods},
 };
 pub(super) fn install(module: &Bound<'_, PyModule>) -> PyResult<()> {
-    super::artifacts::install(module)?;
     module.add_function(pyo3::wrap_pyfunction!(super::operators::predicate, module)?)?;
     module.add_function(pyo3::wrap_pyfunction!(super::operators::compute, module)?)?;
     module.add_function(pyo3::wrap_pyfunction!(super::operators::reduce, module)?)?;

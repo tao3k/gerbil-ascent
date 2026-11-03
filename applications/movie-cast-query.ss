@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :gerbil-ascent/program/objects
+(import :gerbil-ascent/program/func
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider))
 (export gerbil-ascent-movie-cast-program)

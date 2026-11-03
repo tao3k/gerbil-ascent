@@ -4,7 +4,7 @@
 ;;; Invocation-owned graph admission and rule emission. The compiler receiver
 ;;; selects constructors once; traversal contains no prototype dispatch.
 (import "operator-descriptor.ss" "operator-analysis.ss"
- (only-in "objects.ss" gerbil-ascent-atom gerbil-ascent-variable))
+ (only-in "func.ss" gerbil-ascent-atom gerbil-ascent-variable))
 (export lower-operator-graph)
 
 ;;; A lexical variable owns one immutable POO term, reused by every atom

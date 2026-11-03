@@ -64,7 +64,7 @@ fn assert_query(query: &ModuleValue, solution: &ModuleValue, expected: &[Vec<i64
 #[test]
 fn library_operators_compose_query_replace_and_preserve_failed_update() {
     let engine = Engine::new(1).unwrap();
-    let module = engine.module(":gerbil-ascent/program/interface").unwrap();
+    let module = engine.module(":gerbil-ascent/program/api").unwrap();
     let source = module
         .call(
             "relational-op-source",
@@ -161,7 +161,7 @@ fn library_operators_compose_query_replace_and_preserve_failed_update() {
 fn registered_native_module_imports_constructor_and_scoped_export_bindings() {
     let engine = Engine::new(1).unwrap();
     engine.register_module(":consumer/targets",r"
-      (import :gerbil-ascent/rules/interface)
+      (import :gerbil-ascent/rules/func)
       (export make)
       (def (make inputs)
         (let (fragment (relational-op-fragment (relational-op-project (relational-op-source 'edge 2 inputs) '(1)) 'targets))

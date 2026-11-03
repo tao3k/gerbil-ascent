@@ -29,7 +29,7 @@
                                      (string->symbol (string-append ":gerbil-ascent/" name))))
                     (file-exists? (string-append (path-strip-extension expected) ".o1")))
          (error "finite mapping benchmark requires both native implementations" name))))
-   '("program/types" "program/scheme-checked" "program/objects"
+   '("program/types" "program/scheme-checked" "program/func"
      "t/performance/finite-mapping/reference-types" "t/performance/finite-mapping/reference-objects"
      "t/performance/finite-mapping/reference"))
   (displayln "NATIVE-MODULES-OK") (force-output))

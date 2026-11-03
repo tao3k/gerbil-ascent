@@ -10,7 +10,7 @@
                            gerbil-ascent-index-build gerbil-ascent-index-extend!)
                    (gerbil-ascent-index-build old-build)
                    (gerbil-ascent-index-extend! old-extend!))
-        (only-in :gerbil-ascent/program/interface gerbil-ascent-program gerbil-ascent-relation
+        (only-in :gerbil-ascent/program/api gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes
@@ -190,7 +190,7 @@
            (check-equal? (rows ((.ref new '.run))) (rows ((.ref old '.run)))))
          (iota 10 31))
         (check-equal? (length (rows first-new)) 31)
-        (for-each (lambda (engine) ((.ref engine '.replace-source!) 'right '((0 99)))) (list old new))
+        (for-each (lambda (engine) ((.ref engine '.source-replacement) 'right '((0 99)))) (list old new))
         (check-equal? (rows ((.ref new '.run))) (rows ((.ref old '.run))))))
     (test-case "custom build extend lookup traces and superset candidates remain identical"
       (let* ((trace [])

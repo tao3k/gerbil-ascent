@@ -11,7 +11,7 @@
         "operator-descriptor.ss" "operator-measurement.ss" "operator-reference.ss"
         (only-in "operator-lowering.ss" lower-operator-graph)
         (only-in "types.ss" gerbil-ascent-fact-limit?)
-        (only-in "objects.ss" gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
+        (only-in "func.ss" gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-fragment gerbil-ascent-construct-inert-program
                  gerbil-ascent-construct-inert-fragment))
 

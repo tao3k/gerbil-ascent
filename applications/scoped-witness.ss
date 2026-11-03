@@ -3,9 +3,10 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; MatLogic finite two-hop transfer: exclude only the intermediate witness
 ;;; before answer projection. Direct support is a separate, unmasked branch.
-(import :gerbil-ascent/program/objects)
+(import :gerbil-ascent/program/func)
 (export gerbil-ascent-scoped-witness-program
         gerbil-ascent-branch-scoped-witness-program)
+;; : (-> Edges Starts Targets Blocked Direct FactLimit FactLimit FactLimit Program)
 (def (gerbil-ascent-scoped-witness-program edges starts targets blocked direct
         (input-budget 10000) (fact-budget 10000) (output-budget 20000))
   (let ((s (gerbil-ascent-variable 's)) (w (gerbil-ascent-variable 'w))
@@ -32,6 +33,7 @@
 ;;; Branch identities remain in input selections, masks, witnesses and answers.
 ;;; Only branch_union deliberately projects the identity away after exclusion.
 ;;; Edges are shared; direct support remains unmasked inside its own branch.
+;; : (-> Edges ScopedStarts ScopedTargets ScopedBlocked ScopedDirect FactLimit FactLimit FactLimit Program)
 (def (gerbil-ascent-branch-scoped-witness-program edges starts targets blocked direct
         (input-budget 10000) (fact-budget 10000) (output-budget 20000))
   (let ((scope (gerbil-ascent-variable 'scope)) (s (gerbil-ascent-variable 's))

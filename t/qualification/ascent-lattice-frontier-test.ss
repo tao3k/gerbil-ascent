@@ -4,7 +4,7 @@
 (import :std/test (only-in :std/error Error-message Error-irritants)
         :clan/poo/object
         :gerbil-ascent/program/lattice-frontier
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program
                  gerbil-ascent-relation gerbil-ascent-lattice)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (rename-in (only-in :gerbil-ascent/t/performance/lattice-frontier/reference

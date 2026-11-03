@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         (only-in :gerbil-ascent/program/types gerbil-ascent-relation-with-rows
                  GerbilAscentRelationContract GerbilAscentLatticeContract)
         (only-in :gerbil-ascent/interface/engine-api ascent-engine-program-wire)
@@ -13,7 +13,7 @@
 ;;; Inspect the actual owner stamp in compiled code without adding a production
 ;;; test hook. It records field-specification ownership, never validation success.
 (def shape? (##eval 'gerbil-ascent/program/types#declared-value-shape?))
-(def ordinary-check (##eval 'gerbil-ascent/program/objects#current-declaration-check))
+(def ordinary-check (##eval 'gerbil-ascent/program/func#current-declaration-check))
 (def (old-view relation replacement) (.o (:: @ relation) rows: replacement))
 (def (rejected? action) (with-catch (lambda (_) #t) (lambda () (action) #f)))
 (def (same-data? a b)

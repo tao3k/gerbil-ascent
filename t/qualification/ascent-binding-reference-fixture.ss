@@ -4,7 +4,7 @@
 
 
 ;;; Frozen binding oracle from 74f0046bb6137b4fce22db5ae398b9812734c137.
-(import (only-in :gerbil-ascent/program/objects gerbil-ascent-atom gerbil-ascent-clause-plan))
+(import (only-in :gerbil-ascent/program/func gerbil-ascent-atom gerbil-ascent-clause-plan))
 (export ascent-reference-bind-row ascent-binding-atom-plan)
 
 (def (ascent-reference-expression-value payload environment)

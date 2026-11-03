@@ -4,7 +4,7 @@
 
 (import (only-in :gerbil-ascent/t/qualification/ascent-session-corpus
                  ascent-session-qualification)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-count gerbil-ascent-open-session)
         (only-in :gerbil-ascent/program/syntax ascent))
 

@@ -8,7 +8,7 @@
                  benchmark-receipt-pass?
                  benchmark-run/result)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!

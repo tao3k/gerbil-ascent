@@ -9,7 +9,7 @@
                  ascent-recursive-lattice-projection-program)
         (only-in :gerbil-ascent/t/qualification/ascent-lattice-negation-fixture
                  ascent-lattice-negation-program)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-lattice gerbil-ascent-relation
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-evaluate-program

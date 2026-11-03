@@ -1,28 +1,15 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; ASCENT business exports. GC, roots and conversions belong to the upstream bridge.
 (import (only-in "engine-api.ss" ascent-engine-call)
-        (only-in "rule-module.ss" ascent-prepare-source-context!)
+        (only-in "../rules/source.ss" ascent-prepare-source-context!)
         :gerbil-scheme-rust/scheme/runtime
-        (only-in :gerbil/runtime/loader set-load-path! load-module)
-        (only-in :gerbil/runtime/init __scheme-source)
+        (only-in :gerbil/runtime/loader set-load-path!)
         (only-in :gerbil/runtime/mop slot-ref)
         :gerbil/runtime/gambit
-        :gerbil-ascent/program/execution-control)
+        :gerbil-ascent/core/execution-control)
 (extern namespace: #f gerbil-ascent/interface/hybrid#checkpoint
                        gerbil-ascent/interface/hybrid#bind-checkpoint)
 (export main)
-(def instance-loader-installed? #f)
-(def (install-instance-source-loader! library)
-  (set-load-path! (list library))
-  (unless instance-loader-installed?
-    ;; The SDK's generated .scm carriers are raw Gambit code. Scope its existing
-    ;; raw-source parameter to module loading only; user `load` and DSL evaluation
-    ;; retain their ordinary semantics. No compiler is entered or reimplemented.
-    (let (original load-module)
-      (set! load-module
-        (lambda (module)
-          (parameterize ((__scheme-source module)) (original module)))))
-    (set! instance-loader-installed? #t)))
 (def (main . _) (void))
 (def (failure-message failure)
   ;; SyntaxError display pretty-prints through Gambit's terminal machinery.
@@ -99,13 +86,14 @@ void ascent_hybrid_set_checkpoint(ascent_check_type fn) { ascent_check_fn = fn; 
     (gerbil-scheme-rust/scheme/runtime#gerbil-rs-rooted-call request
       (lambda (input)
         (unless (and (vector? input) (= (vector-length input) 2)
-                     (string? (vector-ref input 1)))
+                     (list? (vector-ref input 1))
+                     (andmap string? (vector-ref input 1)))
           (error "invalid fixed-owner initialization"))
-        (gerbil-ascent/interface/hybrid#install-instance-source-loader! (vector-ref input 1))
+        (set-load-path! (vector-ref input 1))
         (gerbil-ascent/interface/hybrid#bind-checkpoint (vector-ref input 0))
         ;; The upstream owner initialization task retains its original 60-second
         ;; bound. Do not publish a bound owner before its fixed source ABI is ready.
-        (gerbil-ascent/interface/rule-module#ascent-prepare-source-context!))))
+        (gerbil-ascent/rules/source#ascent-prepare-source-context!))))
   (c-define (table request) (int64) int64 "ascent_hybrid_table" "extern"
     (gerbil-scheme-rust/scheme/runtime#gerbil-rs-rooted-call request
       (lambda (entries)

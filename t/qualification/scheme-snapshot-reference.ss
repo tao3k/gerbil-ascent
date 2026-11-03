@@ -8,7 +8,7 @@
 
 ;;; Rebuild caller declarations into the checked scalar grammar before planning.
 ;;; This owner constructs no evaluator or retained session.
-(import :gerbil-ascent/program/objects :gerbil-ascent/program/scheme-checked
+(import :gerbil-ascent/program/func :gerbil-ascent/program/scheme-checked
         (only-in :gerbil-ascent/program/types GerbilAscentProgramContract)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate))

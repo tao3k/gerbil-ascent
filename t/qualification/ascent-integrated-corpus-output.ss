@@ -5,8 +5,8 @@
 ;;; Batch differential adapter for one composed Ascent program. Each input
 ;;; case is (edge-rows blocked-nodes); every case gets a fresh POO program.
 (import (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-construct-inert-program)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/func gerbil-ascent-construct-inert-program)
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-count gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!

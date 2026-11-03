@@ -218,6 +218,8 @@
     (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
     empty-row-indexes))
 
+;;; Boundary: Each engine owns the mutable cache cells created here.
+;;; Invariant: Failed publication revokes versions before another reader can reuse an entry.
 (def (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
   ;; Allocate a physical lane only on demand. The ordinary route retains its
   ;; scan threshold; qualified pure plans may reuse exact bound-key indexes

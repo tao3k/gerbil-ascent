@@ -70,9 +70,6 @@ pub use datalog::{DatalogGraph, DatalogRequest, evaluate_datalog, read_datalog};
 mod rows;
 pub use rows::rows_equal;
 
-#[cfg(feature = "artifacts")]
-pub mod artifacts;
-
 /// Bounded inert Scheme datum decoding; no evaluation or authority admission.
 pub mod syntax;
 

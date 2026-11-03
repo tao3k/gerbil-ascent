@@ -4,7 +4,7 @@
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :std/list/list append-map)
         (only-in :clan/poo/object .ref)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         :gerbil-ascent/program/actor-round
         :gerbil-ascent/program/positive-components
         (only-in :gerbil-ascent/program/component-worker make-component-snapshot gerbil-ascent-run-positive-component!)

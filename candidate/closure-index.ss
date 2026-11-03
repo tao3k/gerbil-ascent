@@ -7,6 +7,7 @@
 (export make-closure-index closure-index-rows closure-index-member? closure-index-source)
 (defstruct closure-relation (rows members source))
 
+;;; Intentional raw data record: a verified replay owns finite membership tables; ordered source rows remain enumeration and budget authority.
 ;; : (-> VerifiedClosure SourceRelations ClosureIndex)
 (def (make-closure-index closure (sources []))
   (let (index (make-hash-table-eq size: (length closure)))

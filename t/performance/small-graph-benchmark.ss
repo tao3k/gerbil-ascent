@@ -16,7 +16,7 @@
                  relational-op-function relational-op-apply
                  relational-op-compile relational-op-fragment
                  relational-op-reference)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  relational-admit relational-solve relational-query-name
                  relational-compose relational-query
                  relational-op-open-retained relational-op-retained-rows

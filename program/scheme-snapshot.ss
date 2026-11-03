@@ -5,7 +5,7 @@
 
 ;;; Rebuild caller declarations into the checked scalar grammar before planning.
 ;;; This owner constructs no evaluator or retained session.
-(import "objects.ss" "scheme-checked.ss"
+(import "func.ss" "scheme-checked.ss"
         (only-in "types.ss" GerbilAscentProgramContract)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate))
@@ -111,10 +111,12 @@
 
 (def (relational-capture-rule rule)
   (let ((heads (map relational-capture-atom (.ref rule 'heads)))
-        (body (map relational-capture-clause (.ref rule 'body))))
+        (body (map relational-capture-clause (.ref rule 'body)))
+        (origin (relational-rule-origin rule)))
     (lambda ()
-      (gerbil-ascent-rule (map (lambda (build) (build)) heads)
-                         (map (lambda (build) (build)) body)))))
+      (relational-with-origin
+       (gerbil-ascent-rule (map (lambda (build) (build)) heads)
+                          (map (lambda (build) (build)) body)) origin))))
 
 ;;; The engine constructor checks relation names, arities, rule bindings,
 ;;; dependencies and budgets before the admission value becomes observable.
@@ -132,7 +134,8 @@
                          (vector-ref domain 1))))
                  (name (.ref relation 'name)) (arity (.ref relation 'arity))
                  (rows (.ref relation 'rows)))
-            (case (.ref relation 'storage-kind)
+            (relational-with-role
+             (case (.ref relation 'storage-kind)
               ((relation)
                (if domain (relational-finite-source name arity rows domains)
                    (relational-source name arity rows)))
@@ -144,7 +147,8 @@
                  (if domain
                      (relational-finite-lattice name arity rows (vector-ref descriptor 1) domains)
                      (relational-checked-lattice name arity rows (vector-ref descriptor 1)))))
-              (else (error "unsupported relational storage kind")))))
+              (else (error "unsupported relational storage kind")))
+             (relational-relation-role relation))))
         (.ref program 'relations)))
          (rules (map relational-capture-rule (.ref program 'rules)))
          (input-limit (.ref program 'max-input-facts))
@@ -154,7 +158,8 @@
     ;; The source has already passed the ordinary complete Program contract.
     ;; This new, private tree passes that same complete contract after restoring
     ;; ordinary constructor checks. No Term validation result is memoized.
-    (gerbil-ascent-construct-inert-program
+    (relational-check-roles!
+     (gerbil-ascent-construct-inert-program
      (lambda ()
        (gerbil-ascent-program relations (map (lambda (build) (build)) rules)
-         input-limit derived-limit output-limit sources)))))
+         input-limit derived-limit output-limit sources))))))

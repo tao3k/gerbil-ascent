@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 One completed stratum of the checked rule body's atom/negation path.
-`visit` follows program/evaluate.ss: an atom extends its environment once
+`visit` follows program/rule-body.ss (called by program/evaluate.ss): an atom extends its environment once
 per matching row; negation keeps that environment only if no row matches.
 Rows are frozen lower-stratum membership. This is a model of the control
 path, not an extraction or proof of the native index/binding implementation.

@@ -19,11 +19,12 @@
   (append-source! replace-source! run run-timeout analysis schema publication
    recomputed? source-additions source-overrides) final: #t)
 
+;; : (-> EngineState Session)
 (def (engine-state-public state)
   (validate GerbilAscentSessionContract
     (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
       (.append-source! (engine-state-append-source! state))
-      (.replace-source! (engine-state-replace-source! state))
+      (.source-replacement (engine-state-replace-source! state))
       (.run (engine-state-run state))
       (.run-timeout (engine-state-run-timeout state))
       (.analysis (engine-state-analysis state))

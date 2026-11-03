@@ -2,12 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/program/interface
+(import (only-in :gerbil-ascent/program/api
                  gerbil-ascent-count gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/program/syntax ascent)
         (only-in :gerbil-ascent/t/qualification/ascent-fragment-source
                  ascent-reach-fragment ascent-generated-seed-fragment)
-        (only-in :gerbil-ascent/table/interface
+        (only-in :gerbil-ascent/table/func
                  gerbil-ascent-hash-index-provider
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-set-storage-provider)

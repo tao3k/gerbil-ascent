@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .ref)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         :gerbil-ascent/table/access
         (rename-in (only-in :gerbil-ascent/t/performance/index-build/reference-access

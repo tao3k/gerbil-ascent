@@ -27,7 +27,5 @@ mod operators;
 
 mod datalog;
 
-mod artifacts;
-
 #[cfg(all(feature = "instances", target_os = "macos"))]
 mod instances;

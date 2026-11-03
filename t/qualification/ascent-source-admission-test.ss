@@ -4,7 +4,7 @@
 
 (import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil-ascent/program/objects
+        (only-in :gerbil-ascent/program/func
                  gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-atom gerbil-ascent-rule gerbil-ascent-variable)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)

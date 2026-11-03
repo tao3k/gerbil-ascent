@@ -6,7 +6,7 @@
 ;;; Run the same file on a97762d and its parent ce86647.
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-negation
                  gerbil-ascent-rule gerbil-ascent-program))

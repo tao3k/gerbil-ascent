@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-make-updated-engine)
         (only-in :gerbil-ascent/program/reuse gerbil-ascent-activate-selected-rules)

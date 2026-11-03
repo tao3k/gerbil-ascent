@@ -27,6 +27,8 @@
 (export relational-op-delta-change relational-op-prepare-change relational-op-change
         GerbilAscentChangePlanContract)
 
+;;; Boundary: This descriptor describes a pending change, not execution authority.
+;;; Invariant: Session admission and complete publication remain mandatory.
 (define-type (GerbilAscentChangePlanContract @ YuanxuObjectContract.)
   identity: 'ascent/operator-change-plan
   proto: (.o)

@@ -74,11 +74,11 @@ class ModuleExecution(unittest.TestCase):
             with self.assertRaises(ascent.EngineError): module.call('change',[[1]],[[2]],1)
             retained=stack.enter_context(module.call('retain',[[1]]))
             with self.assertRaises(ascent.EngineError):
-                module.call('relational-op-retained-replace!',retained.reference(),[[1,2]],module=':gerbil-ascent/program/interface')
-            with module.call('relational-op-retained-rows',retained.reference(),module=':gerbil-ascent/program/interface') as value:
+                module.call('relational-op-retained-replace!',retained.reference(),[[1,2]],module=':gerbil-ascent/program/api')
+            with module.call('relational-op-retained-rows',retained.reference(),module=':gerbil-ascent/program/api') as value:
                 self.assertEqual(decode(value.graph),[[4]])
-            with module.call('relational-op-retained-replace!',retained.reference(),[[2]],module=':gerbil-ascent/program/interface'): pass
-            with module.call('relational-op-retained-rows',retained.reference(),module=':gerbil-ascent/program/interface') as value:
+            with module.call('relational-op-retained-replace!',retained.reference(),[[2]],module=':gerbil-ascent/program/api'): pass
+            with module.call('relational-op-retained-rows',retained.reference(),module=':gerbil-ascent/program/api') as value:
                 self.assertEqual(decode(value.graph),[[5]])
 
     def test_registered_module_closure_and_export_order_is_distinct_from_empty_selection(self):
@@ -105,7 +105,7 @@ class ModuleExecution(unittest.TestCase):
         self.engine.register_module(':consumer/b','(import :consumer/a) (export b) (def b 2)',trusted=True)
         with self.assertRaises(ascent.EngineError): self.engine.module(':consumer/a')
         with self.assertRaises(ascent.EngineError):
-            self.engine.register_module(':gerbil-ascent/program/interface','(export fake)',trusted=True)
+            self.engine.register_module(':gerbil-ascent/program/api','(export fake)',trusted=True)
 
     def test_component_constructor_and_module_convenience_keep_independent_session(self):
         source=(ROOT/'rust/ascent/tests/fixtures/evidence-source.ss').read_text()

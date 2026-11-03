@@ -1,17 +1,17 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :gerbil-ascent/program/objects
+(import :gerbil-ascent/program/func
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider))
 (export gerbil-ascent-finite-flow-program)
+;;; A source row is (Point, immutable nonnegative integer mask). Domain width is
+;;; fixed for this Program. Session updates replace or append masks, not domains.
+;;; The blocker aggregate is strict: adding a blocker can withdraw prior facts.
+;;; Opaque procedures deliberately select Session replay and ordered evaluation.
+;;; Budgets below charge packed Program rows, not decoded logical facts; gamma
+;;; publication separately charges its logical cardinality.
 ;; : (-> FactWidth PointDomain SeedMasks CfgEdges BlockMasks InputBudget FactBudget OutputBudget Program)
-;; A source row is (Point, immutable nonnegative integer mask). Domain width is
-;; fixed for this Program. Session updates replace or append masks, not domains.
-;; The blocker aggregate is strict: adding a blocker can withdraw prior facts.
-;; Opaque procedures deliberately select Session replay and ordered evaluation.
-;; Budgets below charge packed Program rows, not decoded logical facts; gamma
-;; publication separately charges its logical cardinality.
 (def (gerbil-ascent-finite-flow-program width points seeds edges blockers
                                         input-budget fact-budget output-budget)
   (unless (and (exact-integer? width) (>= width 0) (list? points))

@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+gerbil-scheme.workspace = true
 gerbil-scheme-aot-build.workspace = true
 # The upstream PR retired the IR generator. Freeze the exact build-only
 # generator inputs still used by ascent; this crate is never a runtime owner.

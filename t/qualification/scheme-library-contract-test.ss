@@ -5,7 +5,7 @@
 ;;; One finite specification for the common native/candidate subset.
 ;;; The matrix below does not call an ASCENT evaluator to obtain expectations.
 (import (only-in :std/test check-equal? check-exception test-suite test-case)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  relational-program relational-fragment relational-compose
                  relational-admit relational-solve relational-query-name
                  relational-query relational-open-program-session

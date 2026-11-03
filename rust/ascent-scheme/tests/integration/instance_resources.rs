@@ -49,7 +49,7 @@ fn resident_owner_uses_its_verified_resource_copy_after_package_removal() {
             ("trusted", Data::Bool(true)),
             (
                 "source",
-                Data::from("(defrules answer-form () ((_) (+ 40 2))) (def (answer) (answer-form)) (def (empty-reexport) (load-module \"gerbil-ascent/rules/interface\") (load-module \"gerbil-ascent/rules/interface\") #t)"),
+                Data::from("(defrules answer-form () ((_) (+ 40 2))) (def (answer) (answer-form)) (def (empty-reexport) (load-module \"gerbil-ascent/rules/func\") (load-module \"gerbil-ascent/rules/func\") #t)"),
             ),
         ]))
         .unwrap();
@@ -121,7 +121,7 @@ fn shared_snapshot_reverifies_and_retains_resources() {
         .cloned()
         .collect();
     assert_eq!(directories.len(), 1, "one captured resource owner");
-    let image = directories[0].join("_owners/ascent-instance.dylib");
+    let image = directories[0].join("_owners/image/ascent-instance.dylib");
     let original = fs::read(&image).unwrap();
     fs::write(&image, b"changed captured bytes").unwrap();
     let error = InstancePool::from_snapshot(1, &package)
@@ -175,7 +175,7 @@ fn changed_package_image_is_rejected_by_the_compiled_manifest() {
     let temporary = tempfile::tempdir().unwrap();
     source.copy_to(temporary.path()).unwrap();
     fs::write(
-        temporary.path().join("_owners/ascent-instance.dylib"),
+        temporary.path().join("_owners/image/ascent-instance.dylib"),
         b"different image",
     )
     .unwrap();

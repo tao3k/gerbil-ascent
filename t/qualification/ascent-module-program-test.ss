@@ -6,7 +6,7 @@
         (only-in :clan/poo/object .o .mix .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-module-source
                  ascent-origin-reach-program)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program))
 
 (export ascent-module-program-test)

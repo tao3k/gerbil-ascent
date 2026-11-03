@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :clan/poo/object :gerbil-ascent/program/objects
+(import :std/test :clan/poo/object :gerbil-ascent/program/func
         (only-in :std/error Error-message)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (rename-in (only-in :gerbil-ascent/t/performance/source-materialization/reference-evaluate
@@ -11,7 +11,7 @@
 
 (def (rows-of result name) ((.ref result 'rows-of) name))
 (def (run engine) ((.ref engine '.run)))
-(def (replace! engine name rows) ((.ref engine '.replace-source!) name rows))
+(def (replace! engine name rows) ((.ref engine '.source-replacement) name rows))
 (def (append! engine name row) ((.ref engine '.append-source!) name row))
 (def (failure thunk) (with-catch Error-message (lambda () (thunk) #f)))
 

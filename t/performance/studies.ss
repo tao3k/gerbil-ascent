@@ -163,7 +163,7 @@
       "t/performance/scalar-index-benchmark.ss" '("single-first" "single-later" "composite-control" "tiny-control")
       #f '(scenario library) #f ".sexp")
     (make-study 'finite-mapping
-      '("table/provider" "table/storage" "table/access" "program/types" "program/objects" "program/scheme-checked" "program/index" "program/evaluate" "program/session" "program/update-selection" "t/performance/finite-mapping/reference-types" "t/performance/finite-mapping/reference-objects" "t/performance/finite-mapping/reference" "t/performance/finite-mapping-benchmark")
+      '("table/provider" "table/storage" "table/access" "program/types" "program/func" "program/scheme-checked" "program/index" "program/evaluate" "program/session" "program/update-selection" "t/performance/finite-mapping/reference-types" "t/performance/finite-mapping/reference-objects" "t/performance/finite-mapping/reference" "t/performance/finite-mapping-benchmark")
       "t/performance/finite-mapping-benchmark.ss" '("narrow-rows" "wide-rows" "wide-view" "source-control" "canonical-provider")
       #f '(scenario library) #f ".sexp")
   ))

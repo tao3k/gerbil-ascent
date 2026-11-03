@@ -27,12 +27,14 @@
 ;;; Admit the named procedure protocol as one responsibility. Separate identical
 ;;; per-slot evidence trees add construction cost without richer method types.
 ;;; Every method is still required and checked before this owner escapes.
-;; : (-> Any Boolean)
+;; : (-> SchemeValue Boolean)
 (def (withdrawal-operations? candidate)
   (and (object? candidate)
        (andmap (lambda (slot) (and (.slot? candidate slot) (procedure? (.ref candidate slot))))
                '(.observe .withdraw .compact .support-size .heights))))
 
+;;; Boundary: Only validated withdrawal operations are published.
+;;; Invariant: The contract does not turn bounded provenance into complete evidence.
 (define-type (GerbilAscentWithdrawalSessionContract @ YuanxuObjectContract.)
   identity: 'ascent/grounded-withdrawal-session
   proto: (.o)
@@ -182,6 +184,8 @@
                   (.heights (lambda (budget) (serialized (lambda () (height-observation budget))))))))))))
 
 (def (withdrawal-observe session) ((.ref (.ref session '.operations) '.observe)))
+;;; Boundary: Update construction remains private until the entire source cut is admitted.
+;;; Invariant: Refusal keeps the previously published generation and support unchanged.
 (.defgeneric (withdrawal-update session generation selectors budget) slot: .withdraw)
 ;;; Observations detach every public pair and identity string from the owner.
 ;; : (-> WithdrawalSession WithdrawalObservation)
@@ -191,6 +195,8 @@
 (def (candidate-withdrawal-session! session generation selectors (budget 100000))
   (withdrawal-update (.ref session '.operations) generation selectors budget))
 
+;;; Boundary: Compaction operates on the retained support owner.
+;;; Invariant: Generation checks and original work budgets precede publication.
 (.defgeneric (withdrawal-compact session generation budget) slot: .compact)
 ;;; Explicit positive-only maintenance preserves source generation and rows.
 ;; : (-> WithdrawalSession Nat Nat WithdrawalObservation)

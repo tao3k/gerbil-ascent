@@ -5,7 +5,7 @@
 ;;; Matched native Session update probe. Fresh build+solve and retained
 ;;; append+run answer the same grown graph; neither timing includes the
 ;;; independent model or construction of the old retained Session.
-(import (only-in :gerbil-ascent/program/interface
+(import (only-in :gerbil-ascent/program/api
                  relational-op-function relational-op-fix
                  relational-op-union relational-op-project
                  relational-op-join relational-op-apply

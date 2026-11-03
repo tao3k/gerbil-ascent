@@ -308,7 +308,10 @@ fn direct_aggregate_contracts_match_original_scheme_numeric_outputs() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let mut child = Command::new("gxi")
         .arg(root.join("../ascent/tests/fixtures/aggregate-oracle.ss"))
-        .env("GERBIL_PATH", root.join("../../.gerbil"))
+        .env(
+            "GERBIL_PATH",
+            std::env::var_os("GERBIL_PATH").map_or_else(|| root.join("../../.gerbil"), Into::into),
+        )
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

@@ -20,7 +20,7 @@
                  ascent-reach-fragment)
         (only-in :gerbil-ascent/t/qualification/ascent-index-program-fixture
                  ascent-index-alist-provider)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-expression
                  gerbil-ascent-open-session

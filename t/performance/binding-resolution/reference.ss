@@ -4,7 +4,7 @@
 ;;; Invocation-owned graph admission and rule emission. The compiler receiver
 ;;; selects constructors once; traversal contains no prototype dispatch.
 (import :gerbil-ascent/program/operator-descriptor :gerbil-ascent/program/operator-analysis
- (only-in :gerbil-ascent/program/objects gerbil-ascent-atom gerbil-ascent-variable))
+ (only-in :gerbil-ascent/program/func gerbil-ascent-atom gerbil-ascent-variable))
 (export lower-operator-graph)
 
 ;;; A lexical variable owns one immutable POO term, reused by every atom

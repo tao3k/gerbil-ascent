@@ -7,7 +7,7 @@
         (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-observation)
         (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-observation)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable gerbil-ascent-atom
                  gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-open-session
                  gerbil-ascent-session-run gerbil-ascent-session-append-source!)
@@ -15,7 +15,7 @@
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/t/qualification/ascent-byods-query-fixture
                  ascent-byods-query-evaluate)
-        (only-in :gerbil-ascent/table/interface
+        (only-in :gerbil-ascent/table/func
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-trrel-storage-provider
                  gerbil-ascent-trrel-uf-storage-provider

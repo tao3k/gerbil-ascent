@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .ref)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         :gerbil-ascent/program/actor-round
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program))
 (export ascent-actor-round-test)

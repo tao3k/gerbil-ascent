@@ -4,8 +4,10 @@
 (import :gerbil/expander
         (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         (only-in :std/make make)
+        (only-in :gerbil/runtime/loader load-path set-load-path!)
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
-        (only-in "../../build-modules.ss" gerbil-ascent-library-spec gerbil-ascent-library-modules gerbil-ascent-compiler-options)
+        (only-in "../../build.ss" gerbil-ascent-compiler-options)
+        (only-in :clan/poo/object .get) "../../init.ss"
         (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
         (only-in :std/misc/process run-process)
         (only-in :std/string/uuid random-uuid uuid->string)
@@ -17,11 +19,14 @@
         "studies.ss")
 (export main build-study! resolve-study-arguments)
 
+(def (gerbil-ascent-library-spec) ((.get gerbil-ascent.init.exports std-make-spec) '("init")))
+(def (gerbil-ascent-library-modules) (map cadr (gerbil-ascent-library-spec)))
+
 ;; BEGIN GENERATED LOOKUP STUDY-PROFILE
 (def (study-build-spec module)
   (normalize-spec
     (if (member module (gerbil-ascent-library-modules)) module
-      [gxc: module [extra-inputs: [(path-expand "build-modules.ss") (path-expand "t/performance/run.ss")]]])
+      [gxc: module [extra-inputs: [(path-expand "init.ss") (path-expand "t/performance/run.ss")]]])
     gerbil-ascent-compiler-options))
 
 ;; END GENERATED LOOKUP STUDY-PROFILE
@@ -35,17 +40,22 @@
       (build-study/native! study library binary))
     '("compile") library))
 (def (build-study/native! study library binary)
-  (let (sources (artifact-sources))
-    (add-load-path! library)
-    (initialize-native-build-core-capacity!)
-    (make (map study-build-spec (study-modules study))
-      srcdir: (current-directory) libdir: library
-      build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
-    (when (study-compiled? study)
-      (compile-exe (study-entry study)
-        [output-dir: library output-file: binary gsc-options: gerbil-ascent-compiler-options parallel: #t
-         verbose: #t invoke-gsc: #t static: #t])
-      (execute-pending-compile-jobs!))
+  (let ((sources (artifact-sources))
+        (spec (map study-build-spec (study-modules study)))
+        (paths (load-path)))
+    (dynamic-wind
+      (lambda () (add-load-path! library))
+      (lambda ()
+        (initialize-native-build-core-capacity!)
+        (make spec
+          srcdir: (current-directory) libdir: library
+          build-deps: (path-expand ".cache/ascent/compiled-library/build-deps"))
+        (when (study-compiled? study)
+          (compile-exe (study-entry study)
+            [output-dir: library output-file: binary gsc-options: gerbil-ascent-compiler-options parallel: #t
+             verbose: #t invoke-gsc: #t static: #t])
+          (execute-pending-compile-jobs!)))
+      (lambda () (set-load-path! paths)))
     (unless (artifact-matching-sources? sources (artifact-sources))
       (error "performance sources changed during compilation" (study-name study)))))
 
@@ -90,11 +100,24 @@
                             arguments))))
           (with-exception-catcher
             (lambda (failure)
+              (displayln "STUDY-SCENARIO-FAILED " name " " scenario)
+              (force-output (current-output-port))
+              (display-exception failure (current-error-port))
+              (newline (current-error-port))
+              (force-output (current-error-port))
               (if (or (study-keep-going? study) (study-compiled? study))
                 (set! failures (cons failure failures))
                 (raise failure)))
             (lambda ()
-              (run-process (append '("timeout" "90s") command) stdout-redirection: #f))))) scenarios)
+              (displayln "STUDY-SCENARIO-START " name " " scenario)
+              (force-output)
+              ;; Native end-of-process rusage observes whole-scenario work,
+              ;; including preparation, oracle and output outside pair clocks.
+              ;; It never replaces or subtracts from the original gate clocks.
+              (run-process
+                (append '("timeout" "--signal=KILL" "90s")
+                        (cond-expand (darwin '("/usr/bin/time" "-l")) (else [])) command)
+                stdout-redirection: #f))))) scenarios)
       ;; A failed admission gate still needs the same source-identity check.
       ;; Keep the failure and its samples; never skip provenance on rejection.
       (unless (artifact-matching-sources? sources (artifact-sources))

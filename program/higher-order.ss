@@ -5,7 +5,7 @@
 ;;; Typed higher-order descriptors normalize to the existing positive IR.
 ;;; Builders run once during construction; admitted solves hold no callbacks.
 (import (only-in :clan/poo/object .o)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-construct-inert-program)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-construct-inert-program)
         (only-in :gerbil-ascent/program/finite-arithmetic
                  relational-capped-product relational-capped-power)
         (only-in :gerbil-ascent/program/operator

@@ -1,0 +1,482 @@
+#+title: Build Ownership Audit
+
+* Ownership
+
+=init.ss= selects the top-level Module declarations through =:load-modules
+"."=. The root =build.ss= is Gerbil's package hook and declares the ABI binary
+targets. =gerbil build= and =gerbil test= own native compilation and test
+execution. =build-modules.ss= and the old =modules/= declaration directory are
+removed; no forwarding modules or replacement catalogue are provided.
+
+* Removed mechanisms and consumers
+
+- Deleted =bindings/artifact.ss= and its publisher, generation/directory scans,
+  source inventory, compiler-output replay and receipt-driven invalidation.
+- Removed =libascent.json= production and consumption, the Rust =artifacts=
+  feature/module, publication/validation APIs and legacy extension wiring.
+- Removed the private =configure-syntax= endpoint and the application rewrite
+  of Gerbil's =load-module=. Isolated owners pass integration library load paths directly.
+- Deleted the local cross-profile archive cache, lease/copy layer, input
+  snapshotter, ledger, build-admission policy and their obsolete tests.
+- Deleted =interface/build-identity.ss= and its source/runtime directory scans.
+  Existing worker handshakes now bind the actual integration library-built archive digest.
+- Removed the linked-development-image alternative from the test driver.
+  GxTest keeps the native command, arguments, heap and exit propagation.
+- Removed dead build-manifest benchmarks and deleted-test registrations.
+
+These implementations were removed, not moved to a different directory or
+retained behind a feature flag. Their removal does not weaken Gerbil/Yuanxu
+source guards, integration library compiler checks or independent inference/provenance tests.
+
+* Existing native Rust boundary
+
+=ascent-build= invokes the standard Gerbil package builds and the pinned integration library's
+=gerbil-rs-stage-program= / program archive API. integration library observations are forwarded
+to Cargo dependency directives; ASCENT retains no parallel input index or
+archive cache. Cargo consumes the integration library's link directives directly.
+
+Optional isolated owners consume =gerbil-rs-stage-load-closure=,
+=ModuleClosure=, =stage_module_closure= and integration library verified publication. Those are
+the integration library's existing formats and operations, not a new ASCENT manifest schema.
+There is no recursive traversal of the installed library, generation guessing,
+flattening of application/integration library trees, or raw-source loader compatibility shim.
+The existing application owner still retains its verified integration library package lease.
+
+The native borrowed-static-input extent remains the existing Yuanxu API. It
+provides temporary compiler write ownership for read-only dependency inputs;
+it does not select binary targets or maintain a resource directory catalogue.
+
+* Validation state
+
+Raw commands, failures and qualification receipts are retained under
+=.data/ascent-native-owner-20261101/=. The default prefix retention budget
+remains zero. No upstream source or dependency revision was changed. Python
+execution and model calls are outside this validation.
+
+Completed focused checks: native ABI build after artifacts removal; independent
+C consumer initialization/request/release/shutdown; native Library publication
+Suite; native source-test command Suite; Rust core/build consumer compilation;
+locked guarded =OwnerAdmission.lean= with exact-source bindings.
+
+The first Rust check failed because the inherited linker could not locate
+=libiconv=. The same locked offline check passed with the actual system compiler
+and macOS integration library. That failed log remains available. Earlier isolated dependency
+installation failures, including the unexplained Yuanxu exit 9, remain failures.
+
+The final native and clean-checkout receipts are recorded below. Optional Rust
+isolated-owner execution remains unaccepted, so complete migration acceptance
+is not claimed. The frozen three-arm measurement has not started, and no
+performance or net-benefit acceptance is claimed.
+
+* Final cleanup and the unaccepted owner route
+
+=bindings/build-entry.ss= is deleted too. Its unused evaluator-based forwarding
+entry is gone. Compiler options and the actual native borrowed-input call are
+owned directly by =build.ss=; preparation/performance consumers import those
+inert values from that same owner. There is no renamed build-entry adapter.
+
+The optional Rust entry is declared in =gerbil-ascent-rust-spec= in =build.ss=.
+The integration library consumer derives the entry path from that specification. The original
+failure, =cannot find static module gerbil-ascent__interface__hybrid.scm=,
+was fixed at that declaration boundary, not with a second module inventory.
+The integration library's resource-root overlap refusal was fixed with disjoint native roots;
+its checks were not weakened. The locked offline =ascent-scheme --features
+instances= compile check then passed.
+
+The real =instance_resources= test did NOT pass: one test passed and owner
+startup in =resident_owner_uses_its_verified_resource_copy_after_package_removal=
+returned =Timeout= under the unchanged 60-second bound. The suite reported
+71.19 seconds. An exact-case diagnostic reproduction also failed; it is not an
+acceptance rerun. Native stack samples are retained beside the logs.
+
+The owner sample locates most samples beneath =___dynamic_load=, =dyld= library
+mapping/signature registration and =fcntl=. The earlier sample was still in
+integration library package verification/copying, before an owner existed. These distinguish
+observed phases; they do not prove a deadlock or an upstream defect.
+
+The pinned integration library has native bundle/coalescing APIs. Its inspected public package
+copy operation copies verified physical files; private owner resource handling
+also materializes logical native-module aliases. That private implementation
+is not a public Rust-only package operation used by this caller. Enabling a
+Python backend or recreating its namespace/alias manager in ASCENT would not
+satisfy this migration. Neither was done. Upstream code and pins remain intact.
+This integration library-only owner consumption route remains unresolved and unaccepted.
+
+Accordingly, compile success is not runtime acceptance. The three-arm study
+remains gated and has no samples. Default materialization remains disabled.
+
+* Final native entry receipts
+
+The consolidated =build.ss= passed the standard =gerbil build= invocation.
+The unchanged borrowed-static-input regression passed through that owner in
+5 seconds, and the exact preparation import model passed its locked Lean guard.
+
+The final isolated source snapshot is
+=6743d105f7da37f9fc90965daa1ea9db0d8c8a85=. It was clean before validation.
+The native dependencies are Yuanxu =85a969c77431b971408610d908bcf694a21830bf=
+and POO =30733c3de7dbca4f0572b25a25b9099396da48a5=, unchanged from the
+production selection. Gerbil's own =clean= and =build= both returned zero;
+no ASCENT cleanup scanner was used. The resulting C consumer reported
+=ABI-CONSUMER-OK= without a JSON sidecar. The Library publication Suite passed
+with Module/Harness/final-OK markers in 9 seconds. Source status stayed clean.
+The earlier empty-ASCENT-prefix build receipt is retained separately; no wall
+latency claim is made from these build receipts.
+
+The five focused native cost/oracle, kernel, Session and provenance Suites also
+passed with their original guards. The isolated-owner timeout remains a failed
+runtime gate. Nothing in these native successes overrides that failure, enables
+materialization by default, or admits the deferred three-arm performance study.
+
+* Owner purpose and timeout diagnosis
+
+An independent owner is an optional same-process Scheme VM and its sole entering
+thread. Separate VM heaps and module state permit concurrent callers without
+sharing Scheme objects. They also incur separate VM, GC and fixed source-context
+initialization. This is not process fault isolation. Rule evaluation, Session
+branching and provenance reuse do not require a separate VM per branch. The
+default linked =Runtime= and the optional =InstancePool= are distinct consumers;
+no accepted throughput advantage currently justifies promoting the latter.
+
+The retained =native-owner-load-path.json= records the inspected native graph:
+495 logical modules, including 236 deferred modules; the load closure contains
+758 native =.o1= parts and 267 =.ssi= files, with no Scheme carriers. For example,
+=std/os/fcntl~1= is a deferred linked unit and its native dynamic part appears in
+the sampled owner's loaded images. These are package and graph counts, not a
+count of modules loaded by the failed request.
+
+The integration library program stub installs a scoped linked-metadata loader. The observed
+dynamic loads show that the current integration does not avoid the expensive
+native loading path for all of that metadata. The subsequent binding experiment
+below establishes a specific incompatibility with the installed native loader;
+no deadlock is established.
+The inspected public integration library package copy API does not materialize the logical
+aliases of coalesced module bundles. Its private owner implementation does.
+Duplicating that implementation in ASCENT would reinstate the removed resource
+manager; enabling a Python owner backend is outside this task. Neither is used
+as a workaround, and no upstream files have been changed.
+
+The existing opt-in =ASCENT_PROCESS_TRACE= now separates package capture or
+verification, native VM setup, and source-context binding. It preserves the
+original error values and both original 60-second waits; no metadata work is
+moved to the first request. The exact lifecycle source binding and owner
+admission theorems passed the locked =OwnerAdmission.lean= guard after this
+change. Phase timing is diagnostic evidence, not a matched performance result.
+
+The single phase-traced diagnostic failed, with the original error =Timeout=:
+
+| Phase                       | Elapsed seconds | Result  |
+|-----------------------------+-----------------+---------|
+| Verified package capture    |        2.248184 | success |
+| Native VM setup             |        1.441969 | success |
+| Fixed source-context bind   |       60.005013 | failure |
+
+The test reported 0 passed, 1 failed and 1 filtered out in 66.16 seconds. The
+full raw receipt is =instance-startup-phase-trace.raw.log= in the diagnostic
+directory. This separates a successful native VM setup from the failing trusted
+DSL/macro readiness task. It does not establish throughput or a general cold
+startup guarantee; other host workloads were present. The dynamic-loading stack
+sample is from the earlier reproduction, not from this phase-traced run. No
+retry was used to obtain a passing result. Migration remains incomplete at this
+optional source-readiness boundary.
+
+* Confirmed ordinary-global versus primitive-binding incompatibility
+
+The subsequent diagnostic used the unchanged native timeout and failed again:
+package capture 2.178183 seconds, VM setup 1.379737 seconds, source-context bind
+60.005179 seconds. The test reported 0 passed, 1 failed, 1 filtered out in 66.08
+seconds. See =instance-loader-bindings.raw.log=. The temporary read-only binding
+observation is retained in =instance-loader-bindings.hybrid.ss=, then removed
+from the application. The final application source again matches the previously
+checked =OwnerAdmission.lean= source literal; no loader replacement was added.
+
+The causal evidence is narrower and stronger than a timing inference:
+
+- The pinned integration library's =program-register-builtins!= installs an ordinary global
+  =load= closure. Its linked-metadata branch calls =##load-module= instead of
+  opening a native carrier file when the scoped module identity is active.
+- The generated integration library program C installs that closure with =___SET_GLO=.
+- The installed Gerbil =gerbil__runtime__loader.c= calls =___PRM_load= via
+  =___JUMPPRM= inside =__load-module=. Its source declares =standard-bindings=.
+  This call does not read the ordinary =load= global modified by the integration library stub.
+- The isolated =native-loader-probe.ss= changes that ordinary global in its
+  own diagnostic process only. A direct global call reaches the hook once.
+  Native =load-module= then executes the carrier again and registers the module,
+  while the hook count remains one. The two =NATIVE-CARRIER-EXECUTED= markers
+  exclude a skipped or cached carrier as the explanation. This is a reproduced
+  incompatibility, not an owner-runtime acceptance or a performance sample.
+- Native expansion and interpreter compilation of =(load-module "probe")=
+  both retain the =load-module= reference. An alleged rewrite of that expression
+  to =__load-module= is not supported by those observations.
+
+Reproduction uses the installed native entry only:
+
+#+begin_src sh
+gxi -:debug=q .data/ascent-native-owner-20261101/native-loader-probe.ss
+#+end_src
+
+=loader-binding-cause.json= binds the probe, inspected installed loader C, integration library
+adapter, generated program C and temporary diagnostic application source by
+SHA256. The probe is diagnostic data; it is not loaded by the Library, build
+entry, runtime owner or package test inventory. The pinned integration library checkout has no
+tracked source diff.
+
+The currently inspected public integration library program API exposes no loader-binding policy
+or alternate linked-metadata initialization entry. It reuses installed system
+objects, including this native loader. Its public resource coalescing and copy
+APIs do not repair the binding incompatibility. Copying loader logic, patching
+primitive cells, rewriting the generated integration library stub or restoring the source-loader
+shim in ASCENT would introduce an application workaround rather than use a
+supported native consumption boundary; none was done. An admissible runtime fix
+has therefore NOT been implemented under the current no-upstream-change and
+no-compatibility-layer constraints. Independent owners remain optional and
+unaccepted. The three-arm study has not run; its budgets, gates and disabled
+default materialization remain unchanged.
+
+* Standalone binding reproduction
+
+This reproduction needs only the installed Gerbil binary. It neither builds nor
+loads ASCENT or the Rust integration library. The global replacement exists only inside
+this short-lived diagnostic process; it is not an application fix.
+
+#+begin_src sh
+probe_dir=$(mktemp -d)
+trap 'rm -rf "$probe_dir"' EXIT
+printf '(displayln "CARRIER-EXECUTED")\n' > "$probe_dir/carrier.scm"
+PROBE_DIR="$probe_dir" gxi -:debug=q -e '
+  (import :gerbil/runtime/loader)
+  (def calls 0)
+  (def variable (##make-global-var (quote load)))
+  (def original (##global-var-ref variable))
+  (set! load (lambda args
+               (set! calls (+ calls 1))
+               (apply original args)))
+  (add-load-path! (getenv "PROBE_DIR"))
+  ((##global-var-ref variable)
+   (path-expand "carrier.scm" (getenv "PROBE_DIR")))
+  (displayln "DIRECT-GLOBAL-HOOK-CALLS " calls)
+  (load-module "carrier")
+  (displayln "AFTER-NATIVE-MODULE-LOAD-HOOK-CALLS " calls)
+  (unless (= calls 1) (error "different native binding behavior" calls))'
+#+end_src
+
+On the recorded toolchain the carrier executes twice while both hook counts
+are one. This distinguishes an actual native-load bypass from a cached or
+skipped file. The native installed-loader C and generated integration library-stub C evidence
+above then identifies the primitive-versus-ordinary binding mismatch. Other
+toolchains may differ; the diagnostic must not be treated as their result.
+
+* Library qualification boundary (updated scope)
+
+Scheme executables and shared libraries are native Gerbil/Gambit build products,
+not the Rust integration library. The integration library adapter generates additional integration code
+for the optional Rust independent-VM consumer. Its loader-binding failure is
+retained as a separate, unaccepted integration issue. Per the subsequent scope
+decision it no longer gates the native Library or the existing Scheme three-arm
+study. This supersedes the earlier decision to gate that study on owner startup;
+it does not turn the failed owner test into an acceptance.
+
+The study's =independent= arm means independent per-plan prefix materialization,
+not an independent VM owner. All three arms use the same native Scheme evaluator
+and its existing study entry. The Rust integration library owner route is not invoked by them.
+
+The Library keeps =init.ss= module ownership and =build.ss= native target
+ownership. No loader compatibility layer, primitive-cell patch, upstream edit,
+timeout extension or enabled default materialization is introduced. The study
+build driver now resolves its init-owned specification before temporarily adding
+the compiled library load path, and restores that path before the native source
+guard rechecks. The frozen task, oracle, measurements and gates are unchanged.
+
+* Current native and clean-checkout receipts
+
+The final detached validation source is
+=4a1d074fbe0f6986b0c5b1f4f97a4c11ed73434a=. No working branch was committed or
+pushed for these validation snapshots. Current-checkout native build, independent
+C ABI consumer and Library publication passed. The existing independent-oracle,
+Session deletion/recovery and complete grounded-provenance Suites all passed
+with their original guards. Receipts have the =library-mainline-= prefix under
+=.data/ascent-native-owner-20261101/=.
+
+An empty dependency prefix was used at
+=/private/tmp/ascent-init-clean-uGKwxQ/mainline-prefix=. The first native
+=gerbil deps --install= failed while building Yuanxu with raw process status 9.
+Its script declares 300 seconds and 2 GiB, unchanged; narrow kernel diagnostics
+did not establish the precise cause. That failed cold installation remains a
+failure. A subsequent native resume, with the same one-job setting, bounds and
+revisions, succeeded using its partial native outputs. Thus this is NOT an
+uninterrupted successful cold dependency-install qualification.
+
+After dependency recovery, there was no =bin/libascent= or compiled ASCENT init
+in that prefix. The standard =just build= completed in 321 whole-entry wall
+seconds with two build cores. This is the first ASCENT build in that prefix,
+separate from dependency installation time. The resulting native Scheme binary
+passed the independent C ABI consumer. Clean-checkout Library publication passed
+in 41 seconds and the finite-domain rule-cost/oracle Suite in 22 seconds, with
+Suite/Module/Harness/final-OK markers. Source status was empty both before and
+after validation. Yuanxu remained =85a969c77431b971408610d908bcf694a21830bf= and
+POO remained =30733c3de7dbca4f0572b25a25b9099396da48a5=.
+
+The initial current-checkout invocation also retained an OpenSSL =pkg-config=
+environment failure. The successful native commands supplied the installed
+Homebrew OpenSSL =lib/pkgconfig= directory via =PKG_CONFIG_LIBDIR=. This was an
+environment correction; no dependency or compiler source was patched.
+
+The native study preparation reported =BUILD-TEST-LIBRARY-OK=, 202 modules and
+71.494903 seconds. The existing canonical =just performance-prefix-dag= entry
+was then invoked once after native/clean qualification. Its original protocol
+file remains unchanged (SHA256
+=b3d0695a1c1652172df1af20e14b48aa273cf62b9db1ee4573569dfe650859c3=).
+The protocol's old =sourceSnapshot= field is historical; the final source above
+and the native run's own =sources.json= identify this execution. It is not a
+claim that the old pre-cleanup source hash describes the current code.
+
+* Primary frozen study outcome
+
+The primary run is =b9264bb1-c30f-4f24-a0e7-3bbb316357bc=. All six original
+scenarios were attempted once, in the frozen order. The overall entry returned
+70. Its log is =native-mainline-three-arm.log= under the original three-arm data
+directory; the native receipts and source frame are also retained in
+=first-native-run/=. This supersedes earlier historical statements that the
+study had not started.
+
+| Scenario                   | Completed progress visible | Final receipt |
+|----------------------------+----------------------------+---------------|
+| stream / stream            | at least 10 / 50           | missing       |
+| independent / independent  | at least 10 / 50           | missing       |
+| shared / shared            | at least 20 / 50           | missing       |
+| stream / independent       | at least 10 / 50           | missing       |
+| stream / shared            | 50 / 50                    | retained      |
+| independent / shared       | 50 / 50                    | retained      |
+
+The old writer emitted a receipt only after all pairs, event counters and live
+heap observations. Consequently, raw values for completed pairs in the four
+incomplete scenarios were not durably written. Their actual final pair counts
+and unrecorded values are UNKNOWN, not zero. The old coordinator also retained
+exceptions in memory and raised only the last one, so individual exit statuses
+for those four cases cannot be reconstructed from its final exception. No
+specific per-case exit code is invented here. Neither missing controls nor
+missing raw values qualify as a pass.
+
+The two complete receipts agree exactly on all three arms' fresh-event counter
+snapshots. The following are sums over the three fresh source cuts, not Session
+event costs or whole-engine provenance cardinalities:
+
+| Native event                    | Stream | Independent | Shared DAG |
+|---------------------------------+--------+-------------+------------|
+| Candidate-row visits             |    193 |         133 |        113 |
+| Complete-witness counter         |     22 |          22 |         22 |
+| Physical index probes            |    153 |         153 |        138 |
+| Index build / extend input rows  | 33 / 7 |      33 / 7 |     33 / 7 |
+| Prefix schema new nodes          |      0 |          24 |         12 |
+| Prefix entry writes              |      0 |          36 |         18 |
+| Cut validations                  |      0 |          56 |         56 |
+| Version-key checks               |      0 |          44 |         50 |
+| Binding slots restored           |      0 |         120 |        149 |
+
+These are different operation families, not interchangeable weighted units.
+The collector disables prefix-history recording in this study and reports
+=#f= for those fields. They remain unknown, not zero semantic repetition.
+Session event breakdown and physical DAG-byte attribution remain unqualified.
+Complete fresh and Session workflows remain inside the measured calls.
+
+The raw stream/shared CPU medians were 30.116 / 30.0885 ms, with 26/50 CPU wins;
+wall medians were 125.68325 / 104.41875 ms, with 31/50 wall wins. The raw
+independent/shared CPU medians were 24.42125 / 24.56925 ms, with 24/50 CPU wins;
+wall medians were 24.87475 / 25.4105 ms, with 23/50 wall wins. Both comparisons
+failed the original gate. The allocation counter is still unqualified, and
+the incomplete controls prevent a stability claim in any event. Reduced
+candidate visits establish a structural reuse effect, not a net speedup or a
+causal attribution of total time to any particular overhead.
+
+* Failure-recording correction and separate diagnostic verification
+
+Only the existing study entry and paired helper were extended. Prefix samples
+now flush raw measurements after both timed extents, before the oracle check,
+with =oracle: pending=. A separate checked marker is emitted only after the
+oracle passes. Each scenario start and exception is flushed individually.
+The native launcher now uses =timeout --signal=KILL 90s= to enforce the original
+deadline rather than rely on graceful termination. The measurement extents,
+inputs, oracle, 50 pairs, four repetitions, capacities, heap and gates are
+unchanged. Other paired-helper callers do not enable sample logging.
+
+A deliberate first-sample oracle failure retained the pending raw packet and
+no checked marker. The final negative-control process exited zero with
+=RAW-SAMPLE-ORACLE-FAILURE-RETAINED=. Its first probe import accidentally exposed
+the benchmark's =main= and ended with an arity error after the marker; that
+failed probe log is also retained. Importing only =paired= fixed the probe,
+without changing the application. A separate one-second native termination
+control returned 137 in one wall second. These validate failure recording and
+termination, not performance.
+
+The recording-only source snapshot is
+=8ef10076f8f17b03c66ef4f34ac27d96f3470076=. It passed native build and the C ABI
+consumer again in the clean checkout, with empty Git status; this incremental
+recheck is not another cold-build claim. A separate post-fix diagnostic
+execution uses the same six workloads to verify durable failure records. It is
+not a replacement primary experiment or an independent confirmatory replicate.
+It will not be pooled with, or selected over, the primary frozen run to obtain
+an acceptance. The original no-pass-selection policy, failed controls and
+allocation-counter limitation remain binding; default retention stays zero.
+
+The separate recording verification finished as run
+=533f8c6f-54bb-4f1c-9a11-75eeb6a1480a=, overall exit 70. Its source frame and
+four complete receipts are retained in =recording-verification/=; the complete
+stdout/stderr stream is =native-recording-verification.log=. Native stderr
+backtraces can interleave with coordinator stdout, so failure markers must be
+read by their full marker text rather than assumed to begin a line.
+
+| Scenario                  | Raw pairs | Oracle-checked | Pending | Missing of 50 |
+|---------------------------+-----------+----------------+---------+---------------|
+| stream / stream           |        50 |             50 |       0 |             0 |
+| independent / independent |        50 |             50 |       0 |             0 |
+| shared / shared           |        50 |             50 |       0 |             0 |
+| stream / independent      |        50 |             50 |       0 |             0 |
+| stream / shared           |        48 |             48 |       0 |             2 |
+| independent / shared      |        47 |             47 |       0 |             3 |
+
+=recording-coverage.json= verifies 295 raw/checked pairs, contiguous unique
+sample IDs, and zero malformed/truncated raw-record lines. All retained records
+were additionally covered by a native reader check: all 295 raw packets and 295
+checked markers parsed as complete Scheme forms, with raw packets still marked
+pending until their separate checked marker (=RETAINED-RECORDS-PARSE-OK=).
+The final two cases
+have recorded native status 9 under the hard 90-second launcher; their missing
+pairs remain missing. The four complete cases retained the deliberate
+unqualified exit (child status 70), because allocation admission remains false.
+The three diagnostic same-arm raw gates passed; the complete stream/independent
+raw gate failed (CPU 25.62275 / 26.3905 ms, 20/50 CPU wins; wall
+28.28975 / 28.81925 ms, 22/50 wall wins). This diagnostic result does not repair
+the incomplete primary controls or establish general stability.
+
+All four complete diagnostic fresh-event snapshots exactly equal the primary
+run's event snapshots. This supports reproducibility of the structural matching
+counts above, not equivalence of the two executions' allocation geometry or
+timing conditions. The actual native Library query emitted
+=DEFAULT-MATERIALIZATION-OFF=. No upstream tracked source diff was present in
+the installed POO/Yuanxu checkouts or pinned Rust integration library. No CI, Python binding
+execution, model calls, compatibility loader or default-enabling change was
+introduced. The optional owner source-context failure remains open separately;
+the Library's native and clean-checkout qualification is complete within the
+scope described above, while performance and net benefit remain UNACCEPTED.
+
+The subsequent native cost/timeout attribution, observer-off changes and
+single post-change validation are recorded in
+[[file:prefix-cost-attribution-20261102.org][Native Prefix Reuse Cost Attribution]].
+
+* Later compiled-call evidence: checked versus unchecked entries
+
+A subsequent integration-library investigation on the installed 1cfb032
+compiler adds a distinct observation. The earlier expansion/interpreter probe
+retained load-module; it did not establish what the optimizing native compiler
+emits. A compiled runtime helper with a literal string argument emitted
+__load-module, while its assignment still updated the checked load-module
+binding. Its generated C called the unchecked global directly. Reassigning the
+checked procedure therefore did not observe that optimized call.
+
+This is separate from the previously recorded primitive-load versus ordinary
+load incompatibility. Neither observation authorizes changing primitive cells
+or adding a source-loader workaround to ASCENT. Instrumentation at a checked
+entry cannot be treated as a complete account of native execution after
+contract specialization. The integration library's current candidate instead
+uses ordinary compiled-library loading and observes the native module resolver
+through its existing extension point. That candidate and its tests are owned
+by the integration library; ASCENT consumption remains a separate pending gate.

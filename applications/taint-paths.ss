@@ -3,8 +3,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; IRIS section 3.1 transfer over caller-supplied finite graph/specifications.
 ;;; No Java extraction, CodeQL integration, LLM labeling or vulnerability verdict.
-(import :gerbil-ascent/program/objects)
+(import :gerbil-ascent/program/func)
 (export gerbil-ascent-taint-path-program)
+;; : (-> Edges Sources Sinks Sanitizers FactLimit FactLimit FactLimit Program)
 (def (gerbil-ascent-taint-path-program edges sources sinks sanitizers
         (input-budget 10000) (fact-budget 10000) (output-budget 20000))
   (let ((s (gerbil-ascent-variable 's)) (x (gerbil-ascent-variable 'x))

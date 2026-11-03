@@ -7,7 +7,7 @@
           gerbil-ascent-storage-engine-state gerbil-ascent-storage-initialize-uf!
           gerbil-ascent-storage-admit-state! gerbil-ascent-storage-check-state!
           gerbil-ascent-storage-freeze-view))
-(import :clan/poo/object :gerbil-ascent/program/objects
+(import :clan/poo/object :gerbil-ascent/program/func
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (prefix-in :gerbil-ascent/t/performance/uf-reuse/reference-evaluate historical-))

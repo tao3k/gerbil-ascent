@@ -4,19 +4,21 @@
 
 ;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
-(import (only-in :std/list/list delete-duplicates/hash)
+(import "declaration-contract.ss"
+        (only-in :std/list/list delete-duplicates/hash)
         (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
         (only-in :clan/poo/mop define-type element? validate Type. Any)
+        (only-in :clan/poo/type Record)
         (only-in :clan/poo/object-contract ObjectContract.)
         (only-in :yuanxu/object-types/contracts
-                 YuanxuObjectContract.
+                 YuanxuObjectContract. YuanxuContract.
                  yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/provider
                  GerbilAscentIndexProviderContract gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
-(export canonical-value-check-current?
+(export ProgramScopeContract canonical-value-check-current?
         gerbil-ascent-fact-limit?
         gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
         gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
@@ -26,6 +28,7 @@
         gerbil-ascent-make-program-value gerbil-ascent-check-source-handles
         gerbil-ascent-projection-tree-current? gerbil-ascent-check-projection-program
         gerbil-ascent-relation-with-rows
+        gerbil-ascent-relation-with-role gerbil-ascent-rule-with-origin
         gerbil-ascent-make-session-value
         GerbilAscentRelationContract
         GerbilAscentLatticeContract
@@ -40,134 +43,6 @@
         GerbilAscentFragmentContract
         GerbilAscentProgramContract
         GerbilAscentSessionContract)
-
-;; : (-> Symbol Procedure PredicateContract)
-(def (slot-contract identity predicate)
-  (yuanxu-predicate-contract identity predicate))
-
-(def +symbol+ (slot-contract 'ascent/symbol symbol?))
-(def +arity+ (slot-contract 'ascent/arity
-                           (lambda (value)
-                             (and (exact-integer? value) (<= 0 value)))))
-(def (gerbil-ascent-fact-limit? value)
-  (or (eqv? value +inf.0)
-      (and (exact-integer? value) (> value 0))))
-(def +fact-budget+
-  (slot-contract 'ascent/fact-budget gerbil-ascent-fact-limit?))
-(def +rows+ (slot-contract 'ascent/rows list?))
-(def +field-predicates+
-  (slot-contract 'ascent/field-predicates
-                 (lambda (value)
-                   (and (list? value) (andmap procedure? value)))))
-(def +provider+
-  (slot-contract 'ascent/index-provider
-                 (lambda (value)
-                   ;; This exact receiver was validated when its module loaded.
-                   ;; Derived/custom objects have another identity and retain
-                   ;; the complete receiver contract, including missing slots.
-                   (or (gerbil-ascent-canonical-hash-index-provider? value)
-                       (element? GerbilAscentIndexProviderContract value)))))
-(def +storage-provider+
-  (slot-contract 'ascent/storage-provider
-                 (lambda (value)
-                   (or (gerbil-ascent-canonical-set-storage-provider? value)
-                       (element? GerbilAscentStorageProviderContract value)))))
-(def (term-kind? value)
-  (memq value '(variable wildcard literal expression pattern)))
-(def +term-kind+ (slot-contract 'ascent/term-kind term-kind?))
-(def +any+ (slot-contract 'ascent/value (lambda (_value) #t)))
-(def +plan+ (slot-contract 'ascent/clause-plan procedure?))
-;; : (-> Symbol PredicateContract)
-(def (clause-kind? expected value) (eq? value expected))
-(def (clause-kind-contract kind)
-  (slot-contract 'ascent/clause-kind (cut clause-kind? kind <>)))
-
-;;; Relation shape checks arity, source rows, and physical providers before
-;;; the evaluator creates any mutable table state.
-(define-type (GerbilAscentRelationContract @ YuanxuObjectContract.)
-  identity: 'ascent/relation
-  proto: (.o)
-  responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
-                      field-predicates: +field-predicates+
-                      storage-kind: (clause-kind-contract 'relation)
-                      index-provider: +provider+
-                      storage-provider: +storage-provider+))
-
-;;; A lattice owns a join operation; key refinement semantics are distinct
-;;; from ordinary set insertion even when source rows have the same shape.
-(define-type (GerbilAscentLatticeContract @ YuanxuObjectContract.)
-  identity: 'ascent/lattice
-  proto: (.o)
-  responsibilities: (.o name: +symbol+ arity: +arity+ rows: +rows+
-                      field-predicates: +field-predicates+
-                      storage-kind: (clause-kind-contract 'lattice)
-                      join: (slot-contract 'ascent/lattice-join procedure?)
-                      checked-operator:
-                      (slot-contract 'ascent/lattice-checked-operator
-                                     (lambda (value)
-                                       (or (not value) (vector? value))))
-                      index-provider: +provider+))
-
-;;; Terms retain tagged source intent until planning can resolve variables and
-;;; construct executable expression and pattern operations.
-(define-type (GerbilAscentTermContract @ YuanxuObjectContract.)
-  identity: 'ascent/term
-  proto: (.o)
-  responsibilities: (.o kind: +term-kind+ value: +any+))
-
-;; Nested membership consumes a Boolean, not a contextual receipt. Reuse
-;; the upstream value Type with the same ancestry, fields and kind predicate;
-;; explicit Term admission still uses the complete public Flow Contract above.
-(def +term-value+
-  (.cc ObjectContract. identity: 'ascent/term-value
-       required-prototype: (.ref GerbilAscentTermContract 'proto)
-       extra-fields: 'delegate constraints: (list Any)
-       responsibilities: (.o kind: (.cc Type. .element?: term-kind?) value: Any)))
-
-
-;; Retain public descriptor mutation and classifier instrumentation. POO revisions
-;; invalidate ordinary metadata edits; classifier identity also detects the
-;; existing direct instance instrumentation used by the semantic cost control.
-;; This caches descriptor identity only, never the result for an input value.
-;; BEGIN GENERATED PREPARATION METADATA-GUARD
-(def (canonical-metadata-current? contract slots)
-  (let* ((fields (.ref contract 'responsibilities))
-         (descriptors (cons contract (map (cut .ref fields <>) slots)))
-         (sources (cons fields descriptors))
-         (revisions (map object-revision sources))
-         (classifiers (map (cut .ref <> '.classify) descriptors)))
-    (lambda ()
-      (and (andmap (lambda (source revision) (= (object-revision source) revision)) sources revisions)
-           (eq? fields (.ref/cached contract 'responsibilities))
-           (andmap (lambda (slot descriptor) (eq? (.ref/cached fields slot) descriptor)) slots (cdr descriptors))
-           (andmap (lambda (descriptor classifier) (eq? (.ref/cached descriptor '.classify) classifier))
-                   descriptors classifiers)))))
-(def (canonical-value-member contract view slots)
-  (let (current? (canonical-value-check-current? contract slots))
-    (lambda (value)
-      (if (current?) (element? view value) (element? contract value)))))
-(def (canonical-validation-current? contract slots)
-  (let* ((fields (.ref contract 'responsibilities))
-         (descriptors (delete-duplicates/hash (map (cut .ref fields <>) slots) table: (make-hash-table-eq)))
-         (missing (gensym 'missing-validation-protocol))
-         (entries
-          (apply append
-            (map (lambda (entry)
-                   (map (lambda (slot) (vector (car entry) slot (.ref (car entry) slot))) (cdr entry)))
-                 (cons (cons contract '(.element? .validate .admit .obligations value-contract))
-                       (map (lambda (field) (cons field '(.element? .admit .obligations value-contract))) descriptors))))))
-    (lambda ()
-      (andmap (lambda (entry)
-                (eq? (vector-ref entry 2)
-                     (.ref/cached (vector-ref entry 0) (vector-ref entry 1) (lambda () missing)))) entries))))
-;;; Capture metadata/method identities for a callback-free compatible value view.
-;;; The caller proves view compatibility; this predicate never admits a value.
-;; : (-> Contract [Symbol] (-> Boolean))
-(def (canonical-value-check-current? contract slots)
-  (let ((metadata? (canonical-metadata-current? contract slots))
-        (protocol? (canonical-validation-current? contract slots)))
-    (lambda () (and (metadata?) (protocol?)))))
-;; END GENERATED PREPARATION METADATA-GUARD
 
 (def declared-value-shapes (make-hash-table test: eq? weak-keys: #t))
 
@@ -246,6 +121,48 @@
       (remember-value-shape! 'relation value)
       value)))
 ;; END GENERATED OWNED ROW VIEW
+
+;;; Declarative metadata leaves all original semantic fields inherited. Reuse
+;;; the existing factory-issued shape discipline, never a validation result.
+;;; Caller objects and ancestor edits retain the ordinary complete checks.
+;; gerbil-ascent-relation-with-role
+;; : (forall (r m) (-> r m r))
+;; : (-> Relation RelationRole Relation)
+;; | doc m%
+;;     Attach declaration metadata without changing inherited relation fields.
+;;     Boundary: only an unchanged factory-issued parent can issue a child shape.
+;;     Invariant: the child is never a cached successful admission.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (.ref (gerbil-ascent-relation-with-role relation 'input) 'checked-role)
+;;     ;; => input
+;;     ```
+;;   %
+(def (gerbil-ascent-relation-with-role relation role)
+  (let (value (.o (:: @ relation) checked-role: role))
+    (if (declared-value-shape? 'relation relation)
+      (remember-value-shape! 'relation value) value)))
+;; gerbil-ascent-rule-with-origin
+;; : (forall (r o) (-> r o r))
+;; : (-> Rule DetachedOrigin Rule)
+;; | doc m%
+;;     Preserve a rule's semantic fields while attaching diagnostic reader data.
+;;     Boundary: checked admission separately validates and detaches this data.
+;;     Invariant: source metadata grants no validation or source-update authority.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (.ref (gerbil-ascent-rule-with-origin rule #f) 'source-origin)
+;;     ;; => #f
+;;     ```
+;;   %
+(def (gerbil-ascent-rule-with-origin rule origin)
+  (let (value (.o (:: @ rule) source-origin: origin))
+    (if (declared-value-shape? 'rule rule)
+      (remember-value-shape! 'rule value) value)))
 
 ;; BEGIN GENERATED OWNED DECLARATION VALUES
 (def term-value-current? (canonical-value-check-current? GerbilAscentTermContract '(kind value)))
@@ -473,10 +390,10 @@
        required-prototype: (.ref GerbilAscentRuleContract 'proto)
        extra-fields: 'delegate constraints: (list Any)
        responsibilities:
-       (.o heads: (.cc Type. .element?: (lambda (heads)
-             (and (pair? heads) (list? heads) (andmap atom-value? heads))))
-           body: (.cc Type. .element?: (lambda (body)
-             (and (list? body) (andmap atom-value? body)))))))
+       (.o heads: (.cc Type. .element?: (lambda (head-atoms)
+             (and (pair? head-atoms) (list? head-atoms) (andmap atom-value? head-atoms))))
+           body: (.cc Type. .element?: (lambda (body-atoms)
+             (and (list? body-atoms) (andmap atom-value? body-atoms)))))))
 (def rule-value-current?
   (canonical-value-check-current? GerbilAscentRuleContract '(heads body)))
 (def (owned-rule-fields? value)
@@ -566,6 +483,21 @@
                    (hash-put! names found #t)
                    (or (eq? found name) (scan)))))))))
 
+;; gerbil-ascent-check-source-handles
+;; : (forall (r) (-> [r] [Symbol] [Symbol]))
+;; : (-> RelationDeclarations SourceHandles DetachedSourceHandles)
+;; | doc m%
+;;     Validate and detach a finite ordered list of unique declared names.
+;;     Relation names are read lazily in first-request order; caller getters
+;;     remain observable and no successful validation is cached across calls.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-check-source-handles '() '())
+;;     ;; => '()
+;;     ```
+;;   %
 (def (gerbil-ascent-check-source-handles relations source-handle-values)
   (unless (list? source-handle-values)
     (error "invalid ASCENT source handles" source-handle-values))
@@ -619,12 +551,14 @@
 ;; Prototype identity outlives the descriptor's lazily materialized slot cache.
 ;; Rematerialization must not invalidate already published native Sessions.
 (def +session-prototype+ (.o))
+;;; Boundary: public Session values expose only admitted mutable operations.
+;;; Invariant: this stable prototype survives descriptor cache rematerialization.
 (define-type (GerbilAscentSessionContract @ YuanxuObjectContract.)
   identity: 'ascent/session
   proto: +session-prototype+
   responsibilities:
   (.o .append-source!: +procedure+
-      .replace-source!: +procedure+
+      .source-replacement: +procedure+
       .run: +procedure+))
 
 ;; This factory owns all field getters. It checks every mandatory procedure on
@@ -635,17 +569,28 @@
        extra-fields: 'delegate constraints: (list Any)
        responsibilities:
        (.o .append-source!: (.cc Type. .element?: procedure?)
-           .replace-source!: (.cc Type. .element?: procedure?)
+           .source-replacement: (.cc Type. .element?: procedure?)
            .run: (.cc Type. .element?: procedure?))))
 (def session-metadata-current?
-  (canonical-metadata-current? GerbilAscentSessionContract '(.append-source! .replace-source! .run)))
+  (canonical-metadata-current? GerbilAscentSessionContract '(.append-source! .source-replacement .run)))
 (def session-protocol-current?
-  (canonical-validation-current? GerbilAscentSessionContract '(.append-source! .replace-source! .run)))
+  (canonical-validation-current? GerbilAscentSessionContract '(.append-source! .source-replacement .run)))
 (def (gerbil-ascent-make-session-value append! replace! replace-all! run! timeout!)
   (let (value (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
-                .append-source!: append! .replace-source!: replace!
-                .replace-sources!: replace-all! .run: run! .run-timeout: timeout!))
+                .append-source!: append! .source-replacement: replace!
+                .source-replacements: replace-all! .run: run! .run-timeout: timeout!))
     (if (and (session-metadata-current?) (session-protocol-current?)
              (element? +session-value+ value))
       value
       (validate GerbilAscentSessionContract value))))
+
+;;; The Module publishes these existing native operations. Engine state and
+;;; candidate values retain their own contracts; publication is not execution.
+(def ProgramScopeContract
+  (.cc YuanxuContract. identity: 'ascent/program-scope
+       proto: (.o)
+       value-contract: (Record relation: (list +procedure+)
+                              program: (list +procedure+)
+                              evaluate: (list +procedure+)
+                              open-session: (list +procedure+)
+                              solve: (list +procedure+))))

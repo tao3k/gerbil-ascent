@@ -1,16 +1,18 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Reuse only private projection object graphs, never a validation result or wire value.
 (import (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program)
         (only-in :gerbil-ascent/program/types gerbil-ascent-relation-with-rows
                  gerbil-ascent-projection-tree-current? gerbil-ascent-check-projection-program))
 (export ascent-projection-program)
 (defstruct projection-cache (generation relations rules handles limits program) final: #t)
+;; : (forall (a) (-> [a] [a] Boolean))
 (def (same-references? left right)
   (cond ((null? left) (null? right))
         ((null? right) #f)
         (else (and (eq? (car left) (car right))
                    (same-references? (cdr left) (cdr right))))))
+;; : (-> Program Sources Program)
 (def (fresh-program original sources)
   (gerbil-ascent-program
     (map (lambda (relation)
@@ -20,6 +22,7 @@
     (.ref original 'rules) (.ref original 'max-input-facts)
     (.ref original 'max-derived-facts) (.ref original 'max-output-facts)
     (.ref original 'source-handles)))
+;; : (-> Program Sources Natural (Maybe ProjectionCache) (Values Program (Maybe ProjectionCache)))
 (def (ascent-projection-program original sources generation previous)
   (if (not (gerbil-ascent-projection-tree-current? original))
     (values (fresh-program original sources) #f)

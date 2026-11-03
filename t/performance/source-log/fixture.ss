@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run gerbil-ascent-session-replace-sources!
                  gerbil-ascent-session-append-source!)

@@ -977,7 +977,7 @@
                         (.append-source!
                          (if single-set-source?
                            append-single-set-source! append-source!))
-                        (.replace-source! replace-source!)
+                        (.source-replacement replace-source!)
                         (.run run-session!)
                         (.run-timeout run-timeout!)
                         (.analysis analysis)

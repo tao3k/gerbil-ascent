@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
         (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-construct-inert-program gerbil-ascent-variable gerbil-ascent-program gerbil-ascent-atom gerbil-ascent-rule)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-construct-inert-program gerbil-ascent-variable gerbil-ascent-program gerbil-ascent-atom gerbil-ascent-rule)
         :gerbil-ascent/candidate/checked-program
         :gerbil-ascent/candidate/types
         :gerbil-ascent/t/performance/candidate-flow/fixture

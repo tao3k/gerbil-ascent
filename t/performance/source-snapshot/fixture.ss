@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :clan/poo/object :gerbil-ascent/program/objects
+(import :clan/poo/object :gerbil-ascent/program/func
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (rename-in (only-in :gerbil-ascent/t/performance/source-snapshot/reference-session
@@ -37,7 +37,7 @@
                     (if old? (old-engine program #t) (gerbil-ascent-make-engine program #t))
                     (if old? (old-open program) (gerbil-ascent-open-session program)))))
     ((.ref session '.run))
-    (when positive? ((.ref session '.replace-sources!) (list (cons 'input []))))
+    (when positive? ((.ref session '.source-replacements) (list (cons 'input []))))
     (cons session (.ref program 'relations))))
 
 (def (snapshot-projection result declarations)
@@ -56,9 +56,9 @@
                (begin
                  ((.ref session '.append-source!) 'blocked '(0))
                  (let (blocked (snapshot-projection ((.ref session '.run)) declarations))
-                   ((.ref session '.replace-source!) 'blocked [])
+                   ((.ref session '.source-replacement) 'blocked [])
                    (list blocked (snapshot-projection ((.ref session '.run)) declarations))))
                (begin
-                 ((.ref session '.replace-sources!) (list (cons name rows)))
+                 ((.ref session '.source-replacements) (list (cons name rows)))
                  (snapshot-projection ((.ref session '.run)) declarations)))))
          (iota 4))))

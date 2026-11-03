@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .ref .o)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable
                  gerbil-ascent-guard gerbil-ascent-literal gerbil-ascent-negation)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine gerbil-ascent-evaluate-program)
@@ -94,7 +94,7 @@
                       (check-equal? (failure (lambda () ((.ref engine '.append-source!) 'input '(1 2))))
                                     "ASCENT relation field type mismatch")
                       (set! reject? #f)
-                      ((.ref engine '.replace-source!) 'input '((1 2)))
+                      ((.ref engine '.source-replacement) 'input '((1 2)))
                       ((.ref engine '.append-source!) 'input '(2 3))
                       (let* ((updated ((.ref engine '.run)))
                              (fresh (gerbil-ascent-evaluate-program
@@ -133,9 +133,9 @@
                    (set! reject? #f)
                    ;; Failed admission counted a row before recording its source.
                    ;; The legal 33-row replacement must not be counted as 34.
-                   ((.ref engine '.replace-source!) 'input (append source '((0 32))))
+                   ((.ref engine '.source-replacement) 'input (append source '((0 32))))
                    (check-equal? (length ((.ref ((.ref engine '.run)) 'rows-of) 'out)) 33)
-                   ((.ref engine '.replace-source!) 'input source)
+                   ((.ref engine '.source-replacement) 'input source)
                    ((.ref engine '.append-source!) 'input '(0 32))
                    (check-equal? (length ((.ref ((.ref engine '.run)) 'rows-of) 'out)) 33)
                    (check-equal? (length ((.ref old 'rows-of) 'out)) 32)

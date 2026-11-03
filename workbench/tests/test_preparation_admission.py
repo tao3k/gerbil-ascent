@@ -21,7 +21,10 @@ class PreparationAdmissionTests(unittest.TestCase):
         original = b'(package: gerbil-ascent depend: ("core@fixed"' + edge + b'))\n'
         before = {'gerbil.pkg': original}
         after = {'gerbil.pkg': original.replace(edge, b'')}
-        for name in ('gerbil.pkg', 'build.ss', 'production-build-test.ss'):
+        # This control qualifies the historical split, including its exact ASP
+        # implementation. Later authorized parser revisions are not that study.
+        after['dev/gerbil.pkg'] = b'(depend: (' + edge.strip() + b'))\n'
+        for name in ('build.ss', 'production-build-test.ss'):
             after['dev/' + name] = (ROOT / 'dev' / name).read_bytes()
         changed = set(after)
         self.assertEqual(development_dependency_paths(changed, before.get, after.get), changed)

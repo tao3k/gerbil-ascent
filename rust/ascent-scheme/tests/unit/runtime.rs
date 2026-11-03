@@ -135,9 +135,20 @@ fn bind_source_library(runtime: &Runtime) {
     unsafe extern "C" {
         fn ascent_hybrid_bind(root: i64) -> i64;
     }
+    let manifest = gerbil_scheme_python::PackageManifest::from_json(include_bytes!(concat!(
+        env!("OUT_DIR"),
+        "/instance_inventory.json"
+    )))
+    .unwrap();
+    let package = manifest.verify(env!("ASCENT_INSTANCE_PACKAGE")).unwrap();
+    let paths = package
+        .load_paths()
+        .iter()
+        .map(|path| Data::from(path.to_str().unwrap()))
+        .collect();
     let input = Data::List(vec![
         Data::Integer((crate::control::ascent_hybrid_checkpoint as *const () as usize).into()),
-        Data::from(concat!(env!("ASCENT_INSTANCE_PACKAGE"), "/_owners/lib")),
+        Data::List(paths),
     ]);
     let fields = input
         .list()

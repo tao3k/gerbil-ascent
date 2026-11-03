@@ -4,7 +4,7 @@
 (import (only-in :std/test test-suite check-equal? check-exception test-case)
         (only-in :std/list/list append-map)
         (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-literal gerbil-ascent-wildcard gerbil-ascent-atom
                  gerbil-ascent-rule gerbil-ascent-guard)
@@ -971,7 +971,7 @@
         (for-each (lambda (engine) ((.ref engine '.run-timeout) 0)) (list old new))
         (check-equal? (rows ((.ref new '.run)) 'path) (rows ((.ref old '.run)) 'path))
         (check-equal? (rows old-first 'path) (rows new-first 'path))
-        (for-each (lambda (engine) ((.ref engine '.replace-source!) 'edge '((2 1)))) (list old new))
+        (for-each (lambda (engine) ((.ref engine '.source-replacement) 'edge '((2 1)))) (list old new))
         (check-equal? (rows ((.ref new '.run)) 'path) (rows ((.ref old '.run)) 'path))))
     (test-case "wide rules read numeric slots without a fixed variable limit"
       (let* ((variables (map (lambda (n) (v (string->symbol (string-append "v" (number->string n))))) (iota 40)))

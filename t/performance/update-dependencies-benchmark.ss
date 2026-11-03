@@ -4,7 +4,7 @@
 ;;; Repeated source-selection cost; declaration graph compilation is upfront.
 (import :gerbil/runtime/gambit
         (only-in :gerbil/expander core-resolve-library-module-path)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program
                  gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-atom
                  gerbil-ascent-variable)
         (only-in :gerbil-ascent/program/analysis gerbil-ascent-program-schema)

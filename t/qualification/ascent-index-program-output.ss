@@ -8,7 +8,7 @@
                  ascent-composite-index-fixture-program
                  ascent-lattice-index-fixture-program
                  ascent-index-alist-provider)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program))
 
 (export main)

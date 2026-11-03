@@ -4,10 +4,10 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/table/interface
+        (only-in :gerbil-ascent/table/func
                  gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-hash-index-provider)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program
                  gerbil-ascent-open-session
                  gerbil-ascent-session-run

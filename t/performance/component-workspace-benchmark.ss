@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander (only-in :std/misc/process run-process)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         (only-in :gerbil-ascent/t/performance/component-scope/fixture component-scope-request component-scope-program)
         (only-in :gerbil-ascent/program/positive-components gerbil-ascent-run-positive-components!)
         (rename-in (only-in :gerbil-ascent/t/performance/component-workspace/reference-coordinator gerbil-ascent-run-positive-components!)

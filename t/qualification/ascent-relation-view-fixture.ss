@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :gerbil/runtime/gambit :gerbil-ascent/program/objects
+(import :gerbil/runtime/gambit :gerbil-ascent/program/func
         :gerbil-ascent/table/provider :gerbil-ascent/table/storage)
 (export ordered cycle-program)
 (def (ordered rows)

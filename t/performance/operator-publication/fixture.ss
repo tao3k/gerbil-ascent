@@ -4,8 +4,8 @@
 (import (only-in :clan/poo/object .o .ref)
         :gerbil-ascent/program/operator
         (prefix-in :gerbil-ascent/t/performance/operator-publication/reference old-)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program)
-        (only-in :gerbil-ascent/program/interface relational-admit relational-solve relational-query-name))
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-program)
+        (only-in :gerbil-ascent/program/api relational-admit relational-solve relational-query-name))
 (export publication-prepare publication-consume publication-expected publication-verify!
         publication-shape)
 (def (graph width)

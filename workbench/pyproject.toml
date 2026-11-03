@@ -20,3 +20,8 @@ include = ["ascent_workbench*"]
 
 [tool.uv.sources]
 gerbil-ascent = { path = "../python", editable = true }
+
+[dependency-groups]
+design = [
+    "opensysml==0.10.1",
+]

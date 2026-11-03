@@ -1,147 +1,78 @@
-#+title: ASCENT → POO Flow 迁移审计（2026-10-21）
+#+title: ASCENT to POO Flow Migration Audit (2026-10-21)
+#+language: en
 
-* 当前结论
+* Acceptance status
 
-迁移代码已进入两个日常 checkout 的正式 PR 分支，并已推送 GitHub。
-ASCENT 保留通用规则、查询、retained Session、增量维护及推导 provenance；
-Evidence、Clue、Trajectory、Review、Domain 与模型交互由 POO Flow 承接。
-没有提供旧 ASCENT 应用接口的兼容层，没有新增防重复 thinking prompt。
+The application migration is implemented on the existing PR branches. Full
+acceptance is incomplete. This document records implemented ownership and
+source-bound results; it is not an implementation plan or a release approval.
 
-- ASCENT：/Users/guangtao/ghq/github.com/tao3k/gerbil-ascent，分支 feature/ascent-scheme-syntax，[[https://github.com/tao3k/gerbil-ascent/pull/1][PR #1]]。
-- POO Flow：/Users/guangtao/ghq/github.com/tao3k/poo-flow，分支 research/ascent-poo-flow，[[https://github.com/tao3k/poo-flow/pull/34][PR #34]]。
-- 固定 producer 提交：0f99da9e3a3baf1a272ba58fe0769ed8278ae746。POO Cargo 与 gerbil.pkg 使用同一提交，不依赖 /private/tmp 路径。
-- 两库完整远端 CI 正在验收；本地通过不能代替远端全部通过。下文区分已通过和待验收。
+ASCENT owns the generic rule and Logical Programming library: rules, queries,
+retained sessions, incremental maintenance and derivation provenance. POO Flow
+owns Evidence, Clue, Trajectory, Review, Domain and model interaction. The
+migration introduces neither an application compatibility layer nor an
+anti-repetition prompt. No model experiment was run as part of this migration.
 
-* 实现到底去了哪里
+| Repository | Existing PR | Implementation revision |
+|------------+-------------+-------------------------|
+| ASCENT | [[https://github.com/tao3k/gerbil-ascent/pull/1][#1]] | =71408ec3dc20510416ddbac9f5d4e8f5ed68b854= |
+| POO Flow | [[https://github.com/tao3k/poo-flow/pull/34][#34]] | =e7066ecafee314f42026c0f7d9f59772f5c0ac71=; integration =45c516d8d3976e1ecd1aacb1b596d2815bf2e8d3= |
+| ASP | [[https://github.com/tao3k/asp-gerbil-scheme/pull/13][#13]] | =9ae9bc377cbab4b84de52b512a2c03375a36d6c9= |
+| Parser | [[https://github.com/tao3k/gerbil-parser/pull/13][#13]] | =85d1fe07fda0768b78023fbf17ad5653bbf326cb=; publication-order/test repair =50cd35738977ed155800b61b6b4a20384d41474a= |
+| Orgize | [[https://github.com/tao3k/orgize/pull/18][#18]] | =d64cbb6cc2ba3d56bdff3700049091c68f5c76f5=; generated-lock ignore =c9958bc448f01a98d054546c6b05a85913f6189f= |
+| Yuanxu / former Core | [[https://github.com/tao3k/gebril-yuanxu/pull/19][#19]] | production =45817d938961e2ad9ca90e1fd56ff843bb53541e=; test package =94d676674b463401d0ebd12e9e48a40a7b2b467d= |
 
-目标均相对日常 POO Flow 根目录；临时副本仅用于构建与复现，不再是唯一交付位置。
+These revisions identify distinct source changes, not interchangeable test
+receipts. Parser PR #20 was closed; work remains on its original PR #13.
+No release Tag has been created or moved.
 
-| 原 ASCENT 实现 | POO Flow 实际归属 |
-|----------------+------------------|
-| rust/ascent/src/evidence_store、evidence_graph、computational、derivations.rs | modules/evidence-assessment/native/src/ 下对应模块 |
+* Implemented ownership
+
+Paths below are repository-relative to POO Flow unless the source column names
+ASCENT. Temporary validation checkouts are not production dependencies.
+
+| Former ASCENT implementation | POO Flow owner |
+|-----------------------------+----------------|
+| rust/ascent/src/evidence_store、evidence_graph、computational、derivations.rs | modules/evidence-assessment/native/src/ corresponding modules |
 | rust/ascent/src/review/ | modules/evidence-assessment/native/src/review/{mod,owner,policy}.rs |
 | evidence/agent/review-rules.scm | modules/evidence-assessment/policies/review-rules.scm |
 | rust/ascent-python/src/api/review.rs | modules/evidence-assessment/native/src/python/review.rs |
-| rust/ascent/src/domain*、observations、conversation.rs、provider.rs | modules/evidence-assessment/native/src/ 下对应模块 |
-| rust/ascent/src/clues/；program/clue-exchange.ss；evidence/clue-query.ss | modules/ai-agentic-context/clues/native/；clue-exchange.ss；clue-query.ss |
+| rust/ascent/src/domain*、observations、conversation.rs、provider.rs | modules/evidence-assessment/native/src/ corresponding modules |
+| rust/ascent/src/clues/; program/clue-exchange.ss; evidence/clue-query.ss | modules/ai-agentic-context/clues/native/; clue-exchange.ss; clue-query.ss |
 | rust/ascent/src/interaction/ | modules/ai-agentic-context/interaction/native/ |
-| rust/ascent/src/trajectory/；program/trajectory.ss；evidence/checkpoint.ss | modules/temporal-causality/trajectory/native/；ascent-ledger.ss；ascent-checkpoint.ss |
-| program/evidence-dag.ss；candidate/evidence-store.ss；applications/domain-evidence.ss | modules/evidence-assessment/ascent-dag.ss；candidate/evidence-store.ss；domain-checks.ss |
-| 应用 Python 绑定与 .ss 资源 | modules/evidence-assessment/native/src/python/；packages/python-runtime/src/poo_flow_runtime/reasoning.py 与 reasoning_rules/ |
-| Review、Catalog、History、investigation 等场景规则和测试 | modules/evidence-assessment/native/tests/fixtures/evidence/、tests/scenarios.rs；packages/python-runtime/tests/assessment/ |
-| 应用离线研究、冻结协议与对应测试 | packages/python-testing/src/poo_flow_testing/assessment_studies/ 与 tests/assessment/ |
-| 20 个应用 Quint 源文件 | packages/proofs/quint/；通过现有 CI 接入，包含正面与负面校验 |
-| 7 个应用 Lean 模块 | packages/proofs/lean/PooFlowProof/EvidenceAssessment/；目标 PooFlowModuleEvidenceAssessmentProof |
-| 历史论文研究、报告与失败记录 | docs/research/；其余旧应用说明在 modules/evidence-assessment/research/ |
+| rust/ascent/src/trajectory/; program/trajectory.ss; evidence/checkpoint.ss | modules/temporal-causality/trajectory/native/; ascent-ledger.ss; ascent-checkpoint.ss |
+| program/evidence-dag.ss; candidate/evidence-store.ss; applications/domain-evidence.ss | modules/evidence-assessment/ascent-dag.ss; candidate/evidence-store.ss; domain-checks.ss |
+| Application Python bindings and .ss assets | modules/evidence-assessment/native/src/python/; packages/python-runtime/src/poo_flow_runtime/reasoning.py and reasoning_rules/ |
+| Review, Catalog, History and investigation rules and tests | modules/evidence-assessment/native/tests/fixtures/evidence/、tests/scenarios.rs; packages/python-runtime/tests/assessment/ |
+| Offline application studies, frozen protocols and tests | packages/python-testing/src/poo_flow_testing/assessment_studies/ and tests/assessment/ |
+| 20 application Quint source files | packages/proofs/quint/; existing CI, including positive and negative controls |
+| 7 application Lean modules | packages/proofs/lean/PooFlowProof/EvidenceAssessment/; target PooFlowModuleEvidenceAssessmentProof |
+| Historical research, reports and failure records | docs/research/; other application documentation in modules/evidence-assessment/research/ |
 
-Review 已包含原生实现、规则、Python EvidenceReview/review_sources、失效与失败测试，
-以及真实消费者场景，不是只迁移名称或文档。
+The inventory at =modules/evidence-assessment/migration-inventory.json= contains
+295 path records. Its original base is =923610340c4890bb56f51a7264355a91e05d44ab=:
+293 of the initial 294 removed paths have mapped destinations and content
+hashes; one unused duplicate Python wrapper was explicitly retired. The later
+execution-policy record names its actual source revision separately. Historical
+research has byte-preservation checks. Generic internal ASCENT renames are not
+counted as cross-repository moves.
 
-完整逐文件清单位于 POO 的 modules/evidence-assessment/migration-inventory.json：
-以迁移前 923610340c4890bb56f51a7264355a91e05d44ab 为基准，294 个删除路径中，
-293 个有明确 POO 目标及源/目标内容哈希；一个未使用的重复 Python wrapper 明确退役。
-历史研究报告另有原始字节一致检查。通用文件在 ASCENT 内部的重命名不计入跨库迁移。
+Review includes its native implementation, policies, Python
+=EvidenceReview/review_sources=, invalidation controls and consumer scenarios.
+POO invokes =gerbil_ascent::Engine=; it does not contain a copied evaluator.
+Clue, Interaction and Trajectory have their respective existing module owners
+and currently compile through one native consumer crate.
 
-* ASCENT 核心与调用关系
+ASCENT retains =RuleProgram / RuleSession / RuleResult=, =Engine.rules=,
+=rules/=, fixed points, relational algebra, typed values, =SourceSession=,
+updates and retractions. Generic source generation, provenance, cache identity
+and applicability contracts remain in the library. Generic models still named
+=EvidenceLifecycle= and =EvidenceCacheAdmission= remain by semantic ownership;
+the application store and review policies have moved. Datalog executes one real
+=SourceSession= without an implicit application EvidenceChain execution or
+synthetic cache counts.
 
-- 规则前端是 RuleProgram / RuleSession / RuleResult、Engine.rules、Scheme rules/。
-- 查询、固定点、关系代数、typed values、retained SourceSession、增量更新与撤回留在 ASCENT。
-- 通用 provenance、source generation、依赖、缓存身份与适用条件留在 ASCENT。
-- 通用程序验证位于 candidate/checked-program.ss，不迁成应用评审策略。
-- 通用 EvidenceLifecycle、EvidenceCacheAdmission 形式模型仍留在 ASCENT；按语义归属划分，不按单词机械删除。
-- 已移除无实际消费者的 provider-protocol Cargo feature；模型 provider 解析归 POO。
-- Datalog 只执行一次真实 SourceSession，不暗中附带 EvidenceChain 的第二次执行和合成缓存计数。
-
-POO 的 Runtime 包含并调用 gerbil_ascent::Engine，应用 owner 与生命周期计数由 POO 拥有。
-没有复制求值器。Clue、Interaction、Trajectory 源码归各自现有模块，当前由一个 native crate
-编译。既有 POO Case/函数仍是正常 Scheme API；内部 packet transport 不被提升为公共框架。
-
-* 并发改动如何保留
-
-ASCENT 原有 9 个 tracked 变更均逐项核对：Clue read-confirmation 及对应测试、Quint/Lean
-在 POO 保留；SourceUpdateFrame 的新增证明在 ASCENT 保留；依赖 pin 与最新 CompilerCost
-负面控制也保留。原始改动另有保留的 Git stash，未删除；_apalache-out/ 未动。
-
-POO 原有 212 个 tracked 变更保存在原始 stash，并恢复到迁移后的工作目录。
-justfile 的双方末尾追加发生冲突，已同时保留两组 recipe。
-除明确整合的 justfile、gerbil.pkg、Lean lakefile 与 Core gitlink 外，逐文件比较没有意外字节差异。
-原有 Core/文档子模块工作目录保留。无关并发修改仍留在原暂存区/工作树，没有混入迁移提交。
-因此远端 PR 的验收对象是已提交迁移；日常工作目录还包含并发工作，不应称为干净 checkout。
-
-* 已验证的事实
-
-| 验证 | 本地结果 | 证据边界 |
-|------+----------+----------|
-| 原生 Scheme binding，沿 CI nextest 入口 | 63/63 通过，0 skipped | 无 forced-stop、shutdown-error、checkpoint-transport 或 leak 标记 |
-| ASCENT workbench，含最新远端改动 | 100 通过 | 监督测试使用真实 ps/子进程权限 |
-| ASCENT Lean 全量 | 175 jobs 通过，LeanPoo Guard 返回 0 | 包含最新 CompilerCost；未放宽证明预算 |
-| 干净 ASCENT checkout → wheel → 全新 venv | 139 个安装后消费者测试通过 | 测试使用 workbench 辅助代码；ASCENT 来自安装 wheel |
-| 干净 POO checkout，Git-pinned producer | 3 unit + 54 integration 通过 | 包含迁移的 5 个真实应用场景 |
-| 干净 POO checkout → wheel → 同一全新 venv | 112 个安装后消费者测试通过 | 包含 Review、失效、native/C-ABI、错误与边界检查 |
-| 应用离线研究与迁移 inventory | 152 通过 | 没有真实模型请求 |
-| 两个独立安装的 native artifact | 63 个 producer 输入哈希全部匹配 | 同时核验真实 Git source；不是仅相信调用方声称的版本 |
-| 迁移前一阶段应用形式验证 | 15 个协议、143 项正反义务；7 个 Lean 模块通过 | 源码清单保持；新远端 CI 仍会重新检查，不能冒充本次远端已绿 |
-
-干净源码副本分别为 /private/tmp/ascent-migration-clean-20261021 和
-/private/tmp/poo-migration-clean-20261021，均无 tracked 修改。
-依赖下载与编译缓存允许复用；这不是“无 SDK、无网络、无缓存环境”的承诺。
-POO 既有完整 wheel 的 Bazel C-runtime handoff 仍由原 CI 单独验收，不能由本地 extension wheel 代替。
-
-* 失败及未完成的 gate
-
-- 未指定 GERBIL_HOME 的原生运行报模块加载失败；修正 SDK 环境后使用原 CI nextest 完成，原失败日志保留。
-- 直接串行诊断在 120 秒被截断，保留为 incomplete；没有当作运行通过，也未扩大既有仓库测试期限。
-- 新挂载的旧 Python 消费者缺少组件 manifest，现已提交明确 fixture。
-- 旧测试曾允许零期限返回缓存结果；按现行严格合同改为必须拒绝，包括已有缓存的调用。
-- 旧测试曾要求修订后历史 explanation 不可读；现检查原合同：保留原内容/代次，同时 current=false，不赋予当前证明效力。
-- 沙箱阻止 ps、进程通信和固定依赖下载的失败也保留；授权重跑使用相同 gate。
-- 干净 checkout 的完整 workspace Clippy 首次因尚未安装 Scheme 依赖失败；在独立前缀安装一致依赖后已通过完整 workspace Clippy（包括可选 backend），没有跳过。
-- 两库准确 HEAD 的完整 CI 尚待收齐。已有本地结果不构成远端全绿声明。
-
-本次原始日志留在 /private/tmp/ascent-migration-* 与 /private/tmp/poo-migration-*，不提交 raw logs。
-CI 有独立 artifacts。POO migration.org 及 migration-inventory.json 提供持久归属和失败摘要。
-本次只验证迁移与 Library 交互边界，没有调用模型，也没有声称已经证明减少 thinking。
-
-* 后续 CI 根因与修正记录
-
-- 完整数学 gate 已完成：complete=true，原 900 秒预算；所有生成源码一致性检查通过。
-- POO 迁入的 Quint 协议和 EvidenceAssessment Lean 目标已在第一轮 CI 通过。
-- 166 个迁入文件补充精确 REUSE 注解，新 native workspace 声明原许可；原始研究字节保持不变，许可证合同与测试已通过。
-- POO 原有 Bazel 派生源仍指向旧 ASCENT，已用现有 pin/sync-lock 工具修正，并在 Bazel lockfile_mode=error 下通过。
-- Core/ASP 的 gerbil-poo 固定版本冲突已通过一行上游修正及标准安装验证。另一个并发修正将开发工具从生产依赖中拆出；该改动继续保留。
-- 上游 ASP PR #12 已关闭；并发的 ASP PR #13 使用消费者选择版本的声明，当前正与最新源码整合。不重开已关闭 PR。
-- POO 的旧 Parser 仍固定 Core e85fd453，与 ASCENT 所需 Core 52130d2 冲突；Orgize 固定这份 Parser。该冲突仍是独立待处理 gate，不伪装为安装成功。
-- 第一轮 POO workflow Lean 下载失败是 TLS 错误，保留失败，后续准确 HEAD CI 将重新检查。
-
-* 发布与开发依赖边界（2026-10-21 更新）
-
-- 并发 ASCENT 提交 =44bd6695bb826a8c2b6f2c651217315986ad17ee= 已整合进验证 checkout；生产构建和 AOT staging 不再加载 ASP。原生生产构建检查报告 =PRODUCTION-BUILD-NO-ASP contexts=2048=；这项结果早于最后的 AOT 修改，不替代最终准确 HEAD 的完整验收。
-- POO 并发提交 =99f03c7d95746f7fb5931920f59cc82ac1542a57= 已整合；原有 212 项 Core/Module/Funflow 并发修改由其原负责人正式提交，没有回滚。
-- Parser 在 Core 52130d2 安装后继续失败：安装产物缺少 =core/module-system/source/module-prelude=。Core 6299e9f 的构建清单已包含该模块，同时选择 gerbil-poo 46d1b932；正在独立安装前缀验证，尚未声明通过或打发布 Tag。
-- 当前 SDK 将包安装到不含版本号的目录；同一环境无法并存同包多版本。不同 SHA 冲突；不同数字版本 Tag 会选择较大版本，且不检查主版本兼容性。不能用 Tag 选择行为替代原生验证。
-- 发布/干净 checkout 使用固定版本，并保存 Tag 到完整 SHA 的绑定。开发工具分类不等于源码覆盖；移除 REV 本身不保证使用本地 checkout。开发源码必须独立选择与记录，不自动改写正式依赖。
-- 本轮两库最新 CI 仍在执行，没有远端全绿声明；历史测试计数属于上表记载的已验证源码，不能自动转移给新的依赖组合。
-
-* 准确 HEAD 的依赖与 CI 修复（继续验证中）
-
-- POO =99f03c7d= 的 Linux/Bazel 和 Darwin/source-build 均在 Core 的 =replay-slot-reads!= 引用处失败；其 gerbil-poo 投影仍是 fdeadfa，而新 Core 需要 46d1b932 导出的接口。已有 pin 工具正在同步正式声明和 Bazel 投影，未添加加载路径或兼容层。
-- 同一 HEAD 的 unit/Darwin 原生安装仍拒绝旧 Parser 带入的 gerbil-poo 099b381；日志保留，不认为 Bazel 的接口错误是唯一根因。
-- Parser 候选 =6f54db0e4619ec7989340957431fe4363057c383= 只改两条依赖声明（Core 6299e9f、ASP 31c7ddee）。独立干净源码副本的标准依赖安装和完整原生构建退出 0；原 =just test-all= 正在执行，未把构建成功当作测试成功。
-- Core 6299e9f/251ff28 的 Linux CI 在测试启动前被旧 Just 的 =Unknown attribute group= 拒绝。现有 PR #19 的 =6f94d8125653ecd7788bbf2f26f4f5be96c73468= 固定 Just 1.56.0，并记录所选工具版本；原测试和超时保持，Lean 已通过，新原生/Quint CI 待完成。6299e9f 到该提交的 Scheme 生产源码没有改变；后续干净安装仍选择新准确 SHA，不冒充已验证。
-- POO Quint 失败是 job 未初始化所需 Core 子模块，导致 =core/proofs/quint/backend.py= 不存在；修复为初始化已固定的 Core，没有复制 backend 或跳过模型。
-- POO 许可证失败来自并发新增的两个 SDK patch 未声明许可；补充两个精确 REUSE 路径，保持 patch 内容不变。
-- 一次临时 Parser 构建的安装前缀位于源码扫描范围内，诊断构建已取消并保留日志；后续改用独立干净源码副本、源码树外的标准前缀。该取消不是通过或产品缺陷。
-- 所有发布 Tag 仍未创建；最终依赖组合、原生验收和完整准确 HEAD CI 未收齐之前，不声明发布完成。
-
-* Existing PR continuation and development boundary
-
-This section supersedes the unfinished dependency candidates above. No release
-Tag has been created. Parser PR #20 was closed at the user's request; its
-commits remain recoverable. Work continues in ASCENT #1, POO Flow #34, Parser
-#13, Orgize #18, ASP #13 and the original Core PR #19 (now redirected to
-=tao3k/gebril-yuanxu=). No replacement PR is part of this continuation.
-
-** Source and owner changes
+* Integrated source changes
 
 - Concurrent ASCENT =cfa7588bd2a1cd4e42d2f735acae591c5970e771= and POO Flow
   =e20e93236ca7a04275d1293cdc9ce770401efd7f= were integrated; concurrent Core
@@ -175,71 +106,194 @@ commits remain recoverable. Work continues in ASCENT #1, POO Flow #34, Parser
   =fca7913015b58d577eaee7ba0b51fcc83641c766= explicitly. The inventory now has
   295 path records; generic aggregate tests remain in ASCENT.
 
-** Verified boundaries and pending gates
 
-- ASP's relocated entry emits discovery count 1, MODULE-OK, HARNESS-OK, OK,
-  and the all-batches-complete receipt, with natural exit 0. The focused
-  extension test passes. The exact ASP commit has all four remote native
-  library/provider checks passing on Linux and macOS.
-- The full local ASP suite emitted all 17 MODULE-OK receipts and final OK,
-  but hit its 300-second diagnostic timeout before natural exit. It is kept
-  as an incomplete run. An isolated native-closure/compile control subsequently
-  completed with natural exit 0; this does not relabel the full run.
-- Core's clean/build and public prelude test pass with natural exit 0. The
-  unchanged source-only bootstrap also passes: 38 targets, compile, clean,
-  rebuild, original negative controls, and final harness OK. Exact-head remote
-  checks remain a separate gate.
-- The POO SDK specification matches the prior production specification byte
-  for byte (264 ordinary modules plus the three native FFI targets). Parser's
-  production/development specifications compare equal as native data (263
-  targets). These are catalog checks, not whole-product test receipts.
-- POO's build-projection boundary test and six dependency controls pass.
-  Frozen Bazel lock validation passes; the declared production compile closure
-  has no ASP/development target. The updated 295-record source inventory passes.
-- Parser production compilation is being exercised without ASP installed in
-  its prefix. Orgize native qualification, final installed Python/Rust artifacts,
-  the relocated execution-policy checks and full clean-checkout acceptance
-  are not yet certified by this section.
-- The earlier 63-test ASCENT native run remains 62 passed / 1 timeout, namely
-  the execution-policy provenance check. Relocating that check does not remove
-  its failed receipt or turn it into a producer pass. The consumer must execute
-  the moved check with the same default limits.
-- The POO Python project harness still has its previously recorded 154 blocking
-  findings. Four focused fixture assertions are not a project-harness pass.
-- Standard gxpkg update again reproduced =missing gerbil.pkg= for a package
-  argument containing =@SHA=. The checkout and stored tag already named the
-  requested SHA; updating by package name completed at that same SHA. Nothing
-  was uninstalled and no revision or validation was weakened.
+* Validation receipts
 
-** Subsequent exact-source receipts
+** Latest implementation cohort
 
-ASCENT =71408ec3dc20510416ddbac9f5d4e8f5ed68b854= completed its full native
-production build and =check-production-build= with natural exit 0 and
-=PRODUCTION-BUILD-NO-ASP contexts=1508=. Parser's production build likewise
-completed without ASP installed, with =LIBRARY-PUBLICATION-READY= and exit 0.
-The Parser development policy pass completed with 589 warnings and zero errors;
-warnings were not suppressed. Catalog comparison now retains every target and
-option while normalizing filesystem enumeration order, and reports both sides
-of a mismatch rather than weakening the source inventory.
+| Check | Observed result | Boundary |
+|-------+-----------------+----------|
+| ASCENT 71408ec native suite | 61 passed, one failed, zero skipped | Complex-cell execution reached its original timeout; full suite failed |
+| ASCENT 71408ec production build | Natural exit 0; =PRODUCTION-BUILD-NO-ASP contexts=1508= | Production build, not the full native test suite |
+| Parser 85d1fe0 production build | Natural exit 0; =LIBRARY-PUBLICATION-READY= | ASP absent from the production prefix |
+| Parser development policy | 589 warnings, zero errors locally | Both hosts pass catalog/policy; optional-command publication fails at 5d7609b |
+| POO native consumer at ASCENT 71408ec | 55 passed, zero ignored or filtered; natural exit 0 | Includes the moved execution-policy test with original default limits |
+| POO consumer Python feature | Cargo check and native test compilation passed | Installed Python wheel execution is not yet certified for this cohort |
+| POO ownership and dependency controls | Six dependency controls and 295-record inventory passed | Not a whole-project Python harness pass |
+| POO production Bazel closure | Frozen lock validation passed; no ASP/development target | Production compile dependency boundary |
+| ASP 9ae9bc3 relocated entry | One discovered test; MODULE-OK, HARNESS-OK, final OK and natural exit 0 | Real parent-tree invocation, not exit 0 alone |
+| ASP 9ae9bc3 remote checks | All four Linux/macOS library and provider checks passed | Exact ASP source revision only |
+| Yuanxu 45817d9 native build and public prelude | Natural exit 0 | Independent native prelude package; header checks retained |
+| Yuanxu source-only bootstrap | 38 targets, compile, clean, rebuild, negative controls and final harness OK | Does not certify the full native test directory |
+| POO production catalog | Byte-identical to the prior specification: 264 ordinary modules plus three FFI targets | Catalog parity only |
+| Parser production/development catalog | Equal native data locally, 263 targets | Remote catalog/policy also pass at 5d7609b; publication is a separate failed gate |
 
-POO's native consumer crate and Python feature compiled against that same ASCENT
-revision. Its full serial native test execution completed 55/55, zero ignored,
-zero filtered, with natural exit 0. This includes the migrated execution-policy
-provenance test. Its preceding isolated run still timed out with the original
-limits; both results are retained. No timing or caching improvement is claimed.
-An initial run was refused by the process/socket sandbox; another correctly
-refused an old worker at its identity handshake. The final run used the worker
-built from the same resolved ASCENT SHA and the selected SDK root.
+** Earlier migration cohort
 
-The original Core PR also exposed a test-directory VM heap overflow after build,
-prelude and bootstrap had already passed. Its CI now keeps the same 200 direct
-=t/*-test.ss= files and the same 1 GiB allowance, running them individually via
-the existing bounded test entry. The source-only test fixtures have a confined
-=core/t= native package; production sources are not prioritized over compiled
-Kernel artifacts to satisfy a fixture import. Full exact-head CI remains open.
+The following results belong to the earlier ASCENT =0f99da9= / POO =03d7=
+cohort. They are retained as historical results and are not transferred to the
+latest dependency combination.
 
-All work continues on the original PRs. POO's remote PR branch contains the
-migration, but its primary working checkout acquired roughly 580 concurrent
-uncommitted changes. That checkout was not reset, stashed, broadly staged or
-forcibly fast-forwarded. ASCENT's primary checkout was clean apart from its
-historical untracked validation output and was normally fast-forwarded.
+| Check | Historical result |
+|-------+-------------------|
+| ASCENT native Scheme binding | 63 passed, zero skipped |
+| ASCENT workbench | 100 passed |
+| ASCENT Lean | 175 jobs passed; LeanPoo Guard exit 0 |
+| ASCENT clean checkout to wheel to fresh venv | 139 installed-consumer tests passed |
+| POO native consumer | Three unit and 54 integration tests passed |
+| POO clean checkout to wheel to fresh venv | 112 installed-consumer tests passed |
+| Offline studies and inventory | 152 tests passed; no model calls |
+| Two installed native artifacts | All 63 producer input hashes matched, including Git source identity |
+| Application formal controls | 15 protocols, 143 positive/negative obligations and seven Lean modules passed |
+| Full mathematics gate | =complete=true= within the original 900-second budget |
+
+Clean source copies used =/private/tmp/ascent-migration-clean-20261021= and
+=/private/tmp/poo-migration-clean-20261021=. Download and compiler caches were
+reused. Local extension-wheel tests do not replace the existing CI Bazel
+C-runtime wheel handoff. Raw logs remain outside Git; remote CI owns its artifacts.
+
+* Retained failures and incomplete acceptance
+
+- The earlier 63-test ASCENT run at the subsequent cohort finished 62 passed
+  and one execution-policy provenance timeout. Its consumer test was moved
+  with the original limits and assertions. The first isolated consumer run
+  also timed out; the later full serial 55-test run passed. Both results remain.
+- An old worker was refused by its source-identity handshake. The passing
+  consumer run used a worker built from the resolved ASCENT 71408ec source.
+  Missing =GERBIL_HOME= and sandbox process/socket refusals are retained too.
+- The full local ASP suite emitted 17 MODULE-OK receipts and final OK but
+  reached its 300-second diagnostic deadline before natural exit. It remains
+  incomplete; a later isolated native-closure pass does not relabel it.
+- ASCENT 71408ec full nextest completed 62 tests: 61 passed, one failed, zero
+  skipped. The complex-cell parallel binding/publication test reported
+  =OBSERVE-RUN-FAIL stage=execute error=Timeout=. Its default deadline was not
+  changed, and this run is a failure.
+- Yuanxu's full native test directory exceeded the single-VM heap allowance.
+  CI now invokes the same 200 direct =t/*-test.ss= files individually through
+  the existing bounded entry with the same 1 GiB limit. Fixture imports use
+  the confined =core/t= package, without prioritizing production source over
+  compiled Kernel artifacts. A focused approved-recovery run then reached its
+  existing 120-second worker timeout and failed cleanup coverage. That failure
+  is unresolved; the deadline and source guards were not weakened. Remote
+  Linux CI additionally fails because =nix-store= is absent when the actual
+  approved producer persists its build artifact.
+- Parser 5d7609b passes development catalog comparison and policy on CI. The
+  later command build refuses the now-stale base publication after the new
+  development namespace was compiled. The working repair orders development
+  compilation before the base writer. The native control rejects the stale
+  base and accepts its rebuilt generation. The full publication module then
+  passed MODULE-OK, HARNESS-OK and final OK with natural exit 0 after its
+  source-witness setup was resolved before entering the private test prefix.
+  Earlier missing-fixture and source-execution-path failures remain recorded;
+  remote acceptance of the changed build order is still incomplete.
+- Orgize's direct build lacked a standard gxpkg Parser registration manifest.
+  Standard dependency installation reached its 600-second diagnostic deadline
+  and remains incomplete; no manifest was forged. Its remote revision check
+  also exposed the stale Parser revision in =fuzz/Cargo.lock=. Cargo regenerated
+  exactly the two Parser package identities at the declared 85d1fe0 revision;
+  the unchanged revision/dependency checks and locked fuzz metadata pass locally.
+- The POO Python project harness has 154 recorded blocking findings: 141 bare
+  prints, 12 oversized modules and one unexpected test root. Focused fixture
+  assertions do not constitute a harness pass.
+- Earlier frozen dependency conflicts, missing prelude publication, missing
+  Quint submodule initialization, exact REUSE metadata omissions and the old
+  Just attribute error have retained failure logs and source fixes. Later
+  complete validation, not a candidate dependency declaration, decides acceptance.
+- Standard gxpkg update with an =@SHA= argument reproduced a missing-manifest
+  path error. The checkout and stored tag already matched the requested SHA;
+  updating by package name completed at that SHA. Nothing was uninstalled.
+- Final installed Python/Rust artifacts, full clean-checkout acceptance and
+  complete exact-head CI are not yet certified for the latest cohort.
+
+These results establish migration and library-boundary checks only. They do
+not establish reduced model thinking, improved search quality or runtime speed.
+
+* Checkout and dependency boundaries
+
+Concurrent ASCENT =cfa7588b= and POO =e20e9323= were integrated on the existing
+PR branches. Earlier working changes and their recovery stashes were preserved,
+including Clue read-confirmation, SourceUpdateFrame proofs, CompilerCost
+negative controls and both sets of appended Just recipes.
+
+The POO remote PR contains the migration. Its primary working checkout later
+acquired roughly 580 concurrent tracked edits and was not reset, stashed,
+broadly staged or forcibly advanced. Concurrent Core source/proof changes were
+also preserved. The ASCENT primary checkout was normally fast-forwarded and
+retains its historical untracked validation output. A dirty primary checkout is
+not presented as a clean-checkout receipt.
+
+Production and development manifests are separate. POO and Parser keep ASP
+under =dev/=; production uses the native SDK. POO Scheme and Cargo declarations
+resolve the same ASCENT 71408ec source. Orgize Scheme and Cargo declarations
+resolve the same Parser 85d1fe0 source. The SDK installs a package into a single
+unversioned directory in each prefix; dropping a revision does not select a
+local development checkout or create parallel version slots. Published pins
+remain fixed. No release is certified before its dependency combination and
+native/clean-checkout gates are complete.
+
+* Native follow-up receipts
+
+The migration audit remains a working edit. No planning-only audit commit was
+created in this follow-up.
+
+- The original ASCENT 62-test failure remains 61 passed / one timeout. An
+  unchanged isolated run passed once. An instrumented two-test run alongside
+  the existing inexact-fold control reproduced the failure at workers=1:
+  limit 1,000,000,000 ns, elapsed 1,000,982,458 ns, queue 3,667 ns and 4,348
+  completed checkpoints. The companion passed. Subsequent single-test commands
+  also timed out under other host activity. These runs locate exhaustion during
+  controlled execution rather than queue admission; they do not establish a
+  transport fix, a performance gain, or a newly passing full suite.
+- Yuanxu d9f9cd4 added an immutable Nix installer action and fixed Nix 2.28.5.
+  The actual local daemon preflight passed using host Nix 2.34.4+1. The complete
+  approved-recovery test at that source passed with the original 1 GiB setting,
+  deadlines and eight recovery decisions: warm recovery true; joint forgery, policy
+  change, warm policy change, Core source change, cold source change, cold joint
+  forgery and cold omitted observation all false. MODULE-OK, HARNESS-OK, final OK
+  and CORE-APPROVED-RECOVERY-OK were emitted with natural exit 0.
+- Concurrent Yuanxu 1eb0251 includes that Nix repair and the namespace/ABI work.
+  Its Linux CI passed Nix setup, then rejected a duplicate declaration of
+  module-system/source/module-prelude. Revision 073f3b9 removes only the extra
+  declaration. Native catalog inspection reports 164 unique targets; the
+  duplicate-target admission guard remains unchanged. This is not a full
+  native acceptance receipt for 073f3b9.
+- Parser 50cd357 passed preparation on both hosts and Linux Rust, generation,
+  FFI and corpus checks. Semantics failed on Linux and Darwin. The Linux failure
+  reaches the OpenCypher LanguageGrammar phase-observation scenario and its
+  original five-second idle watchdog. Negative-fixture diagnostics elsewhere
+  in the log are not treated as its root cause.
+- Orgize 00539a9 passed its repaired dependency revision gate, then failed the
+  byte-exact query-pack source check. Regeneration with declared Parser 85d1fe0
+  changes only the graph digest, leaving query code identical. The updated
+  full Org Element module emitted MODULE-OK, HARNESS-OK and final OK with
+  natural exit 0. Revision 0817a1d publishes that generated identity and the
+  bridge upgrade on original PR #18; its full exact-head CI remains separate.
+- Bridge PR #18 was frozen at cfbc10c47ddc41f6670bd78e46e1e9d856cbb870.
+  ASCENT runtime, sys, Python and AOT dependencies resolve that SHA. Its normal
+  runtime dependency tree contains only cfbc10c Scheme/sys crates. The retired
+  build-only IR compiler stays at its existing immutable revision; it is absent
+  at cfbc10c and was not copied or replaced by a compatibility implementation.
+  ASCENT's pre-namespace-merge native/Python cargo check and worker build pass.
+  Concurrent ASCENT d634efac changes Yuanxu to 44a99d4, which still exports
+  :core and the PooFlow contract API. Porting 16 consumer files to the later
+  upstream :yuanxu API in 7c4bee52 was incorrect and failed native CI. Revision
+  7aeaf0e5 reverts only that mistaken port; dc64cd42 integrates the correction
+  with concurrent OpenSSL and formal-control repairs. No alias was introduced.
+  Earlier build receipts are not transferred to the changed dependency cohort.
+- The original bridge PR #18 head remains cfbc10c. Its Linux/macOS bindings,
+  Bazel bindings, Darwin native lifecycle and Quint checks pass; the SDK's SMP
+  job is explicitly skipped. ASCENT, Orgize and the POO runtime declarations
+  now use this revision, with their generated Cargo locks updated.
+- POO 89e92e88 aligns Core 44a99d4, ASCENT dc64cd42, Parser 153572a and
+  Orgize 8807683. Four dependency projection tests, the 295-path inventory,
+  locked Cargo metadata and the frozen Bazel source lock pass. This is a
+  dependency-coherence receipt, not full installed native acceptance.
+- The fresh Core 44 package installation remained incomplete at the 600-second
+  diagnostic cap. The subsequent standard package update exited 124 at the
+  same cap. Source-only operator controls reached 28 of 64 parity cases before
+  their 180-second cap; the closure-contract control reached its original
+  120-second idle watchdog. All are retained as incomplete or failed attempts.
+  No timeout was enlarged and no partial publication was admitted as installed.
+
+Raw diagnostic logs remain under /private/tmp. The primary POO checkout and
+new concurrent bridge model edits were preserved. No release Tag was created.

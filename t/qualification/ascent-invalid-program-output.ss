@@ -5,7 +5,7 @@
 (import (only-in :gerbil/runtime/gambit
                  call-with-output-string display-exception
                  with-exception-catcher)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-count gerbil-ascent-sum
                  gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/program/syntax ascent))

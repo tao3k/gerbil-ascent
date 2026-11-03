@@ -2,7 +2,7 @@
 ;;; Counter matches the pinned ASP benchmark memory projection (stats slot 16).
 (import :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule gerbil-ascent-program
                  gerbil-ascent-generator)

@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :gerbil/runtime/gambit
+(import (only-in :clan/poo/support/base lambda-match)
+        :gerbil/runtime/gambit
         (only-in "source-cut.ss" gerbil-ascent-make-source-cut
                  gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update)
         (only-in :clan/poo/object .o .ref)
@@ -93,8 +94,10 @@
                      (set! pending next)
                      (set! snapshot-source #f) (set! snapshot-relations #f)
                      (set! generation (+ generation 1)) (void)))
-                 (let loop ()
-                   (match (thread-receive)
+                 ;; Bind the owner dispatcher once. Each receive still precedes
+                 ;; its original branches; no per-message closure is allocated.
+                 (def dispatch-message!
+                   (lambda-match
                      (['request channel operation args]
                       (with-catch (lambda (failure) (reply! channel (vector #f failure)))
                        (lambda ()
@@ -141,7 +144,9 @@
                             (reply! (vector-ref running 4)
                               (if (= epoch generation) outcome
                                 (vector #f (session-failure "ASCENT actor Session canceled"))))))
-                        (set! running #f))))
+                        (set! running #f)))))
+                 (let loop ()
+                   (dispatch-message! (thread-receive))
                    (if (and (pair? closing) (not running))
                      (begin
                        (mutex-lock! gate) (set! closed? #t) (mutex-unlock! gate)
@@ -169,8 +174,8 @@
       (validate GerbilAscentSessionContract
                 (.o (:: @ Session.)
                     (.append-source! (lambda (name row) (request 'append name row)))
-                    (.replace-source! (lambda (name rows) (request 'replace name rows)))
-                    (.replace-sources! (lambda (replacements) (request 'replace-many replacements)))
+                    (.source-replacement (lambda (name rows) (request 'replace name rows)))
+                    (.source-replacements (lambda (replacements) (request 'replace-many replacements)))
                     (.run (lambda () (request 'run)))
                     (.cancel! (lambda () (request 'cancel)))
                     (.last-completed (lambda () (request 'result)))

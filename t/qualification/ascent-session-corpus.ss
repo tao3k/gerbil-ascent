@@ -6,7 +6,7 @@
 (import (only-in :gerbil/runtime/gambit
                  call-with-output-string display-exception)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-run))

@@ -16,7 +16,7 @@
                  reasoning-candidate-query reasoning-candidate-limits
                  +max-relations+ +max-rules+ +max-input-facts+
                  +max-derived-facts+ +max-output-facts+)
-        (only-in :gerbil-ascent/program/objects
+        (only-in :gerbil-ascent/program/func
                  gerbil-ascent-relation gerbil-ascent-atom
                  gerbil-ascent-negation gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-construct-inert-program

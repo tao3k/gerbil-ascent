@@ -5,7 +5,7 @@
         (only-in :asp-gerbil-scheme/benchmark-api
                  benchmark-fixture-ref benchmark-fixture-contract-pass? benchmark-run/result)
         (only-in :gerbil-ascent/program/operator relational-op-source relational-op-fix relational-op-union relational-op-compile)
-        (only-in :gerbil-ascent/program/interface relational-admit relational-solve relational-query-name)
+        (only-in :gerbil-ascent/program/api relational-admit relational-solve relational-query-name)
         (rename-in (only-in :gerbil-ascent/t/performance/operator-scope/reference
                            relational-op-source relational-op-fix relational-op-union relational-op-compile)
                    (relational-op-source old-source) (relational-op-fix old-fix)

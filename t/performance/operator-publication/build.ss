@@ -39,7 +39,7 @@
   (generate-contract!)
   (add-load-path! library)
   (let (sources (owners))
-    (make (append '("program/types" "program/objects" "program/operator" "t/performance/operator-publication/reference"
+    (make (append '("program/types" "program/func" "program/operator" "t/performance/operator-publication/reference"
                     "t/performance/operator-publication/fixture")
                   (if binary '("t/performance/operator-publication/runner") []))
       srcdir: (current-directory) libdir: library parallelize: (##cpu-count)

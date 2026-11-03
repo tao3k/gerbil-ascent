@@ -382,14 +382,13 @@ def main() -> int:
             renderings = (
                 ("ExecutionPolicy.lean", "snapshot", "program/scheme-snapshot.ss"),
                 ("ExecutionPolicy.lean", "snapshot-quint", "packages/proofs/quint/ClosedDslLowering.qnt"),
-                ("ExecutionPolicy.lean", "archive-cache", ".github/workflows/ci.yml"),
                 ("ExecutionPolicy.lean", "row-view-scheme", "program/types.ss"),
                 ("ExecutionPolicy.lean", "borrowed-match-rust", "rust/ascent/src/execution/matching.rs"),
                 ("ExecutionPolicy.lean", "borrowed-match-scheme", "program/rust-execution.ss"),
                 ("ExecutionPolicy.lean", "ranked-row-rust", "rust/ascent/src/execution/ordering.rs"),
-                ("ExecutionPolicy.lean", "archive-rust", "rust/ascent-build/src/policy.rs"),
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
+                ("ExecutionPolicy.lean", "declaration-role-scheme", "program/declaration-role.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
                 ("ExecutionPolicy.lean", "proof-authority-rust", "rust/ascent-scheme/src/api/session.rs"),
                 ("ExecutionPolicy.lean", "ordinal-extent-rust", "rust/ascent/src/execution/ordinal.rs"),
@@ -419,7 +418,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "lookup-admission", "core/relation-view.ss"),
                 ("ExecutionPolicy.lean", "lookup-study-profile", "t/performance/run.ss"),
                 ("ExecutionPolicy.lean", "preparation-cc-observed", "workbench/src/ascent_workbench/preparation_work.py"),
-                ("ExecutionPolicy.lean", "preparation-compiler", "build-modules.ss"),
+                ("ExecutionPolicy.lean", "preparation-compiler", "build.ss"),
                 ("ExecutionPolicy.lean", "preparation-options", "t/harness/artifact-admission.ss"),
                 ("ExecutionPolicy.lean", "preparation-stale", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-coverage", "workbench/src/ascent_workbench/preparation_work.py"),
@@ -432,21 +431,21 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-producer", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-support-admission", "t/harness/artifact-admission.ss"),
                 ("ExecutionPolicy.lean", "preparation-value-shape", "program/types.ss"),
-                ("ExecutionPolicy.lean", "preparation-metadata-guard", "program/types.ss"),
+                ("ExecutionPolicy.lean", "preparation-metadata-guard", "program/declaration-contract.ss"),
                 ("ExecutionPolicy.lean", "owned-relation-value", "program/types.ss"),
                 ("ExecutionPolicy.lean", "owned-aggregate-value", "program/types.ss"),
-                ("ExecutionPolicy.lean", "aggregate-constructor", "program/objects.ss"),
+                ("ExecutionPolicy.lean", "aggregate-constructor", "program/func.ss"),
                 ("ExecutionPolicy.lean", "checkpoint-spin-policy", "rust/ascent-scheme/tests/unit/checkpoint_transport.rs"),
                 ("ExecutionPolicy.lean", "checkpoint-publication-link", "rust/ascent-scheme/src/service.rs"),
                 ("ExecutionPolicy.lean", "instance-package-resource", "rust/ascent-scheme/src/instances/package.rs"),
                 ("ExecutionPolicy.lean", "instance-package-lifecycle", "rust/ascent-scheme/src/instances/lifecycle.rs"),
                 ("ExecutionPolicy.lean", "owner-hybrid-scheme", "interface/hybrid.ss"),
-                ("ExecutionPolicy.lean", "owner-source-scheme", "interface/rule-module.ss"),
+                ("ExecutionPolicy.lean", "owner-source-scheme", "rules/source.ss"),
                 ("ExecutionPolicy.lean", "owner-control-rust", "rust/ascent-scheme/src/control_state.rs"),
                 ("ExecutionPolicy.lean", "projection-object-reuse", "interface/projection-cache.ss"),
                 ("ExecutionPolicy.lean", "projection-allocation-probe", "tools/ci/projection-allocation.ss"),
                 ("ExecutionPolicy.lean", "owned-declaration-values", "program/types.ss"),
-                ("ExecutionPolicy.lean", "owned-declaration-check", "program/objects.ss"),
+                ("ExecutionPolicy.lean", "owned-declaration-check", "program/func.ss"),
                 ("ExecutionPolicy.lean", "capture-row-transport", "program/operator-analysis.ss"),
                 ("ExecutionPolicy.lean", "capture-mapping-indexes", "program/operator-change.ss"),
                 ("ExecutionPolicy.lean", "preparation-output-target", "workbench/src/ascent_workbench/preparation_work.py"),
@@ -465,7 +464,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-runner", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-groups", "t/harness/test.ss"),
                 ("ExecutionPolicy.lean", "dsl-select", "program/scheme-language.ss"),
-                ("ExecutionPolicy.lean", "dsl-root", "program/objects.ss"),
+                ("ExecutionPolicy.lean", "dsl-root", "program/func.ss"),
                 ("ExecutionPolicy.lean", "dsl-owned", "program/scheme-language.ss"),
                 ("ExecutionPolicy.lean", "dsl-workload", "t/qualification/ascent-semi-naive-test.ss"),
                 ("ExecutionPolicy.lean", "preparation-roots", "t/harness/library-spec.ss"),
@@ -484,6 +483,7 @@ def main() -> int:
             if code:
                 raise RuntimeError("Lean source rendering batch failed: " + batch_output)
             batch = renderings_from_batch(batch_output, languages)
+            mismatches = []
             for script, language, target in renderings:
                 if script == "ExecutionPolicy.lean":
                     code, source = 0, batch[language]
@@ -492,13 +492,7 @@ def main() -> int:
                         ["lake", "env", "lean", "--run", script, language],
                         Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
-                if language == "archive-cache":
-                    begin = "      # BEGIN GENERATED ARCHIVE CACHE\n"
-                    end = "      # END GENERATED ARCHIVE CACHE\n"
-                    if expected.count(begin) != 1 or expected.count(end) != 1:
-                        raise RuntimeError("missing or duplicate archive cache region")
-                    expected = expected.split(begin)[1].split(end)[0]
-                elif language == "row-view-scheme":
+                if language == "row-view-scheme":
                     begin, end = ';; BEGIN GENERATED OWNED ROW VIEW\n', ';; END GENERATED OWNED ROW VIEW\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate owned row view source region")
@@ -616,8 +610,12 @@ def main() -> int:
                         raise RuntimeError('missing or duplicate generated preparation region: ' + language)
                     expected = expected.split(begin)[1].split(end)[0]
                 if code or source != expected:
-                    raise RuntimeError("execution policy rendering differs: " + target)
-                print("EXECUTION-POLICY-OK " + target, flush=True)
+                    mismatches.append(target)
+                    print("EXECUTION-POLICY-MISMATCH " + target, flush=True)
+                else:
+                    print("EXECUTION-POLICY-OK " + target, flush=True)
+            if mismatches:
+                raise RuntimeError("execution policy renderings differ: " + ", ".join(mismatches))
             print("ALL-FORMAL-CHECK-OK", flush=True)
         else:
             results = runner.quint_checks(models)

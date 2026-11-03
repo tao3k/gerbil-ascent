@@ -8,7 +8,7 @@
         (only-in :gerbil-ascent/program/types
                  GerbilAscentAtomContract GerbilAscentGuardContract
                  GerbilAscentRuleContract GerbilAscentProgramContract GerbilAscentSessionContract)
-        (only-in :gerbil-ascent/program/objects
+        (only-in :gerbil-ascent/program/func
                  gerbil-ascent-atom gerbil-ascent-variable
                  gerbil-ascent-guard gerbil-ascent-generator
                  gerbil-ascent-binding gerbil-ascent-negation gerbil-ascent-aggregate
@@ -30,7 +30,7 @@
       (let* ((program (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 '((1)))) [] 16 16 16))
              (engine (gerbil-ascent-make-engine program #t))
              (session (gerbil-ascent-open-session program))
-             (alien (.o .append-source!: void .replace-source!: void .run: void))
+             (alien (.o .append-source!: void .source-replacement: void .run: void))
              (prototype (.ref GerbilAscentSessionContract 'proto)))
         (uninstantiate-object! GerbilAscentSessionContract)
         (check-equal? (eq? prototype (.ref GerbilAscentSessionContract 'proto)) #t)
@@ -38,7 +38,7 @@
           (check-equal? (eq? (validate GerbilAscentSessionContract value) value) #t)
           (for-each (lambda (slot)
             (check-exception (validate GerbilAscentSessionContract (.cc value slot #f)) true))
-            '(.append-source! .replace-source! .run))) (list engine session))
+            '(.append-source! .source-replacement .run))) (list engine session))
         (check-exception (validate GerbilAscentSessionContract alien) true)))
     (test-case "six clause prototypes retain full responsibility checks"
       (let* ((x (gerbil-ascent-variable 'x))

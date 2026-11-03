@@ -38,26 +38,55 @@
              (vector-set! frame slot (call frame))
              (next frame))))))))
 
+;;; Fixed shape tests are lexical syntax, not runtime tuple adapters. The cut
+;;; call sites supply a variable for current, so no caller expression repeats.
+;; input-shape?
+;; : (-> ShapeSyntax TupleSyntax Boolean)
+;; | doc m%
+;;     Specialize one/two-name guards without retaining a borrowed input spine.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     ((cut input-shape? ('x) <>) '(x))
+;;     ;; => #t
+;;     ```
+;;   %
+(defrules input-shape? ()
+  ((_ (one) current)
+   (and (pair? current) (eq? (car current) one) (null? (cdr current))))
+  ((_ (one two) current)
+   (and (pair? current) (eq? (car current) one)
+        (pair? (cdr current)) (eq? (cadr current) two)
+        (null? (cddr current)))))
+
 ;;; Observe the current input tuple without retaining a borrowed mutable spine.
 ;;; Common arities use identity checks; larger shapes walk a detached vector.
 ;;; Element equality stays generic; every call validates the complete current shape.
-;; : (-> Names (-> Any Boolean))
+;; : (-> Names (-> SchemeValue Boolean))
+
+;; gerbil-ascent-compile-input-guard
+;; : (-> Names (-> SchemeValue Boolean))
+;; | doc m%
+;;     Capture names, not a successful validation; each call checks the complete current tuple.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     ((gerbil-ascent-compile-input-guard '(x)) '(x))
+;;     ;; => #t
+;;     ```
+;;   %
 (def (gerbil-ascent-compile-input-guard names)
   (match names
     ([] null?)
-    ([one]
-     (lambda (current)
-       (and (pair? current) (eq? (car current) one) (null? (cdr current)))))
-    ([one two]
-     (lambda (current)
-       (and (pair? current) (eq? (car current) one)
-            (pair? (cdr current)) (eq? (cadr current) two)
-            (null? (cddr current)))))
+    ([one] (cut input-shape? (one) <>))
+    ([one two] (cut input-shape? (one two) <>))
     (else
      (let (expected (list->vector names))
        (lambda (current)
-         (let compare ((remaining current) (slot 0))
-           (if (= slot (vector-length expected)) (null? remaining)
-             (and (pair? remaining)
-                  (equal? (car remaining) (vector-ref expected slot))
-                  (compare (cdr remaining) (+ slot 1))))))))))
+         (do ((remaining current (cdr remaining)) (slot 0 (+ slot 1)))
+             ((or (= slot (vector-length expected))
+                  (not (pair? remaining))
+                  (not (equal? (car remaining) (vector-ref expected slot))))
+              (and (= slot (vector-length expected)) (null? remaining)))))))))

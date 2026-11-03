@@ -4,7 +4,7 @@
 (import :gerbil/runtime/gambit :asp-gerbil-scheme/benchmark-api
  (only-in :clan/poo/object .ref)
  :gerbil-ascent/program/operator
- (only-in :gerbil-ascent/program/interface relational-admit relational-solve relational-query-name)
+ (only-in :gerbil-ascent/program/api relational-admit relational-solve relational-query-name)
  (rename-in (only-in :gerbil-ascent/t/performance/operator-flow/reference relational-op-compile)
   (relational-op-compile old-compile)))
 (export main)

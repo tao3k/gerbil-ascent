@@ -278,7 +278,10 @@ fn original_graph_constructor_preserves_opaque_references_and_original_lattice_m
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let oracle = std::process::Command::new("gxi")
         .arg(root.join("../ascent/tests/fixtures/constructor-oracle.ss"))
-        .env("GERBIL_PATH", root.join("../../.gerbil"))
+        .env(
+            "GERBIL_PATH",
+            std::env::var_os("GERBIL_PATH").map_or_else(|| root.join("../../.gerbil"), Into::into),
+        )
         .output()
         .unwrap();
     assert!(

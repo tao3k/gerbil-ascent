@@ -1,11 +1,11 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :clan/poo/object :gerbil-ascent/program/objects
+(import :std/test :clan/poo/object :gerbil-ascent/program/func
         :gerbil-ascent/t/performance/view-lattice-round/fixture
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (prefix-in :gerbil-ascent/t/performance/view-lattice-round/reference-evaluate old-)
-        (only-in :gerbil-ascent/table/interface gerbil-ascent-hash-index-provider
+        (only-in :gerbil-ascent/table/func gerbil-ascent-hash-index-provider
                  gerbil-ascent-eqrel-storage-provider gerbil-ascent-trrel-uf-storage-provider))
 (export ascent-view-lattice-round-test)
 (def (run engine) ((.ref engine '.run)))
@@ -71,7 +71,7 @@
           (check-exception (run new) true)
           (check-equal? (vl-project first) saved)
           (set! reject? #f)
-          (for-each (lambda (engine) ((.ref engine '.replace-source!) 'source '((0 1) (1 2)))) (list new old))
+          (for-each (lambda (engine) ((.ref engine '.source-replacement) 'source '((0 1) (1 2)))) (list new old))
           (check-equal? (vl-project (run new))
                         (vl-project (run old))))))
     (test-case "lattice key revisits keep join order and effective membership"

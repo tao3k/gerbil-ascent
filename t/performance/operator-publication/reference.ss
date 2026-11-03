@@ -10,7 +10,7 @@
         (only-in :yuanxu/object-types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
         :gerbil-ascent/program/operator-descriptor :gerbil-ascent/program/operator-measurement :gerbil-ascent/program/operator-reference
         (only-in :gerbil-ascent/program/operator-lowering lower-operator-graph)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-fragment))
 
 (export GerbilAscentOperatorCompilerContract relational-op-compiler

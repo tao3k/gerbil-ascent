@@ -6,7 +6,7 @@
 ;;; Descriptor construction, graph admission and set interpretation have
 ;;; separate owners; only this invocation emits private relation handles.
 (import :gerbil-ascent/program/operator-descriptor :gerbil-ascent/program/operator-analysis :gerbil-ascent/program/operator-measurement :gerbil-ascent/program/operator-reference
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-fragment))
 
 (export relational-op-source relational-op-union relational-op-join

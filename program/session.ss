@@ -21,7 +21,7 @@
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-canonical-set-storage-provider?))
 
-(import "execution-control.ss")
+(import :gerbil-ascent/core/execution-control)
 
 (export gerbil-ascent-open-session
         gerbil-ascent-session-append-source!
@@ -398,12 +398,12 @@
   ((.ref session '.append-source!) name row))
 
 (def (gerbil-ascent-session-replace-source! session name rows)
-  ((.ref session '.replace-source!) name rows))
+  ((.ref session '.source-replacement) name rows))
 
 (def (gerbil-ascent-session-replace-sources! session replacements (accept-result #f))
   (if accept-result
-    ((.ref session '.replace-sources!) replacements accept-result)
-    ((.ref session '.replace-sources!) replacements)))
+    ((.ref session '.source-replacements) replacements accept-result)
+    ((.ref session '.source-replacements) replacements)))
 
 (def (gerbil-ascent-session-run session)
   ((.ref session '.run)))

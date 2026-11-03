@@ -1,6 +1,6 @@
 (import :gerbil/runtime/gambit
         (only-in :clan/poo/object .o .ref)
-        (only-in :gerbil-ascent/program/interface gerbil-ascent-relation gerbil-ascent-program
+        (only-in :gerbil-ascent/program/api gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-rule)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider))

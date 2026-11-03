@@ -6,7 +6,7 @@
 ;;; Program construction and result checks are outside each timed span.
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-bind-row)
-        (only-in :gerbil-ascent/program/objects
+        (only-in :gerbil-ascent/program/func
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule gerbil-ascent-program)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)

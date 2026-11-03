@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :gerbil-ascent/program/objects
+(import (only-in :gerbil-ascent/program/func
   gerbil-ascent-program gerbil-ascent-relation gerbil-ascent-rule
   gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-expression
   gerbil-ascent-binding gerbil-ascent-guard))

@@ -19,7 +19,7 @@
                  relational-program-replace-source! relational-program-session-run relational-program-query)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-scalar? relational-copy-rows relational-finite-source relational-finite-lattice)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program)
         (only-in :clan/poo/object .o .ref))
 (export scheme-higher-order-test)
 

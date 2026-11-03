@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .o .ref)
         :gerbil-ascent/program/index
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider gerbil-ascent-curried-index-provider)
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-build)
                    (gerbil-ascent-index-build build-index))

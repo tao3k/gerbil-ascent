@@ -1,6 +1,6 @@
 (import :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface gerbil-ascent-program gerbil-ascent-relation
+        (only-in :gerbil-ascent/program/api gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-open-session gerbil-ascent-session-run
                  gerbil-ascent-session-append-source!))
 (def rows (map list (iota 10000)))

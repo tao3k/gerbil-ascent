@@ -3,12 +3,12 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :clan/poo/object .o)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-lattice
                  gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-program)
-        (only-in :gerbil-ascent/table/interface
+        (only-in :gerbil-ascent/table/func
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/funs
                  gerbil-ascent-index-key))

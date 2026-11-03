@@ -24,7 +24,7 @@ struct Pool {
     dispatcher: InstanceDispatcher,
     active: AtomicUsize,
     maximum: AtomicUsize,
-    source_library: std::path::PathBuf,
+    source_library: Vec<std::path::PathBuf>,
 }
 #[derive(Default)]
 struct Counters {
@@ -78,7 +78,7 @@ impl InstancePool {
     fn from_runtime(
         owners: usize,
         runtime: gerbil_scheme::instances::InstancePool,
-        source_library: std::path::PathBuf,
+        source_library: Vec<std::path::PathBuf>,
     ) -> Result<Self> {
         let dispatcher = runtime.dispatcher();
         let pool = Arc::new(Pool {

@@ -3,5 +3,6 @@
 (import (only-in :yuanxu/module-system/selection/init-syntax yuanxu!))
 ;; Production capabilities own native roots; Core derives their source closure.
 (yuanxu!
-  :load-modules "./modules" mode: explicit rename: Library
-  (relations) (inference) (evidence))
+  :load-modules "." mode: explicit rename: Library
+  (core) (table) (program) (rules)
+  (candidate) (temporal) (interface) (applications))

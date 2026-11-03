@@ -3,19 +3,16 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-# Match the repository's mrr-gerbil environment boundary. Homebrew's configured
-# compiler must not inherit Nix compiler flags, tools, or its macOS SDK. Resolve the
-# active Homebrew OpenSSL library after clearing inherited search paths; Gerbil
-# release metadata can retain a removed Cellar directory after a formula upgrade.
+# Preserve PATH and native compiler configuration. Gerbil/Gambit own compiler
+# selection; this entry does not force cc or inject another SDK's linker flags.
+# Resolve the active OpenSSL library after clearing unrelated compiler flags.
 gerbil_environment := if os() == "macos" {
-    "env -u CC -u CFLAGS -u CPPFLAGS -u LDFLAGS -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u LIBRARY_PATH -u NIX_CFLAGS_COMPILE -u NIX_LDFLAGS -u DEVELOPER_DIR -u SDKROOT PATH=\"/usr/bin:/bin:$PATH\" LIBRARY_PATH=\"$(brew --prefix openssl@3)/lib\""
+    "env -u CFLAGS -u CPPFLAGS -u LDFLAGS -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u LIBRARY_PATH -u NIX_CFLAGS_COMPILE -u NIX_LDFLAGS -u DEVELOPER_DIR -u SDKROOT LIBRARY_PATH=\"$(brew --prefix openssl@3)/lib\""
 } else { "env" }
 gerbil_command := gerbil_environment + " gerbil"
-# gxpkg env only selects the package prefix and prepends its bin directory.
-# The captured environment already fixes the toolchain; apply that boundary
-# directly instead of importing the package-management CLI for every script.
+# Select the package prefix without changing the caller's tool search path.
 gerbil_package_prefix := '${GERBIL_PATH:-' + justfile_directory() + '/.gerbil}'
-gxi_command := gerbil_environment + ' GERBIL_PATH="' + gerbil_package_prefix + '" PATH="' + gerbil_package_prefix + '/bin:/usr/bin:/bin:$PATH" gxi'
+gxi_command := gerbil_environment + ' GERBIL_PATH="' + gerbil_package_prefix + '" gxi'
 
 # Production, tests and AOT objects share the standard package library.
 package_library := gerbil_package_prefix + '/lib'
@@ -34,7 +31,7 @@ test_library_environment := 'GERBIL_PATH="' + gerbil_package_prefix + '" ASCENT_
 default:
     @just --list
 
-# Use the SDK package entrypoint; it owns profile flags and build dispatch.
+# Use Gerbil's native package entrypoint; it owns profile flags and build dispatch.
 build:
     GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gerbil_command }} build
 
@@ -48,6 +45,10 @@ prepare-dev:
 
 check-policy:
     {{ gxi_command }} dev/build.ss
+
+# Explicit development-only architecture checks; production builds stay unchanged.
+check-design:
+    uv run --project workbench --only-group design --locked python workbench/src/ascent_workbench/design.py
 
 check-production-build:
     {{ gxi_command }} dev/production-build-test.ss compile
@@ -701,13 +702,6 @@ grouped-eqrel-session-rows:
 oracle: build-dsl-closure
     #!/usr/bin/env bash
     set -euo pipefail
-    export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-    if [[ "$(uname -s)" == Darwin ]]; then
-        unset SDKROOT DEVELOPER_DIR
-        export SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
-        export CC=/usr/bin/clang
-        export RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }-C linker=/usr/bin/clang -C link-arg=-isysroot -C link-arg=$SDKROOT"
-    fi
     # Resolve package identity without passing Cargo through Gambit process ports.
     export GERBIL_PATH="${GERBIL_PATH:-$({{ gxi_command }} -e '(display (getenv "GERBIL_PATH"))' </dev/null 2> >(cat >&2))}"
     # Fresh pipes preserve blocking Cargo stdio after the Gerbil build prerequisite.

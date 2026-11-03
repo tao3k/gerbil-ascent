@@ -3,6 +3,17 @@
 
 * Purpose and authority
 
+The [[file:acceptance.org][checked declaration implementation receipt]] records concrete behavior, exact
+local checks, retained failures and remaining source/performance obligations.
+
+The [[file:workflow.org][design-to-proof-to-Scheme workflow]] extends this existing study with an
+engineering lifecycle, the complete DSL design inventory, and three initial
+workstreams: relation roles, finite domains and source diagnostics.
+=development.sysml= allocates their owners and remaining obligations;
+=dsl-contracts.sysml= makes proposed contracts executable. =just check-design=
+checks both new models and every concrete matching fixture below. These are
+development checks; proposed DSL changes and whole-source refinement remain open.
+
 =matching-state.sysml= allocates the native matcher/compiler/index/Session/support
 responsibilities and makes selected reuse/publication preconditions executable.
 =Current= names inspected Scheme owners from =6d99b909= through the documented

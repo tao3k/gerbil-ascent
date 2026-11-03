@@ -10,7 +10,7 @@
         relational-admit/report
         relational-admission-report? relational-admission-report-admission
         relational-admission-report-diagnostic
-        relational-diagnostic? relational-diagnostic-code
+        relational-diagnostic? relational-diagnostic-code relational-diagnostic-origin
         relational-diagnostic-path relational-diagnostic-detail
         relational-solve relational-prepare-query relational-prepare-queries
         relational-query relational-query-name

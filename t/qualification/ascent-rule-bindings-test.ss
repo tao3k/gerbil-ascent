@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-case test-suite)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         :gerbil-ascent/core/rule-bindings
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (rename-in (only-in :gerbil-ascent/t/performance/rule-bindings/reference

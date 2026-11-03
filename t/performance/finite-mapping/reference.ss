@@ -4,7 +4,7 @@
 ;;; Frozen finite mapping boundary from 541d5b5; imports normalized only.
 (import (only-in :gerbil-ascent/t/performance/finite-mapping/reference-objects
                  gerbil-ascent-relation gerbil-ascent-fragment)
-        (rename-in (only-in :gerbil-ascent/program/objects gerbil-ascent-relation)
+        (rename-in (only-in :gerbil-ascent/program/func gerbil-ascent-relation)
                    (gerbil-ascent-relation shared-core-relation))
         (only-in :gerbil-ascent/program/scheme-checked relational-scalar?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)

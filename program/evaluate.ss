@@ -48,9 +48,7 @@
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
                  gerbil-ascent-joined-row)
-        (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row
-                 gerbil-ascent-binding-values
-                 gerbil-ascent-call-with-bindings gerbil-ascent-extend-pattern)
+        (only-in "rule-body.ss" make-rule-body-visitor)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-eqrel-state?
                  make-storage-readiness gerbil-ascent-storage-check-readiness!
@@ -59,7 +57,7 @@
                  gerbil-ascent-canonical-set-storage-provider?)
         (only-in :clan/poo/support/base until))
 
-(import "execution-control.ss")
+(import :gerbil-ascent/core/execution-control)
 
 (export gerbil-ascent-evaluate-program gerbil-ascent-make-engine
         gerbil-ascent-make-updated-engine
@@ -102,7 +100,7 @@
    (gerbil-ascent-prepare-session-reuse previous candidate completed analysis source-cut publication)))
 
 ;; gerbil-ascent-make-engine
-;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean Engine)
+;;   : (-> Program Boolean (Maybe Analysis) (Maybe Schema) Boolean (Maybe PlanError) (Maybe Reuse) PositiveInteger (Maybe Cancel) Boolean Engine)
 ;;   | doc m%
 ;;       Construct a stratified evaluator for a program and an optional
 ;;       retained session. Timing observes rules without changing their rows.
@@ -122,6 +120,9 @@
                             measure-rule-times? plan-error reuse workers canceled? empty-bucket-reuse?))
     (if session? (engine-state-public state) state)))
 
+;;; Boundary: this closure owns one engine's mutable rows, indexes and counters.
+;;; Vector cursors fit allocated lengths; fact/version/budget counters stay exact.
+;;; Failed publication requires source replay; no partial result becomes success.
 (def (%make-engine program session? (analysis-override #f)
                    (schema-override #f) (measure-rule-times? #f)
                    (plan-error #f) (reuse #f) (workers 1) (canceled? #f) (empty-bucket-reuse? #f))
@@ -534,106 +535,7 @@
                             derived-count pending-count)
                          output-limit)
                   (error "ASCENT output fact budget exceeded"))))
-            (def (visit-body body delta-at depth environment consume)
-              (if (null? body)
-                (consume environment)
-                (let (clause (car body))
-                  (cond
-                   ((eq? (vector-ref clause 0) 'atom)
-                    (let* ((atom (vector-ref clause 1))
-                           (rows (callback-rows atom environment
-                                               (= depth delta-at) #f)))
-                      (gerbil-ascent-for-each-row
-                       (lambda (row)
-                         (let (bound (gerbil-ascent-bind-row (vector-ref atom 3)
-                                                row environment))
-                           (when bound
-                             (visit-body (cdr body) delta-at (+ depth 1)
-                                         bound consume))))
-                       rows)))
-                   ((eq? (vector-ref clause 0) 'negation)
-                    (let* ((atom (vector-ref clause 1))
-                           (rows (callback-rows atom environment #f #f)))
-                      (unless (gerbil-ascent-any-row?
-                               (lambda (row)
-                                 (gerbil-ascent-bind-row (vector-ref atom 3)
-                                           row environment))
-                               rows)
-                        (visit-body (cdr body) delta-at depth
-                                    environment consume))))
-                   ((eq? (vector-ref clause 0) 'aggregate)
-                    (let* ((atom (vector-ref clause 1))
-                           (rows (callback-rows atom environment #f #f))
-                           (variables (vector-ref clause 3))
-                           (tuples []))
-                      (gerbil-ascent-for-each-row
-                       (lambda (row)
-                         (let (bound (gerbil-ascent-bind-row (vector-ref atom 3)
-                                                row environment))
-                           (when bound
-                             (set! tuples
-                               (cons (gerbil-ascent-binding-values
-                                      variables bound "unbound ASCENT clause variable")
-                                     tuples)))))
-                       rows)
-                      (let (values ((vector-ref clause 4)
-                                    (reverse tuples)))
-                        (unless (list? values)
-                          (error "ASCENT aggregator must return a list"
-                                 values))
-                        (for-each
-                         (lambda (value)
-                           (let* ((output (vector-ref clause 2))
-                                  (matcher (vector-ref clause 5))
-                                  (next-environment
-                                   (if matcher
-                                     (let (matched (matcher value))
-                                       (gerbil-ascent-extend-pattern
-                                        output matched environment
-                                        "ASCENT aggregate pattern returned invalid bindings"))
-                                     (cons (cons output value)
-                                           environment))))
-                             (visit-body (cdr body) delta-at depth
-                                         next-environment consume)))
-                         values))))
-                   ((eq? (vector-ref clause 0) 'guard)
-                    (let (pass? (gerbil-ascent-call-with-bindings
-                                  (vector-ref clause 2) (vector-ref clause 1)
-                                  environment "unbound ASCENT clause variable"))
-                      (unless (boolean? pass?)
-                        (error "ASCENT guard must return a boolean" pass?))
-                      (when pass?
-                        (visit-body (cdr body) delta-at depth
-                                    environment consume))))
-                   ((eq? (vector-ref clause 0) 'generator)
-                    (let (values (gerbil-ascent-call-with-bindings
-                                  (vector-ref clause 3) (vector-ref clause 2)
-                                  environment "unbound ASCENT clause variable"))
-                      (for (value values)
-                        (let* ((output (vector-ref clause 1))
-                               (next-environment
-                                (if (list? output)
-                                  (let (row (if (vector? value)
-                                               (vector->list value)
-                                               value))
-                                    (unless (and (list? row)
-                                                 (= (length row)
-                                                    (length output)))
-                                      (error "ASCENT generator tuple arity mismatch"
-                                             value))
-                                    (gerbil-ascent-bind-row output row
-                                                            environment))
-                                  (cons (cons output value) environment))))
-                          (visit-body (cdr body) delta-at depth
-                                      next-environment consume)))))
-                   ((eq? (vector-ref clause 0) 'binding)
-                    (let (value (gerbil-ascent-call-with-bindings
-                                  (vector-ref clause 3) (vector-ref clause 2)
-                                  environment "unbound ASCENT clause variable"))
-                      (visit-body (cdr body) delta-at depth
-                                  (cons (cons (vector-ref clause 1) value)
-                                        environment)
-                                  consume)))))))
+            (def visit-body (make-rule-body-visitor callback-rows))
          (call/cc
           (lambda (return)
          (let evaluate-stratum ((stratum (or resume-stratum 0)))
@@ -742,9 +644,9 @@
                   (round-work-reset! round-work stratum (or first-run? (> stratum 0))
                                      all-size delta-size reset-delta!)
                   (let reset ((index 0))
-                    (when (< index count)
+                    (when (fx< index (vector-length delta))
                       (reset-delta! index)
-                      (reset (+ index 1))))))
+                      (reset (fx+ index 1))))))
           (until (not active?)
           (set! round (+ round 1))
           (set! pending-count 0)
@@ -1084,7 +986,7 @@
            source-additions source-overrides))
           run!)))))
 
-;; : (-> Program EvaluationResult)
+;; : (-> Program Boolean PositiveInteger (Maybe Cancel) Boolean EvaluationResult)
 (def (gerbil-ascent-evaluate-program program
                                       measure-rule-times?: (measure-rule-times? #f)
                                       workers: (workers 1)

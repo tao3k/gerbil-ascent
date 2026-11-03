@@ -8,7 +8,7 @@
                  ascent-lattice-wide-evaluate
                  ascent-lattice-wide-source-evaluate
                  ascent-recursive-lattice-projection-program)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program))
 
 (export main)

@@ -117,7 +117,11 @@ fn oracle_command() -> Command {
     let mut command = Command::new("gxi");
     command
         .arg(root.join("rust/ascent/tests/fixtures/scheme-expressions.ss"))
-        .env("GERBIL_PATH", root.join(".gerbil"))
+        .env(
+            "GERBIL_PATH",
+            std::env::var_os("GERBIL_PATH")
+                .unwrap_or_else(|| root.join(".gerbil").into_os_string()),
+        )
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit());

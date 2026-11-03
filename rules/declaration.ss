@@ -1,13 +1,14 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :gerbil-ascent/program/objects gerbil-ascent-program)
-        (only-in :clan/poo/object .ref))
+(import (only-in :gerbil-ascent/program/func gerbil-ascent-program)
+        (only-in :clan/poo/object .ref with-slots))
 (export ascent-rule-module rule-module? rule-module-program
         rule-module-explain rule-module-bindings
         make-declared-program recorded-rule-explanation)
 
 (defstruct rule-module (program explain bindings) final: #t)
+;; : (-> Program (Maybe Explain) Bindings RuleModule)
 (def (ascent-rule-module program (explain #f) (bindings []))
   (unless (or (not explain) (procedure? explain))
     (error "Evidence explanation must be a native procedure"))
@@ -15,6 +16,7 @@
     (error "Evidence bindings must pair public labels with native relation handles"))
   (make-rule-module program explain bindings))
 
+;; : (-> Program Result Query Scope RecordedExplanation)
 (def (recorded-rule-explanation program result query scope)
   (hash ("status" "recorded-only") ("query" query) ("scope" scope)
         ("dependencies" (.ref program 'rules))
@@ -22,6 +24,7 @@
 
 ;; Public labels are metadata, not a projection or an execution restriction.
 ;; Preserve the complete upstream Program, including opaque fields and callbacks.
+;; : (-> Program Sources Outputs Explain RuleModule)
 (def (make-declared-program program sources outputs explain)
   (def (bindings values)
     (unless (and (list? values)
@@ -34,20 +37,22 @@
           (error "duplicate Evidence relation binding" value))
         (hash-put! labels (car value) #t) (hash-put! handles (cdr value) #t)) values))
     values)
-  (let* ((sources (bindings sources)) (outputs (bindings outputs))
-         (names (map (cut .ref <> 'name) (.ref program 'relations)))
-         (combined sources))
-    (for-each (lambda (binding)
-      (unless (memq (cdr binding) names)
-        (error "Evidence binding does not name a declared relation" binding))
-      (unless (member binding combined)
-        (when (or (assq (car binding) combined)
-                  (find (lambda (prior) (eq? (cdr prior) (cdr binding))) combined))
-          (error "conflicting Evidence public relation binding" binding))
-        (set! combined (append combined (list binding))))) outputs)
-    (ascent-rule-module
-      (gerbil-ascent-program (.ref program 'relations) (.ref program 'rules)
-        (.ref program 'max-input-facts) (.ref program 'max-derived-facts)
-        (.ref program 'max-output-facts) (map cdr sources))
-      explain combined)))
-
+  ;; Slot bindings are lazy aliases, not captured validation receipts. Reads
+  ;; retain their original positions, repetition and exception order.
+  (with-slots (relations rules max-input-facts max-derived-facts max-output-facts) program
+    (let* ((sources (bindings sources)) (outputs (bindings outputs))
+           (names (map (cut .ref <> 'name) relations))
+           (combined sources))
+      (for-each (lambda (binding)
+        (unless (memq (cdr binding) names)
+          (error "Evidence binding does not name a declared relation" binding))
+        (unless (member binding combined)
+          (when (or (assq (car binding) combined)
+                    (find (lambda (prior) (eq? (cdr prior) (cdr binding))) combined))
+            (error "conflicting Evidence public relation binding" binding))
+          (set! combined (append combined (list binding))))) outputs)
+      (ascent-rule-module
+        (gerbil-ascent-program relations rules
+          max-input-facts max-derived-facts
+          max-output-facts (map cdr sources))
+        explain combined))))

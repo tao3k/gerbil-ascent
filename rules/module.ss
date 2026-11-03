@@ -1,20 +1,27 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :gerbil-ascent/rules/interface (only-in :clan/poo/object .ref))
+(import (only-in "declaration.ss" ascent-rule-module)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program)
+        (only-in :clan/poo/object .ref with-slots))
 (export make-recorded-module source-capacity)
 
+;; : (-> Fragment Sources FactLimit FactLimit FactLimit RuleModule)
+;;; Intentional raw data record: the explanation callback emits a recorded-only transport hash, never an extensible object or provenance authority.
 (def (make-recorded-module fragment sources (input-limit +inf.0)
                            (derived-limit +inf.0) (output-limit +inf.0))
-  (let* ((program (gerbil-ascent-program (.ref fragment 'relations) (.ref fragment 'rules)
-                    input-limit derived-limit output-limit sources)))
-    (ascent-rule-module program
-      (lambda (program result query scope)
-        (hash ("status" "recorded-only") ("query" query) ("scope" scope)
-              ("dependencies" (.ref program 'rules))
-              ("gap" "Declaration dependencies and current source rows are not per-row proof or execution authority"))))))
+  ;; with-slots expands at each use; no fields are hoisted or cached.
+  (with-slots (relations rules) fragment
+    (let* ((program (gerbil-ascent-program relations rules
+                      input-limit derived-limit output-limit sources)))
+      (ascent-rule-module program
+        (lambda (program result query scope)
+          (hash ("status" "recorded-only") ("query" query) ("scope" scope)
+                ("dependencies" (.ref program 'rules))
+                ("gap" "Declaration dependencies and current source rows are not per-row proof or execution authority")))))))
 
 ;; Admission observation only: count every supplied tuple, including unchanged
 ;; and backend-resource rows. Never derive deltas or bypass the Program limit.
+;; : (-> Sources PositiveInteger CapacityObservation)
 (def (source-capacity sources limit)
   (unless (and (list? sources) (exact-integer? limit) (> limit 0))
     (error "explicit source inventory and positive capacity required"))

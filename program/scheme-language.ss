@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import "objects.ss" "scheme-checked.ss" "scheme-admission.ss"
+(import "func.ss" "scheme-checked.ss" "scheme-admission.ss"
         (only-in :clan/poo/object .ref))
 
 (export relational-program relational-fragment
@@ -11,7 +11,7 @@
         relational-admit/report
         relational-admission-report? relational-admission-report-admission
         relational-admission-report-diagnostic
-        relational-diagnostic? relational-diagnostic-code
+        relational-diagnostic? relational-diagnostic-code relational-diagnostic-origin
         relational-diagnostic-path relational-diagnostic-detail
         relational-solve relational-prepare-query relational-prepare-queries
         relational-query relational-query-name
@@ -204,11 +204,71 @@
       #f "expected atom, not, reduce, where, or compute clause"
                          (syntax bad)))))
 
+;;; Declaration annotations lower to existing finite-domain constructors.
+;;; Both orders are accepted; duplicates/unknown annotations reject at expansion.
+(defsyntax (relational-declaration-options stx)
+  (syntax-case stx (role domain)
+    ((_ build name columns rows default-role (role kind) (domain domains))
+     (syntax (build name (length 'columns) rows 'kind (relational-require-domain domains))))
+    ((_ build name columns rows default-role (domain domains) (role kind))
+     (syntax (build name (length 'columns) rows 'kind (relational-require-domain domains))))
+    ((_ build name columns rows default-role (role kind))
+     (syntax (build name (length 'columns) rows 'kind #f)))
+    ((_ build name columns rows default-role (domain domains))
+     (syntax (build name (length 'columns) rows 'default-role (relational-require-domain domains))))
+    ((_ build name columns rows default-role)
+     (syntax (build name (length 'columns) rows 'default-role #f)))
+    ((_ bad ...)
+     (raise-syntax-error #f "expected one role and/or domain annotation" stx))))
+
+;; relational-located-rule
+;; : (forall (s) (-> s s))
+;; : (-> RuleSyntax LocatedRuleSyntax)
+;; | doc m%
+;;     Preserve reader locations through named and lexical rule lowering.
+;;     Boundary: reader data remains untrusted until checked snapshot capture.
+;;     Invariant: the head/body metadata never changes dependency or binding order.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (relational-program (relation r (x) '())
+;;       (rule (r 1)) (limits 4 4 4))
+;;     ;; => a declaration whose rule carries detached reader locations
+;;     ```
+;;   %
+(defsyntax (relational-located-rule stx)
+  (syntax-case stx ()
+    ((_ atom-lowering negation-lowering reduce-lowering head body ...)
+     (with-syntax ((origin (datum->syntax #f
+                            (vector (stx-source (syntax head))
+                                    (map stx-source (syntax->list (syntax (body ...))))))))
+       (syntax
+        (relational-with-origin
+         (gerbil-ascent-rule
+          (list (atom-lowering head))
+          (list (relational-checked-clause atom-lowering negation-lowering reduce-lowering body) ...))
+         'origin))))))
+
 ;;; This collector preserves declaration and body order for the planner.
 ;;; The final limits form is mandatory so every compiled program has finite
 ;;; resource bounds before its first solve; no evaluation happens here.
 (defsyntax (relational-collect stx)
   (syntax-case stx (relation lattice rule limits)
+    ((_ finish (declared ...) (lowered ...)
+        (relation name (column ...) rows option options ...) rest ...)
+     (and (identifier? (syntax name)) (andmap identifier? (syntax->list (syntax (column ...)))))
+     (syntax (relational-collect finish
+       (declared ... (relational-declaration-options relational-declared-source
+         'name (column ...) rows mixed option options ...)) (lowered ...) rest ...)))
+    ((_ finish (declared ...) (lowered ...)
+        (lattice name (column ...) rows mode option options ...) rest ...)
+     (and (identifier? (syntax name)) (identifier? (syntax mode))
+          (andmap identifier? (syntax->list (syntax (column ...)))))
+     (syntax (relational-collect finish
+       (declared ... (relational-declaration-options
+         (lambda (n a r role domains) (relational-declared-lattice n a r 'mode role domains))
+         'name (column ...) rows mixed option options ...)) (lowered ...) rest ...)))
     ((_ finish (declared ...) (lowered ...)
         (lattice name (column ...) rows mode) rest ...)
      (and (identifier? (syntax name))
@@ -241,19 +301,13 @@
      (syntax (relational-collect finish
               (declared ...)
               (lowered ...
-                       (gerbil-ascent-rule
-                        (list (relational-atom head))
-                        (list (relational-checked-clause
-                               relational-atom relational-negation
-                               relational-reduce
-                               body) ...)))
+                       (relational-located-rule relational-atom relational-negation relational-reduce head body ...))
               rest ...)))
     ((_ finish (declared ...) (lowered ...) (limits input derived output))
      (syntax (let (relations (list declared ...))
                (finish
                 relations (list lowered ...) input derived output
-                (map (lambda (relation) (.ref relation 'name))
-                     relations)))))
+                (relational-source-handles relations)))))
     ((_ finish (declared ...) (lowered ...) bad rest ...)
      (raise-syntax-error
       #f "expected relation, rule, or final limits clause"
@@ -302,6 +356,23 @@
 
 ;; END GENERATED DSL-OWNED
 
+;; relational-program
+;; : (forall (s) (-> s s))
+;; : (-> ProgramSyntax ProgramConstructionSyntax)
+;; | doc m%
+;;     Lower checked declarations through the existing construction paths.
+;;     The conservative path preserves all host expression evaluation; the
+;;     closed-positive selection requires inspectable atom and scalar syntax.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (relational-program (relation r (x) '()) (limits 4 4 4))
+;;     ;; => a checked declaration; no rule evaluation occurs during expansion
+;;     ```
+;;   %
+;;; Boundary: expansion selects a constructor, never a second evaluator.
+;;; Invariant: opaque source expressions stay lexical and are evaluated once.
 ;; BEGIN GENERATED DSL-SELECT
 (defsyntax (relational-program stx)
   (def (closed-positive? clauses)
@@ -379,8 +450,8 @@
 ;;; Final graph admission checks the assembled relation namespace.
 (defrules relational-fragment (import source private export rule)
   ((_ (import (import-name imported-handle) ...)
-      (source (source-name (source-column ...) source-rows) ...)
-      (private (private-name (private-column ...)) ...)
+      (source (source-name (source-column ...) source-rows source-option ...) ...)
+      (private (private-name (private-column ...) private-option ...) ...)
       (export (public-name exported-name) ...)
       (rule (head head-term ...)
             (body body-term ...) ...) ...)
@@ -388,18 +459,13 @@
          (source-name (gensym 'source-name)) ...
          (private-name (gensym 'private-name)) ...)
      (gerbil-ascent-fragment
-      (list (relational-source source-name
-                               (length '(source-column ...))
-                               source-rows) ...
-            (relational-source private-name
-                               (length '(private-column ...))
-                               []) ...)
+      (list (relational-declaration-options relational-declared-source
+               source-name (source-column ...) source-rows mixed source-option ...) ...
+            (relational-declaration-options relational-declared-source
+               private-name (private-column ...) [] derived private-option ...) ...)
       (list
-       (gerbil-ascent-rule
-        (list (relational-atom/lexical (head head-term ...)))
-        (list (relational-checked-clause
-               relational-atom/lexical relational-negation/lexical
-               relational-reduce/lexical
-               (body body-term ...)) ...)) ...)
+       (relational-located-rule relational-atom/lexical relational-negation/lexical
+                                relational-reduce/lexical
+                                (head head-term ...) (body body-term ...) ...) ...)
       (list (cons 'public-name exported-name) ...)
       (list source-name ...)))))

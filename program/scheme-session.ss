@@ -160,7 +160,7 @@
      (relational-session-source-arities session) entries))))
 
 ;; relational-session-prepare-transaction
-;;   : (-> RelationalSession (List (List Fragment Symbol))
+;;   : (-> RelationalSession (List (Pair Fragment Symbol))
 ;;          (-> (List Rows) RelationalSolution))
 ;;   | doc m%
 ;;       Fix an ordered nonempty source checklist for one retained Session.

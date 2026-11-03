@@ -10,7 +10,6 @@ use std::{
 
 #[test]
 fn current_scheme_evaluator_and_rayon_agree_on_cyclic_and_acyclic_inputs() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     let cases = [
         vec![],
         vec![[1, 2]],
@@ -19,14 +18,7 @@ fn current_scheme_evaluator_and_rayon_agree_on_cyclic_and_acyclic_inputs() {
         vec![[i64::MIN, 0], [0, i64::MAX]],
         vec![[0, 0], [0, 0], [1, 1]],
     ];
-    let mut child = Command::new("gxi")
-        .arg(root.join("rust/ascent/tests/fixtures/closure.ss"))
-        .env("GERBIL_PATH", root.join(".gerbil"))
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .spawn()
-        .expect("Scheme oracle");
+    let mut child = oracle_command().spawn().expect("Scheme oracle");
     let mut input = child.stdin.take().unwrap();
     for edges in &cases {
         write!(input, "(").unwrap();
@@ -109,4 +101,20 @@ fn current_scheme_evaluator_and_rayon_agree_on_cyclic_and_acyclic_inputs() {
             assert_eq!(&pairs, expected);
         }
     }
+}
+
+fn oracle_command() -> Command {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let mut command = Command::new("gxi");
+    command
+        .arg(root.join("rust/ascent/tests/fixtures/closure.ss"))
+        .env(
+            "GERBIL_PATH",
+            std::env::var_os("GERBIL_PATH")
+                .unwrap_or_else(|| root.join(".gerbil").into_os_string()),
+        )
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit());
+    command
 }

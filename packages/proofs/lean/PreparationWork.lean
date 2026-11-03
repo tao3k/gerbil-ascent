@@ -8,8 +8,8 @@ they cannot be added as if nested imports owned disjoint allocation intervals.
 The SDK compiler/allocator and the observer/decoder remain outside this proof. -/
 namespace Ascent.PreparationWork
 
--- The production entry owns package/ABI declaration work. The separate module
--- catalog projects init's native specification without executing that entry.
+-- The production entry owns package/ABI declaration work. The native consumer
+-- directly requests init's standard specification without executing that entry.
 -- This classification does not assert zero init, source-admission or lowering
 -- work; those runtime operations remain outside this small work model.
 inductive InventorySource where
@@ -22,7 +22,7 @@ def inventoryPackageDeclarations : InventorySource → Nat
   | .buildEntry => 1
 
 def inventoryImportSchemeSource : String :=
-  "        (only-in \"../../build-modules.ss\" gerbil-ascent-library-spec gerbil-ascent-library-modules gerbil-ascent-build-input-modules gerbil-ascent-compiler-options)\n"
+  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options)\n        (only-in :clan/poo/object .get) \"../../init.ss\"\n"
 
 theorem module_data_avoids_package_declaration :
     inventoryPackageDeclarations .moduleData = 0 ∧
@@ -35,7 +35,7 @@ def selected (tests : List String) (entries : List Dependency) : List String :=
   (entries.filter (requested tests)).flatMap Prod.snd
 
 -- A declared dependency has no cost effect in a lane that does not request it.
--- In particular scheme-artifact-test is absent from prepare-test-library's
+-- Ordinary source Suites are absent from prepare-test-library's
 -- performance consumers. Deleting its bridge entry cannot explain that lane.
 theorem inactive_dependency_no_work (tests : List String)
     (before after : List Dependency) (entry : Dependency)
@@ -393,10 +393,8 @@ def groupsSchemeSource : String :=
   ";;; batches. Isolated exhaustive declaration work keeps the default target.\n" ++
   "(def (source-live-ratio profiled file (darwin? (cond-expand (darwin #t) (else #f))))\n" ++
   "  (if (and darwin? (not (testing-interface-test-file-isolated? profiled file))) 80 50))\n" ++
-  "(def (source-vm-command command program (live-ratio #f))\n" ++
+  "(def (source-vm-command command (live-ratio #f))\n" ++
   "  ;; Keep upstream GxTest, argv, heap options and its original explicit exit.\n" ++
-  "  ;; The package's admitted linked shell owns only the preloaded production\n" ++
-  "  ;; closure; Suite carriers are still expanded from source in each fresh VM.\n" ++
   "  (unless (or (not live-ratio) (memv live-ratio '(50 80)))\n" ++
   "    (error \"unsupported source VM live ratio\" live-ratio))\n" ++
   "  (when (and live-ratio\n" ++
@@ -411,14 +409,7 @@ def groupsSchemeSource : String :=
   "                     argument)) command)\n" ++
   "            command)\n" ++
   "          live-ratio))\n" ++
-  "    (if program\n" ++
-  "      (cons program\n" ++
-  "        (let replace ((arguments (cdr command)))\n" ++
-  "          (cond\n" ++
-  "            ((null? arguments) (error \"native test command has no expression\" command))\n" ++
-  "            ((equal? (car arguments) \"-e\") (cons \"--eval-plain\" (cdr arguments)))\n" ++
-  "            (else (cons (car arguments) (replace (cdr arguments)))))))\n" ++
-  "      command)))\n" ++
+  "    command))\n" ++
   "\n"
 
 -- The source-bound change only orders the same ordinary and isolated batches.

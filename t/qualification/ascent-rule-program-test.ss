@@ -12,7 +12,7 @@
                  ascent-rule-fixture-evaluate)
         (only-in :gerbil-ascent/t/qualification/ascent-typed-program-fixture
                  ascent-typed-program-evaluate)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-literal gerbil-ascent-atom
                  gerbil-ascent-guard gerbil-ascent-generator

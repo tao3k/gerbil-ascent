@@ -2,17 +2,24 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import "objects.ss"
+(import (only-in "declaration-role.ss" relational-role-source? relational-role-head?)
+        "func.ss"
         (only-in "aggregators.ss"
                  gerbil-ascent-count gerbil-ascent-sum
                  gerbil-ascent-min gerbil-ascent-max)
-        (only-in :clan/poo/object .ref)
+        (only-in :clan/poo/object .ref .slot?)
+        (only-in :std/error deferror-class)
+        (only-in "types.ss" gerbil-ascent-relation-with-role gerbil-ascent-rule-with-origin)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage
                  gerbil-ascent-set-storage-provider))
 
 (export relational-scalar? relational-copy-row relational-copy-rows
+        relational-declared-source relational-declared-lattice relational-require-domain
+        relational-relation-role relational-with-role relational-source-handles
+        relational-check-roles! relational-with-origin relational-rule-origin
+        RelationalDeclarationError? RelationalDeclarationError-code RelationalDeclarationError-path
         relational-finite-rows
         relational-source relational-finite-source relational-finite-lattice
         relational-checked-lattice relational-lattice-fragment
@@ -48,6 +55,98 @@
 (def (relational-scalar? value)
   (or (exact-integer? value) (boolean? value)
       (symbol? value) (char? value)))
+
+;;; Roles describe allowed contributions; source handles remain the separate
+;;; mutation capability. Ordinary relation constructors retain mixed semantics.
+(deferror-class RelationalDeclarationError (code path))
+(def (declaration-failure code path message value)
+  (let (failure (RelationalDeclarationError message irritants: (list value)))
+    (set! (RelationalDeclarationError-code failure) code)
+    (set! (RelationalDeclarationError-path failure) path)
+    (raise failure)))
+(def (relational-relation-role relation)
+  (let (role (if (.slot? relation 'checked-role) (.ref relation 'checked-role) 'mixed))
+    (unless (memq role '(input derived mixed))
+      (declaration-failure 'invalid-relation-role '(program) "invalid checked relation role" role))
+    role))
+(def (relational-with-role relation role)
+  (unless (memq role '(input derived mixed))
+    (declaration-failure 'invalid-relation-role '(program) "invalid checked relation role" role))
+  (when (and (eq? role 'derived) (pair? (.ref relation 'rows)))
+    (declaration-failure 'derived-source-facts '(program) "derived-only relation has input rows" (.ref relation 'name)))
+  (if (eq? role 'mixed) relation (gerbil-ascent-relation-with-role relation role)))
+(def (relational-source-handles relations)
+  (filter-map (lambda (relation)
+                (and (relational-role-source? (relational-relation-role relation))
+                     (.ref relation 'name))) relations))
+(def (relational-declared-source name arity rows role domains)
+  (relational-with-role
+   (if domains (relational-finite-source name arity rows domains)
+       (relational-source name arity rows)) role))
+(def (relational-require-domain domains)
+  (unless (list? domains)
+    (declaration-failure 'invalid-finite-domain '(program) "domain annotation requires column domains" domains))
+  domains)
+(def (relational-declared-lattice name arity rows mode role domains)
+  (relational-with-role
+   (if domains (relational-finite-lattice name arity rows mode domains)
+       (relational-checked-lattice name arity rows mode)) role))
+
+;;; Origins are explanatory metadata. Copy them, never use them as identity,
+;;; support keys or authorization. Missing locations stay explicitly absent.
+(def (copy-reader-location location)
+  (if (not location) #f
+    (begin
+      ;; The frozen SDK emits file/start/end locations. Older reader locations
+      ;; have file/start only; preserve the end when supplied by the reader.
+      (unless (and (vector? location) (memv (vector-length location) '(2 3))
+                   (fixnum? (vector-ref location 1))
+                   (or (= (vector-length location) 2) (fixnum? (vector-ref location 2)))
+                   (let (file (vector-ref location 0))
+                     (or (string? file)
+                         (and (list? file) (= (length file) 1) (symbol? (car file))))))
+        (declaration-failure 'invalid-rule-origin '(program) "invalid native reader location" 'metadata))
+      (let (file (vector-ref location 0))
+        (let (copied-file (if (string? file) (string-copy file) (list (car file))))
+          (if (= (vector-length location) 3)
+            (vector copied-file (vector-ref location 1) (vector-ref location 2))
+            (vector copied-file (vector-ref location 1))))))))
+(def (copy-rule-origin origin body-length)
+  (unless (and (vector? origin) (= (vector-length origin) 2)
+               (list? (vector-ref origin 1)) (= (length (vector-ref origin 1)) body-length))
+    (declaration-failure 'invalid-rule-origin '(program) "invalid rule origin shape" 'metadata))
+  (vector (copy-reader-location (vector-ref origin 0))
+          (map copy-reader-location (vector-ref origin 1))))
+(def (relational-rule-origin rule)
+  (and (.slot? rule 'source-origin)
+       (let (origin (.ref rule 'source-origin))
+         (and origin (copy-rule-origin origin (length (.ref rule 'body)))))))
+(def (relational-with-origin rule origin)
+  (if origin (gerbil-ascent-rule-with-origin rule (copy-rule-origin origin (length (.ref rule 'body)))) rule))
+(def (relational-check-roles! program)
+  (let ((roles (make-hash-table-eq)) (relations (.ref program 'relations)))
+    (for-each (lambda (relation)
+                (let (role (relational-relation-role relation))
+                  (when (and (eq? role 'derived) (pair? (.ref relation 'rows)))
+                    (declaration-failure 'derived-source-facts '(program)
+                                         "derived-only relation has input rows" (.ref relation 'name)))
+                  (hash-put! roles (.ref relation 'name) role))) relations)
+    (for-each (lambda (name)
+                (let (role (hash-get roles name))
+                  (when (and role (not (relational-role-source? role)))
+                  (declaration-failure 'derived-source-handle '(program)
+                                       "derived-only relation cannot grant a source handle" name))))
+              (.ref program 'source-handles))
+    (for-each (lambda (rule rule-index)
+                (for-each (lambda (head head-index)
+                            (let (role (hash-get roles (.ref head 'relation)))
+                              (when (and role (not (relational-role-head? role)))
+                              (declaration-failure 'input-rule-head
+                                (list 'rule rule-index 'head head-index)
+                                "input-only relation cannot receive rule heads" (.ref head 'relation)))))
+                          (.ref rule 'heads) (iota (length (.ref rule 'heads)))))
+              (.ref program 'rules) (iota (length (.ref program 'rules))))
+    program))
 
 ;;; Shape admission precedes scalar checks, including improper/cyclic lists.
 ;; : (-> Row Arity Row)

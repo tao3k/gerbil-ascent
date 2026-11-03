@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .ref)
- :gerbil-ascent/program/operator-lowering :gerbil-ascent/program/objects
+ :gerbil-ascent/program/operator-lowering :gerbil-ascent/program/func
  (only-in :gerbil-ascent/t/performance/lexical-dependencies/fixture lexical-input)
  (prefix-in :gerbil-ascent/t/performance/binding-resolution/reference old-)
  (only-in :std/list/list delete-duplicates/hash))

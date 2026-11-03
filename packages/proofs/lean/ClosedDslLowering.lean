@@ -1,5 +1,6 @@
 -- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import DslDeclarations
 /-! Closed expression lowering under the same canonical primitive bindings.
 Primitive results include errors. This theorem covers the expression transform,
 not Gerbil expansion, reader admission, or arbitrary Scheme syntax. Scheme tests
@@ -246,7 +247,7 @@ def snapshotSchemeSource : String :=
   "\n" ++
   ";;; Rebuild caller declarations into the checked scalar grammar before planning.\n" ++
   ";;; This owner constructs no evaluator or retained session.\n" ++
-  "(import \"objects.ss\" \"scheme-checked.ss\"\n" ++
+  "(import \"func.ss\" \"scheme-checked.ss\"\n" ++
   "        (only-in \"types.ss\" GerbilAscentProgramContract)\n" ++
   "        (only-in :clan/poo/object .ref)\n" ++
   "        (only-in :clan/poo/mop validate))\n" ++
@@ -352,10 +353,12 @@ def snapshotSchemeSource : String :=
   "\n" ++
   "(def (relational-capture-rule rule)\n" ++
   "  (let ((heads (map relational-capture-atom (.ref rule 'heads)))\n" ++
-  "        (body (map relational-capture-clause (.ref rule 'body))))\n" ++
+  "        (body (map relational-capture-clause (.ref rule 'body)))\n" ++
+  "        (origin (relational-rule-origin rule)))\n" ++
   "    (lambda ()\n" ++
-  "      (gerbil-ascent-rule (map (lambda (build) (build)) heads)\n" ++
-  "                         (map (lambda (build) (build)) body)))))\n" ++
+  "      (relational-with-origin\n" ++
+  "       (gerbil-ascent-rule (map (lambda (build) (build)) heads)\n" ++
+  "                          (map (lambda (build) (build)) body)) origin))))\n" ++
   "\n" ++
   ";;; The engine constructor checks relation names, arities, rule bindings,\n" ++
   ";;; dependencies and budgets before the admission value becomes observable.\n" ++
@@ -373,7 +376,8 @@ def snapshotSchemeSource : String :=
   "                         (vector-ref domain 1))))\n" ++
   "                 (name (.ref relation 'name)) (arity (.ref relation 'arity))\n" ++
   "                 (rows (.ref relation 'rows)))\n" ++
-  "            (case (.ref relation 'storage-kind)\n" ++
+  "            (relational-with-role\n" ++
+  "             (case (.ref relation 'storage-kind)\n" ++
   "              ((relation)\n" ++
   "               (if domain (relational-finite-source name arity rows domains)\n" ++
   "                   (relational-source name arity rows)))\n" ++
@@ -385,7 +389,8 @@ def snapshotSchemeSource : String :=
   "                 (if domain\n" ++
   "                     (relational-finite-lattice name arity rows (vector-ref descriptor 1) domains)\n" ++
   "                     (relational-checked-lattice name arity rows (vector-ref descriptor 1)))))\n" ++
-  "              (else (error \"unsupported relational storage kind\")))))\n" ++
+  "              (else (error \"unsupported relational storage kind\")))\n" ++
+  "             (relational-relation-role relation))))\n" ++
   "        (.ref program 'relations)))\n" ++
   "         (rules (map relational-capture-rule (.ref program 'rules)))\n" ++
   "         (input-limit (.ref program 'max-input-facts))\n" ++
@@ -395,10 +400,11 @@ def snapshotSchemeSource : String :=
   "    ;; The source has already passed the ordinary complete Program contract.\n" ++
   "    ;; This new, private tree passes that same complete contract after restoring\n" ++
   "    ;; ordinary constructor checks. No Term validation result is memoized.\n" ++
-  "    (gerbil-ascent-construct-inert-program\n" ++
+  "    (relational-check-roles!\n" ++
+  "     (gerbil-ascent-construct-inert-program\n" ++
   "     (lambda ()\n" ++
   "       (gerbil-ascent-program relations (map (lambda (build) (build)) rules)\n" ++
-  "         input-limit derived-limit output-limit sources)))))\n"
+  "         input-limit derived-limit output-limit sources))))))\n"
 
 def snapshotQuintSource : String :=
   "// SPDX-FileCopyrightText: 2026 tao3k team and Contributors\n" ++
@@ -406,6 +412,7 @@ def snapshotQuintSource : String :=
   "// Whole-source choice precedes construction; failure never retries another route.\n" ++
   "module ClosedDslLowering {\n" ++
   "  const Mutation: str\n" ++
+  Ascent.DslDeclarations.quintDeclarations ++
   "  var phase: str\n" ++
   "  var recognized: bool\n" ++
   "  var route: str\n" ++
@@ -450,6 +457,12 @@ def snapshotQuintSource : String :=
   "  val WholeChoice = route != \"closed\" or recognized\n" ++
   "  val NoRetry = attempts <= 1\n" ++
   "  val FailurePrivate = not(rejected) or not(owner)\n" ++
+  "  val RoleSourceExact = phase == \"reader\" or (declaration_source(\"input\") and\n" ++
+  "    not(declaration_source(\"derived\")) and declaration_source(\"mixed\"))\n" ++
+  "  val RoleHeadExact = phase == \"reader\" or (not(declaration_head(\"input\")) and\n" ++
+  "    declaration_head(\"derived\") and declaration_head(\"mixed\"))\n" ++
+  "  val RoleUnknownClosed = phase == \"reader\" or (not(declaration_source(\"unknown\")) and\n" ++
+  "    not(declaration_head(\"unknown\")))\n" ++
   "}\n"
 
 end Ascent.ClosedDslLowering

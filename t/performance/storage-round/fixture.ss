@@ -1,8 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :clan/poo/object :gerbil-ascent/program/objects
-        (only-in :gerbil-ascent/table/interface gerbil-ascent-set-storage-provider
+(import :clan/poo/object :gerbil-ascent/program/func
+        (only-in :gerbil-ascent/table/func gerbil-ascent-set-storage-provider
                  gerbil-ascent-trrel-uf-storage-provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (prefix-in :gerbil-ascent/t/performance/storage-round/reference-evaluate old-)

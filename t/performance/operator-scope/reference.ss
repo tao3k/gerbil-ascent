@@ -5,7 +5,7 @@
 ;;; Finite, positive relation operator descriptors for Scheme builders.
 ;;; Builder procedures run before admission; evaluation sees only rules and
 ;;; finite source tables, never a captured relation-valued Scheme closure.
-(import (only-in :gerbil-ascent/program/objects
+(import (only-in :gerbil-ascent/program/func
                  gerbil-ascent-relation gerbil-ascent-program
                  gerbil-ascent-rule gerbil-ascent-atom
                  gerbil-ascent-variable gerbil-ascent-fragment)

@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :clan/poo/object .ref)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         :gerbil-ascent/applications/scoped-witness
         :gerbil-ascent/applications/scoped-reachability-mask)
 (export gerbil-ascent-scoped-composition-program gerbil-ascent-compose-scoped-program
@@ -87,16 +87,34 @@
 ;;; is not evidence that its endpoint pair survived any particular scope.
 ;; : (forall (v) (-> EvaluationResult v v (Maybe [v])))
 ;; : (-> EvaluationResult Vertex Vertex OptionalPath)
+
+;; gerbil-ascent-scoped-query-path
+;; : (forall (v) (-> EvaluationResult v v (Maybe [v])))
+;; : (-> EvaluationResult Vertex Vertex OptionalPath)
+;; | doc m%
+;;     Read a shortest path only from a complete published scoped result.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-scoped-query-path result source target)
+;;     ;; => a producer path, or #f when no scoped distance exists
+;;     ```
+;;   %
 (def (gerbil-ascent-scoped-query-path result s t)
   (unless (.ref result 'finished) (error "ASCENT scoped query path requires completed execution"))
   (let ((visit (.ref result 'visit-rows)) (distance #f))
     (visit 'mask_shortest '(0 1) (list s t) (lambda (row) (set! distance (caddr row))))
     (and distance
-      (let loop ((target t) (remaining distance) (path (list t)))
-        (if (zero? remaining)
-          (begin (unless (equal? s target) (error "ASCENT scoped query path has invalid zero-hop root")) path)
+      (let ((target t) (path (list t)))
+        (do ((remaining distance (- remaining 1)))
+            ((zero? remaining)
+             (unless (equal? s target)
+               (error "ASCENT scoped query path has invalid zero-hop root"))
+             path)
           (let (previous #f)
             (visit 'mask_predecessor '(0 2 3) (list s target remaining)
               (lambda (row) (unless previous (set! previous (list (cadr row))))))
             (unless previous (error "ASCENT scoped query path is missing a predecessor"))
-            (loop (car previous) (- remaining 1) (cons (car previous) path))))))))
+            (set! target (car previous))
+            (set! path (cons target path))))))))

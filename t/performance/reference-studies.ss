@@ -6,7 +6,7 @@
 (def reference-studies
   (list
     (make-reference-study 'binding
-      '("core/dependency-graph" "core/rule-semantics" "program/objects" "program/evaluate" "t/qualification/ascent-binding-reference-fixture" "t/qualification/ascent-binding-reference-evaluate" "t/qualification/ascent-index-program-fixture")
+      '("core/dependency-graph" "core/rule-semantics" "program/func" "program/evaluate" "t/qualification/ascent-binding-reference-fixture" "t/qualification/ascent-binding-reference-evaluate" "t/qualification/ascent-index-program-fixture")
       "t/performance/binding-benchmark.ss" 150 120 6)
     (make-reference-study 'strata
       '("core/dependency-graph" "core/rule-semantics" "t/qualification/ascent-strata-fixture")

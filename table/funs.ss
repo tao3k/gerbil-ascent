@@ -13,6 +13,19 @@
 ;;; entire batch. Fresh cons cells preserve previously returned bucket spines.
 ;;; The index expression is evaluated once; key evaluation precedes publication.
 ;; : (-> Index Rows RowBinding KeyExpression Index)
+
+;; gerbil-ascent-index-batch!
+;; : (-> Index Rows RowBinding KeyExpression Index)
+;; | doc m%
+;;     Evaluate the index once and each key before publishing its corresponding row.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-index-batch! (make-hash-table) '() row row)
+;;     ;; => an empty index
+;;     ```
+;;   %
 (defrule (gerbil-ascent-index-batch! index rows row key)
   (let* ((target index) (row-slot (vector #f))
          (prepend-row (lambda (bucket) (cons (vector-ref row-slot 0) (or bucket [])))))

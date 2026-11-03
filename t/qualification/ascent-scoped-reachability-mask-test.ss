@@ -5,7 +5,7 @@
         :gerbil-ascent/applications/scoped-reachability-mask
         :gerbil-ascent/applications/scoped-composition
         :gerbil-ascent/applications/taint-paths
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/program/session gerbil-ascent-open-session
                  gerbil-ascent-session-run gerbil-ascent-session-replace-source!))

@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :clan/poo/object :gerbil-ascent/program/objects
+(import :clan/poo/object :gerbil-ascent/program/func
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (prefix-in :gerbil-ascent/t/performance/scc-execution/reference-evaluate old-))
 (export scc-program scc-prepare scc-consume scc-expected scc-project)

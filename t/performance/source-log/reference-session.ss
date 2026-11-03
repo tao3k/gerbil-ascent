@@ -208,7 +208,7 @@
              (outcome
               (attempt
                (lambda ()
-                 ((.ref engine '.replace-source!) name rows)
+                 ((.ref engine '.source-replacement) name rows)
                  (vector-set! pending index (cons rows []))))))
         (unless (vector-ref outcome 0)
           (vector-set! pending index source-state)
@@ -321,8 +321,8 @@
                   (.append-source!
                    (if direct-appends? direct-append-source!
                        append-source!))
-                  (.replace-source! replace-source!)
-                  (.replace-sources! replace-sources!)
+                  (.source-replacement replace-source!)
+                  (.source-replacements replace-sources!)
                   (.run run!)
                   (.run-timeout run-timeout!)))))
 
@@ -330,10 +330,10 @@
   ((.ref session '.append-source!) name row))
 
 (def (gerbil-ascent-session-replace-source! session name rows)
-  ((.ref session '.replace-source!) name rows))
+  ((.ref session '.source-replacement) name rows))
 
 (def (gerbil-ascent-session-replace-sources! session replacements)
-  ((.ref session '.replace-sources!) replacements))
+  ((.ref session '.source-replacements) replacements))
 
 (def (gerbil-ascent-session-run session)
   ((.ref session '.run)))

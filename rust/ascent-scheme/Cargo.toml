@@ -6,8 +6,8 @@ license.workspace = true
 links = "ascent_scheme_program"
 
 [dependencies]
-gerbil-scheme.workspace = true
-gerbil-scheme-sys.workspace = true
+gerbil-scheme = { workspace = true, features = ["external-program"] }
+gerbil-scheme-sys = { workspace = true, features = ["external-program"] }
 gerbil-scheme-python = { workspace = true, optional = true }
 gerbil-ascent = { workspace = true, features = ["process-runtime"] }
 libc = "=0.2.186"
@@ -37,10 +37,6 @@ unsafe_op_in_unsafe_fn = "deny"
 [lints.clippy]
 all = "warn"
 pedantic = "warn"
-
-[[test]]
-name = "archive_build"
-path = "tests/integration/archive.rs"
 
 [[bench]]
 name = "hybrid_benchmark"

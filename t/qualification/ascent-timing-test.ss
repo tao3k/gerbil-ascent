@@ -4,7 +4,7 @@
 
 (import (only-in :std/test check-equal? test-suite test-case)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!

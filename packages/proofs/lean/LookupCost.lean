@@ -45,7 +45,7 @@ def admissionSchemeSource : String :=
   "  (def (visit-admitted-complete-key columns key point)\n    (let* ((offset (- (vector-length routes) 2))\n           (endpoints (list-tail key offset)))\n      (for-each (lambda (block)\n        (with (((rectangle prefix left right) block))\n          (when (matches-prefix? key prefix)\n            ;; Return the candidate's stored values directly, without\n            ;; allocating selected singleton spines or product collectors.\n            (let ((a (captured-point-member routes left offset (car endpoints)))\n                  (b (captured-point-member routes right (+ offset 1) (cadr endpoints))))\n              (when (and a b) (point prefix (car a) (car b))))))) (if small? blocks (selected columns key)))\n      #t))\n  (def (visit-complete-key columns key point)\n    (and complete-columns (equal? columns complete-columns)\n       (visit-admitted-complete-key columns key point)))\n"
 
 def studyProfileSchemeSource : String :=
-  "(def (study-build-spec module)\n  (normalize-spec\n    (if (member module gerbil-ascent-library-modules) module\n      [gxc: module [extra-inputs: [(path-expand \"build-modules.ss\") (path-expand \"t/performance/run.ss\")]]])\n    gerbil-ascent-compiler-options))\n\n"
+  "(def (study-build-spec module)\n  (normalize-spec\n    (if (member module (gerbil-ascent-library-modules)) module\n      [gxc: module [extra-inputs: [(path-expand \"init.ss\") (path-expand \"t/performance/run.ss\")]]])\n    gerbil-ascent-compiler-options))\n\n"
 
 -- Two valid allocator histories have identical observed snapshots but
 -- different heap-event allocation. A net counter is not a heap-event decoder.
@@ -246,7 +246,45 @@ def borrowedMatchRustSource : String := "pub(crate) struct MatchState {\n    val
 
 def borrowedMatchSchemeSource : String := "(def (match-function function-name body)\n  (function function-name\n    '((\"state\" . \"&mut crate::execution::MatchState\") (\"term\" . \"&crate::execution::Pattern\") (\"value\" . \"crate::execution::Cell\"))\n    \"bool\" body))\n(def (matching-ir)\n  (let* ((state (name \"state\")) (term (name \"term\")) (value (name \"value\"))\n         (slot (method term \"variable_index\")))\n    (list\n      (match-function \"bind_variable\"\n        (conditional (method state \"contains\" slot)\n          (same (method state \"value\" slot) value)\n          (method state \"set\" slot (method value \"owned\"))))\n      (match-function \"bind_checked\"\n        (conditional (method term \"is_literal\")\n          (same (method term \"literal_value\") value)\n          (call \"bind_variable\" state term value)))\n      (match-function \"bind_term\"\n        (node \"binary\" (cons \"operator\" \"or\")\n          (cons \"left\" (method term \"is_wildcard\"))\n          (cons \"right\" (call \"bind_checked\" state term value)))))))\n(def (binding-ir)\n  (function \"bind\"\n    '((\"terms\" . \"&[crate::execution::Pattern]\") (\"row\" . \"&[crate::execution::Cell]\")\n      (\"prior\" . \"&[Option<crate::execution::Cell>]\"))\n    \"Option<crate::execution::Bindings>\"\n    (call \"crate::execution::MatchState::matching\"\n      (name \"terms\") (name \"row\") (name \"prior\") (name \"bind_term\"))))\n"
 
+-- Semantic model of prefix-frame-key's ascending reads and fresh accumulator.
+-- The native loop generates the ordinals directly; this list describes their
+-- values, not another runtime allocation. Stable frame reads are a premise.
+def prefixKeyAccumulator {α : Type} : List α → List α → List α
+  | [], acc => acc.reverse
+  | value :: rest, acc => prefixKeyAccumulator rest (value :: acc)
+
+theorem prefix_key_accumulator_order {α : Type} (values acc : List α) :
+    prefixKeyAccumulator values acc = acc.reverse ++ values := by
+  induction values generalizing acc with
+  | nil => simp [prefixKeyAccumulator]
+  | cons value rest ih =>
+    simp [prefixKeyAccumulator, ih, List.reverse_cons, List.append_assoc]
+
+theorem prefix_key_preserves_slots {α : Type} (read : Nat → α) (slots : List Nat) :
+    prefixKeyAccumulator (slots.map read) [] = slots.map read := by
+  simp [prefix_key_accumulator_order]
+
+-- Logical temporary spines only, not allocator bytes or wall/CPU costs.
+theorem prefix_key_removes_ordinal_spine (width : Nat) :
+    2 * width = width + width := by omega
+
+theorem version_pair_check_equivalent {α : Type} (valid : α → Bool) (a b : α) :
+    [a, b].all valid = (valid a && valid b) := by simp
+
+-- Only pure, stable revision observations may contract duplicate identities.
+-- This does NOT apply to POO slot deliveries, callbacks, or admission results.
+theorem pure_revision_duplicate {α : Type} (check : α → Bool)
+    (before after : List α) (source : α) :
+    (before ++ source :: source :: after).all check =
+      (before ++ source :: after).all check := by
+  cases h : check source <;> simp [List.all_append, h, Bool.and_assoc]
+
 end Ascent.LookupCost
+#print axioms Ascent.LookupCost.pure_revision_duplicate
+#print axioms Ascent.LookupCost.prefix_key_accumulator_order
+#print axioms Ascent.LookupCost.prefix_key_preserves_slots
+#print axioms Ascent.LookupCost.prefix_key_removes_ordinal_spine
+#print axioms Ascent.LookupCost.version_pair_check_equivalent
 #print axioms Ascent.LookupCost.admission_deduplication
 #print axioms Ascent.LookupCost.canonical_columns_in_range
 #print axioms Ascent.LookupCost.admitted_tiny_keeps_order_and_multiplicity

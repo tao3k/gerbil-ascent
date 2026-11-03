@@ -9,7 +9,7 @@
   (let ((sources (artifact-sources))
         (source (string-append "t/performance/typed-sharing/" lane ".ss")))
     (add-load-path! library)
-    (make (append '("program/objects" "program/higher-order" "t/performance/typed-sharing/reference"
+    (make (append '("program/func" "program/higher-order" "t/performance/typed-sharing/reference"
                    "t/performance/typed-sharing/fixture")
                   (if (equal? lane "qualify")
                     '("t/qualification/scheme-higher-order-test"

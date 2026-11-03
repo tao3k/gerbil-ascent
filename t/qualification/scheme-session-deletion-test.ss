@@ -7,7 +7,7 @@
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/scheme-language relational-program)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-guard
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-guard
                  gerbil-ascent-relation gerbil-ascent-atom gerbil-ascent-rule
                  gerbil-ascent-variable gerbil-ascent-literal)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)

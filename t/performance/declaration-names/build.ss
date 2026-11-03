@@ -22,7 +22,7 @@
   (let ((sources (owned-sources))
         (source (string-append "t/performance/declaration-names/" lane ".ss")))
     (add-load-path! library)
-    (make (append '("program/objects" "t/performance/declaration-names/reference"
+    (make (append '("program/func" "t/performance/declaration-names/reference"
                    "t/performance/declaration-names/fixture")
                   (if (equal? lane "qualify")
                     '("t/qualification/ascent-declaration-names-test"

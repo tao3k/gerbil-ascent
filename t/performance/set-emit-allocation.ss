@@ -3,7 +3,7 @@
 ;;; Slot 16 is the latest GC gauge and cannot measure allocations per solve.
 (import :gerbil/runtime/gambit
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-rule gerbil-ascent-program
                  gerbil-ascent-generator)

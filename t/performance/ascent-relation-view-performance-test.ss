@@ -4,7 +4,7 @@
 (import :gerbil/runtime/gambit :gerbil-ascent/core/relation-view
         (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .ref .o)
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         :gerbil-ascent/program/session
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-visit-parts)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program gerbil-ascent-make-engine)

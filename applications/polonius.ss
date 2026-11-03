@@ -4,7 +4,7 @@
 ;;; Complete Polonius 0.13 Naive rule semantics, including initialization,
 ;;; liveness and placeholder preprocessing. Ordinary Program evaluation owns
 ;;; storage, stratification, cancellation and immutable result publication.
-(import :gerbil-ascent/program/objects)
+(import :gerbil-ascent/program/func)
 (export gerbil-ascent-polonius-program gerbil-ascent-polonius-input-schema
         gerbil-ascent-polonius-output-schema)
 ;; : (List (Pair Symbol Nat))
@@ -47,9 +47,9 @@
 ;; loan_invalidated_at retains the public (Point, Loan) order. Its upstream
 ;; unpopulated Output carrier is deliberately not an output truth predicate.
 ;; : (forall (a) (-> (List (Pair Symbol (List (List a)))) Nat Nat Nat Program))
+;;; The ordinary exact Set path admits semantic controls; dense full-data storage
+;;; needs separate representation admission before this can qualify that workload.
 ;; : (-> RawPoloniusFacts InputBudget FactBudget OutputBudget Program)
-;; The ordinary exact Set path admits semantic controls; dense full-data storage
-;; needs separate representation admission before this can qualify that workload.
 (def (gerbil-ascent-polonius-program inputs (input-budget 1000000)
                                       (fact-budget 1000000) (output-budget 2000000))
   (unless (and (list? inputs) (= (length inputs) (length gerbil-ascent-polonius-input-schema)))

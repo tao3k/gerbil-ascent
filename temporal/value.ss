@@ -29,16 +29,11 @@
 ;; : (forall (a) (-> (List a) Boolean))
 ;; : (-> InertList Boolean)
 (def (unique? xs)
-  (match xs
-    ((or [] [_]) #t)
-    (else
-     (let (seen (make-hash-table))
-       (let admit ((rest xs))
-         (match rest
-           ([] #t)
-           ([value . more]
-            (and (not (hash-get seen value))
-                 (begin (hash-put! seen value #t) (admit more))))))))))
+  (if (or (null? xs) (null? (cdr xs))) #t
+    (let (seen (make-hash-table))
+      (andmap (lambda (value)
+                (and (not (hash-get seen value))
+                     (begin (hash-put! seen value #t) #t))) xs))))
 ;; : (forall (a) (-> a Nat Boolean))
 ;; : (-> SchemeValue ElementCap Boolean)
 (def (bounded-list? x cap)

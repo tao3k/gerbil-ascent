@@ -16,8 +16,8 @@
                  relational-op-measure
                  relational-op-measurement-join-probes
                  relational-op-measurement-fix-body-evaluations)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-fragment)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-fragment)
+        (only-in :gerbil-ascent/program/api
                  relational-op-compiler
                  relational-admit relational-solve relational-query-name
                  relational-compose relational-export

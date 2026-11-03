@@ -1,7 +1,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Independent existing Scheme evaluator. This is qualification, not transport.
-(import :gerbil-ascent/program/objects :gerbil-ascent/program/session
+(import :gerbil-ascent/program/func :gerbil-ascent/program/session
         (only-in :clan/poo/object .ref))
 (export main)
 (def (solve edges)

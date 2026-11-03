@@ -1,4 +1,4 @@
-(import :gerbil-ascent/program/interface
+(import :gerbil-ascent/program/api
         :gerbil-ascent/t/qualification/ascent-positive-plan-reference-evaluate)
 (for-each
  (lambda (name) (displayln (gx#module-context-path (gx#import-module name))))

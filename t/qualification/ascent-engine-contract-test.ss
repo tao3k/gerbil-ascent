@@ -5,7 +5,7 @@
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate element? TypeError?)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program gerbil-ascent-relation)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine))
 (export ascent-engine-contract-test)
 
@@ -29,7 +29,7 @@
       (def session
         (.o (:: @ (.ref GerbilAscentSessionContract 'proto))
           (.append-source! (capture 'append))
-          (.replace-source! (capture 'replace))
+          (.source-replacement (capture 'replace))
           (.run (capture 'run))
           (unselected (error "unselected Session getter demanded"))))
       (check-equal? (eq? session (validate GerbilAscentSessionContract session)) #t)
@@ -38,7 +38,7 @@
       (def observed [])
       (def session
         (.o (.append-source! (begin (set! observed (cons 'append observed)) (lambda args (void))))
-            (.replace-source! (begin (set! observed (cons 'replace observed)) (lambda args (void))))
+            (.source-replacement (begin (set! observed (cons 'replace observed)) (lambda args (void))))
             (.run (begin (set! observed (cons 'run observed)) (lambda args (void))))))
       (check-exception (validate GerbilAscentSessionContract session) TypeError?)
       (check-equal? observed []))))

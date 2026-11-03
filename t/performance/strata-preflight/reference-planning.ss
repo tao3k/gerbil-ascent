@@ -4,7 +4,7 @@
 
 ;;; Rule planning is separate from relation state and fixed-point execution.
 ;;; The passed atom-plan resolves names and arities against one program schema.
-(import (only-in :gerbil-ascent/program/objects gerbil-ascent-clause-plan
+(import (only-in :gerbil-ascent/program/func gerbil-ascent-clause-plan
                  gerbil-ascent-bound-membership)
         (only-in :gerbil-ascent/t/performance/strata-preflight/reference-semantics gerbil-ascent-rule-strata
                  gerbil-ascent-rule-successors

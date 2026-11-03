@@ -28,11 +28,39 @@ acceptance remain separate obligations.
 
 ## Run
 
+`init.ss` selects the actual `core`, `table`, `program`, `rules`, `candidate`,
+`temporal`, `interface` and `applications` Yuanxu Modules from the repository
+root. Each `interface.ss` owns its Module declaration. Native Scheme consumers
+use `:gerbil-ascent/program/api`, `:gerbil-ascent/program/func` (constructors),
+`:gerbil-ascent/rules/func` and `:gerbil-ascent/table/func` directly.
+
+Source-bound Module APIs are demanded through `Library.<owner>.scope`; Program
+and Table publish their corresponding `types` alongside their values. Nominal
+types from independent source contexts are not interchangeable. See the
+[Module migration audit](docs/yuanxu-module-convergence-20261102.org) for the
+breaking entry changes, actual validation and retained failures.
+
 ```sh
 gerbil deps --install
 just build
 just test
 ```
+
+Builds preserve the caller's `PATH` and leave compiler selection to Gerbil/Gambit
+and explicit native configuration. Dependency metadata and libraries must be
+visible to that toolchain. When Nix tools are on PATH alongside Homebrew
+Gerbil/Gambit, GCC's standard `COMPILER_PATH` can select the Apple assembler and
+linker without changing GCC or injecting SDK flags. Prepare that environment
+and the installed dependencies before the commands above:
+
+```sh
+export COMPILER_PATH="$(dirname "$(xcrun --find ld)")"
+export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+export LIBRARY_PATH="$(brew --prefix libiconv)/lib:$(brew --prefix openssl@3)/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
+```
+
+The Rust consumer also needs libiconv discoverable by its host linker. Do not
+automatically inject `SDKROOT` or `-isysroot` into `RUSTFLAGS`: that can mix SDKs.
 
 `just oracle` runs the Rust comparison; `just performance` runs the
 benchmark suite. See `just --list` for focused checks.

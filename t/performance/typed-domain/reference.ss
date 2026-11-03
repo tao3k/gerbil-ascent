@@ -12,7 +12,7 @@
                  relational-op-fix relational-op-compile relational-op-kind)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-scalar? relational-copy-rows relational-finite-rows relational-finite-source)
-        (only-in :gerbil-ascent/program/objects gerbil-ascent-program)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program)
         (only-in :clan/poo/object .ref)
         (only-in :std/list/list delete-duplicates/hash take))
 

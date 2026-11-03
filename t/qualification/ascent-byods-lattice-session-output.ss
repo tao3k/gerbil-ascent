@@ -7,7 +7,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-byods-lattice-fixture
                  ascent-byods-lattice-program)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-open-session
                  gerbil-ascent-session-append-source!
                  gerbil-ascent-session-replace-source!

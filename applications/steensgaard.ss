@@ -4,7 +4,7 @@
 ;;; B23 Steensgaard rules, aligned with the upstream application at
 ;;; 03f4f792442ecaf9e4f178a6a1b5840eab526388. Input and budget admission belong
 ;;; to the ordinary POO Program/Relation contracts; this module owns no state.
-(import :gerbil-ascent/program/objects
+(import :gerbil-ascent/program/func
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-eqrel-storage-provider
                  gerbil-ascent-set-storage-provider))
@@ -12,6 +12,7 @@
 
 ;; alloc/assign: (destination source); load: (destination base field);
 ;; store: (base field source). The explicit arm materializes equivalence laws.
+;; : (-> AllocRows AssignRows LoadRows StoreRows FactLimit FactLimit FactLimit Program)
 (def (gerbil-ascent-steensgaard-program alloc assign load store
                                       (explicit? #f) (input-budget 1000000)
                                       (fact-budget 1000000) (output-budget 2000000))

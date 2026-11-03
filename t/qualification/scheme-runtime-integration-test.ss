@@ -4,7 +4,7 @@
 
 (import (only-in :std/test check-equal? check-exception
                  test-case test-suite)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  relational-fragment relational-finite-view
                  relational-lattice-fragment relational-compose
                  relational-export relational-open-session

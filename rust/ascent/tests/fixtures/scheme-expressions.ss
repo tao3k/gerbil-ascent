@@ -2,7 +2,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Qualification oracle only: execute the same original native Scheme forms.
 (import :gerbil-ascent/interface/dsl-source
-        :gerbil-ascent/program/interface
+        :gerbil-ascent/program/api
         (only-in :clan/poo/object .ref))
 (export main)
 (def (solve source rows)

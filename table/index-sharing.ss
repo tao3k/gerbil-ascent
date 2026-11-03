@@ -148,6 +148,19 @@
 ;;; Only chains with multiple logical requirements change physical storage;
 ;;; singleton chains retain the existing specialized hash representation.
 ;; : (-> ColumnRequirements IndexSharingLayout)
+
+;; gerbil-ascent-index-sharing-layout
+;; : (-> ColumnRequirements SharedIndexLayout)
+;; | doc m%
+;;     Construct chains only after independent matching and endpoint-cover checks.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-index-sharing-layout '())
+;;     ;; => an empty admitted layout
+;;     ```
+;;   %
 (def (gerbil-ascent-index-sharing-layout requirements)
   (let* ((sets (normalize-column-requirements requirements))
          (order (compile-column-order sets))
@@ -256,11 +269,12 @@
 ;;; another column spine at each extension. Both length and order guard reuse.
 ;; : (-> NonemptyDistinctColumns (Vector Column) Boolean)
 (def (same-columns? columns snapshot)
-  (let compare ((remaining columns) (slot 0))
-    (if (null? remaining) (= slot (vector-length snapshot))
-      (and (< slot (vector-length snapshot))
-           (equal? (car remaining) (vector-ref snapshot slot))
-           (compare (cdr remaining) (+ slot 1))))))
+  (let ((slot 0) (width (vector-length snapshot)))
+    (and (andmap (lambda (column)
+                   (and (< slot width)
+                        (let (matches? (equal? column (vector-ref snapshot slot)))
+                          (set! slot (+ slot 1)) matches?))) columns)
+         (= slot width))))
 
 ;;; No user callback runs between gather and insert. Sort private metadata,
 ;;; never source columns or rows; row values are read afresh for every insert.
@@ -291,26 +305,29 @@
 ;;; Validation completes before metadata publication; values enter only later.
 (def (compile-key-projection logical physical)
   (let (width (length logical))
-    ;; This runs once per cached plan. Avoid a temporary ordinal hash table and
-    ;; its entries; preserve first-occurrence lookup for repeated columns.
-    (def (position-of column)
-      (let seek ((remaining logical) (position 0))
-        (and (pair? remaining)
-             (if (= column (car remaining)) position
-               (seek (cdr remaining) (+ position 1))))))
+    ;; This runs once per cached plan, not per inserted row. Retain the first
+    ;; logical occurrence when repeated columns refer to the same physical key.
+    (let (positions (make-hash-table))
+      (for-each (lambda (column position)
+                  (unless (hash-get positions column) (hash-put! positions column position)))
+                logical (iota (length logical)))
+      (def (position-of column) (hash-get positions column))
     (let gather ((remaining physical) (left width) (selected []) (prefix []))
       (if (zero? left)
         (make-key-projection (list->vector (reverse! prefix))
                             (column-writes (reverse! selected)) (make-vector width #f))
         (let (position (and (pair? remaining) (position-of (car remaining))))
           (unless position (error "logical index is not a physical prefix" logical physical))
-          (gather (cdr remaining) (- left 1) (cons position selected) (cons (car remaining) prefix)))))))
+          (gather (cdr remaining) (- left 1) (cons position selected) (cons (car remaining) prefix))))))))
 
 (def (same-physical-prefix? physical snapshot)
-  (let compare ((remaining physical) (slot 0))
-    (or (= slot (vector-length snapshot))
-        (and (pair? remaining) (equal? (car remaining) (vector-ref snapshot slot))
-             (compare (cdr remaining) (+ slot 1))))))
+  (let ((remaining physical) (width (vector-length snapshot)))
+    (def (prefix? slot)
+      (or (= slot width)
+          (and (pair? remaining)
+               (equal? (car remaining) (vector-ref snapshot slot))
+               (begin (set! remaining (cdr remaining)) (prefix? (+ slot 1))))))
+    (prefix? 0)))
 
 ;;; Metadata equality consumes natural ordinals, including large exact values.
 ;;; Keep hashing under Gerbil's existing structural hash contract.
@@ -350,6 +367,19 @@
 ;;; Logical key order may differ from the physical prefix permutation. Resolve
 ;;; that adapter without changing caller columns, keys, rows or published lists.
 ;; : (-> SharedIndex LogicalPrefixColumns LogicalKey OrderedRows)
+
+;; gerbil-ascent-shared-index-rows
+;; : (-> SharedIndex Columns Key Rows)
+;; | doc m%
+;;     Read the current physical index using already evaluated logical key values.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-shared-index-rows index columns key)
+;;     ;; => the current matching row bucket
+;;     ```
+;;   %
 (def (gerbil-ascent-shared-index-rows index columns key)
   (let (physical (shared-index-columns index))
     (unless (= (length columns) (length key)) (error "shared index key arity mismatch"))

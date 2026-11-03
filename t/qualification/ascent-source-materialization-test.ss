@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :clan/poo/object
-        :gerbil-ascent/program/objects
+        :gerbil-ascent/program/func
         :gerbil-ascent/program/source-snapshot
         :gerbil-ascent/program/session
         :gerbil-ascent/program/update-selection
@@ -129,7 +129,7 @@
           (check ((gerbil-ascent-publication-reader new-publication next) 'input) => '((0) (1)))
           (check (reader 'input) => '((0)))
           (check ((.ref held 'rows-of) 'input) => '((0)))
-          ((.ref engine '.replace-source!) 'input '((7)))
+          ((.ref engine '.source-replacement) 'input '((7)))
           (check ((.ref engine '.native-publication)) => #f)
           (check ((.ref ((.ref engine '.run)) 'rows-of) 'input) => '((7)))
           (check (reader 'input) => '((0))))))

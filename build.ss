@@ -9,8 +9,8 @@
 (import (only-in :gerbil/expander core-import-module)
         (only-in :clan/poo/object .o)
         (only-in :yuanxu/module-system/building/source-closure for-each-build-module)
-        (only-in :yuanxu/module-system/source/static-inputs module-native-static-inputs)
-        (only-in :yuanxu/module-system/building/artifacts call-with-native-static-inputs)
+        (only-in :yuanxu/module-system/source/static-inputs module-static-compiler-inputs)
+        (only-in :yuanxu/module-system/building/artifacts call-with-static-compiler-inputs)
         (only-in :clan/poo/object .get) "init.ss"
         (only-in :std/build-script defbuild-script)
         (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
@@ -33,8 +33,8 @@
       (for-each-build-module (core-import-module (path-expand entry root))
         (lambda (context) (set! contexts (cons context contexts))) seen))
     entries)
-  (def inputs (module-native-static-inputs (reverse contexts) owned-identities))
-  (call-with-native-static-inputs (.o static-inputs: inputs) action))
+  (def inputs (module-static-compiler-inputs (reverse contexts) owned-identities))
+  (call-with-static-compiler-inputs (.o static-inputs: inputs) action))
 
 (def (gerbil-ascent-library-spec)
   ((.get gerbil-ascent.init.exports std-make-spec) '("init")))

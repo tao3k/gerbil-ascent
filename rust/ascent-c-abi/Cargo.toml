@@ -1,0 +1,22 @@
+[package]
+name = "ascent-c-abi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+gerbil-ascent = { workspace = true, features = ["rayon"] }
+gerbil-scheme-python = { workspace = true, features = ["c-abi"] }
+
+[dev-dependencies]
+asp-rust.workspace = true
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

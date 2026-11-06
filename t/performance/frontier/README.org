@@ -1,0 +1,57 @@
+#+title: Empty second-atom frontier qualification
+
+=GERBIL_PATH=<qualified-prefix> GERBIL_BUILD_CORES=12 just size-benchmark=
+compiles the candidate and frozen pre-slice evaluator with the same settings.
+The reference includes the earlier checked binding optimization; it is not
+an untouched HEAD baseline. The package pins and installed POO are unchanged.
+
+The retained optimization skips delta position 1 only when the first two
+clauses are atoms, the first atom has no index columns and only variable
+terms, and the second atom's delta size is zero. The original path cannot
+reach a suffix or emit rows; neither atom dispatches a Provider callback
+on this path. Other prefixes keep their original execution.
+
+Each chain shape (16, 256, 1024 edges) uses 20 warmups and 1000 alternating
+old/new pairs. Construction and exact ordered-row validation are outside
+timing spans. Both control shapes require median nonregression. The 1024
+shape additionally requires at least 900 strictly faster pairs. Raw samples
+and source manifests are in =receipts/=. No budget is relaxed.
+
+The separate count-maintenance experiment failed the 900-pair admission
+on the 1024 shape (525 wins) and was removed before final qualification.
+Its exploratory receipt is retained as =rejected-count*=. Earlier mixed
+count/frontier runs do not qualify the final retained source.
+
+Semantic Cases compare exact snapshots and sizes, source duplicates,
+all 16 two-node graphs and both roots, session append/replacement, custom
+Provider build/lookup counts, guard/generator counts, lattice replacement,
+and timeout resumption. Timeout prefixes may differ; the resumed fixed
+point must match. These are focused local receipts, not a complete-suite
+qualification of the entire SS suite.
+
+Both final runs pass, with final =OK= and process exit 0. Their source
+manifests match the retained evaluator and benchmark. Values are nanoseconds:
+
+| edges | old p50 run 1/2 | new p50 run 1/2 | strict wins run 1/2 |
+|-------+-----------------+-----------------+---------------------|
+| 16 | 22000 / 23000 | 19000 / 20000 | 935 / 869 |
+| 256 | 852000 / 868000 | 335000 / 348000 | 983 / 954 |
+| 1024 | 20702000 / 31009000 | 1846000 / 1917000 | 980 / 977 |
+
+The 1024 chain's median gain is 11.2x and 16.2x in these runs. This
+is a constructed recursive-chain workload. The 16-edge second run does
+not meet a 900-win criterion; that shape is a nonregression control only.
+The semantic module passes all seven Cases, =MODULE-OK=, =HARNESS-OK=,
+final =OK= and exit 0.
+
+The final candidate also passes the main =just build= and =just check-policy=
+(37 selected modules, findings=0, errors=0). Existing index, BYODS,
+lattice and source-admission modules pass 32 Cases in total. All four
+modules include =MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0.
+
+Two final unchanged =just performance-scenario ascent-indexed-joins= runs
+pass 1000 samples each: p95=563/634 us against the original 2000 us gate,
+with semanticEquivalent=#t and exit 0. This is a local repeat of that
+scenario gate, not a matched speedup claim or complete SS suite closure.
+The earlier Core duration failures and other suite gates were not rerun.
+Build, policy and scenario logs are retained alongside the paired receipts.

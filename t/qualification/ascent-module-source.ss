@@ -4,7 +4,7 @@
 
 ;;; A reusable Gerbil module supplies the rule family. The caller's origin
 ;;; is an ordinary lexical Scheme value captured by the guard procedure.
-(import (only-in :gerbil-ascent/program/interface
+(import (only-in :gerbil-ascent/program/api
                  gerbil-ascent-relation gerbil-ascent-variable
                  gerbil-ascent-atom gerbil-ascent-guard
                  gerbil-ascent-rule gerbil-ascent-program))

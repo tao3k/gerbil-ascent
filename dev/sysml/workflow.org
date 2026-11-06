@@ -1,0 +1,306 @@
+#+TITLE: ASCENT design, proof and implementation workflow
+#+DATE: 2026-11-02
+#+STATUS: first DSL tranche implemented; source refinement and remaining inventory open
+
+* Authority and scope
+
+Org records decisions, alternatives, premises, evidence and remaining work.
+SysML records boundaries, allocation and executable architectural constraints.
+Lean owns universal semantic/representation laws. Quint owns interleavings,
+invalidation, cancellation and publication transitions. Existing Scheme owners
+implement the behavior; independent native checks establish correspondence.
+Matched performance experiments remain a separate admission requirement.
+
+Neither SysML validation nor Lean source rendering establishes whole Scheme
+source refinement. Fixtures declare assumptions; they do not observe callbacks,
+VM execution, allocation or the truth of their own evidence flags. A path to a
+theorem is a navigation link, not a certificate that its premises apply here.
+Do not automatically translate unrestricted SysML into Lean or generate a new
+Scheme evaluator. Restrict any generated region and prove/check its decoding
+and execution correspondence separately.
+
+Production =gerbil build= and DSL loading do not invoke these development tools.
+The workflow does not change the SDK, evaluator, cancellation points, fact
+budgets, provenance rules, concurrency configuration or performance gates.
+The declaration/API candidate is described separately below; it has its own
+unclosed native and source-refinement obligations.
+The existing [[file:matching-state.sysml][matching study]] and all its negative controls are retained.
+
+* Lifecycle and evidence
+
+| Stage | Required deliverable | Exit condition | Does not establish |
+|-------+----------------------+----------------+--------------------|
+| Inspect | Current owner, existing semantics, callers and tests | Baseline identities and counterexamples recorded | Proposed behavior is implemented |
+| Decide | Org decision and SysML allocation | Alternatives and observable compatibility effects reviewed | General semantic soundness |
+| Specify | Formal definitions and explicit assumptions | Independent reference meaning and representation relation stated | Actual decoder/VM satisfies assumptions |
+| Prove | Existing Lean/Quint owners extended as needed | Kernel-checked laws; bounded temporal checks with fault controls | Whole-source or timing correctness |
+| Implement | Changes to existing Scheme owner | Public semantics, ownership and failure behavior preserved or explicitly revised | New revision is qualified |
+| Refine | Source-to-model map and independent native oracle | Actual decoding, state transitions and publication obligations checked | Universal source closure from finite tests |
+| Measure | Same workload, limits and semantic coverage | Original time/allocation/resource gates pass | Unmeasured workloads improve |
+| Deliver | Reviewed exact revision and acceptance receipts | Required exact-head CI completed; gaps explicitly retained | Unrelated claims close |
+
+Each change must name the primary owner of every claim. Reuse an existing
+theorem/model where its premises match; do not create a second model merely
+to give both tools the same badge. A temporal model is optional when no new
+temporal question exists. Proof and implementation development can iterate;
+the acceptance boundary must still separate their claims.
+
+A receipt records the exact commit plus dirty inputs, dependency/tool identity,
+native artifact identity, command, limits, complete workload, natural exit,
+negative controls and unresolved obligations. A new source revision invalidates
+old source acceptance until applicability is checked. Do not overwrite failures,
+reinterpret timeout as a counterexample, widen gates or select favorable reruns.
+Missing cumulative allocation is unknown, never zero or inferred from live heap.
+
+* First implementation workstreams
+
+These are design contracts. The implementation candidate below is not yet
+admitted as a completed native/source-refined implementation.
+The model =development.sysml= allocates each question; =dsl-contracts.sysml=
+checks proposed permission, finite-height and diagnostic constraints.
+
+** DSL-ROLE: explicit relation and update ownership
+:PROPERTIES:
+:CUSTOM_ID: dsl-role
+:END:
+
+Inspected baseline: [[file:../../program/scheme-language.ss][relational-collect]] supplied every declared relation as a source handle;
+=relational-fragment= instead separates source/private handles. The existing
+[[file:../../program/scheme-session.ss][Session facade]] enforces those handles. This is an observable design difference,
+not evidence of a broken Session permission check.
+
+Proposed decision: explicit input, derived-only and mixed roles. Input permits
+external facts; derived-only permits rule heads; mixed permits both. An update
+additionally requires the admitted writable handle. Empty rows do not determine
+the role. Decide how existing declarations map before changing defaults; mixed
+relations must not silently lose their externally supplied supports.
+
+| Obligation | Existing owner/reference | Remaining work |
+|------------+--------------------------+----------------|
+| Preserve roles through lowering/composition | [[file:../../program/scheme-language.ss][DSL]], [[file:../../program/scheme-admit.ss][composition]] | Define role representation and preservation theorem; currently absent |
+| No foreign/private update authority | [[file:../../program/scheme-session.ss][source handles]], [[file:../../packages/proofs/lean/DescriptorScope.lean][descriptor scope]] | Scope theorem does not prove role permissions; establish concrete relation |
+| Failure preserves prior publication | [[file:../../packages/proofs/quint/SessionTransaction.qnt][transaction model]], [[file:../../program/session.ss][Session]] | Extend only if role changes add transitions; validate actual rejection/rollback |
+| Direct/fragment parity | [[file:../../t/qualification/scheme-library-contract-test.ss][library tests]], [[file:../../t/qualification/scheme-session-deletion-test.ss][update tests]] | Add explicit role parity, mixed support and illegal-update cases |
+
+Required negative controls: remove handle checking; accept a derived-only
+external update; allow a head on input-only relation; leak one fragment's
+private handle. Rejection must precede mutation. An accepted mixed relation
+must preserve native fresh-solve equality and complete provenance support.
+
+** DSL-DOMAIN: expose existing finite-domain capabilities
+:PROPERTIES:
+:CUSTOM_ID: dsl-domain
+:END:
+
+Inspected baseline: [[file:../../program/scheme-checked.ss][finite-source/finite-lattice constructors]] copy domains and rebuild membership
+checks. [[file:../../program/higher-order.ss][Typed descriptors]] have relation/arrow types, finite-height reasoning and
+an expansion budget. The ordinary relation/lattice macro lacks a direct domain
+form. Existing arithmetic can generate unbounded exact integers.
+
+Proposed decision: optional domain declarations lower to these existing
+constructors. Do not create another type system. Align the per-column domain
+representation with the typed API's current finite-universe representation
+explicitly; they are not automatically interchangeable. Validate initial,
+appended, replacement and derived rows. Reject rather than clamp violations.
+
+| Obligation | Existing owner/reference | Remaining work |
+|------------+--------------------------+----------------|
+| Finite-height stabilization | [[file:../../packages/proofs/lean/FiniteHeight.lean][bounded_rank_stabilizes]], [[file:../../packages/proofs/lean/FiniteOperators.lean][operator laws]] | Discharge bounded-rank/progress premises for the actual admitted representation |
+| Domain survives admission and updates | [[file:../../program/scheme-snapshot.ss][snapshot rebuild]], [[file:../../t/qualification/scheme-higher-order-test.ss][domain/rollback cases]] | Add macro-to-constructor equivalence and cross-entrypoint cases |
+| Budget exhaustion never publishes closure | [[file:../../t/qualification/scheme-closure-contract-test.ss][successor and lattice cases]], [[file:../../packages/proofs/quint/SessionPublication.qnt][publication model]] | Preserve exact statuses under the new macro form |
+
+Required controls: out-of-domain initial/derived/replacement rows, one-key
+unbounded max, unbounded successor, and a finite but underbudget computation.
+Finite height does not promise completion within a particular resource budget.
+
+** DSL-DIAGNOSTIC: source origin without semantic interference
+:PROPERTIES:
+:CUSTOM_ID: dsl-diagnostic
+:END:
+
+Inspected baseline: [[file:../../program/planning.ss][planner]] reports zero-based rule/body/head paths. [[file:../../program/scheme-admit.ss][admit/report]] mapped
+them to broad error codes plus explanatory exceptions. It returns no runnable
+admission on rejection. Macro expansion already rejects malformed syntax.
+
+Proposed decision: preserve source file/span and nested fragment origin through
+lowering. Keep machine-readable codes separate from prose. Metadata must not
+evaluate user expressions, force extra getters, change exception order or
+participate in relation identity, deduplication or provenance support keys.
+
+No existing theorem is claimed to prove diagnostic transport. Specify a
+source-origin erasure relation and prove unchanged accepted meaning/rejection
+for the covered descriptor fragment before claiming formal closure. Do not
+duplicate the scheduler in a new Quint model for this metadata-only question.
+Native tests must exercise macro-generated rules, repeated fragment instances,
+composed dependency cycles, malformed syntax and getter/exception ordering.
+
+* Remaining DSL design inventory
+
+| Requirement | Current owners | Next obligation |
+|-------------+----------------+-----------------|
+| DSL-ENTRY: host versus checked entrypoints | [[file:../../program/syntax.ss][ascent]], [[file:../../program/scheme-language.ss][relational DSL]], [[file:../../program/higher-order.ss][typed API]] | Document guarantee selection and cross-entrypoint equivalence only on their common subset |
+| DSL-OPERATOR: sealed scalar operations | [[file:../../program/scheme-checked.ss][closed constructors]], [[file:../../core/expression-plan.ss][ordered callbacks]] | Signature/domain/error metadata; prove any reordering preserves observable errors |
+| DSL-COMPOSE: private identities and imports | [[file:../../program/scheme-language.ss][fragment handles]], [[file:../../program/planning.ss][whole-program checks]] | Import/export domain, storage and role compatibility; no new namespace registry |
+| DSL-SHARE: safe matching reuse | [[file:matching-state.sysml][existing model]], [[file:../../core/positive-plan.ss][matcher]], [[file:../../core/positive-certificate.ss][checker]] | Actual descriptor/checker equivalence, mutable cache refinement and net benefit remain distinct |
+| DSL-LIFETIME: immutable analysis/owned execution | [[file:../../program/scheme-snapshot.ss][snapshot]], [[file:../../program/activation.ss][frames]], [[file:../../program/reuse.ss][reuse]] | Preserve live validation and callback order; measure complete declaration/Session cost |
+| DSL-RESULT: completion and explanation | [[file:../../program/scheme-query.ss][queries]], [[file:../../program/scheme-session.ss][Sessions]], [[file:../../docs/scheme-closure-contract.org][closure contract]] | No timeout-as-absence, bounded witness-as-all-provenance or Runtime-dependent rule meaning |
+
+* Executable checks and integration
+
+The existing =ascent-workbench= package owns the optional =design= development
+dependency group in [[file:../../workbench/pyproject.toml][pyproject.toml]], with =opensysml==0.10.1= locked in
+[[file:../../workbench/uv.lock][uv.lock]]. It is not a dependency of the production Python or Gerbil package.
+Installing only this group does not build/install ASCENT or its Rust extension.
+The [[https://runtime.opensysml.org/clients/python/][upstream Python client]] owns service discovery, checksum-verified binary download,
+private service startup and cleanup. The client and service must both be v0.10.1.
+Qualify upgrades explicitly; do not add a CLI wrapper or another service manager.
+
+#+begin_src sh
+uv sync --project workbench --only-group design --locked
+just check-design
+PYTHONPATH=workbench/src uv run --project workbench --only-group design --locked python -m unittest discover -s workbench/tests -p test_design.py
+# Existing formal and native gates; source changes require their own evidence.
+just check-lean-file FiniteHeight.lean
+just check-formal
+just test-file t/qualification/scheme-closure-contract-test.ss
+just test-file t/qualification/scheme-higher-order-test.ss
+just test-file t/qualification/scheme-library-contract-test.ss
+just test-file t/qualification/scheme-session-deletion-test.ss
+#+end_src
+
+=check-design= uses =Connection.parse_sources(strict=True, strict_conformance=True)=
+and =Model.validate_instance= directly. All 40 concrete fixtures remain:
+14 positive and 26 negative. Each parse/validation operation has a 30-second
+deadline using the supported macOS/Linux alarm facility. The upstream connection
+owns private-service cleanup; there is no local process/CLI orchestration layer.
+A negative must contain exactly its named violated assertion. Errors, undecided
+or bounded results, missing/duplicate/foreign assertions, wrong object/instance,
+inconsistent summary and timeout reject. Typed verdicts are saved as receipts;
+no CLI JSON is parsed. Logs are retained in unique ignored directories
+under =.cache/ascent/design-checks/=. Model/checker/document/dependency hashes must remain
+unchanged throughout. That receipt binds architectural inputs only, not the
+linked Scheme files, theorem applicability or remote CI. Existing matching
+fixtures remain included rather than being replaced by the new DSL fixtures.
+
+Lean commands must retain the locked LeanPoo Guard. Existing CI's formal,
+semantic and performance jobs remain their authoritative gates. The independent
+[[file:../../.github/workflows/design.yml][design workflow]] installs only the locked Python design dependency group and
+runs the verdict-handling tests and the same API check, without building Scheme
+or Rust. It retains failed receipts. Its five-minute job budget does not alter
+native test deadlines. Remote workflow acceptance requires its own CI run and
+is not claimed by local macOS checks.
+Do not run shared-prefix native compilation concurrently with semantic readers.
+
+* Review checklist for a Scheme change
+
+1. Select a requirement above and record current source/dependency identities.
+2. State observable behavior, changed semantics and rejected alternatives in Org.
+3. Update the allocated SysML contract and named positive/negative fixtures.
+4. State Lean/Quint premises and distinguish reused laws from new obligations.
+5. Modify existing Scheme owners and provide the concrete representation map.
+6. Run independent native oracle/fault controls, then the unchanged full gates.
+7. Measure complete workflow cost where a performance claim is made.
+8. Report each obligation separately as open, model-proved, bounded-tested or
+   source-refined with its actual evidence; never promote all from one badge.
+
+* Initial workflow qualification
+
+All 40 concrete model fixtures passed through the real Python API locally:
+14 positive objects and 26 named negative controls, including every existing
+matching fixture. The earlier shell prototype was removed at the user's request;
+its jq failure and subsequent checks remain historical receipts, not Python API
+acceptance. A sandbox-denied private listening socket also remains a failed
+receipt; the successful API run used permission to start the private service.
+No model assertion was relaxed.
+
+Seven Python test methods check the fixture inventory, positive/negative verdicts,
+missing/extra/duplicate/foreign assertions, undecided/error/bounded results,
+wrong failed assertions/false success, wrong objects/instances/summaries and a
+real alarm interrupt with handler restoration. The timeout test does not claim
+to simulate a stalled gRPC server or prove process-tree cleanup. These tests own
+verdict handling, not Scheme semantics. No new Lean theorem, Quint transition,
+DSL implementation, full native acceptance or performance benefit is claimed.
+
+* Checked DSL implementation candidate
+
+The 2026-11-02 candidate adds annotations to existing declarations:
+
+#+begin_src scheme
+(relational-program
+ (relation edge (from to) '((1 2))
+           (role input) (domain '((1 2 3) (1 2 3))))
+ (relation reach (from to) '()
+           (role derived) (domain '((1 2 3) (1 2 3))))
+ (rule (reach ?x ?y) (edge ?x ?y))
+ (limits 16 32 64))
+#+end_src
+
+Both annotation orders lower to existing finite-source/finite-lattice builders.
+An explicitly false domain rejects rather than disabling checking. Ordinary
+unannotated direct relations retain mixed semantics, including empty relations.
+Fragment source declarations retain mixed semantics by default; private
+declarations default to derived. Sources remain the only exported mutation
+capabilities. A derived role in a fragment's source group conflicts with that
+group's source-handle grant and is rejected at admission. No role is inferred
+from row emptiness. Checked admission and checked Session opening recheck roles.
+Trusted lower-level host evaluation is not given new checked-language guarantees.
+
+Rules retain detached reader locations for their head/body syntax. Admission
+reports expose =relational-diagnostic-origin= in addition to the existing path.
+The origin uses the native reader location representation; full source spans,
+macro expansion ancestry, detailed planner error taxonomy and actual dependency
+cycle paths remain open. New role violations have typed machine-readable codes.
+Existing planner error codes are preserved. No diagnostic callback executes
+inside the rule evaluator.
+
+[[file:../../packages/proofs/lean/DslDeclarations.lean][DslDeclarations]] proves permission, exact source-handle filtering/composition,
+domain membership and origin-erasure laws. Its stated representation premises
+remain obligations for Scheme; source rendering equality is not their proof.
+LeanPoo is selected by the authorized release tag =v0.1.2=, resolved to
+=b29ea0d9d2ffeed0c13b66794fc6d418fd5b0393=. The new laws and complete 180-job
+Lean library passed under the unchanged Guard budgets on that release.
+
+The new [[file:../../t/qualification/scheme-declaration-contract-test.ss][native discriminator]] is separate from the existing semantic suites;
+it does not replace or reduce them. The initial 14 new Cases passed through the standard
+native =just test-file= entry. That whole-library acceptance passed 177 modules
+and 1,478 Cases with 12 concurrent test VMs, each reporting one processor, in
+273 seconds under the unchanged 600-second limit. Full formal passed 81 positive,
+498 negative and 94 source-region checks. See [[file:acceptance.org][the acceptance receipt]] for separate
+source-refinement, performance and whole-library ASP gaps. The original local prefix lacked
+the pinned Yuanxu contracts module. Missing POO commit availability, dependency
+installation failures and macOS compiler-driver link failures are retained in
+=.cache/ascent/dsl-contracts/=. Gerbil dependency pins and SDK were unchanged;
+the separately authorized LeanPoo release selection is recorded above.
+
+The initial full formal run passed 81 positive checks and 498 negative controls
+but rejected the existing CI cache-input rendering: =init.ss= was missing from
+the workflow's compiler-input list. That existing Lean contract remains intact;
+the workflow now includes =init.ss= while retaining the other task's removal
+of the deleted =build-modules.ss=. This corrects an actual build-root identity
+gap without changing budgets, scheduling or model obligations. The failed run
+is retained separately from the post-fix full formal run.
+
+* Ordered traversal and policy follow-up
+
+The 2026-11-03 follow-up extracts the existing host-clause traversal into
+[[file:../../program/rule-body.ss][rule-body.ss]] without changing its recursive body. The engine remains the
+owner of mutable state and scheduling. Native delta-position, callback-order
+and aggregate-exception controls extend the declaration Suite to 17 Cases.
+Complete semantics pass 177 modules / 1,481 Cases with 12 single-processor VMs.
+This historical pass left 76 warnings. The subsequent source repair reaches
+zero findings; current cohort evidence and unclosed claims are recorded below.
+See [[file:acceptance.org][the acceptance record]] for exact scope, source identities and formal refresh.
+The baseline questions above remain historical design inputs; implemented
+annotations do not imply all their concrete refinement premises are discharged.
+
+* Current cohort update (2026-11-03)
+
+The current [[file:acceptance.org][acceptance record]] supersedes historical warning counts and local Suite
+totals above. The finite role kernel is generated from the same decision table
+proved by =DslDeclarations.compile_cases_exact= and imported by production
+constructors. Quint mutation controls and exact source comparisons cover that
+boundary. Macro decoding, mutable state and host execution remain separately
+open refinement obligations. Current full semantics cover 179 modules and
+1,487 Cases with 12 single-processor VMs. The refactor retires the old artifact
+API and its internal Suite; see the explicit coverage boundary in the report.
+Unrelated newly added prefix experiments remain outside the publication cohort.

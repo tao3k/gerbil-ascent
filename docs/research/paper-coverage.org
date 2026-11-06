@@ -1,0 +1,85 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: README paper coverage and engineering acceptance audit
+#+DATE: 2026-10-10
+
+* Reading and implementation are separate statuses
+
+This inventory audits all 27 papers named in README against repository notes
+and implementation owners. A bibliography entry or screening paragraph is not
+a dedicated method/artifact study. A dedicated reading is not benchmark
+replication. Native engineering qualification is not universal native extraction.
+README now exposes this inventory instead of using one “Papers studied” label
+for all these states.
+
+| README paper | Repository reading | Current transfer and remaining work |
+|--------------+--------------------+-------------------------------------|
+| LLM-MatLogic | [[file:agent-inference/scoped-witness.org][note]] | Proof-guided total-hop exclusion, unified bounded scoped requests, shortest predecessors, group OR/AND and final traces share Scheme/Lean/Quint verification; Wikidata exclusion and gold/proposal grading implemented; general typed evidence joins and raw model/KGQA benchmark pending |
+| DatalogBench | [[file:agent-inference/candidate-feedback.org][note]] | Dedicated reading; finite held-out graph/mutant discriminator implemented; model/Souffle corpus pending |
+| IRIS | [[file:agent-inference/taint-paths.org][note]] | Dedicated reading added; finite sanitizer-path Program, Lean and Session checks |
+| BRINK | [[file:agent-inference/withholding.org][note]] | Dedicated method reading; whole-batch finite withholding implemented; upstream mined-rule/KG-RAG experiments pending |
+| Datafun | [[file:scheme-dsl/functional-fixed-points.org][note]] | Dedicated reading; checked finite operators/fixed-point laws |
+| Higher-order seminaive evaluation | [[file:scheme-dsl/higher-order-change.org][note]] | Dedicated reading; higher-order derivative execution remains a research seam |
+| BYODS | [[file:scheme-dsl/provider-concretization.org][note]] | Built-in Provider/frontier/shared-index engineering baseline qualified; full paper workloads separate |
+| Mono Types | [[file:scheme-dsl/monotone-containers.org][note]] | Dedicated reading; monotone observation/finite-domain lowering constraints |
+| Ascent | [[file:scheme-dsl/rule-planning.org][note]] | Dedicated reading; current native/Rust comparison baseline |
+| Flix language-integrated Datalog | [[file:scheme-dsl/program-lifecycle.org][note]] | Dedicated reading; Program/private-name/solve boundaries |
+| FlowLog | [[file:scheme-dsl/recursive-physical-planning.org][note]] | Dedicated reading; recursive physical-plan workload comparison pending |
+| Scallop | [[file:agent-inference/weighted-provenance.org][note]] | Dedicated reading; weighted/differentiable execution unimplemented |
+| Souffle | [[file:scheme-dsl/index-planning.org][note]] | Dedicated synthesis/index-selection method reading; canonical native chain planning implemented; RAM/C++ and full workloads pending |
+| Differential dataflow | [[file:scheme-dsl/differential-updates.org][note]] | Dedicated signed-change/partial-order semantics reading; trace execution and compaction remain open |
+| DBSP | [[file:scheme-dsl/incremental-view-maintenance.org][note]] | Dedicated reading; derivative circuit implementation pending |
+| DRedc | [[file:scheme-dsl/deletion-rederivation.org][note]] | Dedicated reading; grounded positive DRed, bounded deletion-only support compaction and native component rederivation; count-based DRedc pending |
+| egglog | [[file:../related-work-matrix.org][note]] | Matrix only; equality saturation/congruence semantics unimplemented |
+| Formulog | [[file:../related-work-matrix.org][note]] | Matrix only; SMT terms/solver boundary unimplemented |
+| microKanren | [[file:scheme-dsl/relational-kernel.org][note]] | Dedicated reading; separate search semantics; no stream-search executor |
+| First-class Datalog constraints | [[file:scheme-dsl/fragment-composition.org][note]] | Dedicated reading; composition/stratification transfer |
+| First-class facts | [[file:agent-inference/2026-logic-ai-screen.org][note]] | Screen only; nested fact identity/domain contract pending |
+| Provenance semirings | [[file:agent-inference/provenance-annotations.org][note]] | Dedicated method reading; bounded all-tree natural counts implemented; symbolic polynomial/power-series annotations pending |
+| Revisiting semiring provenance | [[file:agent-inference/provenance-annotations.org][note]] | Dedicated semantics comparison; all-tree choice and recursive refusal tested; alternative semantics unimplemented |
+| PUG | [[file:agent-inference/why-not-explanations.org][note]] | Dedicated reading; bounded Why/Why-Not transfer; full PUG replication pending |
+| Large-scale Datalog provenance | [[file:agent-inference/proof-height.org][note]] | Dedicated minimum-height/fragment method reading; bounded maintained-support min/max heights, Lean certificate characterization and Quint fault controls implemented; native seminaive annotations, fragments and paper workloads remain open |
+| Dedalus | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; dedicated temporal/distributed semantics study pending |
+| Structural-model causes | [[file:../temporal-causality-module-design.org][note]] | Temporal overview; counterfactual cause model unimplemented |
+
+* BYODS baseline and replication
+
+The built-in Provider/frontier/shared-index mainline has Scheme implementations,
+independent native/Rust controls, Lean laws and Quint protocols. Its current
+engineering regression gates passed in revision =92475f6=, including all three
+oracle jobs and Scheme performance/source/native checks
+([[https://github.com/tao3k/gerbil-ascent/actions/runs/37915327136][completed CI]]). Preserve this accepted baseline rather than repeatedly treating
+its mechanisms as absent implementation. Later revisions require their own CI.
+
+Full Steensgaard input/partition correspondence is accepted. Complete upstream
+Polonius reference observations and native complete-rule fixtures are accepted;
+the full =clap-rs= native Scheme application comparison remains open. PageRank,
+LLVM/index-sharing application replication, matched whole-application benefits
+and universal native extraction remain distinct research work. The feature
+[[file:../features/steensgaard/acceptance.org][Steensgaard]] and [[file:../features/polonius/acceptance.org][Polonius]] pages specify those source-bound limits.
+
+* Connected work and remaining head-paper gates
+
+IRIS supplies finite path specifications; candidate execution feedback supplies frozen-proposal full-row
+feedback; BRINK adds whole-batch incomplete-source construction and preserved
+original answers. Scheme snapshot/receipt owners connect these transfers. Lean
+states semantic laws; Quint states completion, binding and publication premises.
+The dedicated feature pages record their executable native controls.
+
+scoped witness execution now has an executable gold/proposal comparison gate in the same feedback
+owner: both receipts independently bind and complete against one source, and
+full query identity precedes exact set differences. Frozen scope controls,
+Lean premises and Quint fault exploration qualify this finite transfer.
+One shared corpus now links the current Quint transition evaluator, a
+kernel-checked executable Lean grader and production Scheme receipt replay,
+with automatic regeneration and comparison in CI.
+The scoped-witness Program now addresses witness loss before projection with
+a separate 256-input three-language corpus, general Lean scope laws and four
+named filtering/evidence faults. Its two-hop scope and independent direct
+branch are explicit; arbitrary EEC plans and matrix propagation remain open.
+
+Remaining head-paper experiments include scoped witness execution raw model proposal/specification
+comparison and BRINK released mined-rule groundings with versioned real-KG
+answers and retrieval metrics. candidate execution feedback model synthesis/Souffle corpus and IRIS Java
+extraction/CodeQL/CWE-Bench-Java remain separate. The existing Wikidata scoped exclusion gold executor
+is a finite real-KG baseline, not closure of those model experiments.

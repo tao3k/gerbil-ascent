@@ -1,0 +1,658 @@
+;;-*- Gerbil -*-
+;; Prototype Object Orientation Functionally, in Gerbil Scheme.
+;;
+;; Next version of poo, with multiple inheritance and a budding meta-object protocol.
+;; See doc/poo.md for documentation
+;; TODO: see Future Features and the Internals TODO sections in document above.
+
+;; Reexport renamed version of core things we shadow
+(export #t @object? @make-object
+        (for-syntax %make-object-slot-self-parameter
+                    %make-object-slot-identifier-expander))
+
+(import
+  (prefix-in (only-in Runtime object? make-object) @) ;; Rename them before we shadow them
+  (for-syntax :std/iter
+              (only-in :std/list/list push!)
+              (only-in :std/list/list-builder with-list-builder))
+  (only-in :std/error deferror-class Exception)
+  (only-in :std/hash/misc hash->list/sort hash-ref/default hash-ensure-modify!)
+  :std/iter
+  (only-in :std/list/list-builder with-list-builder)
+  (only-in :std/list/list flatten)
+  (only-in :std/string/symbol symbol<?)
+  :std/stxparam
+  (only-in :std/values first-value)
+  (only-in :gerbil/runtime/c3 c4-linearize)
+  (only-in ./support/base λ let-id-rule defonce awhen))
+
+;; A slot list is still exposed as an immutable-in-practice snapshot.  Writes
+;; accumulate behind that view and are materialized only when a reader asks for
+;; the list, so repeated .putslot! calls do not repeatedly copy its prefix.
+(defstruct $slot-store (snapshot pending values dirty?))
+
+(def (make-slot-store snapshot)
+  (make-$slot-store snapshot '() #f #f))
+
+(def ($slot-store-put! store name value)
+  (unless ($slot-store-values store)
+    (let (values (make-hash-table-symbolic))
+      (for (([key . old-value] ($slot-store-snapshot store)))
+        (unless (hash-key? values key)
+          (hash-put! values key old-value)))
+      (set! ($slot-store-values store) values)))
+  (unless (hash-key? ($slot-store-values store) name)
+    (set! ($slot-store-pending store)
+          (cons name ($slot-store-pending store))))
+  (hash-put! ($slot-store-values store) name value)
+  (set! ($slot-store-dirty? store) #t))
+
+(def ($slot-store-list store)
+  (if (not ($slot-store-dirty? store))
+    ($slot-store-snapshot store)
+    (let ((seen (make-hash-table-symbolic))
+          (values ($slot-store-values store)))
+      (def result
+        (with-list-builder (add)
+          (for (([name . old-value] ($slot-store-snapshot store)))
+            (if (hash-key? seen name)
+              (add (cons name old-value))
+              (begin
+                (hash-put! seen name #t)
+                (add (cons name (hash-ref values name))))))
+          (for (name (reverse ($slot-store-pending store)))
+            (add (cons name (hash-ref values name))))))
+      (set! ($slot-store-snapshot store) result)
+      (set! ($slot-store-pending store) '())
+      (set! ($slot-store-values store) #f)
+      (set! ($slot-store-dirty? store) #f)
+      result)))
+
+;; TODO: formalize (Object A S D) and the type conditions under which an object is instantiatable?
+(defstruct object ;; = (Object A)
+  (supers ;; : (Listof (Object ?))
+   %slots ;; : direct slot method list, or $slot-store after mutation
+   %defaults ;; : direct slot default list, or $slot-store after mutation
+   %instance ;; : (Table (A_ k) <- k:Sym) ; hash table from slot keys to slot values
+   %precedence-list ;; : (Listof (Object ?)) ; linearization of the supers DAG
+   %slot-funs ;; : (Table (Fun (A_ k)) <- k:Symbol) ; functions to compute slots
+   %all-slots) ;; : (Listof Symbol) ; definition order for all slot keys
+  constructor: :init!)
+(defmethod {:init! object}
+  (lambda (self ;; : (Object A)
+      supers: (supers '()) ;; : (Listof Objects) ;; Actually, can be a pair-tree of Object's and nulls.
+      slots: (slots '()) ;; : (Listof (Pair Symbol (SlotSpec ? ?)))
+      defaults: (defaults '())) ;; : (Listof (Pair Symbol ?))
+    (set! (object-supers self) (flatten supers))
+    (set! (object-%slots self) slots)
+    (set! (object-%defaults self) defaults)
+    (set! (object-%instance self) #f)
+    (set! (object-%precedence-list self) #f)
+    (set! (object-%slot-funs self) #f)
+    (set! (object-%all-slots self) #f)))
+
+(def (object-slots self)
+  (let (storage (object-%slots self))
+    (if ($slot-store? storage) ($slot-store-list storage) storage)))
+
+(def (object-defaults self)
+  (let (storage (object-%defaults self))
+    (if ($slot-store? storage) ($slot-store-list storage) storage)))
+
+(def (object-slots-set! self slots)
+  (set! (object-%slots self) slots))
+
+(def (object-defaults-set! self defaults)
+  (set! (object-%defaults self) defaults))
+
+(def (instantiate-object! self)
+  (if (object? self)
+    (unless (object-%instance self)
+      (set! (object-%instance self) (make-hash-table-symbolic))
+      (compute-precedence-list! self)
+      (compute-slot-funs! self)
+      #;(check-assertions! self)) ;; TODO: allow for instantiation-time assertions
+    (error "Not an object" self)))
+
+(def (uninstantiate-object! self)
+  (when (object-%instance self)
+    (set! (object-%instance self) #f)
+    (set! (object-%precedence-list self) #f)
+    (set! (object-%slot-funs self) #f)
+    (set! (object-%all-slots self) #f)))
+
+(defclass (InvalidObject Exception) (slots) transparent: #t)
+(def (invalid-object-summary self)
+  (InvalidObject slots: (map car (append (object-slots self) (object-defaults self)))))
+
+(def (compute-precedence-list! self (heads '()))
+  ;; A cached result does not need an invocation-local cycle guard.
+  ;; Preserve for-each's rejection of malformed heads, even on a cache hit.
+  (or (and (list? heads) (object-%precedence-list self))
+      (let ()
+        ;; Preserve the ordered heads for diagnostics while keeping the cycle guard
+        ;; as private implementation state at this abstraction boundary.
+        (def active (make-hash-table-eq))
+        (for-each (lambda (head) (hash-put! active head #t)) heads)
+        (let compute ((object self) (heads heads))
+          (cond
+           ((object-%precedence-list object))
+           ((hash-key? active object)
+            (error "Circular precedence graph" (member object heads)))
+           (else
+            (hash-put! active object #t)
+            (let (precedence-list
+                  (first-value
+                   (c4-linearize
+                    [object] (object-supers object)
+                    get-precedence-list:
+                    (lambda (super) (compute super [object . heads]))
+                    eq: eq?
+                    get-name: invalid-object-summary)))
+              (hash-remove! active object)
+              (set! (object-%precedence-list object) precedence-list)
+              precedence-list)))))))
+
+(def (compute-slot-funs! self)
+  (def h (make-hash-table-symbolic))
+  (def supers (reverse (object-%precedence-list self)))
+  ;; Handle defaults
+  (for (super supers)
+    (for (([slot . value] (object-defaults super)))
+      (hash-put! h slot (lambda _ value))))
+  ;; Handle methods
+  (for (super supers)
+    (for (([slot . spec] (object-slots super)))
+      (hash-ensure-modify! h slot
+                           (lambda () (cut no-applicable-method self slot))
+                           (cut apply-slot-spec self spec <>))))
+  (set! (object-%slot-funs self) h))
+
+;; Given a list of list of keys, in precedence order,
+;; return a list of keys from containing from left to right
+;; all the keys from tail to head of the precedence list, skipping repetitions.
+(def (merge-super-slots super-slots)
+  (def h (make-hash-table-symbolic))
+  (with-list-builder (c)
+    (for-each (lambda (l)
+    (for-each (lambda (k)
+      (unless (hash-key? h k)
+        (hash-put! h k #t) (c k)))
+    l)) (reverse super-slots))))
+
+(defstruct $slot-spec () transparent: #t) ;; = (SlotSpec A k)
+(defstruct ($constant-slot-spec $slot-spec) (value) transparent: #t) ;; constant value
+(defstruct ($thunk-slot-spec $slot-spec) (thunk) transparent: #t) ;; thunk
+(defstruct ($self-slot-spec $slot-spec) (fun) transparent: #t) ;; fun to be passed self as argument, not super
+(defstruct ($computed-slot-spec $slot-spec) (fun) transparent: #t) ;; fun to be passed self and superfun as arguments
+
+(def (apply-slot-spec self spec superfun)
+  (match spec
+    (($constant-slot-spec val) (lambda _ val))
+    (($thunk-slot-spec fun) fun)
+    (($self-slot-spec fun) (cut fun self))
+    (($computed-slot-spec fun) (cut fun self superfun))))
+
+(def (object-instance self)
+  (instantiate-object! self)
+  (object-%instance self))
+
+(def (.ref self slot)
+  (def instance (object-instance self))
+  ;; Keep the cached path to one V19 runtime hash lookup without allocating
+  ;; the cache-miss thunk required by hash-ensure-ref.
+  (def value (hash-ref instance slot absent-value))
+  (if (eq? value absent-value)
+    (let (value ((hash-ref/default (object-%slot-funs self) slot
+                                   (cut cut no-applicable-method self slot))))
+      (hash-put! instance slot value)
+      value)
+    value))
+
+;; Get an existing cached slot value from an object
+(def (.ref/cached self slot (default false))
+  (hash-ref/default (object-instance self) slot default))
+
+(defclass (NoApplicableMethod Exception) (self slot) transparent: #t)
+
+;; Prototype to put at the end of the list, to handle
+;; undefined-prototype-behavior a bit better.
+;; Should it send a special message in that case?
+(def (no-applicable-method self slot)
+  (def nam (and (not (eq? slot 'no-applicable-method))
+                (with-catch false (cut .@ self no-applicable-method))))
+  (if nam (nam self slot) (raise (NoApplicableMethod self: self slot: slot))))
+
+;; : (Object A) <- (IndexedList ? ((Pair s (A s)) <- s:Symbol)) \
+;;     supers: ? (ConsTreeOf (Object ?)) defaults: ? (Table ? Symbol)
+(def (object<-alist a supers: (supers '()) defaults: (defaults '()))
+  (make-object slots: (for/collect (([k . v] a)) (cons k ($constant-slot-spec v)))
+               supers: supers defaults: defaults))
+
+(def (object<-hash h supers: (supers '()) defaults: (defaults '()))
+  (object<-alist (hash->list/sort h symbol<?) supers: supers defaults: defaults))
+
+(def (object<-fun f keys: (keys '()) supers: (supers '()) defaults: (defaults '()))
+  (make-object slots: (map (lambda (k) (cons k ($thunk-slot-spec (cut f k)))) keys)
+               supers: supers defaults: defaults))
+
+(def (.mix slots: (slots '()) defaults: (defaults '()) . supers)
+  (make-object supers: supers slots: slots defaults: defaults))
+(def (.extend self defaults: (defaults '()) . slots)
+  (make-object slots: slots supers: [self] defaults: defaults))
+(def (.+ base override)
+  (make-object slots: (object-slots override)
+               supers: [(object-supers override)... base] defaults: (object-defaults override)))
+
+;; : Bool <- (Object _) Symbol
+(def (.slot? self slot)
+  (instantiate-object! self)
+  (hash-key? (object-%slot-funs self) slot))
+
+(defrules .has? ()
+  ((_ x) #t)
+  ((_ x slot) (.slot? x 'slot))
+  ((_ x slot1 slot2 slot3 ...) (and (.has? x slot1) (.has? x slot2 slot3 ...))))
+
+;; : (Listof Symbol) <- (Object _)
+(def (.all-slots self)
+  (instantiate-object! self)
+  (or (object-%all-slots self)
+      (let (esl (merge-super-slots
+                 (map (lambda (super) (map car (append (object-slots super) (object-defaults super))))
+                      (object-%precedence-list self))))
+        (set! (object-%all-slots self) esl)
+        esl)))
+
+;; : Unit <- (Object A) (Fun _ <- s:Symbol (A s))
+(def (.for-each! self fun)
+  (for-each (lambda (slot) (fun slot (.ref self slot))) (.all-slots self)))
+
+;; : (Listof Symbol) <- (Object _)
+(def (.all-slots/sort object) (list-sort symbol<? (.all-slots object)))
+
+;; : (Listof (Pair s:Symbol (A s))) <- (Object A)
+(def (.alist self)
+  (map (λ (slot) (cons slot (.ref self slot))) (.all-slots self)))
+
+;; : (Listof (Pair s:Symbol (A s))) <- (Object A)
+(def (.alist/sort self)
+  (map (λ (slot) (cons slot (.ref self slot))) (.all-slots/sort self)))
+
+;; Force the lazy computation of all slots in an object
+;; : (Object A) <- (Object A)
+(def (force-object self) (for-each (cut .ref self <>) (.all-slots self)) self)
+
+;; : (Table (A s) <- s:Symbol) <- (Object A)
+(def (hash<-object self)
+  (object-%instance (force-object self)))
+
+;; For (? test :: proc => pattern),
+;;   test = (o?/slots ks)
+;;   proc = (.refs/slots ks)
+;; : Bool <- (Object _) <- (Listof Symbol)
+(def ((o?/slots slots) o) (and (object? o) (andmap (cut .slot? o <>) slots)))
+;; : (IndexedList ss A) <- (Object A) <- ss:(Listof Symbol)
+(def ((.refs/slots slots) o) (map (cut .ref o <>) slots))
+
+;; the ctx argument exists for macro-scope purposes
+;; TODO: use a syntax-parameter for self instead of the ctx argument?
+(defrules .o/ctx ()
+  ((_ ctx (:: self) slot-spec ...)
+   (object/slots ctx self [] () slot-spec ...))
+  ((_ ctx (:: self super slots ...) slot-spec ...)
+   (object/slots ctx self super (slots ...) slot-spec ...))
+  ((_ ctx () slot-spec ...)
+   (object/slots ctx self [] () slot-spec ...))
+  ((_ ctx slot-spec ...)
+   (object/slots ctx self [] () slot-spec ...)))
+
+(begin-syntax
+  ;; TODO: is there a better option than (stx-car stx) to introduce correct identifier scope?
+  ;; the stx argument is the original syntax #'(.o args ...) or #'(@method args ...)
+  (def (unkeywordify-syntax ctx k)
+    (datum->syntax (stx-car ctx)
+                   (string->symbol (keyword->string (syntax->datum k)))))
+
+  ;; A NormalizedSlotSpec is one of:
+  ;;  - (slot-name value-expr)                           ; ignore parent, override
+  ;;  - (slot-name => function-expr extra-arg-expr ...)  ; invoke parent, pass into function
+  ;;  - (slot-name (inherited-computation) value-expr)   ; lazy reference to parent
+  ;;  - (slot-name)                                      ; same-named var from surrounding scope
+  ;;  - (slot-name =>.+ object-expr)                     ; override parent with a mixin
+  ;;  - (slot-name ?: default-expr)                      ; default for the slot
+  ;; Interpretation according to `doc/poo.md` section `POO Definition Syntax`
+
+  (def (normalize-slot-specs ctx specs)
+    (def methods (make-hash-table-symbolic))
+    (def defaults (make-hash-table-symbolic))
+    (def defaults-list '())
+    (def (d x) (push! x defaults-list))
+    (def slot-methods
+      (with-list-builder (c) (%normalize-slot-specs ctx specs methods defaults c d)))
+    [slot-methods (reverse defaults-list)])
+
+  (def (%normalize-slot-specs ctx specs methods defaults c d)
+    (def (loop more) (%normalize-slot-specs ctx more methods defaults c d))
+    (syntax-case specs ()
+      (() (void))
+      ((arg . more)
+       (let ((e (syntax-e #'arg)))
+         (cond
+          ((pair? e) (%normalize-slot-spec ctx #'arg methods defaults c d) (loop #'more))
+          ((symbol? e) (%normalize-slot-spec ctx #'(arg) methods defaults c d) (loop #'more))
+          ((keyword? e) (%normalize-named-slot-specs
+                         ctx (unkeywordify-syntax ctx #'arg) #'more methods defaults c d))
+          (else (raise-syntax-error #f "bad slot spec" #'arg ctx)))))))
+
+  (def (%normalize-slot-spec ctx spec methods defaults c d)
+    (def (do-method name more)
+      (def sym (syntax-e name))
+      (unless (symbol? sym) (raise-syntax-error #f "Slot name not a symbol" ctx name))
+      (if (hash-key? methods sym)
+        (raise-syntax-error #f "Multiple slot methods specified" name ctx)
+        (hash-put! methods sym #t))
+      (c [name . more]))
+    (def (do-defaults name value)
+      (def sym (syntax-e name))
+      (unless (symbol? sym) (raise-syntax-error #f "Slot name not a symbol" ctx name))
+      (if (hash-key? defaults sym)
+        (raise-syntax-error #f "Multiple slot defaults specified" name ctx)
+        (hash-put! defaults sym #f))
+      (d [name value]))
+    (syntax-case spec (?)
+      ((name value) (do-method #'name #'(value)))
+      ((name ? value) (do-defaults #'name #'value))
+      ((name ? . more) (raise-syntax-error #f "Invalid slot default specified" ctx #'name))
+      ((name . more) (do-method #'name #'more))))
+
+  (def (%normalize-named-slot-specs ctx name specs methods defaults c d)
+    (def (loop spec more)
+      (%normalize-slot-spec ctx spec methods defaults c d)
+      (%normalize-slot-specs ctx more methods defaults c d))
+    (with-syntax ((name name))
+      (syntax-case specs (=> =>.+ ?)
+        ((=> value-spec . more) (loop #'(name => value-spec) #'more))
+        ((=>.+ value-spec . more) (loop #'(name =>.+ value-spec) #'more))
+        ((? value-spec . more) (loop #'(name ? value-spec) #'more))
+        ((value-spec . more) (loop #'(name value-spec) #'more))
+        (() (raise-syntax-error #f "missing value after slot name" #'name (syntax->datum #'name) ctx (syntax->datum ctx))))))
+
+  (def (normalize-slot-specs-for-match ctx specs)
+    (with ([slot-methods defaults] (normalize-slot-specs ctx specs))
+      (unless (null? defaults) (raise-syntax-error #f "? not allowed in patterns" ctx))
+      (for/collect ((s slot-methods))
+        (syntax-case s (=> =>.+ ?)
+          ((slot form) #'(slot form))
+          ((slot) #'(slot slot))
+          ((slot ? . _) (raise-syntax-error #f "? not allowed in patterns" ctx))
+          ((slot => . _) (raise-syntax-error #f "=> not allowed in patterns" ctx))
+          ((slot =>.+ . _) (raise-syntax-error #f "=>.+ not allowed in patterns" ctx))
+          ((slot (next-method) form) (raise-syntax-error #f "(inherited-computation) not allowed in patterns" ctx)))))))
+
+;; A prototype may name the same slot in its inherited, default, and direct
+;; declarations.  Syntax bindings only need one entry for identifiers that
+;; denote the same lexical slot.
+(begin-syntax
+  (def (%make-object-slot-self-parameter)
+    (make-syntax-parameter key: (gensym 'slot-self) default: #f))
+
+  (def (%make-object-slot-identifier-expander self-parameter slot ref)
+    (lambda (stx)
+      (let (self (syntax-parameter-value self-parameter))
+        (unless self
+          (raise-syntax-error #f "slot reference outside object method scope" stx))
+        (with-syntax ((self self) (slot slot) (ref ref))
+          (if (identifier? stx)
+            #'(ref self 'slot)
+            (syntax-case stx ()
+              ((_ . args) #'((ref self 'slot) . args))))))))
+
+  (def (deduplicate-slot-identifiers slots)
+    (let loop ((rest (syntax->list slots)) (seen []) (result []))
+      (match rest
+        ([] (reverse result))
+        ([slot . tail]
+         (if (find (cut bound-identifier=? slot <>) seen)
+           (loop tail seen result)
+           (loop tail [slot . seen] [slot . result]))))))
+
+  (def (prepare-shared-slot-specs specs)
+    (let loop ((rest specs) (bindings []) (result []))
+      (match rest
+        ([] [(reverse bindings) (reverse result)])
+        ([spec . tail]
+         (syntax-case spec ()
+           ((slot)
+            (with-syntax ((value (genident 'slot-value)))
+              (loop tail
+                    [#'(value slot) . bindings]
+                    [#'(slot lexical-slot-value value) . result])))
+           (_ (loop tail bindings [spec . result]))))))))
+
+;; the ctx argument exists for macro-scope purposes
+(defsyntax (object/slots stx)
+  (syntax-case stx ()
+    ((_ ctx self super (slots ...) . slot-specs)
+     (let* ((normalized (normalize-slot-specs #'ctx #'slot-specs))
+            (slot-methods (car normalized))
+            (defaults (cadr normalized))
+            (prepared (prepare-shared-slot-specs slot-methods)))
+       (with-syntax ((((slot spec ...) ...) slot-methods)
+                     (((default-slot . default-value) ...) defaults)
+                     (((constant-id constant-value) ...) (car prepared))
+                     (((prepared-slot prepared-spec ...) ...) (cadr prepared)))
+         #'(let ((constant-id constant-value) ...)
+             (object/init self super (slots ... default-slot ... slot ...)
+                          ((default-slot . default-value) ...)
+                          (prepared-slot prepared-spec ...) ...)))))))
+
+(defrule (object/defaults (default-slot default-value) ...)
+  (list (cons 'default-slot default-value) ...))
+
+(defrule (object/init self super slots ((default-slot default-value) ...) (slot slotspec ...) ...)
+  (make-object
+   supers: super
+   slots: (%with-shared-slot-bindings slots (slot-self)
+           (list (cons 'slot (object/slot-spec %with-shared-slots slot-self self slots slot slotspec ...)) ...))
+   defaults: (object/defaults (default-slot default-value) ...)))
+
+(defrules object/slot-spec (=> =>.+ lexical-slot-value)
+  ((_ scope slot-self self slots slot lexical-slot-value value)
+   ($constant-slot-spec value))
+  ((_ scope slot-self self slots slot form)
+   ($self-slot-spec (lambda (self)
+    (scope slot-self slots self form))))
+  ((_ scope slot-self self slots slot => form args ...)
+   ($computed-slot-spec (lambda (self superfun)
+    (scope slot-self slots self (form (superfun) args ...)))))
+  ((_ scope slot-self self slots slot =>.+ args ...)
+   (object/slot-spec scope slot-self self slots slot => .+ args ...))
+  ((_ scope slot-self self slots slot (next-method) form)
+   ($computed-slot-spec (lambda (self superfun)
+     (defonce (next-method) (superfun))
+     (scope slot-self slots self form))))
+  ((_ scope slot-self self slots slot)
+   ($constant-slot-spec slot)))
+
+(defsyntax (%with-slots stx)
+  (syntax-case stx ()
+    ((_ (slots ...) self body ...)
+     (with-syntax (((slot ...) (deduplicate-slot-identifiers #'(slots ...))))
+       #'(let-id-rule ((slot (.@ self slot)) ...) body ...)))))
+
+(defsyntax (%with-shared-slot-bindings stx)
+  (syntax-case stx ()
+    ((_ (slots ...) (slot-self) body ...)
+     (let* ((slot-self-id (genident 'slot-self))
+            (body (stx-substitute [[#'slot-self . slot-self-id]]
+                                  #'(begin body ...))))
+       (with-syntax (((slot ...) (deduplicate-slot-identifiers #'(slots ...)))
+                     (slot-self slot-self-id)
+                     (body body))
+         #'(let-syntax ((slot-self (%make-object-slot-self-parameter)))
+             (let-syntax ((slot
+                           (%make-object-slot-identifier-expander
+                            (quote-syntax slot-self)
+                            (quote-syntax slot)
+                            (quote-syntax .ref))) ...)
+               body)))))))
+
+(defrule (%with-shared-slots slot-self _ self body ...)
+  (syntax-parameterize ((slot-self (quote-syntax self))) body ...))
+
+(defrule (%with-direct-slots _ slots self body ...)
+  (%with-slots slots self body ...))
+
+(defrules with-slots ()
+  ((_ () self body ...) (begin body ...))
+  ((_ (slots ...) self body ...) (let (object self) (%with-slots (slots ...) object body ...))))
+
+(defrule (def-slots (slot ...) self)
+  (begin
+    (def object self)
+    (defvalues (slot ...) (values (.@ object slot) ...))))
+
+;; TODO: have it called with-slots in both cases, but autodetect
+;; that the first argument is a keyword or string?
+(defsyntax (with-prefixed-slots input)
+  (let (stx (syntax-local-introduce input))
+    (syntax-local-introduce
+     (syntax-case stx ()
+       ((_ (prefix slot ...) self body ...)
+        #'(with-prefixed-slots prefix (prefix slot ...) self body ...))
+       ((_ ctx (prefix) self body ...) #'(begin body ...))
+       ((_ ctx (prefix slot slots ...) self body ...)
+        (with-syntax ((var (stx-identifier #'ctx #'prefix #'slot)))
+          #'(let-id-rule (var (.@ self slot))
+              (with-prefixed-slots ctx (prefix slots ...) self body ...))))))))
+
+(defsyntax (def-prefixed-slots input)
+  (let (stx (syntax-local-introduce input))
+    (syntax-local-introduce
+     (syntax-case stx ()
+       ((_ (prefix slot ...) self)
+        #'(def-prefixed-slots prefix (prefix slot ...) self))
+       ((_ ctx (prefix) self) #'(void))
+       ((_ ctx (prefix slot slots ...) self)
+        (with-syntax ((var (stx-identifier #'ctx #'prefix #'slot)))
+          #'(begin
+              (def var (.@ self slot))
+              (def-prefixed-slots ctx (prefix slots ...) self))))))))
+
+;; TODO: use defsyntax-for-match, and in the pattern use (? test :: proc => pattern) to do the job
+(defsyntax-for-match .o
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ args ...)
+       (with-syntax ((((k v) ...) (normalize-slot-specs-for-match stx #'(args ...))))
+        #'(? (o?/slots '(k ...)) :: (.refs/slots '(k ...)) => [v ...])))))
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ args ...)
+       (with-syntax ((ctx stx)) #'(.o/ctx ctx args ...))))))
+
+(defsyntax (.def stx)
+  (syntax-case stx ()
+    ((_ args ...)
+     (with-syntax ((ctx stx)) #'(.def/ctx ctx args ...)))))
+
+;; the ctx argument exists for macro-scope purposes
+(defrules .def/ctx ()
+  ((_ ctx (name options ...) slot-defs ...)
+   (def name (.o/ctx ctx (:: options ...) slot-defs ...)))
+  ((_ ctx name slot-defs ...)
+   (def name (.o/ctx ctx () slot-defs ...))))
+
+(defrules .get ()
+  ((_ object) object)
+  ((_ object slot slots ...) (.get (.ref object 'slot) slots ...)))
+
+(defalias .@ .get)
+
+(defrules .get-set! ()
+  ((_ object slot v) (.put! object 'slot v))
+  ((_ object slot0 slot1 slots ... v) (.get-set! (.@ object slot0) slot1 slots ... v)))
+
+(defalias .@-set! .get-set!)
+
+(defrules .call ()
+  ((_ object slot args ...) ((.get object slot) args ...)))
+
+;; : Unit <- (Object A) s:Symbol (SlotSpec A s)
+(def (.putslot! self slot slot-spec)
+  (let (storage (object-%slots self))
+    (unless ($slot-store? storage)
+      (set! storage (make-slot-store storage))
+      (set! (object-%slots self) storage))
+    ($slot-store-put! storage slot slot-spec)))
+
+(def (.putdefault! self slot default)
+  (let (storage (object-%defaults self))
+    (unless ($slot-store? storage)
+      (set! storage (make-slot-store storage))
+      (set! (object-%defaults self) storage))
+    ($slot-store-put! storage slot default)))
+
+(defrules .setslot! () ((_ object. slot slot-spec) (.putslot! object. 'slot slot-spec)))
+
+(defrules .def! ()
+  ((_ object slot (:: self _ slots ...) slotspec ...)
+   (.putslot! object 'slot
+              (object/slot-spec %with-direct-slots #f self
+                                (slot slots ...) slot slotspec ...)))
+  ((_ object slot (:: self) slotspec ...)
+   (.def! object slot (:: self []) slotspec ...))
+  ((_ object slot (slots ...) slotspec ...)
+   (.def! object slot (:: self [] slots ...) slotspec ...)))
+
+;; Side-effect the value of a field into an object.
+;; Assumes the top-object-proto was used.
+;; : Unit <- (Object A) s:Symbol (A s)
+(def (.put! self slot value) ;; TODO: check instance mutability status first (?)
+  (hash-put! (object-instance self) slot value))
+
+(defrules .set! () ((_ object. slot value) (.put! object. 'slot value)))
+
+;; carbon copy / clone c...
+;; : (Object A') <- (Object A) <<TODO: type for overrides from A to A' ...>>
+(def (.cc self . overrides)
+  (def added-hash (make-hash-table-symbolic))
+  (def added
+    (with-list-builder (c)
+      (def (add-slot! slot value)
+        (when (hash-key? added-hash slot) (error "Cannot override slot twice" self slot))
+        (hash-put! added-hash slot ($constant-slot-spec value))
+        (c slot))
+      (let loop ((l overrides))
+        (match l
+          ([] (void))
+          ([(? symbol? s) v . r] (add-slot! s v) (loop r))
+          ([(? keyword? k) v . r] (add-slot! (make-symbol k) v) (loop r))
+          (else (error "invalid object overrides" overrides))))))
+  (def slots
+    (with-list-builder (c)
+      (for ((ss (object-slots self)))
+        (def slot (car ss))
+        (cond
+         ((hash-get added-hash slot) => (lambda (spec) (hash-remove! added-hash slot) (c [slot . spec])))
+         (else (c ss))))
+      (for (slot added)
+        (awhen (spec (hash-get added-hash slot))
+          (hash-remove! added-hash slot) (c [slot . spec])))))
+  (make-object slots: slots supers: (object-supers self) defaults: (object-defaults self)))
+
+;; TODO: find an efficient way to repeatedly override one field in a pure way without leaking memory,
+;; in O(log n) rather than O(n)?
+;; TODO: maybe have explicitly distinct variants of stateful vs pure object?
+;; Could one convert from the other, with some freezing and thawing or copying operations?
+;; When overriding a field, should we invalidate all the cached values for all fields?
+;; Should we keep an indefinitely growing list of the super formulas?
+;; Should we maintain flags as to which formulas do or don't use the super and/or self references,
+;; so we know what to invalidate or not?
+
+;; TODO: For type validation,
+;; 1. cache which types an instance was tested to be part of,
+;; which allows for fast checking of types for recursive data structures,
+;; maybe even with cycles.
+;; 2. have a mechanism to extend the above to non-instances.

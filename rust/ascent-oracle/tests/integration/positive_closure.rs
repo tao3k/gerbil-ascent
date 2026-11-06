@@ -215,8 +215,8 @@ fn ascent_support(edges: &[(u32, u32, u32)]) -> Vec<SupportRow> {
     rows
 }
 
-fn scheme_support(edges: &[(u32, u32, u32)]) -> Vec<SupportRow> {
-    let mut request = String::from("(8");
+fn scheme_support(edges: &[(u32, u32, u32)], radix: u32) -> Vec<SupportRow> {
+    let mut request = format!("({radix}");
     for &(from, to, label) in edges {
         request.push_str(&format!(" {from} {to} {label}"));
     }
@@ -262,6 +262,18 @@ fn shortest_support_matches_ascent_and_canonical_source_order() {
     for (index, edges) in snapshots.iter().enumerate() {
         let expected = ascent_support(edges);
         assert!(expected.iter().all(|row| row.distance == row.support.len()));
-        assert_eq!(scheme_support(edges), expected, "support snapshot {index}");
+        assert_eq!(
+            scheme_support(edges, 8),
+            expected,
+            "support snapshot {index}"
+        );
     }
+}
+
+#[test]
+fn shortest_support_matches_ascent_on_thirty_two_node_chain() {
+    let edges: Vec<_> = (0..31).map(|from| (from, from + 1, from)).collect();
+    let expected = ascent_support(&edges);
+    assert_eq!(expected.len(), 496);
+    assert_eq!(scheme_support(&edges, 32), expected);
 }

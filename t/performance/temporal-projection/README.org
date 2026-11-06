@@ -1,0 +1,175 @@
+#+title: Invocation-owned temporal projection facts and ordered horizon traversal
+
+* Gerbil compiler source study
+
+Gerbil 2591dcd =compiler/optimize.ss:28-29= creates invocation-local mutation
+and local-type tables. =optimize-source:164+= collects mutation facts before
+transforming expressions. =optimize-xform.ss:108-113= records binding identity
+once; =optimize-top.ss:17-19= then queries those facts. Analysis lifetime and
+binding identity are explicit, and later passes reuse the admitted facts.
+
+=temporal/lens.ss= applies that pattern to one detached temporal projection.
+A private fixed-layout =projection-node= vector owns the first event row plus cut-member
+and eligible-member flags, followed by owned out-edge/discovery fields and an
+inert window verdict. Field macros name the layout; consumers contain no slot
+indices. One identity table replaces repeated =memq=/=assq=
+scans. Lists retain canonical event/member/parent order, so rejection priority
+and all diagnostic order remain unchanged. Missing event records are explicit;
+eligibility is filled only after original cut validation. No record/index
+escapes into snapshots, answers or receipts. Constructors and evidence policy
+remain unchanged.
+
+* Horizon traversal
+
+The private =horizon-frontier= builds out-edge buckets once, storing each edge's
+original ordinal. Each layer examines only out-edges of its frontier vertices.
+A node discovery field holds the earliest incoming edge for this layer, or =#t= for
+a settled vertex. Duplicates from different parents replace that witness only
+when the incoming ordinal is smaller. Sorting layer witnesses by descending
+ordinal exactly reproduces the previous reverse-first-edge frontier order,
+regardless of parent visitation order. Empty/singleton layers use their direct
+list path. Edges and caller data remain unchanged.
+
+This reduces repeated all-edge scans to one indexing pass plus reached edges
+and layer sorting. No shared cache or environment configuration is introduced.
+The half-open window, whole-cut cycle check, open-cut policy, bounded horizon,
+source binding and native proof verification remain part of each solve.
+
+* Native matched entry
+
+Run =just performance-temporal-projection=. =reference.ss= freezes the entire
+=068b147bb937c757092bd1c9f638b7603934d53c= temporal module byte for byte.
+Both legs share unchanged graph/evidence dependencies and checked input objects.
+Each measurement is a complete =temporal-solve= call, including detached
+projections, admission, horizon traversal, binding digest, snapshot construction
+and answer construction. Complete controls additionally include native evidence
+production and its verification. Input constructors and post-call comparison
+are outside the inner measurement. Program caches are warm after a checked
+setup call; these measurements do not establish cold whole-solver throughput.
+
+The public ASP =make-benchmark-fixture= builds =benchmark.ss= and
+=benchmark-run/result= owns 50 alternating checked pairs and standard wall/heap
+diagnostics. Inner CPU and cumulative allocated bytes are separate from heap
+occupancy. Each pair compares full answer projections, exact frontier order,
+receipt presence and independently specified rows/status/frontier. Setup also
+compares native evidence verdicts. All logs, raw receipts, generated sources
+and binaries remain in ignored =.cache/ascent/temporal-projection/=.
+
+Main 256-event chain/fan cases require 20% CPU improvement and at least 35/50
+CPU wins, allowing at most 64 KiB additional allocation. Four-event complete
+and empty-window controls permit 5% plus 20 microseconds CPU overhead and at
+most 4 KiB extra allocation. Gates are fixed before sampling.
+
+* Retained failed experiments
+
+The initial depth-mark table still scanned every edge at every layer. Chain
+CPU changed =1197 -> 1556= microseconds, with only 2/50 CPU wins. It failed the
+CPU gate; =chain-depth-scan.sexp= and =depth-scan.log= retain that negative result.
+
+The first adjacency version improved CPU =1219 -> 869= with 49 wins but added
+145760 allocated bytes, failing the unchanged 64 KiB cap. The receipt/log
+remain as =chain-adjacency.sexp= and =adjacency.log=. The final path unifies
+projection facts into one owned record index, reuses discovery entries between
+layers and avoids sorting/materializing singleton layers. Neither gate was
+relaxed.
+
+A separate projection-record plus traversal-table experiment passed CPU
+=1224 -> 901= microseconds (47 wins), but added 93024 allocated bytes and
+failed the same cap. It remains in =chain-separate-traversal.sexp= and
+=separate-traversal.log=. The final node record also owns adjacency/discovery
+fields, removing both traversal hash tables. The single index uses the known
+event-count size hint; missing cut members can still grow it normally.
+
+The first unified-node version passed chain CPU/allocation (=1241 -> 885=
+microseconds, +33480 bytes), but fan CPU only changed =1583 -> 1403= and added
+108920 bytes. It failed both fixed fan gates; =fan-ranked-layer.sexp= and
+=ranked-layer.log= retain the result. Restoring original order inside each
+out-edge bucket gives a single-parent layer exactly the original discovery
+sequence. That admitted shape returns its accumulated list directly, avoiding
+rank sorting while preserving duplicate-target first occurrence. Multi-parent
+layers still select minimum ordinals and sort their witnesses.
+
+The single-parent path alone still failed fan (=1575 -> 1367= microseconds,
++96632 bytes), retained as =fan-checked-slots.sexp= / =checked-slots.log=.
+Unchecked private record access changed CPU =1543 -> 1291= but allocation was
+identical and both fan gates still failed; =fan-unchecked-slots.sexp= /
+=unchecked-slots.log= retain that experiment. Checked slot access was restored.
+
+Gerbil =runtime/hash.ss:561+= and =runtime/interface.ss:153+= suggested a
+one-time =HashTable= cast might avoid interface adaptation. The measured fan
+allocation remained identical and CPU only changed =1565 -> 1382= microseconds,
+still failing. That hypothesis was withdrawn; =fan-interface.sexp= /
+=interface.log= retain the result. The final implementation uses ordinary
+hash API calls and checked record access.
+
+Zero horizon requires only the root's outgoing first layer. The final path
+uses one original-order edge scan with node discovery flags in that case,
+avoiding adjacency materialization. Positive horizons retain the indexed
+traversal. This structural admission changes no bound, callback, rejection
+priority or frontier order.
+
+The zero-horizon pass brought fan allocation within the original cap
+(+23288 bytes), but CPU =1576 -> 1359= still failed 20% improvement. Its receipt
+and log remain as =fan-zero-horizon.sexp= and =zero-horizon.log=. The final
+cut-edge descriptor retains both endpoint records. Parent validation and
+eligibility selection reuse these records rather than looking up each endpoint
+again at every phase. Raw canonical rows still supply cycle checks, snapshot
+binding and proof inputs; endpoint descriptors remain private.
+
+A generic class descriptor for each cut edge reduced chain CPU
+=1198 -> 856= microseconds but added 102792 bytes and failed allocation. Its
+receipt/log remain as =chain-edge-record.sexp= / =edge-record.log=. Gerbil
+=runtime/mop.ss:877+= constructs class instances through a rest-argument path.
+The final immutable three-field edge descriptor is a fixed vector with named
+private field macros; node facts keep their checked record representation.
+This preserves readable field responsibilities while avoiding per-edge generic
+constructor machinery. Descriptor rows and endpoint identities remain intact.
+
+The cut-edge descriptor branch was withdrawn: fixed-vector descriptors still
+added 98712 bytes on chain, and a tail collector added 123144 bytes; both failed
+allocation. Their receipts/logs remain as =chain-edge-vector.sexp= /
+=edge-vector.log= and =chain-tail-edge.sexp= / =tail-edge.log=. Parent rows keep
+their original representation. Replacing only private node constructor/field
+machinery with fixed-layout vectors brought fan allocation within cap but CPU
+=1490 -> 1227= still missed 20%; =fan-vector-node.sexp= / =vector-node.log=
+retain that intermediate result.
+
+The final path reuses each node binding during eligibility and member checks,
+avoids rewriting existing member keys, and records one window verdict only
+when the entire event-time projection and window are canonical inert data.
+Canonical exact points admit direct bound comparisons. Noncanonical supplied
+interval callbacks keep their original evaluation count and order; they cannot
+populate the cache. Existing public window validation remains unchanged.
+
+* Local native measurement
+
+All original four gates pass 50 pairs each:
+
+| Scenario | Baseline CPU us | Current CPU us | Baseline bytes | Current bytes | CPU wins |
+|----------+-----------------+----------------+----------------+---------------+----------|
+| chain    | 1221            | 818            | 970504         | 1016224       | 48/50    |
+| fan      | 1538            | 1215           | 1447536        | 1470824       | 49/50    |
+| complete | 21723           | 21935          | 31710880       | 31714736      | 21/50    |
+| empty    | 20919           | 20960          | 31412224       | 31416064      | 27/50    |
+
+Chain/fan complete calls improve CPU approximately 33%/21%, with 45720/23288
+extra allocated bytes. Complete proof control is approximately 1% slower;
+empty-window control is essentially unchanged. Extra small-control allocations
+are 3856/3840 bytes and stay within the fixed 4 KiB cap. These results establish
+this bounded projection improvement and its scratch allocation cost; they do
+not establish a cold whole-solver or general complete-evidence speedup.
+
+The final annotated source repeats all four unchanged gates: chain
+=1193 -> 830= microseconds (50 CPU wins), fan =1532 -> 1225= (50), complete
+=21467 -> 21544= and empty =21366 -> 21408=. Main allocation deltas are
+identical. Fan is close to its 20% median CPU boundary in this repeat; the
+bounded conclusion is approximately 20% on this shape, rather than a wider
+throughput claim. Chain improves approximately 30% in both final runs.
+
+Two native Suites pass 15 Cases, including 768 directed-graph/root/horizon
+comparisons against independent shortest distances, converging witness order,
+105 canonical interval/window comparisons and supplied callbacks that mutate
+previous bounds. The callback Case checks the original repeated invocation
+count and exact answer projection. Existing temporal Suite also checks native
+receipt tampering, forks, generation/scope binding and complete graph truth.
+Final selected production policy has zero findings and zero errors.

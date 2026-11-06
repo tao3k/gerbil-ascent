@@ -1,0 +1,84 @@
+#+TITLE: Frozen membership routing and delta queries
+
+* Production ownership and expression flow
+Frozen rectangle views already publish endpoint and prefix routing. Membership
+now reuses that routing to narrow descriptors and computes row width once per
+query. A private =rectangle-contains?= checks arity, prefix and both member owners;
+a shared endpoint value in a different group never proves membership.
+
+One or two descriptors retain direct scanning: three coordinate hash probes,
+bucket cost folds and candidate gathering cost more than this short scan.
+Larger indexed views capture their full-coordinate ordinal list once. Views
+with mixed arities take a bounded prefix and still check descriptor arity; rows
+wider than the routing vector return false rather than raising an index error.
+The original scan remains available to unindexed views. Difference membership
+inherits the same path through its newer/older view owners. No public API,
+Build.ss entry point, runtime option or test hook was added to production.
+
+Gerbil SDK 1cfb032 =src/gerbil/core/sugar.ss:1022-1051= expands =cut= to a hygienic
+partial lambda; the candidate predicate uses that existing expression form.
+The implementation separates routing admission from the named exact ownership
+predicate, following existing native hash dispatch and compact expression
+composition rather than introducing another extensible receiver hierarchy.
+
+* Matched native contract
+=reference.ss= is exactly =91f8e042ed9b1e73499620d96571489e9f5deca5:core/relation-view.ss=.
+Both implementations compile symmetrically. Fifty alternating pairs measure
+publication of older and newer cuts, construction of their delta and membership
+of each request in all three views. An independent direct descriptor oracle
+checks each result outside timing. Public ASP =make-benchmark-fixture= and
+=benchmark-run/result= own the fixture contract and series gate.
+
+Many groups and absent groups require >=20% CPU reduction and 35/50 paired wins.
+Wide, tiny and empty controls allow 110% plus 20us. All allocations allow 110%
+plus 4096 bytes. This run launches no concurrent build or test lane during
+measurement; global machine isolation is not asserted. CPU/allocation receipts
+measure this provider workflow, not whole-engine solves.
+
+* Retained negative results
+Unconditional routing on the wide two-descriptor control measured CPU
+151 -> 173us and allocation 134960 -> 155792 bytes, failing the allocation gate.
+Its raw receipt remains ignored in =wide-unconditional-failed.ss=. The final
+small-descriptor scan avoids this routing work without relaxing the gate.
+
+The initial native harness selected an optional-arity publisher through a local
+function variable. Its generated Scheme called the production publisher even
+for baseline rectangles, causing a nominal rectangle type mismatch. Explicit
+old/new publisher branches corrected lane ownership; no compiler was rebuilt
+or modified, and no performance result from the failed harness was admitted.
+
+* Reproduce
+#+begin_src sh
+LIBRARY_PATH="$(brew --prefix openssl@3)/lib" GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/membership-routing/build.ss "$PWD/.gerbil/lib" "$PWD/.cache/ascent/membership-routing/runner" runner
+GERBIL_HOME=/opt/homebrew/opt/gerbil-scheme@0.19/current GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" .cache/ascent/membership-routing/runner groups .cache/ascent/membership-routing/groups.ss
+#+end_src
+Repeat separately for miss, wide, small, empty. Compile =qualify= with the same
+builder after measurement finishes. All binaries, logs, raw samples and fixture
+generators reside in ignored =.cache/ascent/membership-routing=.
+
+* Final native results
+Reference blob: =72245197a49c9cc03984d85c369b42580d60e216=.
+| Complete publish and membership workflow | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|------------------------------------------+------------+------------+-----------+-----------+----------|
+| 1024 groups with shared endpoint values | 17081 | 3056 | 6274272 | 6438464 | 50/50 |
+| Absent group requests | 45589 | 2816 | 6249696 | 6372928 | 50/50 |
+| Two descriptors, 64 members per side | 151 | 151 | 134960 | 139120 | 26/50 |
+| Tiny cuts | 11 | 11 | 35440 | 35760 | 18/50 |
+| Empty cuts | 1 | 1 | 2880 | 3136 | 19/50 |
+
+All five final gates passed. Main CPU reductions are 82.1% and 93.8%; allocation
+increased 2.6% and 2.0%. Small descriptor CPU is flat; wide-control allocation
+increased 3.1%, tiny 0.9% and empty 256 bytes. No allocation reduction or tiny
+CPU speedup is claimed. Publication, total membership and delta exclusion are
+all timed; this is not an end-to-end application performance claim.
+
+* Qualification
+Five Suites and 43 Cases passed with real Case successes, final =OK= and exit 0.
+Coverage includes mixed arities (2/3/4), malformed row widths, structured and
+false endpoint values, unrelated owners sharing values, 96 grouped cuts with
+all coordinate combinations, exact ordered delta exports, empty/unindexed
+membership and the existing UF budget/frontier/snapshot qualifications.
+
+Direct source loading and execution passed =SOURCE-MEMBERSHIP-OK=, exercising
+routed presence, absent member ownership and excessive row arity. Production
+policy completed with 29 findings, zero errors and =POLICY-NATIVE-OK=.

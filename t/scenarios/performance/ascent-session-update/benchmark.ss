@@ -6,7 +6,7 @@
  (target_total . 700us)
  (regression_budget . 300us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Append one edge to a retained positive ASCENT session and complete its recursive closure.")
  (unit . "us")
  (sourcePath . "t/scenarios/performance/ascent-session-update/benchmark.ss")

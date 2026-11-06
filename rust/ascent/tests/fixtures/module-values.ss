@@ -1,0 +1,6 @@
+(import :gerbil/core)
+(include "module-values-source.ss")
+(for-each (lambda (f) (write (f)) (newline))
+          (list lexical-shadow rational same-cycle shared distinct-symbols table-key pair-value macro-definition-scope macro-number-case))
+(let (counter (make-counter 7))
+  (write (counter 5)) (newline) (write (counter 1)) (newline))

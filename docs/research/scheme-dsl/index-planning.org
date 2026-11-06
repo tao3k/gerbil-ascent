@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Souffle synthesis and deterministic native index planning
+#+DATE: 2026-10-09
+
+* Primary method reading
+
+[[https://souffle-lang.github.io/pdf/cav16.pdf][Jordan, Scholz and Subotic, CAV 2016]] separates Datalog-to-RAM,
+RAM-to-C++ and C++ compilation specialization. Section 2.1 locates join/index
+planning before fact execution; its chain partition minimizes index count.
+This is a program-specific planning architecture, not just a faster interpreter.
+
+The later [[https://www.vldb.org/pvldb/vol12/p141-subotic.pdf][Subotic et al., PVLDB 12(2), 2018]] supplies the detailed index
+selection method. Equality-bound attribute sets are primitive searches. A
+physical key covers a search when those attributes form its prefix. Strict
+subset chains share one index; minimum chain partition reduces to maximum
+bipartite matching. The theorem concerns coverage/count, not a uniquely chosen
+permutation, and the clustered B-tree performance results depend on the studied
+programs and representation.
+
+* Repository architecture and implemented gap
+
+=table/index-sharing.ss= already implements chain matching, an independent tight
+endpoint-cover certificate and curried physical roots. =IndexedPositiveTraversal=
+already proves competing partition minimality; =CurriedDictionary= handles
+native prefix occurrence restoration under its inventory premise. These are
+existing accepted mechanisms, not new work inferred from the paper.
+
+The remaining gap addressed here is reproducibility of equally minimal plans.
+Normalization formerly fed hash-key encounter order into matching. The native
+planner now lexicographically orders detached, sorted, distinct nonempty column
+sets. Every augmentation and chain publication consumes that fixed order.
+Empty demand sets still require no physical index; singleton representation,
+source occurrence order, independent owners and maximum-matching checks remain
+covered by the existing native suite.
+
+* Executable refinement and limits
+
+All 128 three-column demand families retain independent minimum partition and
+prefix coverage checks. Three additional encounter/column/multiplicity variants
+per family compare physical layouts. Existing large exact integer, detached
+input, solve parity and trie occurrence tests remain in the same native Suite.
+
+Lean =CanonicalIndex= proves inventory membership, demand-set invariance,
+encounter-order invariance, duplicate invariance and deterministic planner
+identity. Its fixed inventory abstraction does not extract Scheme sorting or
+prove arbitrary native mutation safe. Quint =CanonicalIndex= explores finite
+demand collection/publication and requires early publication, omission,
+duplicate and reversed-order controls to violate designated invariants.
+
+This does not implement Souffle RAM/C++ synthesis, inequalities, clustered
+B-trees, DOOP/OpenJDK replication or a measured solve speedup. The historical
+=column-order= branching exact-layout rejection remains recorded; its arbitrary
+baseline tie choices are not a requirement for the new canonical policy.
+Existing performance thresholds and CI deadlines are unchanged.

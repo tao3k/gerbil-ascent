@@ -1,0 +1,2985 @@
+{
+  "ActorRound": {
+    "configuration": {
+      "constants": "Workers = {1,2}\nGenerationCutoff = $actor_cutoff\nRoundCutoff = $round_cutoff\nMutation = \"none\"",
+      "constraint": "Exploration",
+      "invariants": "CompletePublication NoStaleCompletion CompleteBarrier"
+    },
+    "faults": [
+      [
+        "early",
+        "CompletePublication",
+        12
+      ],
+      [
+        "stale",
+        "NoStaleCompletion",
+        12
+      ],
+      [
+        "cancel",
+        "CompletePublication",
+        12
+      ]
+    ]
+  },
+  "ActorRoundCredits": {
+    "configuration": {
+      "constants": "Tasks = {1,2,3}\nCapacity = 2\nEarlyReturn = FALSE",
+      "invariants": "Partition BoundedCredit BoundedAssigned CompleteReturn"
+    },
+    "faults": [
+      [
+        "early",
+        "CompleteReturn",
+        12
+      ]
+    ]
+  },
+  "ActorSession": {
+    "configuration": {
+      "constants": "Cuts = {0,1}\nGenerationCutoff = $session_cutoff\nMutation = \"none\"",
+      "constraint": "Exploration",
+      "invariants": "ConsistentPublication NoStalePublication DrainedClose"
+    },
+    "faults": [
+      [
+        "stale",
+        "NoStalePublication",
+        12
+      ],
+      [
+        "early",
+        "DrainedClose",
+        12
+      ]
+    ]
+  },
+  "ActorTestPool": {
+    "configuration": {
+      "constants": "Tasks = {1,2,3}\nCapacity = 2\nEarlyReturn = FALSE",
+      "invariants": "Partition BoundedCredits StoppedAdmission CompleteReturn"
+    },
+    "faults": [
+      [
+        "early",
+        "CompleteReturn",
+        12
+      ]
+    ]
+  },
+  "ArchiveWork": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "LeaseExclusive NativeCostExact ProfilesShareWork SourceCurrent ReceiptComplete PrivateOutputStable"
+    },
+    "faults": [
+      [
+        "omit-lease",
+        "LeaseExclusive",
+        12
+      ],
+      [
+        "split-by-profile",
+        "ProfilesShareWork",
+        12
+      ],
+      [
+        "count-hit-as-work",
+        "NativeCostExact",
+        12
+      ],
+      [
+        "ignore-source",
+        "SourceCurrent",
+        12
+      ],
+      [
+        "hide-pending",
+        "ReceiptComplete",
+        12
+      ],
+      [
+        "hide-failure",
+        "ReceiptComplete",
+        12
+      ],
+      [
+        "hide-unknown",
+        "ReceiptComplete",
+        12
+      ],
+      [
+        "link-shared",
+        "PrivateOutputStable",
+        12
+      ]
+    ]
+  },
+  "BranchScopedWitness": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactWitnesses ExactBranches ExactUnion Private"
+    },
+    "faults": [
+      [
+        "crossMask",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "switchMask",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "forgetScope",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "collapseBranch",
+        "ExactBranches",
+        12
+      ]
+    ]
+  },
+  "CachePublication": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Safety"
+    },
+    "faults": [
+      [
+        "late-revoke",
+        "RevokedAliases",
+        12
+      ],
+      [
+        "early-publish",
+        "CompletePublication",
+        12
+      ],
+      [
+        "mask-error",
+        "ErrorIdentity",
+        12
+      ],
+      [
+        "mask-witness",
+        "ErrorIdentity",
+        12
+      ],
+      [
+        "skip-witness",
+        "CompletePublication",
+        12
+      ]
+    ]
+  },
+  "CanonicalIndex": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Private Canonical"
+    },
+    "faults": [
+      [
+        "early",
+        "Private",
+        12
+      ],
+      [
+        "omit",
+        "Canonical",
+        12
+      ],
+      [
+        "duplicate",
+        "Canonical",
+        12
+      ],
+      [
+        "order",
+        "Canonical",
+        12
+      ]
+    ]
+  },
+  "CertificateMaterial": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "CountExact UsageBounds ReservedBeforeCopy NoPartialPublication FailureTerminal"
+    },
+    "faults": [
+      [
+        "seed-skip",
+        "CountExact",
+        12
+      ],
+      [
+        "late",
+        "ReservedBeforeCopy",
+        12
+      ],
+      [
+        "partial",
+        "NoPartialPublication",
+        12
+      ],
+      [
+        "resume",
+        "FailureTerminal",
+        12
+      ]
+    ]
+  },
+  "ChangePlan": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Frozen CompletePublication FailureAtomic CapturedRows AdmissionOnce CapturedIndex IndexOnce"
+    },
+    "faults": [
+      [
+        "borrow-index",
+        "CapturedIndex",
+        12
+      ],
+      [
+        "rebuild-index",
+        "IndexOnce",
+        12
+      ],
+      [
+        "omit-rows",
+        "CapturedRows",
+        12
+      ],
+      [
+        "borrow-rows",
+        "CapturedRows",
+        12
+      ],
+      [
+        "reanalyze",
+        "AdmissionOnce",
+        12
+      ],
+      [
+        "alias",
+        "Frozen",
+        12
+      ],
+      [
+        "borrow",
+        "Frozen",
+        12
+      ],
+      [
+        "early",
+        "CompletePublication",
+        12
+      ],
+      [
+        "failure",
+        "FailureAtomic",
+        12
+      ]
+    ]
+  },
+  "ClosedDslLowering": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "WholeChoice NoRetry FailurePrivate SnapshotRoots SnapshotWorkExact"
+    },
+    "faults": [
+      [
+        "partial",
+        "WholeChoice",
+        12
+      ],
+      [
+        "retry",
+        "NoRetry",
+        12
+      ],
+      [
+        "rejectOwner",
+        "FailurePrivate",
+        12
+      ],
+      [
+        "skip-snapshot-root",
+        "SnapshotRoots",
+        12
+      ],
+      [
+        "retain-snapshot-intermediate",
+        "SnapshotWorkExact",
+        12
+      ]
+    ]
+  },
+  "CompilerCost": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly"
+    },
+    "faults": [
+      [
+        "drop-rule-fallback",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-constructor-override",
+        "PolicyExact",
+        12
+      ],
+      [
+        "reuse-term-validation-result",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-validation-protocol",
+        "PolicyExact",
+        12
+      ],
+      [
+        "accept-custom-provider-fast-path",
+        "PolicyExact",
+        12
+      ],
+      [
+        "accept-missing-metadata-cache",
+        "PolicyExact",
+        12
+      ],
+      [
+        "accept-unissued-shape",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-shape-revision",
+        "PolicyExact",
+        12
+      ],
+      [
+        "policy-as-production-build",
+        "PolicyExact",
+        12
+      ],
+      [
+        "source-before-prepared-library",
+        "PolicyExact",
+        12
+      ],
+      [
+        "sum-pass-walls",
+        "PolicyExact",
+        12
+      ],
+      [
+        "skip-changed-cache-write",
+        "PolicyExact",
+        12
+      ],
+      [
+        "projection-index-first-only",
+        "PolicyExact",
+        12
+      ],
+      [
+        "missing-options-as-default",
+        "PolicyExact",
+        12
+      ],
+      [
+        "skip-complete-admission",
+        "PolicyExact",
+        12
+      ],
+      [
+        "retain-duplicate-admission",
+        "PolicyExact",
+        12
+      ],
+      [
+        "retain-tiny-range-scan",
+        "PolicyExact",
+        12
+      ],
+      [
+        "decode-net-as-heap-events",
+        "PolicyExact",
+        12
+      ],
+      [
+        "accept-foreign-module-catalog",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-source-cost-gap",
+        "PolicyExact",
+        12
+      ],
+      [
+        "choose-copy-by-time",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-writer-overlap",
+        "PolicyExact",
+        12
+      ],
+      [
+        "accept-tied-writers",
+        "PolicyExact",
+        12
+      ],
+      [
+        "reuse-unadmitted-projection",
+        "PolicyExact",
+        12
+      ],
+      [
+        "reuse-other-suite-roots",
+        "PolicyExact",
+        12
+      ],
+      [
+        "drop-projection-dependency",
+        "PolicyExact",
+        12
+      ],
+      [
+        "drop-latency-controls",
+        "PolicyExact",
+        12
+      ],
+      [
+        "attribute-non-c-output",
+        "PolicyExact",
+        12
+      ],
+      [
+        "infer-flat-linker-output",
+        "PolicyExact",
+        12
+      ],
+      [
+        "multiply-link-cost-by-edges",
+        "PolicyExact",
+        12
+      ],
+      [
+        "execute-cached-source",
+        "PolicyExact",
+        12
+      ],
+      [
+        "skip-head-admission",
+        "PolicyExact",
+        12
+      ],
+      [
+        "promote-net-stack-counter",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-producer-order",
+        "PolicyExact",
+        12
+      ],
+      [
+        "match-producer-name",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ambiguous-producer",
+        "PolicyExact",
+        12
+      ],
+      [
+        "reuse-changed-reference",
+        "PolicyExact",
+        12
+      ],
+      [
+        "reuse-damaged-interface",
+        "PolicyExact",
+        12
+      ],
+      [
+        "cross-parent-cost",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ambiguous-parent-cost",
+        "PolicyExact",
+        12
+      ],
+      [
+        "count-link-metadata",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-compiler-origin",
+        "PolicyExact",
+        12
+      ],
+      [
+        "accept-multiple-targets",
+        "PolicyExact",
+        12
+      ],
+      [
+        "host-boundary",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-compiler-failure",
+        "PolicyExact",
+        12
+      ],
+      [
+        "ignore-compiler-input",
+        "PolicyExact",
+        12
+      ],
+      [
+        "publish-partial-ggc",
+        "PolicyExact",
+        12
+      ],
+      [
+        "keep-unrequested-old-output",
+        "PolicyExact",
+        12
+      ],
+      [
+        "clean-production",
+        "PolicyExact",
+        12
+      ],
+      [
+        "promote-vm-counter",
+        "PolicyExact",
+        12
+      ],
+      [
+        "sum-nested-passes",
+        "PolicyExact",
+        12
+      ],
+      [
+        "record-failed-build",
+        "SuccessfulCommitOnly",
+        12
+      ],
+      [
+        "reuse-old-options",
+        "CurrentOptionsOnly",
+        12
+      ]
+    ]
+  },
+  "ComponentIndex": {
+    "configuration": {
+      "constants": "Fault = \"none\"",
+      "invariants": "Consistent PrivateExtension HeldStable ViewConsistent",
+      "main": "ComponentIndexFixture"
+    },
+    "faults": [
+      [
+        "order",
+        "Consistent",
+        12
+      ],
+      [
+        "early",
+        "Consistent",
+        12
+      ],
+      [
+        "failed",
+        "Consistent",
+        12
+      ],
+      [
+        "alias",
+        "Consistent",
+        12
+      ],
+      [
+        "foreign",
+        "Consistent",
+        12
+      ],
+      [
+        "reset",
+        "Consistent",
+        12
+      ],
+      [
+        "columns",
+        "Consistent",
+        12
+      ],
+      [
+        "rebuild-columns",
+        "Consistent",
+        12
+      ],
+      [
+        "extend-view",
+        "ViewConsistent",
+        12
+      ],
+      [
+        "failed-view",
+        "ViewConsistent",
+        12
+      ],
+      [
+        "rebuild-view",
+        "ViewConsistent",
+        12
+      ],
+      [
+        "held",
+        "HeldStable",
+        12
+      ],
+      [
+        "held-columns",
+        "HeldStable",
+        12
+      ]
+    ]
+  },
+  "CountProbe": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "PrefixCount CompleteExact PublishedOnlyComplete FailureTerminal Bounds"
+    },
+    "faults": [
+      [
+        "unmatched",
+        "PrefixCount",
+        12
+      ],
+      [
+        "early",
+        "CompleteExact",
+        12
+      ],
+      [
+        "refusal",
+        "PublishedOnlyComplete",
+        12
+      ],
+      [
+        "resume",
+        "FailureTerminal",
+        12
+      ]
+    ]
+  },
+  "DeltaClosure": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Complete Partition FrontierExact NoOldWork UniqueWitness FailurePrivate"
+    },
+    "faults": [
+      [
+        "drop",
+        "Complete",
+        12
+      ],
+      [
+        "early",
+        "Complete",
+        12
+      ],
+      [
+        "allold",
+        "NoOldWork",
+        12
+      ],
+      [
+        "overlap",
+        "UniqueWitness",
+        12
+      ]
+    ]
+  },
+  "DerivationCounts": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Private Fixed Exact"
+    },
+    "faults": [
+      [
+        "refusal",
+        "Private",
+        12
+      ],
+      [
+        "early",
+        "Fixed",
+        12
+      ],
+      [
+        "accumulate",
+        "Fixed",
+        12
+      ]
+    ]
+  },
+  "DslOwnership": {
+    "configuration": {
+      "constants": "ScopeCapacity = 2\nMutation = \"none\"",
+      "constraint": "ExplorationBound",
+      "invariants": "ChargedExpansion IsolatedDefinitions NoForeignReference LiveValues"
+    },
+    "faults": [
+      [
+        "scope",
+        "IsolatedDefinitions",
+        12
+      ],
+      [
+        "failed",
+        "ChargedExpansion",
+        12
+      ],
+      [
+        "reset",
+        "ChargedExpansion",
+        12
+      ],
+      [
+        "foreign",
+        "NoForeignReference",
+        12
+      ]
+    ]
+  },
+  "EvidenceCacheAdmission": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactSource ExactBackend ExactPolicy FailureRevoked LiveAdmission"
+    },
+    "faults": [
+      [
+        "source",
+        "ExactSource",
+        12
+      ],
+      [
+        "backend",
+        "ExactBackend",
+        12
+      ],
+      [
+        "policy",
+        "ExactPolicy",
+        12
+      ],
+      [
+        "retain",
+        "FailureRevoked",
+        12
+      ]
+    ]
+  },
+  "EvidenceLifecycle": {
+    "configuration": {
+      "constants": "GenerationCutoff = $cutoff\nInputLimit = 0\nMutation = \"none\"",
+      "constraint": "ExplorationBound",
+      "invariants": "TypeOK CurrentResult IndependentExplanation FrozenObservation RejectionAtomic ClosedOwners"
+    },
+    "faults": [
+      [
+        "stale",
+        "CurrentResult",
+        12
+      ],
+      [
+        "coupled",
+        "IndependentExplanation",
+        12
+      ],
+      [
+        "rewrite",
+        "FrozenObservation",
+        12
+      ],
+      [
+        "reject",
+        "RejectionAtomic",
+        12
+      ],
+      [
+        "close",
+        "ClosedOwners",
+        12
+      ]
+    ]
+  },
+  "ExecutionFeedback": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Qualified ExactDifferences ExactMatch InconclusivePrivate"
+    },
+    "faults": [
+      [
+        "stale",
+        "Qualified",
+        12
+      ],
+      [
+        "partial",
+        "Qualified",
+        12
+      ],
+      [
+        "missing",
+        "ExactDifferences",
+        12
+      ],
+      [
+        "extra",
+        "ExactDifferences",
+        12
+      ],
+      [
+        "referenceStale",
+        "Qualified",
+        12
+      ],
+      [
+        "referencePartial",
+        "Qualified",
+        12
+      ],
+      [
+        "query",
+        "Qualified",
+        12
+      ]
+    ]
+  },
+  "LatticeProjection": {
+    "configuration": {
+      "constants": "Mutation = \"none\"\nRemaining = 2",
+      "invariants": "MapExact SnapshotExact PrivateStable HeldStable KeyCoverage BudgetBound RefusalSound RefusalStable"
+    },
+    "faults": [
+      [
+        "overwrite",
+        "MapExact",
+        12
+      ],
+      [
+        "prior",
+        "MapExact",
+        12
+      ],
+      [
+        "false",
+        "MapExact",
+        12
+      ],
+      [
+        "retain",
+        "SnapshotExact",
+        12
+      ],
+      [
+        "early",
+        "SnapshotExact",
+        12
+      ],
+      [
+        "stale",
+        "SnapshotExact",
+        12
+      ],
+      [
+        "borrow",
+        "HeldStable",
+        12
+      ],
+      [
+        "lost-key",
+        "KeyCoverage",
+        12
+      ],
+      [
+        "repeat-key",
+        "KeyCoverage",
+        12
+      ],
+      [
+        "budget-skip",
+        "BudgetBound",
+        12
+      ],
+      [
+        "budget-events",
+        "RefusalSound",
+        12
+      ],
+      [
+        "refusal-publish",
+        "RefusalStable",
+        12
+      ]
+    ]
+  },
+  "MinimumHeight": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "CompleteMinimum Private"
+    },
+    "faults": [
+      [
+        "first",
+        "CompleteMinimum",
+        12
+      ],
+      [
+        "stale",
+        "CompleteMinimum",
+        12
+      ],
+      [
+        "early",
+        "Private",
+        12
+      ],
+      [
+        "cycle",
+        "CompleteMinimum",
+        12
+      ],
+      [
+        "minimumBody",
+        "CompleteMinimum",
+        12
+      ]
+    ]
+  },
+  "MovieCastQuery": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactEvidence ExactAnswer ExactTrace Private"
+    },
+    "faults": [
+      [
+        "global",
+        "ExactEvidence",
+        12
+      ],
+      [
+        "early",
+        "ExactEvidence",
+        12
+      ],
+      [
+        "union",
+        "ExactAnswer",
+        12
+      ],
+      [
+        "forget",
+        "ExactTrace",
+        12
+      ]
+    ]
+  },
+  "NegativeProbe": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "AbsenceSound WitnessSound FailureTerminal Bounds"
+    },
+    "faults": [
+      [
+        "early",
+        "AbsenceSound",
+        12
+      ],
+      [
+        "refusal",
+        "AbsenceSound",
+        12
+      ],
+      [
+        "resume",
+        "FailureTerminal",
+        12
+      ]
+    ]
+  },
+  "NumericProbe": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "TypedPrefix PrefixValue PublicationExact Unpublished Bounds"
+    },
+    "faults": [
+      [
+        "type-skip",
+        "TypedPrefix",
+        12
+      ],
+      [
+        "empty",
+        "PrefixValue",
+        12
+      ],
+      [
+        "zero",
+        "PrefixValue",
+        12
+      ],
+      [
+        "early",
+        "PublicationExact",
+        12
+      ],
+      [
+        "refusal",
+        "Unpublished",
+        12
+      ]
+    ]
+  },
+  "OracleTransport": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ReaderErrorSound CompleteReaders ReaderClean CompleteBytes ExitAndRequest"
+    },
+    "faults": [
+      [
+        "early",
+        "CompleteReaders",
+        12
+      ],
+      [
+        "swallow",
+        "ReaderClean",
+        12
+      ],
+      [
+        "tail",
+        "CompleteBytes",
+        12
+      ],
+      [
+        "interrupt",
+        "ReaderErrorSound",
+        12
+      ]
+    ]
+  },
+  "OwnedLookup": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "FrozenExact OrderedExact RejectedStable NoTupleTemporary"
+    },
+    "faults": [
+      [
+        "export",
+        "OrderedExact",
+        12
+      ],
+      [
+        "order",
+        "OrderedExact",
+        12
+      ],
+      [
+        "empty",
+        "OrderedExact",
+        12
+      ],
+      [
+        "duplicate",
+        "OrderedExact",
+        12
+      ],
+      [
+        "shared",
+        "OrderedExact",
+        12
+      ],
+      [
+        "borrow",
+        "FrozenExact",
+        12
+      ],
+      [
+        "retire",
+        "FrozenExact",
+        12
+      ],
+      [
+        "reject",
+        "RejectedStable",
+        12
+      ],
+      [
+        "tuple-temp",
+        "NoTupleTemporary",
+        12
+      ]
+    ]
+  },
+  "PositiveDslAdmission": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "CallbacksOutside ScopeRestored PublicationChecked FullEvaluationMatrix TermCheckCount"
+    },
+    "faults": [
+      [
+        "early",
+        "CallbacksOutside",
+        12
+      ],
+      [
+        "leak",
+        "ScopeRestored",
+        12
+      ],
+      [
+        "skip-root",
+        "PublicationChecked",
+        12
+      ]
+    ]
+  },
+  "PositiveNonmembershipSession": {
+    "configuration": {
+      "constants": "GenerationCutoff = $cutoff",
+      "constraint": "ExplorationBound",
+      "invariants": "TypeOK NoStalePublished NoStaleUse"
+    },
+    "faults": []
+  },
+  "PreparationAdmission": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "RetainedFailures NonRegression CurrentSource Complete Accounted WarmCurrent NoUnresolved"
+    },
+    "faults": [
+      [
+        "drop-history",
+        "RetainedFailures",
+        12
+      ],
+      [
+        "ignore-regression",
+        "NonRegression",
+        12
+      ],
+      [
+        "ignore-source",
+        "CurrentSource",
+        12
+      ],
+      [
+        "accept-incomplete",
+        "Complete",
+        12
+      ],
+      [
+        "ignore-work",
+        "Accounted",
+        12
+      ],
+      [
+        "ignore-warm",
+        "WarmCurrent",
+        12
+      ]
+    ]
+  },
+  "PreparationWork": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained SourceQueueCoverage SourceGcIsolation"
+    },
+    "faults": [
+      [
+        "compact-isolated-source",
+        "SourceGcIsolation",
+        12
+      ],
+      [
+        "ignore-ordinary-gc",
+        "SourceGcIsolation",
+        12
+      ],
+      [
+        "drop-isolated-source",
+        "SourceQueueCoverage",
+        12
+      ],
+      [
+        "last-interface-alias-wins",
+        "IndexedDispatchExact",
+        12
+      ],
+      [
+        "reuse-unadmitted-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "reuse-reloaded-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "reuse-compiling-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "reuse-consumer-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "reuse-missing-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "expand-admitted-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "drop-qualified-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "drop-syntax-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "reuse-unknown-interface",
+        "InterfaceSelectionExact",
+        12
+      ],
+      [
+        "raise-heap-for-gc",
+        "HeapLimitUnchanged",
+        12
+      ],
+      [
+        "skip-heap-cap",
+        "HeapSelectionBounded",
+        12
+      ],
+      [
+        "occupancy-as-cumulative",
+        "CumulativeCapabilityRequired",
+        12
+      ],
+      [
+        "key-by-generated-manifest",
+        "ContentKeyExact",
+        12
+      ],
+      [
+        "key-by-commit",
+        "ContentKeyExact",
+        12
+      ],
+      [
+        "reuse-missing-payload",
+        "CompleteCacheBundle",
+        12
+      ],
+      [
+        "reuse-missing-receipt",
+        "CompleteCacheBundle",
+        12
+      ],
+      [
+        "hide-compiler-failure",
+        "CompilerWorkComplete",
+        12
+      ],
+      [
+        "hide-changed-input",
+        "CompilerWorkComplete",
+        12
+      ],
+      [
+        "hide-job",
+        "JobsExact",
+        12
+      ],
+      [
+        "forget-import",
+        "ImportsExact",
+        12
+      ],
+      [
+        "sum-nested",
+        "AllocationNotNested",
+        12
+      ],
+      [
+        "sum-helper-cpu",
+        "CompilerCpuPartition",
+        12
+      ],
+      [
+        "restore-outputs-only",
+        "RestoredSourceClock",
+        12
+      ],
+      [
+        "restore-stale-source",
+        "RestoredSourceCurrent",
+        12
+      ],
+      [
+        "publish-partial",
+        "Complete",
+        12
+      ],
+      [
+        "ignore-generation",
+        "Current",
+        12
+      ],
+      [
+        "clamp-counter",
+        "OrderedCounter",
+        12
+      ],
+      [
+        "ignore-negative-raw",
+        "OrderedCounter",
+        12
+      ],
+      [
+        "bootstrap-inventory",
+        "InventoryDataOnly",
+        12
+      ],
+      [
+        "eager-catalog",
+        "OnlyDemandedCompilation",
+        12
+      ],
+      [
+        "compile-source-suite",
+        "SourceCarriersRemainSource",
+        12
+      ],
+      [
+        "compile-source-consumer",
+        "SourceCarriersRemainSource",
+        12
+      ],
+      [
+        "reuse-stale-input",
+        "ReuseCurrentInputs",
+        12
+      ],
+      [
+        "expand-producer-catalog",
+        "OnlyConsumerRoots",
+        12
+      ],
+      [
+        "prune-unadmitted-catalog",
+        "UnadmittedCatalogPresent",
+        12
+      ],
+      [
+        "batch-source-roots",
+        "BoundedSourceEntries",
+        12
+      ],
+      [
+        "retain-source-roots",
+        "ExitedVmReleasesEntries",
+        12
+      ],
+      [
+        "drop-demanded-support",
+        "DemandedSupportRetained",
+        12
+      ],
+      [
+        "drop-cached-support",
+        "CachedSupportRetained",
+        12
+      ]
+    ]
+  },
+  "ProgressWitness": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Safety"
+    },
+    "faults": [
+      [
+        "wrong-actor",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "stale-epoch",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "heartbeat",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "unattested",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "changed-source",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "conflicting-id",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "cursor-missing",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "cursor-conflicting",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "active-conflicting",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "duplicate",
+        "OnlyGroundedCompletion",
+        12
+      ],
+      [
+        "resume-renews",
+        "NoInventedTime",
+        12
+      ]
+    ]
+  },
+  "ProofPrefix": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactPrefix GroundedPrefix PublishedGrounded RefusalPrivate PublicationPhase"
+    },
+    "faults": [
+      [
+        "early",
+        "ExactPrefix",
+        12
+      ],
+      [
+        "forward",
+        "GroundedPrefix",
+        12
+      ],
+      [
+        "source",
+        "GroundedPrefix",
+        12
+      ],
+      [
+        "partial",
+        "RefusalPrivate",
+        12
+      ]
+    ]
+  },
+  "ProofShapeAdmission": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "AllocationAfterAdmission AdmittedShape RefusalUnpublished PublicationAfterIndex"
+    },
+    "faults": [
+      [
+        "early",
+        "AllocationAfterAdmission",
+        12
+      ],
+      [
+        "roots",
+        "AdmittedShape",
+        12
+      ],
+      [
+        "improper",
+        "AdmittedShape",
+        12
+      ],
+      [
+        "partial",
+        "RefusalUnpublished",
+        12
+      ]
+    ]
+  },
+  "ProviderAdmission": {
+    "configuration": {
+      "constants": "Fault = \"none\"",
+      "invariants": "CountCaps MatchingExact OutputExact DetachedPacket NoEarlyCallbacks FailedCacheRevoked",
+      "main": "ProviderAdmissionFixture"
+    },
+    "faults": [
+      [
+        "nocap",
+        "MatchingExact",
+        12
+      ],
+      [
+        "set",
+        "MatchingExact",
+        12
+      ],
+      [
+        "allwitness",
+        "CountCaps",
+        12
+      ],
+      [
+        "early",
+        "NoEarlyCallbacks",
+        12
+      ],
+      [
+        "borrow",
+        "DetachedPacket",
+        12
+      ],
+      [
+        "retain",
+        "FailedCacheRevoked",
+        12
+      ]
+    ]
+  },
+  "ProviderFrontier": {
+    "configuration": {
+      "constants": "Fault = \"none\"\nSeeded = FALSE",
+      "invariants": "ExactFrontier FrontierComplete DeliveredExact ConsumerSnapshot",
+      "main": "ProviderFrontierFixture"
+    },
+    "faults": [
+      [
+        "early",
+        "ConsumerSnapshot",
+        12
+      ],
+      [
+        "old",
+        "ConsumerSnapshot",
+        12
+      ],
+      [
+        "initial",
+        "ConsumerSnapshot",
+        12
+      ],
+      [
+        "replace",
+        "ConsumerSnapshot",
+        12
+      ],
+      [
+        "raw",
+        "FrontierComplete",
+        12
+      ],
+      [
+        "foreign",
+        "FrontierComplete",
+        12
+      ],
+      [
+        "omit",
+        "DeliveredExact",
+        12
+      ]
+    ]
+  },
+  "ProviderReplay": {
+    "configuration": {
+      "constants": "Nodes = {0,1}\nScopes = {0,1}\nMutation = \"none\"",
+      "invariants": "PublishedExact JournalExact OrderExact HeldExact RefusalAtomic"
+    },
+    "faults": [
+      [
+        "scope",
+        "PublishedExact",
+        12
+      ],
+      [
+        "early",
+        "JournalExact",
+        12
+      ],
+      [
+        "drop",
+        "JournalExact",
+        12
+      ],
+      [
+        "kind",
+        "OrderExact",
+        12
+      ],
+      [
+        "cut",
+        "HeldExact",
+        12
+      ],
+      [
+        "reject",
+        "RefusalAtomic",
+        12
+      ]
+    ]
+  },
+  "ProviderRouting": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "CompleteExact"
+    },
+    "faults": [
+      [
+        "drop",
+        "CompleteExact",
+        12
+      ],
+      [
+        "order",
+        "CompleteExact",
+        12
+      ],
+      [
+        "representative",
+        "CompleteExact",
+        12
+      ],
+      [
+        "prefix",
+        "CompleteExact",
+        12
+      ]
+    ]
+  },
+  "ProviderViews": {
+    "configuration": {
+      "constants": "Rows = {0,1,2}\nBudget = 2\nMutation = \"none\"\nExplorationBound = $views_cutoff",
+      "constraint": "Explore",
+      "invariants": "AtomicPublication FrozenRead ReaderAlive CurrentReply LogicalBudget"
+    },
+    "faults": [
+      [
+        "alias",
+        "FrozenRead",
+        12
+      ],
+      [
+        "retire",
+        "ReaderAlive",
+        12
+      ],
+      [
+        "early",
+        "AtomicPublication",
+        12
+      ],
+      [
+        "stale",
+        "CurrentReply",
+        12
+      ],
+      [
+        "budget",
+        "LogicalBudget",
+        12
+      ]
+    ]
+  },
+  "RayonPublication": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "TypeOK ExactFacts Bounded JoinBarrier SnapshotSafe CompletionExact"
+    },
+    "faults": [
+      [
+        "early",
+        "JoinBarrier",
+        12
+      ],
+      [
+        "late",
+        "SnapshotSafe",
+        12
+      ],
+      [
+        "digest",
+        "CompletionExact",
+        12
+      ],
+      [
+        "uncapped",
+        "Bounded",
+        12
+      ]
+    ]
+  },
+  "ReaderLifetime": {
+    "configuration": {
+      "constants": "Rows = {0,1,2}\nReaders = {1,2}\nBudget = 2\nMutation = \"none\"",
+      "invariants": "ReaderAlive AcceptedCurrent CreditBalance",
+      "properties": "ReaderCompletion",
+      "specification": "spec"
+    },
+    "faults": [
+      [
+        "stuck",
+        "ReaderCompletion",
+        13
+      ],
+      [
+        "unfair",
+        "ReaderCompletion",
+        13
+      ],
+      [
+        "global",
+        "ReaderCompletion",
+        13
+      ],
+      [
+        "retire",
+        "ReaderAlive",
+        12
+      ],
+      [
+        "credit",
+        "CreditBalance",
+        12
+      ],
+      [
+        "aba",
+        "AcceptedCurrent",
+        12
+      ]
+    ]
+  },
+  "ReadyComponents": {
+    "configuration": {
+      "constants": "Tasks = {1,2,3}\nCapacity = 2\nMutation = \"none\"",
+      "invariants": "Partition Prerequisites CapacityBound CompleteReturn DependencySnapshot CompletedDelivery"
+    },
+    "faults": [
+      [
+        "prerequisite",
+        "Prerequisites",
+        12
+      ],
+      [
+        "early",
+        "CompleteReturn",
+        12
+      ],
+      [
+        "snapshot",
+        "DependencySnapshot",
+        12
+      ],
+      [
+        "tail",
+        "CompletedDelivery",
+        12
+      ],
+      [
+        "credit",
+        "CompletedDelivery",
+        12
+      ]
+    ]
+  },
+  "RectangleCompaction": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "OrderedExact WeightedCount IndependentReaders"
+    },
+    "faults": [
+      [
+        "heavy",
+        "OrderedExact",
+        12
+      ],
+      [
+        "order",
+        "OrderedExact",
+        12
+      ],
+      [
+        "alias",
+        "OrderedExact",
+        12
+      ],
+      [
+        "mass",
+        "WeightedCount",
+        12
+      ],
+      [
+        "shared",
+        "IndependentReaders",
+        12
+      ]
+    ]
+  },
+  "RectangleExport": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "FrozenExact OrderedExact IndependentReads CountExact"
+    },
+    "faults": [
+      [
+        "order",
+        "OrderedExact",
+        12
+      ],
+      [
+        "alias",
+        "FrozenExact",
+        12
+      ],
+      [
+        "shared",
+        "IndependentReads",
+        12
+      ]
+    ]
+  },
+  "RequestScheduling": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "TypeOK NoExpiredAdmission NoCanceledAdmission HeldFailure PendingExact FanoutExact OwnerPublication StageExact CapacityExact"
+    },
+    "faults": [
+      [
+        "reset-at-worker",
+        "NoExpiredAdmission",
+        12
+      ],
+      [
+        "caller-publish",
+        "OwnerPublication",
+        12
+      ],
+      [
+        "ignore-queued-cancel",
+        "NoCanceledAdmission",
+        12
+      ],
+      [
+        "early-retire",
+        "PendingExact",
+        12
+      ],
+      [
+        "publish-failed",
+        "HeldFailure",
+        12
+      ],
+      [
+        "short-fanout",
+        "FanoutExact",
+        12
+      ],
+      [
+        "unbounded-fanout",
+        "FanoutExact",
+        12
+      ],
+      [
+        "stale-stage-fanout",
+        "StageExact",
+        12
+      ],
+      [
+        "eager-stage-probe",
+        "StageExact",
+        12
+      ],
+      [
+        "pool-size-as-capacity",
+        "CapacityExact",
+        12
+      ]
+    ]
+  },
+  "ScopedComposition": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactWitnesses ExactCoverage ExactMissing ExactAnswer Private"
+    },
+    "faults": [
+      [
+        "union",
+        "ExactAnswer",
+        12
+      ],
+      [
+        "allBranches",
+        "ExactCoverage",
+        12
+      ],
+      [
+        "emptyGroup",
+        "ExactMissing",
+        12
+      ],
+      [
+        "forgetWitness",
+        "ExactWitnesses",
+        12
+      ]
+    ]
+  },
+  "ScopedQuery": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactHops ExactReach ExactShortest ExactPredecessors ExactWitnesses ExactBranches ExactGroups ExactTraces Private"
+    },
+    "faults": [
+      [
+        "unbounded",
+        "ExactHops",
+        12
+      ],
+      [
+        "independentSides",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "global",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "forgetPredecessor",
+        "ExactPredecessors",
+        12
+      ],
+      [
+        "forgetTrace",
+        "ExactTraces",
+        12
+      ]
+    ]
+  },
+  "ScopedReachabilityMask": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactReach ExactWitnesses ExactBranches ExactGroups Private"
+    },
+    "faults": [
+      [
+        "global",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "late",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "cleanAlternative",
+        "ExactBranches",
+        12
+      ],
+      [
+        "forgetWitness",
+        "ExactWitnesses",
+        12
+      ]
+    ]
+  },
+  "ScopedWitness": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactWitnesses ExactAnswer Private"
+    },
+    "faults": [
+      [
+        "late",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "global",
+        "ExactAnswer",
+        12
+      ],
+      [
+        "anyBlocked",
+        "ExactWitnesses",
+        12
+      ],
+      [
+        "forget",
+        "ExactWitnesses",
+        12
+      ]
+    ]
+  },
+  "SessionPublication": {
+    "configuration": {
+      "constants": "GenerationCutoff = $cutoff\nMutation = \"none\"",
+      "constraint": "ExplorationBound",
+      "invariants": "TypeOK CommittedSnapshot CleanAligned PartialBounded",
+      "properties": "NoPrematurePublication"
+    },
+    "faults": [
+      [
+        "early",
+        "CommittedSnapshot",
+        12
+      ],
+      [
+        "bounded",
+        "CommittedSnapshot",
+        12
+      ],
+      [
+        "alias",
+        "CommittedSnapshot",
+        12
+      ]
+    ]
+  },
+  "SessionTransaction": {
+    "configuration": {
+      "constants": "GenerationCutoff = $cutoff\nMutation = \"none\"",
+      "constraint": "ExplorationBound",
+      "invariants": "TypeOK AtomicSnapshot",
+      "properties": "NoStaleCommit AbortPreservesSnapshot"
+    },
+    "faults": [
+      [
+        "early",
+        "AtomicSnapshot",
+        12
+      ],
+      [
+        "stale",
+        "NoStaleCommit",
+        13
+      ],
+      [
+        "global",
+        "AtomicSnapshot",
+        12
+      ],
+      [
+        "reuse",
+        "AtomicSnapshot",
+        12
+      ]
+    ]
+  },
+  "TerminalTraversal": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Bounds FailureFrozen CompletedScan"
+    },
+    "faults": [
+      [
+        "tail",
+        "FailureFrozen",
+        12
+      ],
+      [
+        "resume",
+        "FailureFrozen",
+        12
+      ],
+      [
+        "skip",
+        "FailureFrozen",
+        12
+      ],
+      [
+        "early",
+        "CompletedScan",
+        12
+      ]
+    ]
+  },
+  "TransitiveComponents": {
+    "configuration": {
+      "constants": "Nodes = {1,2,3}\nMutation = \"none\"",
+      "invariants": "ReachExact SCCExact ParentRoots PrivateArcs RefusalAtomic ActiveExact DeltaExact ParentChains MemberPartition SizeExact WeightedDeltaExact DifferenceExact ExcessWeightExact SparseMassExact"
+    },
+    "faults": [
+      [
+        "raw",
+        "DeltaExact",
+        12
+      ],
+      [
+        "diagonal",
+        "DeltaExact",
+        12
+      ],
+      [
+        "old",
+        "DeltaExact",
+        12
+      ],
+      [
+        "split",
+        "SCCExact",
+        12
+      ],
+      [
+        "stale",
+        "ReachExact",
+        12
+      ],
+      [
+        "reject",
+        "RefusalAtomic",
+        12
+      ],
+      [
+        "chain",
+        "ParentChains",
+        12
+      ],
+      [
+        "members",
+        "MemberPartition",
+        12
+      ],
+      [
+        "size",
+        "SizeExact",
+        12
+      ],
+      [
+        "adjacency",
+        "PrivateArcs",
+        12
+      ],
+      [
+        "weight",
+        "WeightedDeltaExact",
+        12
+      ],
+      [
+        "excess",
+        "ExcessWeightExact",
+        12
+      ],
+      [
+        "sparseSelf",
+        "SparseMassExact",
+        12
+      ]
+    ]
+  },
+  "WeightedExport": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "FrozenExact OrderedExact IndependentReads AxisExact CountExact SharedPlanExact MembershipExact DifferenceExact GroupedQueryExact FrozenPlanExact CompleteKeyExact TinyOwnerExact RoutedPointExact PointMemberExact CompactQueryExact CompactRangeExact CompactFallbackExact CompactNarrowExact StreamAdmissionExact StreamAdmissionComplete StreamFirstSlots OwnerConstructionExact SharedAxisRouteExact OwnerWorkspaceReuseExact"
+    },
+    "faults": [
+      [
+        "owner-buffer-stale",
+        "OwnerWorkspaceReuseExact",
+        12
+      ],
+      [
+        "route-share",
+        "SharedAxisRouteExact",
+        12
+      ],
+      [
+        "owner-occurrence",
+        "OwnerConstructionExact",
+        12
+      ],
+      [
+        "owner-representative",
+        "OwnerConstructionExact",
+        12
+      ],
+      [
+        "owner-plan-order",
+        "OwnerConstructionExact",
+        12
+      ],
+      [
+        "admit-early",
+        "StreamAdmissionComplete",
+        12
+      ],
+      [
+        "admit-priority",
+        "StreamAdmissionExact",
+        12
+      ],
+      [
+        "admit-last",
+        "StreamFirstSlots",
+        12
+      ],
+      [
+        "compact-candidate",
+        "CompactNarrowExact",
+        12
+      ],
+      [
+        "compact-plan-miss",
+        "CompactFallbackExact",
+        12
+      ],
+      [
+        "compact-conflict",
+        "CompactQueryExact",
+        12
+      ],
+      [
+        "compact-range",
+        "CompactRangeExact",
+        12
+      ],
+      [
+        "point-head-drop",
+        "PointMemberExact",
+        12
+      ],
+      [
+        "tiny-owner",
+        "TinyOwnerExact",
+        12
+      ],
+      [
+        "point-drop",
+        "RoutedPointExact",
+        12
+      ],
+      [
+        "point-prefix",
+        "CompleteKeyExact",
+        12
+      ],
+      [
+        "point-owner",
+        "CompleteKeyExact",
+        12
+      ],
+      [
+        "merge-skip",
+        "FrozenPlanExact",
+        12
+      ],
+      [
+        "merge-order",
+        "FrozenPlanExact",
+        12
+      ],
+      [
+        "repeat-conflict",
+        "GroupedQueryExact",
+        12
+      ],
+      [
+        "group-owner",
+        "GroupedQueryExact",
+        12
+      ],
+      [
+        "owner-cross",
+        "MembershipExact",
+        12
+      ],
+      [
+        "member-miss",
+        "MembershipExact",
+        12
+      ],
+      [
+        "selected-order",
+        "AxisExact",
+        12
+      ],
+      [
+        "plan-axis",
+        "SharedPlanExact",
+        12
+      ],
+      [
+        "order",
+        "OrderedExact",
+        12
+      ],
+      [
+        "alias",
+        "FrozenExact",
+        12
+      ],
+      [
+        "shared",
+        "IndependentReads",
+        12
+      ],
+      [
+        "axis",
+        "AxisExact",
+        12
+      ],
+      [
+        "mass",
+        "CountExact",
+        12
+      ]
+    ]
+  },
+  "WithdrawalConcurrency": {
+    "configuration": {
+      "constants": "Mutation = \"none\"\nSecondExpected = 0",
+      "invariants": "AtomicSnapshot ExclusiveOwnership TerminalReleased OnePublicationPerGeneration ReceiptBound"
+    },
+    "faults": [
+      [
+        "outside",
+        "OnePublicationPerGeneration",
+        12
+      ],
+      [
+        "abandon",
+        "TerminalReleased",
+        12
+      ],
+      [
+        "earlyUnlock",
+        "ExclusiveOwnership",
+        12
+      ]
+    ]
+  },
+  "WithdrawalSession": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "constraint": "ExplorationBound",
+      "invariants": "AtomicSnapshot FrozenGraph CurrentTokens CurrentOrdinal CumulativeSupport HistoricalObservation SupportCoverage StorageAtomic BudgetAdmission"
+    },
+    "faults": [
+      [
+        "early",
+        "AtomicSnapshot",
+        12
+      ],
+      [
+        "graphEdit",
+        "FrozenGraph",
+        12
+      ],
+      [
+        "unchecked",
+        "AtomicSnapshot",
+        12
+      ],
+      [
+        "ordinal",
+        "CurrentOrdinal",
+        12
+      ],
+      [
+        "forgetRemoved",
+        "CumulativeSupport",
+        12
+      ],
+      [
+        "rebase",
+        "CurrentTokens",
+        12
+      ],
+      [
+        "borrowObservation",
+        "HistoricalObservation",
+        12
+      ],
+      [
+        "compactLoss",
+        "SupportCoverage",
+        12
+      ],
+      [
+        "compactEarly",
+        "StorageAtomic",
+        12
+      ],
+      [
+        "compactRebase",
+        "CurrentTokens",
+        12
+      ],
+      [
+        "uncharged",
+        "BudgetAdmission",
+        12
+      ]
+    ]
+  },
+  "Withholding": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Private Bound Protected ExactCut"
+    },
+    "faults": [
+      [
+        "early",
+        "Private",
+        12
+      ],
+      [
+        "local",
+        "Protected",
+        12
+      ],
+      [
+        "stale",
+        "Bound",
+        12
+      ],
+      [
+        "missing",
+        "Protected",
+        12
+      ]
+    ]
+  },
+  "CheckpointTransport": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll WaitTypeOK TransientRechecks FatalStaysFatal ChangedNeverBackoff RetryNoDecision NoLostRegisteredWake NoticeTypeOK NoExtraWake"
+    },
+    "faults": [
+      [
+        "ignore-buffered-hangup",
+        "StablePeerDecision",
+        12
+      ],
+      [
+        "consume-peek",
+        "NoConsume",
+        12
+      ],
+      [
+        "fault-open",
+        "FaultClosed",
+        12
+      ],
+      [
+        "benign-closed",
+        "StablePeerDecision",
+        12
+      ],
+      [
+        "idle-poll",
+        "IdleNoPoll",
+        12
+      ],
+      [
+        "eof-poll",
+        "EofNoPoll",
+        12
+      ],
+      [
+        "memory-fatal",
+        "TransientRechecks",
+        12
+      ],
+      [
+        "invalid-retry",
+        "FatalStaysFatal",
+        12
+      ],
+      [
+        "changed-sleep",
+        "ChangedNeverBackoff",
+        12
+      ],
+      [
+        "retry-grant",
+        "RetryNoDecision",
+        12
+      ],
+      [
+        "register-missing",
+        "NoLostRegisteredWake",
+        12
+      ],
+      [
+        "registration-cleared",
+        "NoLostRegisteredWake",
+        12
+      ],
+      [
+        "wake-before-phase",
+        "NoLostRegisteredWake",
+        12
+      ],
+      [
+        "double-wake",
+        "NoExtraWake",
+        12
+      ]
+    ]
+  },
+  "OrdinalIndex": {
+    "configuration": {
+      "constants": "Mutation = \"none\"\nNativeLimit = 64",
+      "invariants": "ExactRows ExclusiveBins SpineBound NativeBound GuardExact SameRequestCost"
+    },
+    "faults": [
+      [
+        "unbounded-spine",
+        "GuardExact",
+        12
+      ],
+      [
+        "ignore-byte-limit",
+        "GuardExact",
+        12
+      ],
+      [
+        "drop-moved",
+        "ExactRows",
+        12
+      ],
+      [
+        "reverse-moved",
+        "ExactRows",
+        12
+      ],
+      [
+        "retain-moved",
+        "ExclusiveBins",
+        12
+      ],
+      [
+        "skip-sparse",
+        "ExactRows",
+        12
+      ],
+      [
+        "mix-phase-maxima",
+        "SameRequestCost",
+        12
+      ],
+      [
+        "drop-validation",
+        "SameRequestCost",
+        12
+      ]
+    ]
+  },
+  "ProofAuthorityRead": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "OwnerRequired GenerationRequired CancelRequired DeadlineRequired FingerprintRequired RefusalNeverVerified NoUnusedProjection ForeignStillProjects"
+    },
+    "faults": [
+      [
+        "allow-closed",
+        "OwnerRequired",
+        12
+      ],
+      [
+        "skip-generation",
+        "GenerationRequired",
+        12
+      ],
+      [
+        "skip-cancel",
+        "CancelRequired",
+        12
+      ],
+      [
+        "reset-deadline",
+        "DeadlineRequired",
+        12
+      ],
+      [
+        "skip-fingerprint",
+        "FingerprintRequired",
+        12
+      ],
+      [
+        "verify-unsupported",
+        "RefusalNeverVerified",
+        12
+      ],
+      [
+        "project-without-fingerprint",
+        "NoUnusedProjection",
+        12
+      ],
+      [
+        "skip-foreign-fingerprint",
+        "ForeignStillProjects",
+        12
+      ],
+      [
+        "verify-foreign",
+        "RefusalNeverVerified",
+        12
+      ]
+    ]
+  },
+  "RowViewShape": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "StampExact CurrentShape RowsPreserved NoEarlyGetter NoShapeAdmission FreshAdmission GetterOrder"
+    },
+    "faults": [
+      [
+        "claim-arbitrary",
+        "StampExact",
+        12
+      ],
+      [
+        "claim-stale-parent",
+        "StampExact",
+        12
+      ],
+      [
+        "forget-owner",
+        "StampExact",
+        12
+      ],
+      [
+        "skip-parent-invalidation",
+        "CurrentShape",
+        12
+      ],
+      [
+        "ignore-child-revision",
+        "CurrentShape",
+        12
+      ],
+      [
+        "drop-rows",
+        "RowsPreserved",
+        12
+      ],
+      [
+        "eager-getter",
+        "NoEarlyGetter",
+        12
+      ],
+      [
+        "cache-validation",
+        "FreshAdmission",
+        12
+      ],
+      [
+        "skip-getter",
+        "GetterOrder",
+        12
+      ],
+      [
+        "stamp-valid",
+        "NoShapeAdmission",
+        12
+      ]
+    ]
+  },
+  "RankedPublication": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "OrderEmbedding DecodeExact OrderedPublication NoCanceledPublication NoFailedPublication"
+    },
+    "faults": [
+      [
+        "raw-code-order",
+        "OrderEmbedding",
+        12
+      ],
+      [
+        "reverse-rank",
+        "OrderEmbedding",
+        12
+      ],
+      [
+        "drop-prefix",
+        "OrderEmbedding",
+        12
+      ],
+      [
+        "wrong-decode",
+        "DecodeExact",
+        12
+      ],
+      [
+        "missing-order",
+        "OrderedPublication",
+        12
+      ],
+      [
+        "ignore-cancel",
+        "NoCanceledPublication",
+        12
+      ],
+      [
+        "ignore-failure",
+        "NoFailedPublication",
+        12
+      ]
+    ]
+  },
+  "BindingTraversal": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "Equivalent FailClosed OwnedCopies StopsAtFailure"
+    },
+    "faults": [
+      [
+        "erase-prior",
+        "Equivalent",
+        12
+      ],
+      [
+        "ignore-conflict",
+        "Equivalent",
+        12
+      ],
+      [
+        "skip-last",
+        "Equivalent",
+        12
+      ],
+      [
+        "publish-failure",
+        "FailClosed",
+        12
+      ],
+      [
+        "copy-per-term",
+        "OwnedCopies",
+        12
+      ],
+      [
+        "continue-rejected",
+        "StopsAtFailure",
+        12
+      ]
+    ]
+  },
+  "AggregateAdmission": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "AdmissionExact CallbackExact PublicProbeCost AllocationScope"
+    },
+    "faults": [
+      [
+        "forge-shape",
+        "CallbackExact",
+        12
+      ],
+      [
+        "ignore-children",
+        "CallbackExact",
+        12
+      ],
+      [
+        "ignore-revision",
+        "CallbackExact",
+        12
+      ],
+      [
+        "ignore-protocol",
+        "CallbackExact",
+        12
+      ],
+      [
+        "skip-fields",
+        "AdmissionExact",
+        12
+      ],
+      [
+        "reuse-prior",
+        "AdmissionExact",
+        12
+      ],
+      [
+        "reject-tuple",
+        "AdmissionExact",
+        12
+      ],
+      [
+        "keep-public-probes",
+        "PublicProbeCost",
+        12
+      ],
+      [
+        "promote-foreign-allocation",
+        "AllocationScope",
+        12
+      ],
+      [
+        "promote-net-stack",
+        "AllocationScope",
+        12
+      ],
+      [
+        "promote-negative-allocation",
+        "AllocationScope",
+        12
+      ],
+      [
+        "ignore-negative-raw",
+        "AllocationScope",
+        12
+      ],
+      [
+        "exceed-raw-bound",
+        "AllocationScope",
+        12
+      ],
+      [
+        "ignore-counter-precision",
+        "AllocationScope",
+        12
+      ]
+    ]
+  },
+  "CheckpointSpin": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "CpuPressure OwnerPressure Bounded"
+    },
+    "faults": [
+      [
+        "ignore-cpu-pressure",
+        "CpuPressure",
+        12
+      ],
+      [
+        "ignore-owner-pressure",
+        "OwnerPressure",
+        12
+      ],
+      [
+        "unbounded-spin",
+        "Bounded",
+        12
+      ]
+    ]
+  },
+  "OwnerAdmission": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "CallerOnly LeaseFence BudgetExact SnapshotCurrent ResourceLifetime ForkLifetime CapturedCopyCost OwnerReady LibraryScopes"
+    },
+    "faults": [
+      [
+        "child-publishes",
+        "CallerOnly",
+        12
+      ],
+      [
+        "mirror-authority",
+        "CallerOnly",
+        12
+      ],
+      [
+        "ignore-deadline",
+        "CallerOnly",
+        12
+      ],
+      [
+        "unfenced-notice",
+        "LeaseFence",
+        12
+      ],
+      [
+        "ignore-budget",
+        "BudgetExact",
+        12
+      ],
+      [
+        "skip-snapshot-reverify",
+        "SnapshotCurrent",
+        12
+      ],
+      [
+        "drop-resource-with-host",
+        "ResourceLifetime",
+        12
+      ],
+      [
+        "fork-drops-parent",
+        "ForkLifetime",
+        12
+      ],
+      [
+        "repeat-package-copy",
+        "CapturedCopyCost",
+        12
+      ],
+      [
+        "ready-before-metadata",
+        "OwnerReady",
+        12
+      ],
+      [
+        "metadata-spends-scope",
+        "LibraryScopes",
+        12
+      ]
+    ]
+  }
+}

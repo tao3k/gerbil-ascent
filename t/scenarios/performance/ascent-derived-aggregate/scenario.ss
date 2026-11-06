@@ -10,7 +10,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-aggregate-program-fixture
                  ascent-derived-aggregate-program)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program))
 
 (def fixture

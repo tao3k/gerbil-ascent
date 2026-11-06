@@ -1,0 +1,20 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 2000us)
+ (target_total . 1000us)
+ (regression_budget . 1000us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 1000)
+ (targetRationale . "Measure a retained product lattice fixed point before and after direct and derived source appends.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-product-session/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-product-session)
+ (optimizationFocus . "coordinatewise join and retained session update through two lattice relations")
+ (inputShape . "two nodes, incomparable direct source values, derived improvements, and two source appends")
+ (expectedOutcome . "score and copy agree with the coordinatewise fixed point in both phases")
+ (expectedRepair . "preserve the paper fixed point and POO lattice join rather than Rust raw-source artifacts")
+ (measurementPhases open-session initial-fixed-point source-appends updated-fixed-point assert-semantic-gate assert-time-gate)
+ (tags poo ascent lattice product session performance))

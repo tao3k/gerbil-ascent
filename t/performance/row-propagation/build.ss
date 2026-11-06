@@ -1,0 +1,6 @@
+(import (only-in :std/make make))
+(make '("t/performance/row-propagation/reference" "t/performance/row-propagation/kernel")
+      srcdir: (current-directory)
+      libdir: (getenv "ASCENT_ROW_LIB")
+      build-deps: (getenv "ASCENT_ROW_BUILD_DEPS"))
+(exit 0)

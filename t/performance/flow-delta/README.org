@@ -1,0 +1,93 @@
+#+title: Native finite-flow delta qualification
+
+* Source learning and production scope
+
+Gerbil =1cfb032= =std/io/bio/types.ss= distinguishes owned byte buffers from
+cursor state. =std/io/bio/input.ss= uses =defrules __bio-read= to express the
+complete read protocol with selected fill/read/retry operations. The useful
+application here is one private bitmap staging buffer with a shared hygienic
+write/count loop, selected before byte traversal.
+
+=reference.ss= is the complete =core/finite-flow.ss= at
+=cc0a4308fb0734de3af3a9171c4bc1515bca29d0=. Only the relative relation-view import is qualified to the public module. Each timed call constructs the entire
+finite flow: domain/pair admission, adjacency, seeds, queue propagation,
+budget/cancellation checks and frozen publication. Input generation and full
+row enumeration are outside timing. This is not a Program/Session or actor
+performance measurement.
+
+* Ownership and semantic controls
+
+Scratch is lazy and private to one invocation. Equal incoming/total bitmaps prove no new facts and skip scratch. Every byte is overwritten on
+every remaining delta, including zeros and padding. There is no callback between fill
+and synchronous merge. Budget admission precedes mutation of result roots.
+First root insertion copies scratch independently for total and pending;
+returned views retain only their frozen roots and domains.
+
+Each pair checks all ordered emitted facts against independently generated
+truth, exact counts and physical units, the number of cancellation observations
+and unchanged input spines. A held first view is checked again after all later
+calls. Unit Suites retain 256 CFG/seed/blocker combinations, byte boundaries,
+false values, cyclic propagation, a million-fact compact relation and packed
+Program/Session comparisons. An additional Case covers reentrant cancellation
+observations, budget-failure retry and held cuts.
+
+* Fixed native A/B admission
+
+Public ASP =make-benchmark-fixture= generated =benchmark.ss= before sampling.
+There are 50 alternating pairs per shape. Dense, cycle and blocked targets
+require CPU <=90% of baseline and at least 35 CPU wins. Small and empty
+controls allow <=105% plus 20us. All shapes allow allocation <=101% plus 256
+bytes. The ASP pair p95 limit is 999ms. Gates remain fixed after observations.
+Allocation is Gambit's process allocation counter, not retained heap.
+
+Use the existing project Gerbil library and OpenSSL link environment:
+
+#+begin_src scheme
+;; just prepare-test-library
+;; gxi t/performance/flow-delta/build.ss LIBRARY BINARY runner
+;; gxi t/performance/flow-delta/build.ss LIBRARY QUALIFIER qualify
+;; BINARY dense RECEIPT
+;; BINARY cycle RECEIPT
+;; BINARY blocked RECEIPT
+;; BINARY small RECEIPT
+;; BINARY empty RECEIPT
+;; QUALIFIER
+#+end_src
+
+=qualify.ss= runs finite-flow, finite-flow-program and relation-view Suites.
+Require every Case result, final =OK= and exit zero. Run measurements without
+concurrent builds or policy. Logs, binaries and raw receipts stay in ignored
+=.cache/ascent/flow-delta/=. Retain failed or interrupted series separately.
+
+* Local results and rejected measurements
+
+Final independent series, 50 alternating pairs per shape:
+
+| Shape | Old CPU us | New CPU us | Old allocated bytes | New allocated bytes | CPU wins | Admission |
+|-------+------------+------------+---------------------+---------------------+----------+-----------|
+| cycle |        698 |        390 |              549128 |              361032 |       50 | pass      |
+| small |          7 |          7 |               10000 |                9392 |       23 | pass      |
+| empty |          2 |          1 |                2768 |                2800 |       23 | pass      |
+| dense |        296 |        284 |              319240 |              296376 |       42 | fail CPU  |
+| blocked |     3384 |       3073 |             1714072 |             1528920 |       50 | fail CPU  |
+
+The cyclic redundant-edge target improves complete-call CPU about 44% and
+allocation about 34%. Dense/blocked inputs pass semantic checks and allocation
+caps but fail their unchanged 10% CPU improvement requirement. They remain
+callable rejected scenarios; no whole-flow universal speedup is claimed.
+Small/empty timings are near timer resolution and serve only as controls.
+Empty adds 32 allocated bytes within its original control allowance.
+
+The initial scratch/specialization-only cycle series improved CPU about 16%
+and allocation about 34%; dense/blocked already failed the CPU requirement.
+The equal-bitmap empty-delta proof produced the final cyclic gain. These
+initial observations remain in the original scenario logs and receipts.
+
+One finalization batch had brief overlapping measurement processes. Those
+logs are retained as =*-overlap.log=; that batch is excluded. The table uses
+independent =cycle-admitted=, =small-admitted=, =empty-admitted=,
+=dense-isolated= and =blocked-isolated= series. Gates were not changed.
+
+The native qualifier requires final =OK= and exit zero; policy checks cover
+86 selected production files with zero errors and 27 existing advisories.
+These are local receipts, separate from remote CI completion.

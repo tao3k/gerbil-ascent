@@ -1,0 +1,155 @@
+#+TITLE: Native performance qualification lifecycle
+
+
+* Historical collector retirement (2026-10-07)
+
+This directory records a historical measurement, not a current execution entry.
+The one-shot Python collectors and continuation scheduler were removed after
+the Scheme harness migration. Their original code remains in Git commit
+0f20eb900d5a082e445d93e574c4d71eed0b29cb. Retained receipts and negative results
+refer to their recorded source versions; they do not qualify current source.
+Use =just test=, =just test-file <module>= and =just performance= through the
+current Scheme harness for current acceptance. Scheme benchmark/reference
+modules remain available. Collector names below describe historical work.
+
+* Scope and preceding implementation
+
+This change repairs the execution path of the complete performance entrypoint.
+It does not introduce a new solver algorithm. The preceding commit is 5197d6b.
+The production module inventory and every production source remain identical to
+that commit, as do original scenario bodies, benchmark budgets, sample counts,
+heap fences, dependency pins and ASP/POO profiles.
+
+The old test-file recipe placed the checkout first on GERBIL_LOADPATH. In that
+context the evaluator, Session and publication modules resolve to interpreted
+.ss files. Without the checkout prefix the installed production library resolves
+to .ssi; a private freshly built library now proves that resolution independently
+of the installed package cache. An early resolution probe included an unavailable
+reference test module in the installed library; its failure is diagnostic only.
+
+The six-sample phase probe is a diagnosis, not a 1000-pair speedup receipt.
+It uses the same public 10000-append Session workload in both execution modes.
+The warmed compiled append phase allocates 1122048 bytes, whereas the source
+phase allocates 6402080 bytes. The compiled phase is about 1.3 ms in those
+samples; the source phase is about 24--30 ms before later outliers. This
+establishes an execution-mode difference. It does not assign every historical
+latency failure to interpretation or establish an algorithmic speedup.
+
+* One guarded execution path
+
+=just performance= constructs a fresh private library from the module inventory
+owned by build.ss. =just performance-scenario NAME= uses the same path for an
+individual scenario. Fresh top-level builds prevent silent use of old installed
+ASCENT artifacts. Every declared production module must have a compiled .ssi,
+and a resolution probe must select all 41 files from the private library.
+
+The exclusive test lease covers compilation and sampling. Nested scenarios
+inherit the parent's real file descriptor and reuse the same snapshot.
+Source, original fixture/profile, dependency .ssi/.so, generated module inventory
+and private compiled artifact hashes are verified before and after sampling.
+Changes invalidate a receipt instead of qualifying changed code against stale
+artifacts. Build and verification time are outside the benchmark timer.
+
+=assert-native-library!= also checks all production imports in the actual gxtest
+process, before any scenario starts timing. It is shared by the ordinary scenario
+harness and both dedicated binary/candidate performance fixtures. Its
+=NATIVE-MODULES-OK= marker must appear in every final original gate receipt.
+The Case, Module, Harness and final OK/error checks remain active; native exit
+zero cannot hide a failed benchmark assertion.
+
+Ordinary functional tests retain source resolution by default. The new optional
+ASCENT_TEST_LIBRARY prefix is supplied by the guarded performance runner. The
+final functional suite is additionally run against the same compiled snapshot.
+The serial/parallel admission list and GERBIL_BUILD_CORES projection are unchanged.
+
+* Diagnosis, rejected attempts and limits
+
+The initial module-resolution generator used a string where the expander expects
+a module identifier; it was rejected before sampling. Its log is retained.
+Another development build was rejected when the shared runtime guard was changed
+during compilation. Neither attempt supplies a final performance claim.
+
+An earlier native suite stopped at 10000 appends: p50=2.111 ms,
+p95=50.614 ms, max=241.962 ms, 54/1000 over the unchanged 50 ms gate.
+That failed measurement remains in native-suite.log. It demonstrates that native
+production execution alone does not prove tail stability. The preceding source
+receipt (104.996 ms p95, 238/1000 over 50 ms) also remains a failed receipt in
+the result-publication report; this change does not rewrite that evidence.
+
+The original 10000-append fixture demands the final rows after its timer, so its
+pass qualifies that declared measurement phase. complete-append.ss additionally
+charges Session creation, initial run, all public appends, final run and complete
+row demand to every sample. It prepares inputs outside timing, checks exact
+ordered rows outside timing, uses 20 warmups and 1000 samples, retains all raw
+elapsed/allocation observations, and applies the existing 50 ms p95 limit.
+No forced per-sample GC or budget relaxation is introduced.
+
+* Reproduction and evidence
+
+The retired collector commands are available in the frozen Git commit above.
+
+The normal performance entrypoint remains fail-fast. The qualification collector
+executes all 17 unchanged gates independently so that an early failure does not
+hide later outcomes; its final exit fails if any gate fails. Two complete-output
+samples use the same snapshot. final-snapshot.json pins sources, dependencies,
+production artifacts and modules; final-resolution.log retains all native paths.
+Raw per-entry logs and summary.json preserve both passing and failed outcomes.
+
+* Final native gate results
+
+All 17 original gates were collected at the final snapshot. Sixteen pass;
+relation projection fails its unchanged 2 ms p95 bound at 3.768 ms
+(p50 372 us, max 180.914 ms), after exact semantic equality and 1024-row
+cardinality checks passed. No latency explanation follows from that receipt.
+The final qualification therefore exits 1 and is not a full SS pass.
+
+| Original gate | Status |
+|---------------+--------|
+| ascent-byods-trrel | PASS |
+| ascent-session-update | PASS |
+| ascent-ten-thousand-appends | PASS |
+| ascent-nonpositive-session-update | PASS |
+| ascent-rule-clauses | PASS |
+| ascent-var-points-to | PASS |
+| ascent-upstream-examples | PASS |
+| ascent-product-session | PASS |
+| ascent-mutual-recursive-heads | PASS |
+| ascent-derived-aggregate | PASS |
+| ascent-indexed-joins | PASS |
+| ascent-byods-eqrel | PASS |
+| ascent-binary-program | PASS |
+| ascent-reachability-closure | PASS |
+| ascent-table-expression | FAIL |
+| ascent-table-expression-membership | PASS |
+| ascent-shortest-candidates | PASS |
+
+The original 10000-append gate passes in this final snapshot: p50 2.071 ms,
+p95 33.945 ms, max 205.154 ms, 28/1000 above 50 ms. The two stricter
+complete-output runs also pass: median allocation 2564096 bytes in both;
+p50 2.046/2.060 ms and p95 39.444/40.006 ms. All input generation and
+semantic equality checks are outside the timer; final row demand is inside.
+These absolute receipts do not establish a paired algorithmic speedup or
+uniform tail stability. The earlier 50.614 ms native failure remains relevant.
+
+The initial collector attempted a functional suite inside its exclusive parent
+lease; worker launch closed the inherited descriptor and failed before Cases
+started. functional-suite.log and attempt-summary.json retain that collector
+error. The final collector now stops after performance qualification; the
+functional suite is run through its ordinary module scheduler separately, using
+the same compiled library. Its individual workers acquire their normal leases.
+final-gates.json contains the 17 original and two complete-output final gates
+without disguising the development collector failure as a semantic failure.
+
+The Python scheduler and snapshot regression suite passes all 20 tests,
+including source/profile/dependency/artifact drift and unknown scenario
+rejection. final-python-tests.log retains its result.
+
+* Final functional and policy qualification
+
+The separate final native functional suite passed 48 modules and 372 Cases at
+GERBIL_BUILD_CORES=12. collect-suite.py checks exact requested/completed module
+coverage, every Case completion, Module/Harness/final OK and absence of native
+error/overflow markers. All individual logs and machine-readable coverage are
+retained. Production policy selected 41 modules and reported zero findings
+and errors. The final source/dependency/artifact snapshot was checked again
+after qualification. This is local evidence; no remote CI claim is made.

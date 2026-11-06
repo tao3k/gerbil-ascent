@@ -1,0 +1,906 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: Scheme relational DSL: design overview
+#+STATUS: design overview; checked native subset implemented, wider higher-order semantics proposed
+#+DATE: 2026-09-30
+#+FILETAGS: :design:scheme-dsl:
+
+* Purpose and boundary
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-overview
+:END:
+
+This is the short overview for discussing the next Scheme relational
+language.  [[file:research/scheme-dsl/language-history.org][Language history]] explains how the ideas developed;
+[[file:research/scheme-dsl/index.org][the research index]] links individual paper readings with PDF locators.
+The [[file:research/scheme-dsl/reflection.org][reflection and comparison plan]]
+separates paper results from our hypotheses and defines the evidence
+needed before claiming an improvement.
+The [[file:scheme-relational-language-design.org][first language design gate]] defines the high-order layers,
+rule-time operator boundary, native Scheme grammar and
+discriminating experiments.  Its
+[[file:scheme-relational-language-design.org::#scheme-language-finite-operator-graph][finite positive operator subset]] now has executable lowering and
+qualification.
+The [[file:research/agent-inference/index.org][LLM reasoning research index]] studies the deployment-time interface.
+The historical =ascent= implementation recorded selected Rust behavior.
+The new Gerbil Scheme language has no Rust compatibility requirement;
+its grammar, semantic IR and tests must be designed on their own terms.
+The [[file:scheme-closure-contract.org][closure contract]] states the guarantees and open extension obligations.
+The native subset is available through =program/interface.ss=; the old
+=ascent= form lives in =program/syntax.ss= for the parity corpus.
+
+One small relational form remains legible:
+
+#+begin_src scheme
+(rule (path ?source ?target)
+  (edge ?source ?target))
+(rule (path ?source ?target)
+  (path ?source ?middle)
+  (edge ?middle ?target))
+#+end_src
+
+The =rule= form derives facts.  Variables prefixed by =?= belong to the
+rule, so a lexical Scheme binding cannot be mistaken for a logic
+variable.  Body atoms state joins and equality of repeated variables.
+Scheme functions can build program values around these rules; admitted
+operators may compute local values inside rules.  Those phases need
+different guarantees.  This =rule= spelling is implemented within the
+checked =relational-program= and =relational-fragment= forms; the broader
+higher-order language described below remains a proposal.
+
+* Two implementation priorities
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-priorities
+:END:
+
+The first gate is the Scheme relational language design.  Once that
+gate has a concrete semantics and native qualification fixture, the two near-term
+products are (1) a reliable internal Datalog Library
+in Scheme and (2) an LLM reasoning Library built on the same
+program, snapshot and result semantics.  Both need executable evidence.
+The [[file:research/agent-inference/serving-sglang-vllm.org][SGLang/vLLM adapter]]
+is a later delivery channel, after the Library contract is useful from a
+plain Scheme caller.  No model server should define rule validity,
+fixed-point completion, explanation meaning or source authority.
+
+#+NAME: scheme-two-priorities
+| Priority | First executable slice | Acceptance evidence |
+|----------+------------------------+---------------------|
+| Internal Datalog | Assemble one inspectable program from Scheme fragments; admit relation shapes, bindings, dependencies and strata; run and query an immutable result | Independent finite model checks complete recursive facts and negative cases; malformed program returns a located diagnostic; source replacement preserves prior result |
+| LLM reasoning | Submit a candidate fact/rule/query against a named source snapshot; inspect, execute, explain and revise through the Library | A fixed transcript distinguishes undeclared relation, compiling wrong recursive join, present pair and missing pair; status and support limits are explicit; no candidate becomes admitted source |
+
+For the first slice, use a finite graph with recursive reachability and a
+source withdrawal.  The internal path determines the exact result and
+failure behavior; the LLM path exposes that behavior as structured,
+bounded observations.  The same transcript should be callable without
+any LLM or serving framework.  Only then compare actual model turns and
+answer quality.  The historical
+[[file:replication-checklist.org][Rust comparison checklist]] is not a
+gate for this language.
+The current Scheme implementation has checked scalar clauses, stratified
+negation, checked reductions and lattices, finite views, and retained
+source-replacement Sessions.  =relational-admit/report= returns a typed
+diagnostic with a zero-based planner path for invalid rule bodies, heads
+and dependency cycles; direct =relational-admit= still raises.
+Rule-local =where= and =compute= inputs can use scalar literals and
+explicit =(value expression)= captures as well as bound variables;
+admission rebuilds the fixed descriptor before a solve.
+The [[file:llm-reasoning-library-plan.org][implementation plan]] maps the
+research to code seams, interface claims and falsifiable experiments.
+
+* Design feel: a small relational core within Scheme
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-design-feel
+:END:
+
+The public authoring surface should read as Scheme composition of
+relational programs, with a small visible =rule= core.  Program
+fragments are ordinary values that
+Scheme functions can parameterize and combine.  Their relation handles,
+imports, exports, and rules become an inspectable logical program before
+execution.  A rule-time function has declared binding modes, effects,
+and dependencies; it cannot be an opaque call disguised as a relation.
+
+#+NAME: scheme-design-shape
+| Surface | Proposed role | Semantics visible to admission |
+|---------+---------------+--------------------------------|
+| Scheme function | Constructs or specializes fragment values | Resulting fragment and public signature |
+| =rule= and atoms | Derivation, joins, logic-variable equality | Binding modes and dependency edges |
+| Term expression | Row-local scalar computation | Explicit bound inputs and output term |
+| Pointwise relation adapter | Zero, one, or many output rows per fixed input tuple | Input/output modes and declared stability contract |
+| Negation, aggregation, lattice join | Explicit nonpositive or ordered operations | Strata, order/join laws, finite-height obligations |
+| Solve and query | Complete one admitted snapshot, then read it | Completion/failure status and immutable result |
+
+=relation-view= is one provisional adapter for row-local functions, not
+the entire higher-order language.  Arbitrary Scheme closures are not
+proved pure, total, stable, or monotone by accepting =procedure?=.
+
+* LLM reasoning Library is a first-class design case
+:PROPERTIES:
+:CUSTOM_ID: scheme-agent-library
+:END:
+
+The internal rule core and the external LLM interface are both
+Library requirements.  Deployment-time inference is the main use:
+an LLM may receive current evidence, propose candidate
+facts/rules/queries, inspect diagnostics, execute a bounded program,
+ask why or why-not, and revise.  Search is one input path, not the
+definition of all reasoning.  Nonrelational arithmetic, code, planning
+or hypothesis checks need their own semantics behind a shared attempt
+and feedback envelope.  The Library returns observations for the
+model's next turn; it does not change the model's trained weights or
+learned reward model.  A search hit is not an unverified fact insertion
+into the fixed point.
+
+#+NAME: scheme-llm-loop
+| LLM action | Library response | Required boundary |
+|--------------+------------------+-------------------|
+| Propose a fact or rule | Inspectable candidate with syntax/schema/mode diagnostics | No source authority or MRR admission |
+| Execute a query | Complete rows or explicit partial/failure under exact program, snapshot and limits | No completed-answer claim on budget failure |
+| Ask why or why-not | Rule/source witness or bounded missing-premise explanation with status | One witness is not complete provenance |
+| Receive evidence and revise | New attempt against named source generation | Search hit remains a candidate until source binding |
+
+The first graph transcript is implemented in =candidate/reasoning.ss=:
+it accepts an inert two-rule reachability proposal against a copied
+source snapshot, diagnoses an undeclared helper, observes the complete
+result of a compiling wrong join, and returns a row-labelled path
+witness or reachable cut for the exact canonical graph program.  The
+[[file:llm-reasoning-library-plan.org::#llm-library-first-transcript][implemented contract and limits]] and
+[[file:research/agent-inference/index.org::#agent-inference-gate][research gate]] distinguish this case from a general explanation or
+model-control API.  A separate [[file:research/scheme-dsl/positive-provenance.org][finite positive provenance gate]]
+now replays inspected positive atom-only rules into a rule-instance DAG
+and matches its roots against a completed native query.  It reports
+=bounded= or =unsupported= for this Why proof. A distinct
+[[file:research/scheme-dsl/positive-nonmembership.org][ground Why-Not certificate]]
+checks input inclusion, rule closure and tuple absence for a finite
+positive program relative to one snapshot. It does not assert that
+the caller supplied every real-world source fact.
+MRR remains the later
+semantic admission owner, while POO Flow owns caller context and
+effect handoff.
+
+* Current design choices for discussion
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-decisions
+:END:
+
+The table makes our present direction explicit. Several working choices
+now have a bounded implementation and qualification: native rules,
+first-class fragments, fresh handles, checked scalar operators, finite
+views, stratified negation, reductions, lattices, source replacement,
+and first-class positive relation transformers. The discriminator
+column still describes evidence needed for broader claims.
+
+#+NAME: scheme-design-decisions
+| Decision | Working choice | Reason | Discriminator before commitment |
+|----------+----------------+--------+---------------------------------|
+| Core rule | Use a Scheme =rule= form, positive atoms and =?= variables | Preserves an analyzable join graph without Rust spelling | Complete facts and plan visibility against an independent finite model |
+| Host syntax | One new Scheme grammar and semantic IR | Scheme supplies functions and lexical composition | Native fixture spanning scalar, filter, pattern, finite view and recursion |
+| Higher-order construction | Scheme functions return first-class fragment/program values | Reuse the host language without executing at construction | Two parameterized instantiations with private relations |
+| Private names | Fresh relation handles per fragment instantiation; explicit shared imports/exports | Avoid accidental capture through equal printed symbols | Compose two instances with same private label |
+| Public contract | Export relation shapes and handles; keep internal graph for admission | Permit refactoring private rules while retaining planner evidence | Interface and combined-program diagnostics |
+| Rule-time calls | Only declared pointwise adapters or later checked operators | Hidden relation reads and mutable captures break planning | Reject unbound mode, mutation, hidden dependency, divergence |
+| Recursion domain | Require finite-height evidence for closure claim; otherwise bounded failure is explicit | Finite output per call does not imply finite closure | Infinite successor fails; finite successor completes |
+| Nonpositive operations | Negation and general aggregation read completed lower strata | Combined fragments can introduce negative cycles | Late-composition cycle rejection |
+| Lattice state | Explicit order and join contract, separate from set relations | A user join needs law and height evidence | Finite-model law checks and closure comparison |
+| Lifecycle | Construct/inject, admit, solve, query as distinct stages | Late composition and source replacement change answers | Negation-sensitive late composition and repeated query |
+| Source withdrawal | Recompute the accepted snapshot until deletion semantics are proved | Increasing-delta theory does not justify deletion | Failure-atomic replacement with full output comparison |
+| Higher-order delta | First specialize fragments to inspectable IR; research typed operator changes later | Datafun higher-order change's proof concerns a typed calculus | Naive versus transformed full-result equivalence and scale |
+
+Within the internal priority, design the native grammar, semantic IR
+and admission boundary; rewrite the implementation against their
+qualification, then research a restricted higher-order operator IR.
+That restricted operator IR now has an executable reference meaning,
+explicit transformer application, positive-rule lowering and fragment
+composition. Its source-growth change has both a two-complete-result
+reference and a structural positive-change interpreter with a recursive
+frontier. A [[file:research/scheme-dsl/e4-positive-change.org][paired local E4 probe]] records exact-set checks, join probes and
+exploratory timing, including an adverse small case. General typed
+change and a broad performance benefit are not established.
+The [[file:research/scheme-dsl/e4-retained-session.org][retained Session gate]] now admits one transformer into the native
+indexed evaluator and checks appends, duplicate rows, withdrawals and
+old snapshots against a finite graph model. A checked batch transaction
+can replace the explicit input and other exported graph sources together;
+the native Session publishes their result only after a complete solve.
+The 64-mask nested-closure check covers two-source changes and a failed
+batch followed by a successful update tests rollback. Its earlier matched local probe
+compares update latency after initialization with fresh materialization;
+it does not establish lifecycle-wide or general performance superiority.
+The same transaction owner now accepts checked updates across distinct
+fragments and from a direct named program. One end-to-end qualification
+uses an independent finite model for recursive reachability, negation,
+finite mapping, grouped count and a max lattice, then checks both
+withdrawal and failure rollback. [[file:research/scheme-dsl/deletion-rederivation.org][deletion rederivation]] makes explicit that this is
+atomic recomputation, pending any support-aware deletion algorithm.
+The LLM candidate/observation contract follows the admitted Scheme
+core; it cannot claim stronger semantics than that core provides.
+Flix and Datafun inform semantic questions;
+neither language's surface is a target for copying.
+
+* Semantic and lifecycle sketch
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-architecture
+:END:
+
+A conceptual program flow is below.  Names and syntax are explanatory,
+not promised API spelling.
+
+#+begin_src scheme
+;; Schematic, not implemented.
+(def (reachability edge-handle)
+  (fragment
+    (import (edge edge-handle))
+    (private (path (vertex vertex)))
+    (export (reach path))
+    (rule (path ?x ?y) (edge ?x ?y))
+    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))))
+(def reach (reachability edge-handle))
+(def program (compose (inject edge-handle edge-rows) reach))
+(def checked (admit program))
+(def solved (solve checked))
+(query solved (export-of reach 'reach))
+#+end_src
+
+Construction can use normal Scheme functions and POO declarations.
+Admission validates the assembled program: relation identity and arity,
+lexical captures, bound inputs, dependencies, negative cycles, and
+operator effects.  Fixed-point execution uses visible positive atoms
+for join and delta planning.  Solving produces either a completed
+snapshot or explicit failure; querying does not rerun a program.
+
+#+NAME: scheme-language-layers
+| Phase | Object | Obligation |
+|-------+--------+------------|
+| Construct | Fragment/program values | Fresh private handles; explicit imports/exports |
+| Admit | Immutable logical IR | Modes, schema, effects, dependency graph, strata |
+| Evaluate | Sets and ordered state | Stable monotone contribution; closure or failure |
+| Session | Accepted source snapshot | Replacement invalidation and failure atomicity |
+| Query | Solved immutable result | Repeatable projection without mutation |
+
+A fixed point may call a pointwise function =f : I -> finite-set(O)=.
+For a growing input relation =R= it contributes the union of =f(i)=
+for =i in R=.  This contribution grows with =R= only when =f= remains
+stable for that snapshot and reads no hidden changing relations.
+Even then, a recursive successor can generate unbounded facts.  A
+fact budget is an explicit failure bound, never evidence of completed
+least-fixed-point termination.  A finite-domain claim requires domain
+checks and rejection of out-of-domain rows.
+
+* Acceptance and open questions
+:PROPERTIES:
+:CUSTOM_ID: scheme-dsl-migration
+:END:
+
+The first native fixture should combine fragment reuse with private
+handles, source injection/replacement, scalar projection, zero/one/many
+row adapters, recursion, lattice refinement, negation, explicit solve,
+and repeated queries.  Compare complete facts with an independent
+finite model.  Inspect admitted dependency edges, selected indexes and
+delta positions; exercise admission failures, failure atomicity and
+matched scale.  Rewrite the current syntax and tests directly once the
+Scheme contract is settled; old Rust-shaped forms are not retained as
+public aliases or release gates.
+
+#+NAME: scheme-discussion-questions
+| Question for us | Why it changes the design | Next evidence |
+|-----------------+---------------------------+---------------|
+| Should private relation handles be first-class values or exist only in a fragment scope? | Controls hygiene and how fragments share relations | Two-instantiation and cross-module fixture |
+| Should the pointwise adapter be one =relation-view= declaration or several typed operators? | Controls ergonomics and planner precision | Compare integrated fixture and diagnostic quality |
+| Which restricted Scheme expressions can be mechanically certified pure and stable? | Sets the boundary between trusted and verified rule-time code | Scope, capture, effect, and divergence counterexamples |
+| Which finite domains and lattice orders can be admitted without hidden truncation? | Determines when completion can be claimed | Independent finite fixed-point model |
+| What is the smallest public program signature that supports safe composition? | Balances abstraction against combined-program admission | Late cycle and schema-change fixtures |
+| When is typed higher-order delta worth the compiler cost? | Controls the transition beyond first-order specialization | Reference evaluator, transformed evaluator, scale profile |
+
+These are design questions, not deferred proof by terminology.  A
+restricted operator IR may eventually support checked monotonicity and
+higher-order change semantics.  Until then, rule-time arbitrary Scheme
+procedures are trusted adapters with bounded claims.
+
+* Reading path
+
+- [[file:research/scheme-dsl/language-history.org][Language history and design lineage]]
+- [[file:research/scheme-dsl/index.org][Structured research index and individual paper notes]]
+- [[file:scheme-relational-language-design.org][First Scheme language design gate]]
+- [[file:research/agent-inference/index.org][Deployment-time LLM reasoning research index]]
+- [[file:llm-reasoning-library-plan.org][LLM reasoning Library implementation discussion]]
+
+The [[file:scheme-design-framework.org][design framework matrix]] maps each guarantee to its owner, discriminator and remaining acceptance obligation.
+
+* Dusa v3 audit: closure, sharing and repeated prefixes
+:PROPERTIES:
+:CUSTOM_ID: dusa-v3-closure-sharing
+:END:
+
+This audit uses the local =.data/finite-choice-study/2405.19040v3.html=
+(SHA256 =31082deb329cbce570bea6b180f6fdf1c688ba1a2f5d261082c81cc1ce8c06b6=).
+It studies the paper's algorithms independently; no upstream implementation is
+copied or translated. The positive Scheme DSL remains the implementation scope.
+
+** Scientific distinctions that constrain the DSL
+
+Dusa's deduce-then-choose strategy (§§3.2, 6.2) prioritizes nontrivial singleton
+evolution before unresolved alternatives. ASCENT's positive least fixed point,
+local propagation closure, and completion of a finite-choice model are different
+semantic claims. A Session timeout, cancellation or refusal certifies neither
+closure nor inconsistency. Finite alternatives at a head do not imply a finite
+reachable domain. Example 6.3 also shows that this scheduling bias can diverge
+where another schedule reaches finite failure; the constrained algorithm's
+nondeterministic completeness in §6.3 remains conjectural in this edition.
+
+For the existing DSL, explicit completion and finite-domain/resource premises
+are therefore more defensible than an implicit promise that every rule program
+terminates. Arbitrary host procedures remain trusted adapters; their effects,
+stability and termination cannot be inferred from relational notation. A safe
+reuse argument needs stable admitted operators and complete dependency/revision
+identity, not merely equal public query rows.
+
+Section 7.1's prefix-firing accounting assumes suitable memoization and distinguishes
+hash-table assumptions from the functional AVL-map implementation's logarithmic
+access cost. Counting fewer logical visits does not by itself establish lower
+wall time, total maintenance work or allocation.
+
+** What the current implementation actually shares
+
+=program/session.ss= returns its completed =last-result= on a clean run after
+lifecycle guards. =program/evaluate.ss= runs the retained matcher only when dirty.
+Source roots and previously returned snapshots can therefore be retained without
+re-solving a clean Session. Neither fact establishes persistent sharing of every
+matching intermediate across independently opened Sessions or across rules.
+
+The native positive plan uses a depth-first traversal with reusable frames.
+Physical indexes and membership witnesses have row-version ownership; arbitrary
+prefix bindings are not globally memoized. An old prefix must sometimes meet a
+new suffix/delta, and different grounded alternatives may support the same head.
+Head deduplication cannot erase those provenance distinctions. Cross-rule prefix
+factoring would require a separate safety argument about variable scope, operator
+effects, delta ownership and support reconstruction; it is not implemented here.
+
+The current isolation test opens three Sessions over one declaration. Append,
+replacement and restoration are checked against the independent finite-domain
+oracle while held results remain unchanged. This verifies isolation, not a new
+fork API or physical sharing of closed matcher state. The existing provenance
+Suite separately checks sibling withdrawal previews, same-head alternatives,
+duplicate source occurrences, stale graph rejection and unsupported cycles.
+Its normalized graph oracle checks replayed grounded supports tied to native DSL
+rows, not solver-emitted edge events or raw graph-ID isomorphism.
+
+** Minimal safe change: stop an already-rejected source comparison
+
+The nonempty-additions path of =gerbil-ascent-source-log-equal?= previously used
+=foldl=: equality checks stopped after a mismatch, but the remaining base headers
+were still traversed. It now returns at the first mismatch. Admission of owned,
+proper persistent source spines and publication ordering are unchanged. Comparison
+still means exactly =rows = base ++ reverse(additions)=, including order,
+duplicates and false values. Query-set equality is insufficient because source
+occurrences remain observable in provenance. The empty-additions path is unchanged.
+
+This removes source-comparison traversal, not rule-prefix matching. No cache,
+Session fork, choice syntax, Python consumer or replacement evaluator is added.
+The Lean ordered-list model proves exact comparison, one inspected cell at an
+initial mismatch and a bound by base length. Its logical-cell count is not an
+extracted native instruction or allocation count. Quint exhaustively compares
+216 finite triples plus constructed equal cases; its fold is a value model,
+not an early-exit runtime measurement. Existing Session mutation controls remain,
+without a claim that they independently discriminate every new comparator law.
+
+** Verification and remaining admission
+
+The focused warm native preparation rebuilt 31 production modules under existing
+guards. Seven Suites pass 69 cases: ordered logs 5, source snapshots 4, source
+materialization 9, Session deletion 26, provenance graph 18, support cuts 3 and
+support heights 4. The new native POO property checks 128 accepted roots with
+zero discards (seed 20261101, size 16, shrink budget 64). Required labels cover
+first mismatch 53, later mismatch 34, equal log 34, nonempty additions 118 and
+false rows 125. The independent comparison oracle constructs the full logical
+list instead of replaying the optimized traversal. Existing graph PBT and
+revision/provenance controls are rerun within the Suite count.
+
+=just check-lean-file SourceOccurrences.lean= passes the locked Guard; the two
+printed new laws use only existing =propext=. =just _check-quint SessionTransaction=
+passes with =cache=0=: one positive obligation and four expected counterexamples.
+Resource limits are unchanged. Raw logs, sources, checker receipts and hashes
+are retained in =.data/ascent-dusa-dsl-20261101/=. These are focused local checks,
+not whole-package, clean-checkout, cold-build or performance qualification.
+Upstream is untouched, native allocation accounting remains unresolved, and
+empty-bucket reuse remains default-off with performance admission false.
+
+** References
+
+- Chris Martens, Robert J. Simmons and Michael Arntzenius, /Finite-Choice Logic Programming/,
+  local arXiv 2405.19040v3 (21 November 2024), §§3.2, 6.2–6.3, 7.1;
+  [[https://doi.org/10.1145/3704849][DOI 10.1145/3704849]], POPL 2025.
+- [[file:features/rule-costs/acceptance.org][Native rule-cost and provenance acceptance records]].
+
+* Native common-prefix matching: first old atom
+:PROPERTIES:
+:CUSTOM_ID: native-first-old-prefix
+:END:
+
+The next Dusa-v3-derived step enters the actual positive matcher, rather than
+source-list comparison. The existing first-fresh partition evaluates later
+delta pivots with old prefix lanes. For a rule with at least three atoms, pivots
+one and two can share the same first old atom even though their suffix lanes
+differ. Rebuilding that first atom's successful bindings is avoidable; exploring
+both suffixes remains necessary. This is scheduling reuse, not the addition of
+finite-choice language semantics or a claim that all revisits are redundant.
+
+** Ownership, validity and publication
+
+The serial evaluator creates one private prefix state for one rule in one round.
+Only the already checked pure scalar canonical Set route is eligible, with
+first-fresh partitioning and no execution-control checkpoints. Parallel,
+cancellation, custom-provider, callback and unsupported routes keep their existing
+traversal. The state is neither attached to the immutable compiled plan nor
+retained across Session source transactions or sibling Sessions.
+
+The entry binds the exact compiled plan, old-row reader identity and both all
+and delta versions of the first relation. A hit restores only slots freshly
+written by that first atom, in original occurrence order. The first atom has
+no incoming variable bindings. Literal and repeated-variable constraints are
+checked when building the entry; rejected rows do not acquire a binding. Full
+support rows are retained alongside slot values. Empty entries have the same
+version/owner boundary as successful entries. The version reader must report
+nonnegative exact integer versions; changing row contents without advancing its
+owner version violates the existing native index contract.
+
+Every suffix still executes for each prefix binding and its selected pivot.
+No head-based deduplication is added. The entry publishes only after the complete
+prefix traversal and its continuations return normally. An exception does not
+publish partial matches. Engine disposal at each rule/round is an additional
+invalidation boundary, beyond explicit version checks. This first-atom step
+does not share two-atom joins, match states across rules, closed Session forks,
+or source occurrence IDs between independently rebuilt graphs.
+
+** Independent controls and formal scope
+
+The native kernel compares ordered multi-head emissions with both the original
+uncached traversal and an independent finite triple enumerator. The full head
+retains hidden support variables; a second projected head exposes same-head
+alternatives without merging their derivations. A repeated-row fixture also
+checks list-level occurrence multiplicity. The runtime canonical Set path need
+not contain duplicate tuples for the lower-level list contract to preserve them.
+
+POO's existing trace generator, shrinking and replay exercise source-only,
+delta-only, equal-size, withdrawal, empty, restoration and no-op cuts. One stable
+old-row reader is used throughout a trace, so owner changes cannot conceal a
+missing version check. Deliberately freezing either source or delta version
+fails the independent oracle on fixed negative controls. Different readers with
+equal version numbers rebuild; distinct state owners leave held sibling results
+unchanged. The test also rejects checkpointed use of this private state.
+
+Lean =IndexedPositiveTraversal= proves ordered replay of successful environments
+for any suffix, exact selection under the two-version validity premise, and
+restoration of represented prefix slots while newer suffix slots remain dirty.
+This composes with the existing traversal refinement: it does not constitute
+source extraction of the new native branch or a graph-ID isomorphism proof.
+Quint =ProviderFrontier= strengthens the existing support invariant with both-lane
+cut selection and full support tuples, including empty and sibling cuts. It is a
+finite value model, not a proof of native callback purity or numeric-version
+maintenance. Existing mutation controls remain; none is represented as a new
+mutation campaign specifically covering every added invariant.
+
+** Work accounting and retained failures
+
+For the unchanged recursive chain fixture, candidate matches fall from 48 to 42;
+the six restored first-atom bindings account exactly for the difference. Complete
+witnesses remain eight and admitted rows seven. Its equal-size source revision
+falls from 25 to 22 candidates, retaining four witnesses and four admitted rows.
+Restoring the chain restores the first receipt. Formerly dead repeated candidates
+fall from 26 to 20 on the chain and from 13 to 10 on the revised cut; the two
+productive revisits on the chain remain. Tests retain the historical counts as
+conservation equations, rather than weakening the expected semantic results.
+
+New counters distinguish prefix tests, build-input rows, saved slots, replayed
+states and restored slots. On the chain they are 5, 9, 18, 6 and 12 respectively;
+on the revised cut they are 3, 6, 12, 3 and 6. Index build/extend input counts and
+physical probe counts are unchanged on these cuts. Candidate/partial observations
+count executed matching, not restored bindings; complete-witness observations
+still include the supporting first row. These counters are not a complete
+allocator/instruction accounting: record allocation, reversing and owner/version
+comparison costs prohibit inferring net performance from fewer candidates.
+
+The initial PBT failure shrank to =#(3 1)=. Diagnosis found that this installed
+=std/list/list append-map= reverses each returned chunk. The independent oracle
+now uses an explicit order-preserving fold; the native matcher was unchanged by
+that correction. The counterexample and replay remain retained. The initial DSL
+diagnostic also failed its historical dead-visit count (20 versus 26), before
+its conservation assertion accounted for the six replayed bindings. A sandbox
+preparation attempt failed at the watchdog's =ps= permission boundary; the same
+original guards ran with process-observation permission. All attempts remain
+under =.data/ascent-matching-prefix-20261101/=.
+
+The paper authority remains local =2405.19040v3=, especially §§6.1–6.3 and 7.1,
+with the full reference above. No upstream code is copied, translated or modified.
+No choice syntax, Python binding or replacement framework is introduced. Native
+allocation accounting remains deferred; performance is unqualified, and the
+separate empty-bucket policy remains default-off.
+
+* Multi-atom matching architecture: semantic design before refactoring
+:PROPERTIES:
+:CUSTOM_ID: multi-atom-matching-architecture
+:END:
+
+Historical status: initial design study against source =6d99b909=; the later
+scientific-DSL section records the implemented bounded refactoring. At that
+initial study the native implementation still
+has the first-old-atom special case described above. The following architecture
+is a refactoring target, not an implemented multi-atom matcher, an accepted
+performance optimization or a new public DSL. This study does not modify native
+execution, Python interfaces, dependency pins or upstream sources.
+
+** The scientific question is a factorization of evaluation
+
+The question is not how many adjacent atoms can receive individual caches. It
+is whether matching can factor into a checked shared prefix relation and its
+independent continuations while preserving the complete observable contract.
+Correct answers alone are insufficient: hidden supporting variables, rule
+occurrences, multiplicity where observable, order where promised, lifecycle
+completion and invalidation must remain explicit.
+
+For a positive ordered body with atoms A[0] through A[n-1], let T[j] be its
+frozen total lane, D[j] its exact fresh lane, and O[j] = T[j] minus D[j]. The
+existing first-fresh partition assigns a complete support to pivot p:
+
+#+begin_example
+W[p] = O[0] join ... join O[p-1] join D[p] join T[p+1] join ... join T[n-1]
+P[i] = O[0] join ... join O[i-1]
+#+end_example
+
+P[i] is the reusable matching state for any pivot at or beyond i with the same
+prefix dependencies and binding/support schema. Every W[p] continuation still
+runs. A new suffix row creates new combinations with old P[i], even if that
+prefix was previously unproductive. An old failed suffix is not a certificate
+that a prefix is permanently useless. If a relation occurs in both prefix and
+suffix, a change to it is also a prefix dependency change.
+
+This equation describes a positive fixed-cut join. It does not authorize
+reordering callbacks, hoisting negation or aggregates, changing a recursive
+schedule, or adding finite-choice semantics. Prefix matching completion,
+round quiescence, component least-fixed-point completion and complete public
+query publication are four different claims. Dusa's local propagation closure
+is another semantic context, not an interchangeable name for all four.
+
+** Separate the schema, state, schedule and observation
+
+| Owner | Target responsibility | Must not own |
+|-------+-----------------------+--------------|
+| Existing compiler and translation validator | Immutable prefix DAG, canonical relation identities, binding maps, support layout, checked purity and node dependencies | Mutable matching tables or accepted Session sources |
+| Existing engine/index owner | Frozen input cuts and engine-owned matching frontiers using existing exact indexes | A global mutable memo keyed only by printed rule text |
+| Existing delta scheduler | First-fresh support partition and demand for each prefix/continuation | Treating equal projected heads as interchangeable supports |
+| Existing Session/update-selection/reuse owners | Accepted source cuts, affected-component invalidation, completed capsules and atomic result publication | Workflow search policy or a new choice/fork API |
+| Existing provenance owner | Grounded support interpretation and withdrawal behavior | Treating a matched binding or source filename as an authenticated proof |
+
+The current first-atom state mixes traversal, binding storage and validity in
+one branch of =visit-positive-atoms!=. Repeating that branch at each depth would
+multiply special cases rather than establish these owners. The intended refactor
+replaces that special case with one prefix-state interpretation; it does not
+retain the old mechanism next to a new multi-atom mechanism.
+
+Its constructor also accepts a version-reader procedure. The native call site
+supplies an engine-owned closure, but the numeric values alone cannot establish
+the provenance of a dependency cut. The refactored boundary should obtain an
+owned frozen dependency descriptor from the existing engine/index owner, not
+promote an arbitrary reader hook to a validity certificate. The direct primitive
+tests' version readers are deliberate model inputs with explicit premises.
+
+** What a reusable prefix contains
+
+A prefix schema identifies the ordered admitted atoms, canonical relation IDs,
+term constraints, variable/bound-slot maps, required index keys, supported effects
+and full supporting-row layout. Names alone do not establish relation identity.
+A schema equivalence across rules requires a checked alpha-renaming map and
+compatible input types/scopes; textual resemblance or the same number of slots
+is insufficient. The validator must independently reconstruct this mapping.
+
+A prefix record contains a represented binding environment and the ordered
+supporting row occurrences that produced it. Its implementation may use immutable
+parent links to share support spines; this is a representation choice, not a
+license to discard hidden variables or merge different derivations. A cross-rule
+shared prefix does not merge rule occurrence identities: each continuation adds
+its own rule occurrence and heads. Live-variable projection requires a separate
+provenance preservation argument and is not a default part of this design.
+
+Current native matching observes row tuples; the existing alternative graph
+additionally distinguishes source occurrence labels through checked replay.
+A new prefix representation must supply a correspondence to those existing
+identities, not fabricate solver edge events or infer graph isomorphism from
+matching Set answers. Until that correspondence is checked, native query parity
+and graph replay parity must be reported separately.
+
+A prefix cut binds the schema, provider/reader owner, immutable input snapshot,
+selected lane kind and every prefix relation's all/delta revisions. A single
+first-relation version pair cannot validate a two-atom join. Equal cardinality,
+an unchanged maximum version, and an ABA-restored row set are not valid substitutes
+for complete dependency identity. Repeated uses of a relation share its owner
+revision, but still retain distinct atom positions in the support layout.
+
+A suffix-only dependency change may reuse an unchanged P[i], but never the old
+continuation result merely because P[i] is unchanged. A prefix dependency change
+must invalidate P[i] and dependent nodes or apply a separately proved incremental
+join update. Blindly transferring an old failed lookup to a new delta is unsafe.
+The initial semantic target uses exact invalidation; an incremental update law
+is a distinct proof obligation, not an assumed benefit of persistence.
+
+** Materialization and persistence are policies, not semantics
+
+A compiled prefix DAG makes sharing opportunities explicit across both delta
+pivots and equivalent rule prefixes. It does not require eager materialization
+of every node. A multi-atom frontier may be much larger than any source relation;
+finite input alone does not make that memory use acceptable. Dusa v3 §7.1 itself
+describes a time/space tradeoff and logarithmic functional-map costs.
+
+The architecture therefore separates an exact streaming interpreter from an
+exact materializing interpreter of the same checked prefix schema. Nodes with
+multiple consumers are candidates for materialization, not automatic admissions.
+A retained frontier needs an explicit resource policy and accounting. Silent
+hardcoded size caps, charging intermediate matches as public derived facts, or
+widening existing query budgets would change the task rather than validate it.
+A bounded fallback must stream the same computation without dropping supports;
+actual resource exhaustion must retain the existing incomplete/failure semantics.
+
+Persistence means completed immutable prefix cuts may be shared; it does not
+mean mutable builder state is shared. A builder owns private pending records and
+publishes a complete cut only against its captured dependencies. A source change
+during construction invalidates that publication. Prefix publication and query
+publication have different commit points: a completed independent prefix can in
+principle remain valid when a later suffix is canceled, but that canceled query
+cannot publish a completed answer. The present first-atom implementation waits
+for continuations too; changing this behavior needs an explicit lifecycle proof.
+
+There is no new public branch operation in this proposal. Existing independent
+Sessions, prospective source transactions and read-only provenance previews are
+sufficient to exercise isolation. Immutable sharing and independent mutable
+frontiers must be demonstrated physically before claiming shared state between
+Sessions. Sharing a declaration or retaining a result is not that demonstration.
+
+** Refactoring boundary in this repository
+
+- =core/positive-plan.ss= and =core/positive-certificate.ss=: one checked prefix
+  representation and its interpretation, replacing the first-atom exception.
+- =gerbil-ascent-positive-plan-with-outputs=, =program/component-worker.ss= and
+  =program/activation.ss=: preserve the same body/schema when projecting heads
+  or creating engine-local frames. New metadata must survive every constructor.
+- =program/evaluate.ss=: request a prefix frontier through the existing first-fresh
+  scheduler rather than independently reconstructing old joins for every pivot.
+- =program/index.ss=: retain exact existing index ownership/versioning; a prefix
+  table is a join result, not a second physical index/provider implementation.
+- =program/session.ss=, =program/update-selection.ss= and =program/reuse.ss=:
+  retain current transaction authority and dependency invalidation. No global
+  prefix cache or compatibility dispatch is introduced.
+- Existing provenance tests/owner: define and check the support correspondence
+  before treating any hidden-variable projection as an optimization.
+
+The current positional plan has five fields, and the certificate checks that
+shape. Output projection and component-worker constructors reconstruct it.
+Changing only the compiler or attaching an unvalidated side table would leave
+those owners inconsistent. The internal representation change must update all
+constructors, validation and focused activation/projection tests together. No
+Search V1/V2 modules, alternate evaluator framework or new DSL syntax is needed.
+
+** Distinct verification duties
+
+| Layer | Required claim | Necessary discriminator |
+|-------+----------------+-------------------------|
+| SysML in =dev/sysml/= | Ownership, dependencies, completion and publication responsibilities | Second-prefix revision, wrong owner, partial sharing, skipped suffix, lost support and canceled publication reject |
+| Lean | Arbitrary finite ordered multi-atom join factorization and continuation equivalence, dirty-frame representation, alpha-mapping and full-support preservation | Literal/repeated-variable constraints, duplicate occurrences, zero-width projections and arbitrary suffixes |
+| Quint | Transition safety of building/completing/invalidating cuts and isolated transactions, first-fresh exact support partition | Miss a nonfirst dependency, retain old empty state, publish partial state, alias mutable branches or skip a new suffix |
+| Independent native finite-domain oracle | Full query and normalized support observations for finite tasks | Four-atom body with a two-atom prefix used by pivots two/three and by two rules |
+| POO native PBT | Actual Scheme plan/index/Session traces with shrinking and replay | Independent source/delta changes on multiple relations, equal-size replacement, ABA, branch isolation, cancellation and failure recovery |
+| Native work and resource receipts | Matching reduction plus checks, key comparisons, records, index maintenance, retained memory and full entry cost | Fixed tasks/budgets, controls and all failures; no performance admission from fewer candidates |
+
+Existing one-atom Lean/Quint/PBT results do not discharge these multi-atom duties.
+In particular the current Quint =ReplayedOld= is a value-level model, not a
+multi-dependency construction/publication automaton. Existing 112 native cases
+are historical current-implementation receipts, not validation of this proposal.
+
+** Explicit design decisions and open acceptance conditions
+
+The design target is a checked prefix DAG with explicit full-support state, not
+a stack of depth-specific memo tables. Scope sharing first follows schema and
+cut equivalence; retention across Session revisions is allowed only with its
+own invalidation/ownership proof. General host callbacks remain outside the
+reusable fragment. Logical completion remains separate from matching completion.
+
+Three acceptance conditions remain genuinely open: the exact native mapping of
+prefix support records to current provenance occurrences; a bounded materialization
+policy that does not silently change the public budgets; and a checked alpha-map
+for cross-rule sharing. These are design obligations to resolve, not reasons to
+call the current one-atom mechanism a complete architecture. No production
+representation or reuse scope is changed by this design study.
+
+The accompanying [[file:../dev/sysml/README.org][SysML contract study]] makes the ownership/publication slice
+executable with the installed tool. It separates current source owners, proposed
+elements and false native/performance admission flags. Its finite fixtures are
+not a theorem about all joins and do not consume or issue native proof receipts.
+
+References: Martens, Simmons and Arntzenius, /Finite-Choice Logic Programming/,
+local =.data/finite-choice-study/2405.19040v3.html=, §§6.1–6.3 and 7.1,
+DOI =10.1145/3704849=. No upstream evaluator implementation was copied or
+translated. The paper motivates prefix accounting and local propagation; this
+specific Scheme architecture and its validation obligations are our proposal.
+
+* Scientific DSL contract and factorized prefix DAG refactoring
+:PROPERTIES:
+:CUSTOM_ID: scientific-dsl-prefix-dag
+:END:
+
+This section supersedes the initial architecture study's three open decisions
+for the checked scalar positive fragment. The former first-atom implementation
+is replaced, not layered underneath another matcher. General source extraction,
+arbitrary callbacks, numerical semiring provenance and performance acceptance
+remain outside the claims below.
+
+** What is scientific about this DSL
+
+The language is an embedded relational Library with separate construction,
+admission, denotational meaning, execution and update contracts. Scheme program
+construction may use host computation; that does not make arbitrary host callbacks
+pure or terminating rule operators. Admitted positive rules denote the least
+fixed point of their immediate-consequence operator. Finite domains/height and
+bounded execution are explicit premises; binding safety alone is not termination.
+Existing stratified negation, reduction and lattice contracts retain their own
+semantics and are not silently admitted into prefix sharing.
+
+The existing syntax expresses that contract without a new choice construct:
+
+#+begin_src scheme
+(relational-program
+  (relation edge (from to) edges)
+  (relation path (from to))
+  (rule (path ?x ?y) (edge ?x ?y))
+  (rule (path ?x ?z) (edge ?x ?y) (path ?y ?z))
+  (limits 1000 10000 12000))
+#+end_src
+
+An optimization is an implementation of the same admitted language, not a second
+language definition. It must preserve the query contract, supporting alternatives,
+resource-failure meaning and Session publication boundary. Source facts, matched
+bindings, derived rows and proof alternatives are distinct objects.
+
+** What Dusa v3 contributes, and what it does not establish here
+
+- Sections 6.1–6.2 motivate maintaining matching consequences and distinguishing
+  propagation work from a later branch decision. ASCENT retains positive delta
+  evaluation; it does not import a finite-choice search protocol.
+- Section 7.1's prefix-firing cost semantics motivates inspecting the complete
+  rule prefix, rather than only emitted heads or token counts. The paper's
+  comparison of edge/path with path/path recursion is a useful DSL modeling
+  question even without adding choice.
+- Memoizing deductions trades time for space. Functional AVL maps also have
+  logarithmic costs. Neither a DAG nor persistence gives a free speedup.
+- Shared immutable roots and mutable progress have different ownership. The
+  Library must distinguish matching completion, fixed-point completion and
+  public result publication. Example 6.3 and the completeness conjecture prevent
+  treating deduce-then-choose as an unconditional termination/completeness theorem.
+
+These lessons come from the local paper, not copied evaluator code. Our bounded
+factorized transitions do not memoize every prefix firing, so McAllester's
+asymptotic bound is not claimed for this implementation.
+
+** Decision 1: provenance correspondence follows the actual alternative graph
+
+The existing graph uses one fact identity per relation/row in a completed cut.
+Distinct source occurrences become separate source alternatives labelled by
+relation and position; rule alternatives retain rule position, user label and
+ordered premise fact IDs. Equal user labels do not erase rule occurrences.
+This is a recursive alternative graph, not an enumeration of all proof trees.
+
+A reusable transition therefore stores only the current atom's supporting row
+and newly written slots. It never caches its caller's incoming support spine,
+a prior graph's node IDs, source labels or a completed rule's heads. Each replay
+attaches the row to the current incoming support and resumes that rule's own
+continuation. Same bindings reached through two supports still execute twice;
+sharing matching does not merge those supports. Source aliases continue to be
+interpreted by the existing graph owner after the completed native result.
+
+The new four-premise graph fixture uses two alpha-renamed rule occurrences with
+the same label and head. An independent finite enumerator compares every normalized
+source/rule alternative across growth, same-size revision and restoration; an
+old graph rejects against the next source generation. A sibling Session and its
+held result remain unchanged. Native full-support tuple emissions are separately
+compared in the kernel. The graph remains checked replay, not solver-emitted
+edge events or a fabricated graph-ID isomorphism.
+
+** Decision 2: factorize materialization instead of buffering whole joins
+
+A fully materialized P[i] can have Cartesian growth. The selected representation
+is a DAG of matching transitions. A node's immutable schema is its parent prefix,
+canonical relation identity, slot terms and exact key layout. A retained entry
+is indexed by all incoming bound-slot values; its data is the current atom's
+successful rows and fresh-slot values. Prefix evaluation composes these transitions
+through the existing ordered DFS continuation. No public intermediate relation,
+second evaluator or extra storage/index provider is introduced.
+
+This changes the validity argument from a monolithic P[i] table: an entry reads
+its incoming environment and its local relation's all/delta cut. Upstream
+revisions are handled by preceding transitions and current incoming bindings.
+If they leave the same binding, the local transition may remain reusable, because
+no old upstream support is stored inside it. If the local relation changes,
+its node lane releases every old entry before accepting the new owner/cut.
+A later suffix always executes; its old failure is never stored as prefix failure.
+
+The explicit =current-positive-prefix-budget= is captured when constructing an
+engine, and a Session retains that policy across recovery/revision. Default zero
+selects the existing streaming route. Positive capacities are opt-in correctness
+experiments; they are not a performance admission. They do not alter input,
+derived or output fact limits, watchdogs, deadlines or the native heap guard.
+
+The capacity is defined in logical retention units: each entry reserves
+=6 + incoming-slot-count=, and each successful retained row reserves
+=2 + fresh-slot-count=. These are specified weights for stored entry/slot/row
+references, not Gambit allocator bytes. Immutable scalar payloads are borrowed;
+schema metadata, index memory, temporary traversal storage and total process
+memory are separate accounting obligations. No byte/heap bound follows from this
+ledger alone.
+
+On capacity refusal, pending retention is released and the same traversal keeps
+streaming. It neither restarts matching nor truncates a continuation. Only a
+complete normally returned entry publishes; exceptions release that builder's
+pending units. Independently completed entries remain owned by the engine.
+Checkpointed, canceled and parallel routes retain their existing execution path.
+No shared mutable Session frontier or new branch/fork operation is introduced.
+
+** Decision 3: canonical slots provide the cross-rule map
+
+The checked compiler already assigns slots by first variable occurrence. For an
+ordered pure positive prefix, alpha-renamed source variables therefore have the
+same fresh/bound descriptors. Before constructing a DAG, each participating plan
+is independently revalidated from its source atom/head descriptors with the
+existing translation checker. The intern key includes parent node ID, canonical
+relation ID, slot terms, selected columns and lowered key terms. It never uses
+printed variable names or equal slot counts as an equivalence proof.
+
+Two four-atom alpha-renamed plans produce four shared schema nodes, not eight.
+A malformed fresh-slot descriptor rejects before DAG construction. Each rule keeps
+its original outputs and occurrence context. Permuting clauses, identifying two
+variables, changing relation scope, or projecting hidden variables is not an
+allowed alpha-renaming. The Lean injective-renaming law is independent of the
+compiler's mutable symbol table; the native checker tests its actual boundary.
+The native negative fixture also compiles a valid variable-identifying rule:
+its prefix schemas remain separate, producing eight nodes with the original.
+
+The five-field positive plan representation is retained. The DAG is an explicit
+engine-owned execution workspace derived from checked plans, not extra unvalidated
+fields or a side cache attached to global immutable plans. Consequently existing
+head projection and component-local namespace constructors need no representation
+rewrite; their original projection and component tests remain required.
+
+** What changed and what deliberately remains
+
+| Area | Refactoring decision | Reason |
+|------+----------------------+--------|
+| =core/positive-plan.ss= | Replace the first-atom branch with one canonical prefix DAG and bounded factorized transition interpretation | Supports arbitrary old-prefix depths and cross-rule sharing with one mechanism |
+| =program/index.ss= | Expose an owner-bound local all/delta cut | Uses the existing index namespace and revision authority; no arbitrary version-reader certificate |
+| =program/evaluate.ss= | Build one workspace per eligible engine; feed existing first-fresh scheduling | New suffixes and recursive rounds retain their original support partition |
+| =program/session.ss= | Capture the selected capacity for all engine/recovery constructors | Transaction/revision semantics stay with the existing Session |
+| DSL syntax, admission/type/domain rules | Retain | Execution sharing does not require changing the language or finite-choice semantics |
+| Physical indexes and storage providers | Retain | A matching transition is not a second index implementation |
+| Session dependency closure, atomic publication, failure recovery | Retain | Existing invalidation and accepted-source authority already have the right ownership |
+| Provenance graph and source occurrence labels | Retain; add direct correspondence tests | Its fact/source/rule distinction is necessary and already expressive |
+| Component projection, activation and output constructors | Retain their plan shape; rerun controls | No new plan field needs propagation or compatibility dispatch |
+
+** Model-to-code correspondence and present limits
+
+| Obligation | SysML | Lean | Quint | Native discriminator |
+|------------+-------+------+-------+----------------------|
+| Current support, no inherited caller path | =TransitionRead.callerSupportCached= must be false | =FactorizedDAG.factorization= and =provenance_projection= preserve ordered premise spines | Session/memo publication owners stutter independently | Full tuple emissions plus normalized four-premise graph alternatives |
+| Alpha-equivalent prefixes | =canonicalSchemaEqual= and pure-operator guard | =renamed_binding= for injective variable identities | Schema/key equality is an abstraction premise | Four shared nodes and rejected malformed slots |
+| Local source/delta validity and incoming environment | =TransitionRead= versus the separate whole-prefix =ReuseDecision= | Deterministic binding and compositional factorization | Memo captures local cuts/key and checks them before completion/read | Two independently revised relation owners; nonfirst-source/delta stale-version negative controls |
+| Bounded retention with exact fallback | =RetentionPolicy=; no public fact-budget change | =retention_exact=, reservation/release bounds | Building/complete/stream states, capacity refusal, cancellation and row release | Capacities 0/8/32/256/4096 produce identical ordered support emissions and obey the ledger |
+| Session isolation/publication | =BranchPublication= | Pure frame/restoration laws, not a full Session extraction | Existing transaction mutations plus memo lifecycle | Cyclic revisions, sibling/held results and existing transaction failure controls |
+
+The finite SysML fixtures are architecture checks, not runtime observations.
+Quint abstracts cuts as small values and one transition; its existing mutation
+controls do not independently falsify every new memo invariant. Lean proves the
+stated semantic models without new axioms or admitted holes; it does not extract
+all Scheme code. These boundaries remain explicit even when all focused checks
+pass. General heap admission and performance remain false.
+
+The integrated native DSL/index test separately reduces the unchanged recursive
+chain from 48 candidate matches to 36 at capacity 256, retaining eight complete
+witnesses and seven admitted rows. This is distinct from the direct four-atom
+matcher fixture. Materialization currently covers checked scalar old-prefix
+transitions; initial total traversals, selected delta/suffix lanes, actors and
+unsupported routes keep streaming. The common schema/interpreter is not a claim
+that every lane or every Dusa prefix firing is memoized.

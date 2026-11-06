@@ -1,0 +1,123 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+TITLE: Bounded scoped query execution and published path evidence
+#+DATE: 2026-10-10
+
+* Unified execution contract
+
+[[https://proceedings.mlr.press/v306/miao26e.html][LLM-MatLogic: Executable Exchange Contracts for Knowledge-Graph Query Answering with Scoped Negation]], Algorithm 1 and section 3.2, motivate one bounded production, scoped negation, composition and trace chain.
+[[file:../../../applications/scoped-composition.ss][gerbil-ascent-scoped-query-program]] compiles caller vertices, directed edges,
+scope-tagged starts/targets/banned nodes, required groups, members, finite
+candidate pairs and K into one ordinary POO Program. The existing native
+Session owns execution and publishes one immutable evidence cut.
+
+| Stage | Relation | Meaning |
+|-------+----------+---------|
+| Produce | =mask_hop(s,t,k)= | Exact k-edge walk inside declared vertices, 0 ≤ k ≤ K |
+| Produce | =mask_reach(s,t)= | Union of exact layers, including the identity layer |
+| Provenance | =mask_shortest(s,t,k)= | First reachable layer, unique distance per pair |
+| Provenance | =mask_predecessor(s,x,t,k)= | All last edges of shortest k-edge witnesses |
+| Negate | =mask_witness(scope,s,z,t)= | Selected endpoints, banned z, shortest prefix + suffix ≤ K |
+| Negate | =branch_answer(scope,s,t)= | Selected reachable pair with no exclusion witness |
+| Compose | =group_witness(g,scope,s,t)= | Required-group support before conjunction |
+| Compose | =group_answer(s,t)= | Finite candidate supported in every required group |
+| Trace | =answer_trace(g,scope,s,t,k)= | Final answer, required-group support and shortest distance |
+
+K is an integer in [0,64]; the compiler emits O(K) ordinary rule declarations.
+Input/derived/output budgets retain their existing native admission and execution
+meaning. The existing least-closure and existential two-hop APIs retain their
+explicit contracts; this unified request selects bounded structural masking.
+
+* Semantic and publication boundaries
+
+The bounded request uses *total-length structural exclusion*: a pair is removed
+if a walk of total length ≤K visits a banned vertex in that scope. The paper's
+explicit =pre(z)⊗suf(z)= formula bounds each side independently by K. These are
+different contracts, rather than a reproduction of one another. For 0→1→0 and
+banned 1, our K=1 request retains (0,0); K=2 excludes it. The independent-side
+formula excludes it already at K=1. This is an intentional semantic revision
+of the bounded constructor, not a fix to the least-closure API.
+
+The compiler joins *shortest* prefix/suffix distances and checks their sum ≤K.
+Lean proves existence of an exact bounded walk through z iff such shortest
+segments exist with sum ≤K. Joining every pair of exact hop layers is therefore
+unnecessary; the compiler remains O(K) declarations, without O(K²) split rules.
+Only integer addition/comparison is a native guard; graph propagation,
+stratification, source updates and evidence publication belong to the engine.
+Clean alternative paths do not rescue a structurally excluded pair.
+Increasing K can add both reachable pairs and banned witnesses; scoped answers
+are not claimed monotone in K. Masks remain local to the selected scope.
+
+=gerbil-ascent-scoped-query-path(result,s,t)= reconstructs one shortest producer
+path from the completed cut using checked =visit-rows= column selections. Distance
+decreases at every predecessor; zero-hop roots must equal the start. Unreachable
+pairs return false; incomplete results and missing predecessors are rejected.
+The accessor does not search the input graph. A producer path alone is unmasked;
+an =answer_trace= row establishes scope survival and final composition.
+All shortest predecessors are retained, avoiding an order-sensitive single pointer.
+
+Empty required groups reject. No required groups admits only finite candidates
+and has no required-group trace. Source withdrawal updates answers and evidence
+together; previously held cuts remain reconstructible.
+
+* One shared Scheme / Lean / Quint verification chain
+
+[[file:../../../packages/proofs/quint/ScopedQuery.qnt][Quint]] uses the same layer-fold evaluator for model transitions and corpus
+export. Independent expected predicates use matrix powers. All eight subsets of
+the three-node cycle, all 64 scope-mask subsets and K=0,1,2 yield 1,536 complete
+requests and 3,072 pending/completed states. Ten corpus fields retain reach,
+layers, shortest distances, predecessors, exclusion witnesses, branches,
+group answers and final traces. Pending states expose no result relations.
+
+[[file:../../../packages/proofs/lean/ScopedQuery.lean][Lean]] independently grades all fields. Generic kernel theorems prove =via_iff_shortest=, segment concatenation,
+total-bound implication, zero-hop exclusion and scope-local mask antitonicity.
+They connect exact hops to inductive walks, establish a shortest witness for bounded reachability,
+and prove shortest predecessors decrease distance. =query_trace_complete=
+connects native missing-group semantics to a bounded shortest trace for every
+required group. The finite exact/minimum/total-witness tables are linked to those path
+predicates for every graph and k≤2. The revised mask has its own locality/antitonicity proofs; generic composition
+laws are reused.
+No project axiom, =sorry= or =native_decide= is introduced.
+
+[[file:../../../t/qualification/ascent-scoped-query-test.ss][Scheme qualification]] executes the complete public request on 24 retained
+Session owners, compares all shared tables, and reconstructs every shortest
+path through the production accessor, checking its edges against the source.
+Controls cover zero hops, total-hop returning-path boundaries, diamond alternatives, group
+boundaries, source withdrawal, held evidence, publication rejection and budgets.
+
+| Deliberate model fault | Required failure |
+|------------------------+------------------|
+| Ignore K | ExactHops |
+| Bound prefix and suffix independently (paper formula) | ExactWitnesses |
+| Globalize scope mask | ExactWitnesses |
+| Drop predecessors | ExactPredecessors |
+| Drop final traces | ExactTraces |
+
+=just check-scoped-query-conformance= compares regenerated and frozen corpora;
+=just _check-quint ScopedQuery= checks states and fault controls. Both are wired
+into formal CI; ordinary Gerbil discovery owns Scheme qualification.
+These faults are injected contract violations, not production bug claims.
+
+This closes normalized pair requests on a caller-owned finite graph. General
+typed evidence joins, per-atom relation/direction plans, projection across
+different anchors, NL/model specification and real-KG benchmarks remain open.
+Finite cross-language agreement and generic laws are not universal Scheme
+compiler refinement.
+
+* Total-hop design validation
+
+- Eight native Cases passed, including all 1,536 complete requests, source
+  withdrawal, shortest-path replay and K=64 admission, with final =HARNESS-OK=,
+  =OK= and exit 0 (19 seconds in the focused local run).
+- Existing least-closure mask (eight Cases), group composition (nine Cases)
+  and the policy-enabled native package build passed.
+- 156 corpus observations differ from the previous independent-side formula.
+  The reference formula remains a deliberate =independentSides= model control;
+  disagreement is expected for this declared contract.
+- Lean kernel checks the generic shortest-segment equivalence and all finite
+  exact/minimum/bounded/total-witness tables without additional axioms.
+
+Focused local timing is a correctness receipt, not a matched performance
+comparison or a KGQA accuracy claim. Lean accepted the regenerated and frozen ten-field corpus. Quint explored
+3,072 states and detected all five designated faults (exit 12); the complete
+harness exited 0. Exact-revision CI is required for delivery.

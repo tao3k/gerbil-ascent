@@ -1,0 +1,148 @@
+#+title: Frozen UF owner routing and ordered plan publication
+
+* Fixed scope and source learning
+
+Baseline =5f9220b1b8aea142972fe6aa505829756bef938e=, original
+=core/relation-view.ss= SHA256
+=d06fa7175128d51544ef5e31b78b724dbd25c02416ecc32e9925f443d208764c=.
+The historical source remains executable in =reference-relation-view.ss=;
+all earlier studies and budgets remain intact.
+
+Gerbil =1cfb032= =compiler/optimize-base.ss:589-604= constructs an analysis
+result from owned tables before ordering it; stored optimizer records remain
+borrowed. =std/list/list-builder.ss:6-24= scopes a fresh output spine to one
+consumer. =gerbil/builtin.ssxi.ss= distinguishes the allocating =list-sort=
+from mutating =list-sort!=. Apply these expression and ownership contracts to
+the complete frozen-view construction flow, not a query cache or new dispatcher.
+
+The current constructor scans uniform schema and identity-equal axes before
+building routes. Only a uniform cut whose every descriptor borrows the identical
+left/right member spine shares its two immutable endpoint routes. Arbitrary,
+non-self and mixed-width cuts retain distinct routes. Query-local owner caches
+remain coordinate-specific. Small and unindexed inputs retain controls.
+
+Ordered plans are built directly from shared-key route hits. Each hit owns the
+exact member bucket and first stored singleton; unrelated unique members in the
+same bucket are not rescanned. Descriptor occurrences keep their original
+ordinals, including interleaved references to one owner. A fresh selection spine
+is sorted in place, borrowing the stored singleton. No bucket block/member
+spine is sorted or mutated. Selection cardinality and public row allocation
+remain governed by the existing consumers.
+
+* Preset native acceptance
+
+The existing =studies.ss= / =run.ss= / ASP paired runner owns execution.
+=just performance-uf-owner-plans= retains native machine build concurrency,
+real activity supervision for compilation, and the existing separate 90-second
+measurement deadline. No SDK is rebuilt and no historical gate is relaxed.
+
+Eleven scenarios use 20 alternating CPU pairs, 20 ASP admissions, five allocation
+pairs and eight complete consumers per sample. Targets =sparse=, =reused=,
+=sparse-lifecycle= and =reused-lifecycle= require CPU ratio <=0.80, at least
+16 wins and allocation ratio <=0.90. Controls retain ratio <=1.10, 20us CPU
+absolute tolerance and zero allocation absolute tolerance. Gates were fixed
+before the first candidate. Dense captures, dense capture/query lifecycles,
+asymmetric axes, disjoint keys, small/tiny and unindexed inputs stay explicit.
+
+Inputs are prepared outside measurement but both arms construct every descriptor,
+route, plan and view inside the interval. Lifecycle targets additionally execute
+a complete single-axis parts query. Independent Cartesian rows and exact
+ordinal publication order are checked outside timed intervals. Natural GC
+remains charged. This measures complete view construction and construction/
+query consumers, not an isolated sorting helper or whole-engine speed.
+
+* Models and implementation correspondence
+
+Lean =ProviderRectangles= proves that permutation-preserving owner partitioning
+and ordinal restoration recover the original ordered occurrence list. Mapping
+that list to stored payloads preserves representatives; gathered cardinality
+is the sum of selected owner occurrence counts. A separate self-axis theorem
+justifies route sharing only under per-descriptor axis equality. Native identity
+equality is the stronger implementation condition. These proofs do not prove
+native hash lookup or Gambit sorting: those correspondences remain explicit
+native regression and independent-oracle obligations.
+
+Quint =WeightedExport= models distinct logical values/representative tokens,
+interleaved owner IDs and descriptor positions. Existing frozen publication,
+query, lifetime and budget invariants remain. Four added faults cover forced
+route sharing, lost repeated-owner occurrences, query-key substitution for a
+stored representative, and reversed publication. Each must produce its named
+TLC invariant counterexample with original exit 12; parser/init errors are
+failures, not accepted counterexamples.
+
+The independent Python source project compares 594 explicitly shared-owner
+cases through three original Scheme API consumers and both indexed/scan cuts.
+It retains false versus zero and nested readers. The preceding 961 query
+admission cases remain intact. Original native Cases additionally test canonical
+string object identity, duplicate descriptor occurrences, detached public rows,
+mixed-width and asymmetric route fallback. No old Rust wheel is relabeled as
+current Scheme implementation evidence.
+
+* Retained attempts and qualification
+
+The first owner-plan-only candidate failed the preset target gates: sparse CPU
+18148->16848us and allocation 28524800->28387072 bytes; reused CPU
+66020->61250us and allocation 117045568->91675840 bytes. Shared-axis routing
+was not present. The failed ten-scenario run remains in
+=.cache/ascent/uf-owner-plans/ea231aca-7bb5-40d6-9567-06b35ac55177/= and
+=.cache/ascent/owner-plans-native-002.log=. These are negative results, not a
+passing optimization claim. The sandbox-denied process inspection is separately
+retained in =owner-plans-native-001.log=.
+
+A separate full-library compilation completed its make phase in 266.90 seconds
+but was correctly rejected because source inputs changed during compilation.
+The failed run remains =owner-plans-native-003.log=. Subsequent unchanged-input
+preparation completes in 54.74 seconds; it is a warm completion check, not a
+cold-build latency claim. The watchdog, source identity checks and machine
+parallelism remain intact.
+
+The complete eleven-scenario native run
+=8ae0551c-5825-4a97-9a57-657f4ce5c6a3= passes every preset gate. CPU is median
+microseconds per eight-consumer sample; bytes are median native allocation
+counter deltas. Natural GC remains charged. The captured source hash is
+=cad310d81b50d228ff1aeef8f3d2fd2712510130988dcf110a353ce695b610ce=.
+
+| Scenario | Baseline CPU us | Candidate CPU us | Wins /20 | Baseline bytes | Candidate bytes |
+|----------+-----------------+------------------+----------+----------------+-----------------|
+| sparse | 28528 | 15787 | 20 | 28524800 | 14490624 |
+| reused | 95308 | 59178 | 20 | 117045568 | 81222336 |
+| dense | 24188 | 13055 | 20 | 31785856 | 18840784 |
+| sparse-lifecycle | 19648 | 10008 | 20 | 28525440 | 14491264 |
+| reused-lifecycle | 99316 | 62971 | 20 | 117046208 | 81222976 |
+| dense-lifecycle | 33723 | 15027 | 20 | 31786496 | 18841424 |
+| asymmetric | 36460 | 29895 | 13 | 31785856 | 28603648 |
+| disjoint | 28484 | 13486 | 20 | 28312960 | 14416512 |
+| small | 38 | 18 | 17 | 60544 | 42624 |
+| tiny | 81 | 54 | 19 | 82304 | 56704 |
+| unindexed | 15 | 14 | 10 | 75648 | 75648 |
+
+The four target capture/lifecycle cases improve CPU 36.6%-49.1% and allocation
+30.6%-49.2%, all with 20/20 wins. Dense controls improve CPU 46.0%/55.4%
+and allocation 40.7%; asymmetric routing passes without sharing invalid axes.
+Small/tiny inputs allocate 29.6%/31.1% less. Their CPU intervals and the
+unindexed control are too short for a reliable timing benefit claim. These are
+path-specific construction/lifecycle results, not whole-engine acceleration.
+
+Full native source testing through the standard original module paths passes
+170 modules /1358 Cases, zero ERROR markers, in 163/180 seconds. Full Lean
+qualification passes 163 jobs; the new four theorems have only the displayed
+standard kernel axioms. Quint's correct model and all 29 named faults pass;
+TLC counterexamples retain their exact invariant and exit-12 requirements.
+The three independent source Python tests also pass in the fixed candidate.
+
+A source export at =31e4564= plus this batch, with copied native libraries,
+completed its full preparation in 210.69 seconds under real activity supervision.
+Its first all-source runtime then timed out at the unchanged 180-second limit
+before Case output. A sampled child was inside Darwin =dyld= module mapping /
+=fcntl=; this is an observed loading boundary, not a proved UF algorithm fault
+or a passing cold-prefix result. The sample and failed runtime remain under
+=.cache/ascent/owner-plans-*=. Original-path source acceptance above is separate;
+no SDK rebuild, timeout change, generation deletion or private loader was used.
+
+The original =uf-selector-init= / =uf-compact-query= / =uf-initialization= /
+=uf-plan= studies pass all 54 scenarios through their unchanged Just entries.
+Together with this batch, all 65 native A/B scenarios pass. The compiled native
+performance contract Suites pass as well. Exact-commit GitHub CI is a separate
+final gate; its run identity is recorded with the delivered commit.
+Other sessions' engine, trajectory and build changes are independently owned;
+this batch does not revert them or infer their acceptance from UF results.

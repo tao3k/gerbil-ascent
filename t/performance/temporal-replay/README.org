@@ -1,0 +1,129 @@
+#+title: Temporal binding and independent receipt replay
+
+* Production flow and source learning
+
+This study covers =temporal/lens.ss=: solve, verification, hypothetical fork
+and generation comparison. The public POO extension boundary stays native.
+An invocation-private final =temporal-binding= record names detached lens,
+source, root, scope, cut and snapshot. =prepare-binding= owns cut admission
+and content binding; =complete-receipt?= owns independent finite/founded
+replay and native output limits; =answer-projection= owns the wire projection.
+
+The installed Gerbil source at =1cfb032=, =compiler/optimize-base.ss:63-76=,
+names the fields of its internal class metadata. Its
+=compiler/optimize-call.ss:45-56= resolves applicability before selecting a
+transformation. The local Coding Style representation guidance likewise
+separates private records from observable wire lists. Here, a verified finite
+certificate establishes exact closure and query rows; the projected cut and
+coordinate digest establish applicability. Neither an object kind tag nor
+an old answer's retained snapshot establishes that applicability.
+
+Previously, verification called =solve= to build a second complete answer:
+it ran the native engine, produced finite/founded certificates, replayed those
+fresh certificates, then replayed the supplied certificates. Verification now
+rebuilds the current cut and binding, independently replays the supplied
+certificate, and compares the entire reconstructed projection. Fork and
+comparison enter this same verifier before consuming accepted rows. Verification
+uses the existing independent replay budgets; it no longer requires a fresh
+producer to regenerate already valid supplied evidence. This is a certificate
+verification boundary, not an assertion about producer capacity on every input.
+
+The finite replay checks source/candidate input limits and derived limits.
+Native output limits additionally include source rows: verification counts
+all rows in the complete independently admitted certificate closure against
+the fixed candidate's output limit. Empty query receipts still require exact
+closure replay. Nonempty rows additionally require founded replay. Open,
+rejected, bounded, tampered, relabelled and incompatible answers remain
+inadmissible. No verdict cache, unchecked snapshot reuse or new environment
+setting is introduced.
+
+* Fixed complete-consumer A/B
+
+=reference.ss= is byte-identical to
+=797d6f4f489e03e4b5f4843f230eb2214df5174f:temporal/lens.ss=,
+Git blob =f1d7024ce088bcb5d3001c9fc1656ade72b7193b=. Its dependencies are
+shared with the production implementation. Fixture preparation creates inputs
+and accepted answers outside timing. Each timed leg is the entire public
+operation, including fresh cut projection, hashing, independent certificate
+replay, projection detachment and compatibility checks. Fork also includes
+its hypothetical solve and verification of the resulting answer.
+
+Seven scenarios were fixed before sampling:
+
+- verify: a ten-node chain, public verification.
+- compare: the chain and a later empty generation, complete public delta.
+- fork: the chain and a separately named empty hypothetical snapshot, followed
+  by full verification of the hypothetical answer.
+- empty: complete empty query, including finite closure verification.
+- small: two nodes with one edge.
+- partial: an open one-node cut, invalid verdict.
+- solve: complete cold ten-node solve, guarding initial production behavior.
+
+The runner directly calls ASP Scheme =benchmark-run/result=. It records
+20 alternating CPU pairs, 20 independent ASP admissions and five alternating
+allocation pairs via =##get-bytes-allocated!=. Natural collection remains in
+CPU intervals; forced collection is outside them. All results must match the
+frozen operation and independent verdict/delta/scope truth. Primary verify
+and compare gates require CPU <=80% of baseline and >=16/20 wins; fork and
+empty require <=90% and >=16/20 wins. Small, partial and solve require <=110% plus
+20 microseconds. All allocations require <=110% plus 8192 bytes. Gates,
+samples, work budgets and timeouts are not relaxed after measurement.
+
+* Native reproduction
+
+Use the repository's existing Gerbil package environment and installed SDK:
+
+#+begin_src scheme
+;; gxi t/performance/temporal-replay/build.ss "$PWD/.gerbil/lib"
+;; gxi -:max-heap=3G,debug=q t/performance/temporal-replay/runner.ss
+;;     all .cache/ascent/temporal-replay/
+;; Single-scenario form also accepts verify and its explicit receipt path.
+;; gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5
+;;     t/qualification/ascent-temporal-replay-test.ss
+;;     t/qualification/ascent-temporal-lens-test.ss
+;;     t/qualification/ascent-temporal-projection-test.ss
+;;     t/qualification/ascent-temporal-contract-test.ss
+#+end_src
+
+The focused suite covers all sixteen two-node graphs and both roots, every
+projected coordinate, missing empty-query certificates, incomplete POO values without receipt slots,
+detached rows and all
+seven complete consumers. Existing suites independently cover interval/window
+cross products, 64 four-node graphs under both source orders, immutable
+generations, hypothetical forks, altered scopes and tampered native receipts.
+Generated objects, logs, raw receipts and repair attempts stay in ignored
+=.cache/ascent/temporal-replay/=. No SDK rebuild or root build roster change
+is needed.
+
+* Accepted local results
+
+One exclusive native process completed all seven fixed gates, with 20 alternating
+CPU pairs, 20 ASP admissions and five allocation pairs per scenario:
+
+| Scenario | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|----------+------------+------------+-----------+-----------+-----------|
+| verify   | 14306      | 497        | 20        | 24269864  | 458456    |
+| compare  | 25613      | 510        | 20        | 47547752  | 737512    |
+| fork     | 57779      | 10516      | 16        | 70540536  | 23731896  |
+| empty    | 10813      | 95         | 20        | 23122752  | 132688    |
+| small    | 12145      | 239        | 20        | 23505024  | 258624    |
+| partial  | 22         | 22         | 14        | 37440     | 34688     |
+| solve    | 11461      | 11056      | 10        | 23868952  | 23869272  |
+
+Complete verification/comparison/fork median CPU is 96.5%/98.0%/81.8% lower.
+Verification allocation is 98.1% lower. Partial has no material CPU change.
+Cold solve passes its regression control, with 320 additional allocated bytes;
+its 10/20 CPU wins do not establish a repeatable initial-solve speedup.
+No general engine, actor or application throughput claim follows from these
+specific composed consumers.
+
+Formal raw receipts are =verify-final.ss= through =solve-final.ss= and
+=all-final.log= in the ignored cache. Two earlier verify/compare diagnostics
+ran while another task restarted a static compiler. They are preserved as
+=verify-rejected-overlap.*= and =compare-rejected-overlap.*= and excluded
+from qualification. No timing gate, work budget or sample count was relaxed,
+and no admitted result was rerun to select a better number.
+
+The final production and focused Unit Test source policy reports pass with
+zero findings. Native tests require process success, every =CASE-OK= and
+=MODULE-OK=, =HARNESS-OK= and final =OK=; the harness exit alone is insufficient.

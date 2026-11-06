@@ -1,0 +1,103 @@
+#+title: Descriptor key admission and remaining source obligations
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Status
+
+The complete source-refinement request remains OPEN. This change closes a
+compositional gap for decoded descriptors and connects key admission to the
+production Scheme and Rust checkers. It does not close emitted-text semantics,
+host decoding, mutable indexes, complete Tarjan or concurrent publication.
+The earlier [[file:descriptor-runtime-acceptance-20261017.org][runtime correspondence report]] remains historical evidence.
+
+* Checked statements
+
+=DescriptorKeys.collect_exact= proves ordered key collection for arbitrary
+terms, columns and prior names. Invalid columns, wildcards and variables absent
+from the prior map reject. Repeated columns retain their order and multiplicity.
+A variable first introduced in the current atom is unreadable, including later
+occurrences of that variable within the same atom.
+
+=DescriptorKeys.check_accept= proves Boolean equality with
+=CompiledCertificate.accept=, including term actions, final logical name list
+and the complete ordered key list. This is equivalence rather than a one-way
+soundness implication. It is a statement about decoded descriptors: the actual
+Scheme outer wrapper stores a count rather than the logical name list, and its
+field decoding and count-to-map invariant still need source refinement.
+
+=DescriptorKeys.compile_names_nodup= proves that lowering preserves unique
+names. This is necessary for a future refinement to =HashMap::len=; it does not
+itself prove the host hash table's cardinality or insertion implementation.
+
+=SchemeDescriptor.stream_decoder_exact= extends contextual decoding from one
+term to arbitrary streams and either head flag. It covers malformed lengths,
+failed prefixes and source-dependent wildcard payload comparison. Its inputs
+are typed raw images, not unparsed Gambit heap objects.
+
+* Production connection
+
+=RenderDescriptor.lean= emits the complete existing term helpers together with
+the new key helpers into the same two production files. The unchanged formal
+driver regenerates and compares all eight installed artifacts.
+
+=core/positive-certificate.ss= now calls the generated key helper before the
+term helper mutates its private map. Keys read original source terms and that
+prior map. The helper retains exact nonnegative column admission, literal
+payload equality, bound-slot exactness, list shape and duplicate key ordering.
+The private map is independent of the compiler's mutable map. Rejected key
+validation does not mutate it. No join or lookup loop changes.
+
+=rust/ascent/src/graph/certificate.rs= uses the generated prior-column helper.
+Its iterator compares the entire canonical column sequence without allocating
+the previous temporary vector. Rust still requires the maximal canonical key
+sequence; Scheme still admits the columns selected by its compiler. These
+existing backend policies are not silently equated.
+
+The generated helper bodies are production connections, not proofs that the
+Scheme/Rust printers or host compilers preserve their semantics. Exact byte
+regeneration detects source drift but cannot establish that missing theorem.
+
+* Rejected proof route
+
+A restricted parser for the installed Scheme variable branch was attempted
+under the original focused Guard bounds. Kernel reduction reached the original
+recursion-depth limit, including after replacing the final reduction tactic.
+The candidate is excluded from the Lean roots and production imports. Its
+source and both logs are retained under
+=.cache/ascent/descriptor-keys/rejected-branch/= and
+=.cache/ascent/descriptor-keys/branch-*.log=. No recursion, heartbeat, memory or
+wall limit was increased; no axiom, =sorry= or =native_decide= was substituted.
+This failed attempt does not close the earlier rejected full-parser obligation.
+
+* Acceptance and scope
+
+The isolated checkout starts from =c1ae5ae73738050598938d355259447455341248=.
+Only the owned source, proof and test changes are overlaid; concurrent
+trajectory and clue-query work is excluded. The existing released macOS SDK is
+used. No upstream source, dependency revision, build recipe, CI threshold or
+resource limit changes.
+
+Focused Scheme qualification passed all 12 Cases, including prior-map key
+adversaries and unchanged cache, cancellation, accounting and terminal-error
+controls. Focused Lean checks passed under the locked LeanPoo Guard. A cold
+complete Lean build passed 176 jobs; the final decoder and uniqueness additions
+are also checked by the complete formal/CI gates.
+
+Full Scheme semantics, unchanged performance gates and exact-head CI are
+separate acceptance requirements. Their final receipts are attached to PR #1;
+a local focused pass or a previous head's green CI is not current acceptance.
+No end-to-end speedup is claimed from eliminating an admission-time vector.
+
+* Remaining obligations
+
+| Area | Still required for source closure |
+|------+-----------------------------------|
+| Checker and decoder | Parse and interpret the complete emitted text; prove the handwritten outer relation, shape, index and metadata wrappers and actual argument wiring; refine heap values, equality, exact integers and private finite-map primitives |
+| Mutable indexes | Refine actual Provider/hash/UF storage, extend/rebuild, field setters, aliasing, retained views and callback failures; the existing publication-order theorem is narrower |
+| Complete SCC | Refine the actual iterative Tarjan frames, stack, discovery and lowlink updates; prove partition, source-before-target ordering and compiler dependency/head projection |
+| Actor and Rayon | Refine actual mailbox/typed message conversion, owner dispatch, task identity, cancellation, credits, resource accounting and provenance publication under reordering and callback failure |
+
+Existing model proofs and finite semantic/TLC controls remain useful evidence,
+but none of these four rows is relabeled CLOSED by this change. Rayon remains
+the default feature, Rust Ascent remains only a development dependency, and
+cancellation, resource limits and provenance admission retain their semantics.

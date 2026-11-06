@@ -1,0 +1,815 @@
+#+title: Actual Yuanxu Module Ownership Migration
+#+date: 2026-11-02
+
+* Terminology and current acceptance boundary
+
+Gerbil is the Scheme language and its compiler/runtime/package toolchain.
+Gambit is the underlying Scheme compiler/runtime. Neither is called an SDK in
+this acceptance record. =gerbil-scheme-rust= is the Rust integration library;
+its C ABI invokes the native Gerbil builder and test runner. ASCENT is the rule
+engine Library consuming those interfaces. Apple's SDK and =SDKROOT= retain
+their platform-specific meaning.
+
+The native ownership chain is:
+
+#+begin_example
+ASCENT init.ss                 module declarations and dependencies
+ASCENT build.ss                native build declarations and products
+Gerbil build/test              package dispatch, builder and GxTest
+Rust integration library C ABI in-process access to those native operations
+ASCENT Rust consumer           Library behavior and ownership qualification
+#+end_example
+
+This list describes existing owners. It introduces no dispatcher, environment
+protocol, generated inventory, compatibility layer or acceptance framework.
+Language, package-build, ABI-transport and Library-semantic checks have distinct
+claims. A passed integration-library test does not qualify ASCENT.
+
+** Candidate source and unchanged gates
+
+The candidate integration-library source is commit
+=ff50ec4c7c87772b8c4d66279af3cade7fc72958= from original PR #18. The prior
+ASCENT runtime cohort was pinned to =653bacc2ce521a6df4a09b16c139813712e38636=.
+The retired build-only IR generator remains independently pinned to
+=7ebc26dac9e32f982f9ab1455b664b01f2f6e007=; it is not a runtime owner.
+A candidate dependency edit is not an accepted dependency promotion.
+
+| Gate | Required observation | Current claim |
+|------+----------------------+---------------|
+| Native declaration ownership | init.ss owns selected Modules; build.ss consumes its projection | Recheck required |
+| Native production build | standard Gerbil entry builds all declared Library and ABI products | Recheck required |
+| Build/test C ABI | actual native calls, explicit failure codes, correct owner and natural exit | Integration library qualified locally; ASCENT pending |
+| Consumer graph | actual emitted module identities include runtime and codec exactly once | ASCENT pending |
+| Rust process-runtime tests | complete existing target; original 12 processes, typed values, source operations and cancellation | Pending |
+| Clean checkout | exact tracked source plus declared dependencies; no local path patches or preinstalled ASCENT products | Pending |
+| Remote CI and Linux | results for the exact accepted source | Not qualified by local Darwin results |
+| Performance | original study, budgets and thresholds | Paused; materialization remains off |
+
+The first Rust consumer check is the unchanged =ascent-scheme= target
+=process_runtime=. No single test, process count, cancellation boundary or
+assertion is removed to obtain a pass. Follow-up targets and complete native
+qualification remain separate until executed. Build output, final linker
+success, a cleanup marker, and natural process exit are different observations.
+
+Reproduction uses the integration library's existing Justfile environment and
+Cargo entry, for example from that library checkout:
+
+#+begin_src sh
+just bridge-cargo test --manifest-path /path/to/gerbil-ascent/rust/Cargo.toml \
+  -p ascent-scheme --test process_runtime --locked -- --nocapture
+#+end_src
+
+The path selects the consumer manifest; no Cargo path dependency is added.
+No compiler path, Rust sysroot flags, replacement build runner, Python
+integration, or relaxed watchdog is part of this gate.
+
+** Retention limitation carried forward
+
+The earlier =.data/ascent-native-build-abi-20261102/= raw investigation directory
+was removed during the preceding integration-library qualification. Earlier
+claims below that all raw failures remain at that path describe the prior
+state and are not current retention claims. The removal's origin has not been
+established. Source stashes survive; original raw logs and linker snapshots
+cannot currently be asserted available. This is an explicit audit limitation.
+New acceptance receipts use an independently named system temporary directory;
+all new failures must remain visible. A retained warm replay cannot replace a
+missing retained cold-build log.
+
+* Correction of the previous acceptance claim
+
+The previous layout had an init-owned compiler entry, but only three aggregate
+Module shells: =relations=, =inference= and =evidence=. Their Build projections
+listed implementations in other directories. That was not complete migration
+of the actual Library owners. Performance diagnosis was stopped when this gap
+was identified. No performance experiment is part of this migration acceptance.
+
+* Actual source owners
+
+=init.ss= now selects the actual production Scheme directories using
+=:load-modules "."=. Each selected directory owns its four mandatory roles,
+its scope Contract, native implementation inputs and one declaration-only
+=interface.ss=. Dependencies use Yuanxu's native =core.requires= Contracts.
+
+| Module | Required Modules | Native responsibility |
+|--------+------------------+-----------------------|
+| core | none | Matching primitives, finite/binary execution, execution control |
+| table | core | Providers, storage and physical relation operations |
+| program | core, table | Declarations, DSL, planning, evaluation and Session |
+| rules | program | Rule modules, source admission and closed DSL lowering |
+| candidate | program | Bounded candidate checking and generic proof/provenance operations |
+| temporal | candidate | Existing bounded temporal projection operations |
+| interface | program, rules, candidate | Existing native engine/request interface |
+| applications | core, program | Existing finite Library example constructors |
+
+This table describes the executable init declarations; it does not drive
+selection or building. There is no generated directory catalogue, alternate
+module resolver or forwarding namespace. Gerbil computes native imports and
+Yuanxu authenticates the selected source graph. Additional ABI targets remain
+declared once in the package's standard =build.ss= hook.
+
+The =relations/=, =inference/= and =evidence/= shells and all eighteen role files
+were removed. They are retained only as historical inputs in the local receipt
+directory. Generic candidate/provenance implementations were not converted
+into an application Evidence framework. No model interaction was introduced.
+
+Native C and Rust consumers keep their language-owned package boundaries.
+Development tools remain in =dev/gerbil.pkg=; docs, proof inputs and test data
+are not fabricated as production runtime Modules.
+
+* Real role adaptation and direct consumer migration
+
+Yuanxu's interface reader admits one Module =.def= plus optional explicit
+external imports. Mixing the former native import/export API with that
+publication was refused. The corrected boundaries are:
+
+| Entry | Responsibility |
+|-------+----------------|
+| program/interface.ss | Program Module declaration |
+| program/types.ss | Existing value Contracts plus Program scope Contract |
+| program/func.ss | Actual native constructors and clause lowering, formerly in objects.ss |
+| program/objects.ss | Actual Program scope value, without procedure wrappers |
+| program/api.ss | Complete native Scheme language/API export surface |
+| rules/interface.ss | Rules Module declaration |
+| rules/func.ss | Actual rule API and hygienic define-program syntax |
+| table/interface.ss | Table Module declaration |
+| table/func.ss | Native table API export surface |
+
+Existing Scheme, Rust fixture, CI and binding consumer imports were updated
+directly. The former =program/interface=, =rules/interface= and =table/interface=
+runtime APIs are not compatibility re-exports: those paths now denote Module
+declarations. The old =program/objects= constructor entry now denotes its actual
+object role; constructor consumers import =program/func= instead.
+
+Two implementation ownership cycles were removed rather than hidden:
+
+- =program/execution-control.ss= moved to =core/execution-control.ss=. The
+  matcher no longer depends upward on Program for its execution checkpoints.
+- =interface/rule-module.ss= moved to =rules/source.ss=, together with closed
+  source/evidence lowering. Rules no longer import their loader from the ABI
+  owner while that loader imports rule declarations back from Rules.
+
+There are no forwarding files at the removed paths. Original implementation
+bodies and consumers move together; the native package/integration library traversal discovers
+their current imports through the existing build interfaces.
+
+* Authoring findings were corrected, not exempted
+
+The default native checks rejected a =func -> objects= role edge
+(=YUANXU-MODULE-E007=). Moving constructors to their actual function role and
+keeping object publication above it corrected the dependency direction.
+
+The unchanged default authoring Contract also found same-named lambda parameters
+inside =heads=/=body= slot initializers and imperative replacement slots
+(=YUANXU-MODULE-E009=). The predicate parameters were alpha-renamed. Session
+replacement slots are now =.source-replacement= and =.source-replacements=.
+Procedural Library operations such as =gerbil-ascent-session-replace-source!=
+remain the actual implementation entry points; their POO slot dispatch and
+all current consumers/models use the new noun slots. No old-slot aliases remain.
+
+All eight owners pass the original authoring policy without a custom exemption,
+disabled validator, cached approval or alternate source resolver. The first
+rejected projections/builds and diagnostic reader failures remain available.
+
+* Scope and nominal type identity
+
+The namespace exported by init contains inert Module views. Executable demand
+is explicit, for example:
+
+#+begin_src scheme
+(import "init.ss" (only-in :clan/poo/object .get))
+(def program-scope (.get gerbil-ascent.init.exports Library program scope))
+(def table-scope (.get gerbil-ascent.init.exports Library table scope))
+(def program-type (.get program-scope types program))
+#+end_src
+
+A source publication and a separately imported native module can own different
+nominal prototypes. Equal names and equal source text are not identity evidence.
+An initial test incorrectly treated an inert view as its scope. A subsequent
+cross-context validation correctly rejected a provider against a different
+native import's nominal Contract. Both failures are retained.
+
+Program and Table publish their actual Types alongside their actual values,
+following Yuanxu's existing typed-scope pattern. The integration test validates
+those public Contracts again and passes Table providers into Program constructors
+within the same selected source context. It then exercises sibling Sessions,
+source replacement, withdrawal and restoration with independent exact rows.
+No structural cast, prototype alias, permissive replacement Contract or previous
+validation result bridges different source epochs.
+
+* Build, proofs and consumer boundary
+
+=gerbil.pkg= still depends only on the fixed Yuanxu revision
+=85a969c77431b971408610d908bcf694a21830bf=. POO remains transitively fixed at
+=30733c3de7dbca4f0572b25a25b9099396da48a5=. No upstream source or existing tag
+was changed. ASP stays in the existing development package.
+
+The standard =gerbil build= entry consumes the native init projection. The
+existing formal compiler-policy comparison now binds =build.ss=, not the
+deleted =build-modules.ss=. Constructor/source paths and Session slots in the
+Lean source bindings were migrated with their actual owners. Source equality
+and abstract state-model kernel checks are separate from native runtime proof.
+The Module scope Contract is outside the existing generated constructor region;
+the original source-model equality check remains active.
+
+The produced =bin/libascent= is a native Gerbil/Gambit product. It is not the
+Rust integration library. =dev/abi-consumer.c= loads that single known product directly
+and checks ABI version, same-thread initialization, request/result ownership,
+release, shutdown and post-shutdown refusal. It builds no Scheme product.
+
+The optional independent-VM Rust owner's earlier integration library source-binding failure
+remains a separate, unaccepted route. This migration neither patches the integration library
+nor reinstates a namespace/resource compatibility manager to hide it.
+
+* Completed focused receipts
+
+Receipts and failures are retained under
+=.data/ascent-yuanxu-convergence-20261102/=.
+
+- Standard native package/ABI builds passed after the real role corrections.
+- The production entry reported =PRODUCTION-BUILD-NO-ASP contexts=1767=.
+- Eight native suites passed: actual Yuanxu publication, value membership,
+  checked DSL closure, rule-module consumers, native rule-cost/PBT kernel,
+  Session deletion/revision, provenance graph and static-link input ownership.
+- The actual-scope Suite demanded all eight owners and exercised the real
+  Table/Program composition and Session lifecycle; metadata-only projection
+  success was not counted as runtime acceptance.
+- The independent native consumer reported =ABI-CONSUMER-OK=.
+- =CompilerCost.lean= and =OwnerAdmission.lean= passed the locked LeanPoo Guard
+  with the existing limits. Exact migrated source bindings were checked too.
+
+The original failed scope tests, role-admission failures, diagnostic syntax
+failures, first missing-Cargo-PATH attempt and first source-binding mismatch
+remain separate from successful receipts. No failure was overwritten or treated
+as a zero-cost/zero-error observation. Default materialization remains off;
+the previous performance results do not qualify this new layout.
+
+* Compiler selection correction
+
+Fixed compiler paths were rejected during review. Neither =build.ss= nor the
+native consumer selects =/usr/bin/cc= or prepends system compiler directories.
+The old executable =-cc= option was removed: inspection of the installed Gerbil
+driver shows that executable linking consumes =GERBIL_GCC= instead.
+
+The project command and Rust consumer preserve the caller's actual =PATH=.
+An intermediate revision forced =GERBIL_GCC= from =CC= or =cc=. That Library
+compiler policy was subsequently removed: Gerbil/Gambit retain their native
+compiler selection. The Rust adapter preserves caller tool discovery after
+the integration library's environment preparation; no alternate tool resolver is introduced.
+Fixed-compiler validation attempts are retained as non-admissible evidence for
+this policy, including the explicitly canceled Cargo validation. Successful
+earlier native receipts do not establish acceptance under the corrected PATH
+policy. That policy requires its own final checks.
+
+The existing =oracle= recipe was also corrected: it no longer prepends Cargo's
+bin directory, forces =CC=/usr/bin/clang= or supplies a fixed Rust linker.
+An intermediate revision also injected an Xcode sysroot; that entire SDKROOT
+and RUSTFLAGS block was removed. Current build/oracle entries do not inject it.
+Build and oracle dry-run parsing and =git diff --check= passed.
+
+With the caller's actual PATH, =cc= resolves to
+=/run/current-system/sw/bin/cc=. The native incremental build passed; this is
+not a cold-build receipt. The Rust check failed first on missing =libiconv=;
+a separate SDK-sysroot diagnostic also failed with undefined Darwin system
+symbols while compiling the =libc= build script. Both status-101 transcripts
+are retained as =rust-consumer-caller-path.log= and
+=rust-consumer-caller-sdk.log=. No alternate compiler was selected to turn
+these failures into a pass. Complete current-PATH Rust and clean-checkout
+qualification remain unaccepted; performance work remains paused.
+
+* Current-PATH continuation
+
+The linker investigation is recorded in
+=.data/ascent-path-link-20261102/=. The current =cc= is the Nix clang wrapper.
+The original Rust host build-script link requires =-liconv=, which is absent
+from that compiler's default library search. Adding the already installed
+libiconv directory through =LIBRARY_PATH= moved the Rust build past that link.
+Its next failure was native =pkg-config openssl --libs=, before ASCENT Scheme
+compilation. Supplying OpenSSL's installed =lib/pkgconfig= directory through
+=PKG_CONFIG_PATH= addresses that separate dependency-discovery error. Neither
+change selects a compiler or modifies dependency source.
+
+The earlier Xcode-sysroot diagnostic did not repair the Nix compiler link.
+Consequently the =oracle= recipe no longer injects SDKROOT or Rust sysroot
+flags at all: these remain the caller/toolchain's responsibility. Its previous
+compiler-path correction alone was insufficient. Historical failed diagnostics
+and all earlier upstream package timeouts remain retained.
+
+A temporary source-snapshot repository and a separate clean clone were created
+for qualification. The active checkout's branch and index were not changed.
+The clean clone has no ASCENT products, cache or symlinks to this workspace.
+Its exact temporary commit and path are recorded in =checkout-commit.txt= and
+=checkout.txt=. This snapshot includes current uncommitted implementation work;
+it is not a claim that those changes have been published to a remote branch.
+
+The corrected dependency-discovery run completed native =gerbil deps --install=
+in the isolated prefix with status 0. This was incremental recovery after the
+retained package timeouts and missing-OpenSSL failure, not an uninterrupted
+cold dependency install.
+
+The corrected Rust run passed host linking, native ASCENT compilation and integration library
+graph generation. It then failed during =std/error~1= C generation. Inspection
+immediately afterward found that the entire default =rust/target= directory
+was absent. The integration library creates its output directory before the failed operation;
+there is insufficient evidence to attribute this to an integration library creation defect.
+The cause of directory removal is unestablished. That run remains status 101.
+A separate run uses Cargo's standard =CARGO_TARGET_DIR= in the clean checkout;
+its native writes are serialized with the complete Scheme build. No directory
+repair shim or upstream edit is introduced. No timing from these diagnostic
+runs is performance evidence.
+
+* Remaining consumer convergence
+
+The workflow still requested the deleted =gerbil-ascent/artifacts= Cargo
+feature and restored/uploaded the retired =ascent-program-v1= cache and archive
+receipts. These consumers were removed rather than made compatible. The build
+cost input hash no longer names the deleted =build-modules.ss=.
+
+The formal source-binding inventory also still targeted the deleted
+=rust/ascent-build/src/policy.rs=. That binding and the corresponding retired
+Rust/cache emitters were removed together with their workflow region. The
+abstract ArchivePolicy event/admission model and its Quint rendering remain;
+they do not certify integration library execution or configure a Library cache. Existing rule,
+query, Session, invalidation and provenance proof obligations were retained.
+
+Both workflow YAML files parsed, all five requested workspace Cargo features
+exist, and all 94 remaining formal source-binding targets exist. The first
+focused ExecutionPolicy check failed because CompilerCost.olean had not been
+built. The existing complete =just check-lean-proofs= entry restored prerequisites
+and passed all 176 jobs through the locked Guard, within its unchanged
+180-second budget. The focused failure and complete success have separate
+receipts; no proof or resource requirement was relaxed.
+
+* Clean-build ownership defect and repair
+
+The first full build from the clean checkout failed with status 70. It linked
+=ascent-develop=, then rejected =libascent= because the static implementation
+=gerbil-ascent__rules__module.scm= did not exist. The ABI entry imported
+=rules/module=, but Rules' actual publication did not depend on that module.
+An existing installation could therefore conceal the incomplete native build
+projection. Previous incremental success is not acceptance of this boundary.
+
+Rules now publishes the existing recorded-module constructor and capacity
+observation through its real Objects and scope Contract. The implementation
+imports its declaration and Program constructor directly instead of importing
+the entire Rules API. These native imports let Yuanxu derive the implementation
+from the actual selected owner. No build-target list, directory scan, standalone
+precompile or compatibility export was added. The regression Suite checks the
+published operation and that its implementation enters the native projection.
+
+The first repair used a same-named capacity slot initializer. Default E009
+correctly rejected it before native clean; the slot is now =capacity=, bound to
+the existing =source-capacity= procedure. All eight owners subsequently passed
+the unchanged authoring-policy check. The malformed historical diagnostic
+script invocation, E009 refusal and corrected empty-diagnostic receipt remain
+separate. Gerbil's native =clean= entry is used to remove declared ASCENT
+products before requalification, with dependency products retained.
+
+* Final native qualification
+
+The corrected checkout is the temporary source-snapshot commit
+=22a1ef2ffc6a0a993428ce52736a1d913ff55e2e=. It incorporates current Library,
+consumer workflow and formal-source changes without committing to the active
+working branch. Gerbil-native clean completed successfully; the subsequent
+complete =just build= returned 0 and produced both =bin/ascent-develop= and
+=bin/libascent= in the isolated package prefix. The normal compiler projection
+compiled =rules/module= as an owned target. No standalone module precompile
+was performed.
+
+The same checkout and prefix passed the following checks:
+
+| Check | Result | Receipt under .data/ascent-path-link-20261102/ |
+|-------+--------+------------------------------------------------|
+| Complete native Library and ABI build after native clean | 0 | clean-native-build-owned.log |
+| Production closure excludes ASP | 0 | clean-production-no-asp.log |
+| Actual eight-owner Module publication and Session isolation | 0 | clean-yuanxu-library.log |
+| Native value membership | 0 | clean-ascent-value-membership.log |
+| Closure Contract | 0 | clean-scheme-closure-contract.log |
+| Native module, lexical capture and C4 refinement | 0 | clean-ascent-module-program.log |
+| Rule-cost kernel and independent oracle checks | 0 | clean-ascent-rule-cost-kernel.log |
+| Session source deletion/revision behavior | 0 | clean-scheme-session-deletion.log |
+| Grounded provenance and deletion | 0 | clean-scheme-provenance-graph.log |
+| Borrowed static input ownership and refusal | 0 | clean-static-link-inputs.log |
+| Independent C ABI lifecycle consumer, compiled by PATH cc | 0 | clean-abi-consumer.log |
+| Runtime default materialization budget | 0, budget=0 | clean-default-policy.log |
+| Tracked source changes caused by qualification | none | checkout-tracked-diff.log |
+| Full locked Lean proof inventory | 0, 176 jobs | lean-inventory.log |
+
+The native Suites required their Case/Suite/Module/Harness markers and final
+verdict through the existing test entry, not exit status alone. The ABI consumer
+required version, initialization, request, payload release, shutdown and
+post-shutdown refusal. The package's Scheme binary is a native Gerbil/Gambit
+product; these results are separate from Rust integration library acceptance. This is focused
+native regression coverage and a complete native build, not a claim that every
+repository workflow, Python binding or optional owner lane was exercised.
+
+* Remaining Rust native-toolchain boundary
+
+The isolated Cargo run resumed only after native qualification completed. It
+retained its separate standard =CARGO_TARGET_DIR= and did not lose that directory.
+Host linking no longer failed on libiconv. The next real failure was the pinned
+integration library's ordinary =scheme/async-service= build: unresolved =___error= and =_write=.
+The Cargo result remains 101; see =rust-clean-checkout.log=. This run stops
+before the later archive-C stage, so it does not establish the cause of the
+earlier default-target directory disappearance.
+
+An independently written Gambit C-FFI probe reproduces the same two unresolved
+symbols outside ASCENT. The comparison plain-C bundle links with =cc= from the
+unchanged PATH. Neither probe suppresses undefined symbols. Selected GSC is
+derived from the active Gerbil installation, not hard-coded. Verbose GSC output
+shows that its installed =gambuild-C= configuration invokes GCC 16, whose
+configured sysroot is SDK 26; PATH's =cc= is Nix clang 21 with SDK 14.4. Selecting
+=GERBIL_GCC= controls Gerbil's executable linker, not this GSC-internal compiler.
+The exact inner linker responsibility has not been proven by replacing tools.
+
+Receipts: =gsc-system-link-configured.log=, =gsc-system-link-verbose.log=,
+=gsc-system-linker.log=, =path-system-call.log= and =toolchain.log=. The initial
+unconfigured-GSC probe and a plain-C diagnostic whose filename collided with
+Gambit's generated C were invalid diagnostic attempts; their failures are also
+retained, not counted as toolchain comparisons.
+
+The minimal source can be reconstructed without any upstream implementation:
+
+#+begin_src scheme
+(c-declare "#include <unistd.h>\n#include <errno.h>\n")
+(define system-link-probe
+  (c-lambda () int "___return((int)write(-1, \"\", 0) + errno);"))
+#+end_src
+
+Use a distinct basename for the comparison C file, since Gambit generates C
+next to its Scheme input:
+
+#+begin_src c
+#include <unistd.h>
+#include <errno.h>
+int path_system_call(void) { return (int)write(-1, "", 0) + errno; }
+#+end_src
+
+The native environment and commands used for the Gambit probe were:
+
+#+begin_src sh
+native_home="$(gxi -e '(display (getenv "GERBIL_HOME"))')"
+export GAMBOPT="~~bin=$native_home/bin,~~lib=$native_home/lib,~~include=$native_home/include${GAMBOPT:+,$GAMBOPT}"
+"$native_home/bin/gsc" -:debug=q -dynamic -cc-options -v \
+  -o gsc-call.o1 gsc-call.scm
+cc -v -bundle path-system-call.c -o path-system-call.bundle
+#+end_src
+
+The runtime path setup matches the integration library's existing native-tool environment;
+it does not change a compiler path or SDK. The GSC probe returns 70 and the
+plain-C comparison returns 0 in the recorded environment. Upstream sources,
+installed compiler configuration and immutable dependency pins were not edited.
+No forwarding compiler wrapper, cache shim, alternate module list, permissive
+linker flag or increased timeout was added. Rust integration and performance
+remain unaccepted. No performance experiment was run during this continuation.
+
+The final comparison found zero differences across 1,742 implementation,
+configuration, workflow and model files between the active source and the
+qualified checkout. Later audit text is not a build input. The pinned integration library's
+tracked source diff was empty, and the resumed Cargo process exited naturally
+with 101; no qualification process was intentionally left stopped. These facts
+do not convert the remaining native-toolchain failure into Rust acceptance.
+
+* Correction: Nix auxiliary-tool pollution, not GCC 16 selection
+
+The configured GCC 16 is not itself a defect and was not replaced. The earlier
+comparison established a failing environment, not that a different C compiler
+was required. Current PATH resolves both =as= and =ld= through Nix. Verbose GCC
+output confirms a Nix clang assembler entered the GSC call despite GCC being
+the selected C compiler.
+
+A controlled pair keeps GSC, GCC 16, source, PATH, sysroot selection and strict
+link checks unchanged, with =SDKROOT= and =RUSTFLAGS= unset in both arms. The
+polluted arm returns 70 with the same =___error= and =_write= unresolved symbols.
+The other arm supplies GCC's standard auxiliary-tool search configuration:
+
+#+begin_src sh
+export COMPILER_PATH="$(dirname "$(xcrun --find ld)")"
+#+end_src
+
+That arm returns 0. Its verbose output uses the Apple assembler while retaining
+GCC 16 and GCC's configured SDK. Both auxiliary tools are discovered through
+Apple's native =xcrun= interface; no compiler path, SDKROOT, sysroot Rust flag,
+forwarding wrapper or unresolved-symbol suppression was introduced. This pair
+identifies the combined auxiliary-tool search boundary; it does not separately
+attribute responsibility to the assembler and linker.
+
+The Library's forced =GERBIL_GCC= fallback to =cc= was removed from both the
+project entry and Rust graph preparation. Native compiler defaults and explicit
+caller configuration now remain Gerbil/Gambit-owned. The existing README
+records standard =COMPILER_PATH= setup as an environment prerequisite alongside
+OpenSSL metadata and libiconv discovery, rather than implementing another build
+or tool resolver. The Rust consumer validation uses this same environment in
+the existing independent checkout; performance remains paused.
+
+New pair receipts are in =.data/ascent-nix-toolchain-20261102/=:
+=polluted-tools.log/status= and =native-tools.log/status=. All previous failed
+attempts remain intact. Earlier sections describe their historical observations;
+this correction supersedes the inference that the configured GCC must change.
+
+* Ownership correction after integration library/C ABI review
+
+Build/test dispatch belongs to the existing gerbil-scheme-rust/C ABI boundary.
+ASCENT must supply a correct ordinary native build declaration, not another
+Rust-aware build protocol. Moving a Rust planner's Scheme expression into
+build.ss would merely relocate the duplication.
+
+A proposed pair of GERBIL_ASCENT_RUST_* environment fields, conditional integration library
+package scheduling and graph-staging branches was therefore withdrawn before
+qualification. No such environment protocol or branch remains in build.ss.
+The pre-existing consumer implementation is retained as an unaccepted legacy
+integration while its owner boundary is checked; it has not been replaced by
+a deceptively incomplete CLI-only shim. No new abstract dispatcher or package
+manifest was added.
+
+The desired call is through the integration library's existing native C ABI into ordinary
+Gerbil build/test operations, without spawning another Gerbil CLI just to
+reach build.ss. Inspection of the fixed integration library found its current public compiler
+and package-AOT helpers spawning processes, and its archive API consuming an
+already emitted compiler plan. This inspection has not demonstrated an
+existing direct build/test C ABI route. Generic native-call facilities alone
+are not evidence that package dispatch and its lifecycle are already wired.
+That integration remains open in the integration library/C ABI owner; ASCENT must not fill it
+with a parallel builder or a new application service.
+
+The running legacy CLI-path Cargo diagnostic was intentionally canceled after
+this ownership clarification. Its status 143 and partial products are retained
+under architecture-cancellation.log and rust-native-tools.log/status. This is
+neither a fresh compiler failure nor Rust/native-C-ABI acceptance. The controlled
+GCC auxiliary-tool pair remains valid independent evidence: 70 with the polluted
+search, 0 with xcrun-derived native COMPILER_PATH. Performance remains paused.
+
+* Native package C ABI implementation (qualification in progress)
+
+The integration library now contains actual owner-local package entry points, rather than only
+Rust helpers that construct Gerbil commands. =scheme/package-tools.ss= calls the
+ordinary loaded =build.ss= =main "compile"= and the existing native GxTest =main=.
+The public UTF-8 C ABI validates borrowed inputs, preserves an unchanged output
+on transport rejection, and separates transport status from the native tool's
+result. The existing Rust runtime checks its owner thread before calling it.
+The C lifecycle boundary uses the existing host IO capture/restore mechanism.
+
+The optional integration library =package-tools= feature links the compiler and test machinery
+through its existing program/archive builder. This is integration library bootstrap work; it
+is distinct from dispatching a caller's package build/test in the running Rust
+process. The integration fixture uses an ordinary =defbuild-script= and records
+both build and test process IDs for comparison with the Rust host. Its negative
+test deliberately returns 42, followed by a passing test to check recovery.
+Malformed UTF-8 and a missing package directory are also retained checks.
+
+Qualification has not yet passed. The integration library project harness first rejected a
+root test implementation; the fixture now follows the existing thin integration
+mount and unit implementation layout. A subsequent native build identified an
+incorrect installed-object classification: =gerbil/tools/env= supplies Scheme
+source but no installed C/object pair. Namespace-based link ordering remains
+unchanged; installed-object reuse now checks those exact compiler companions.
+The archive's missing-object validation remains enabled. A syntax error in
+that correction and a verification-shell Cargo PATH failure remain recorded.
+
+Receipts are retained in =.data/ascent-native-build-abi-20261102/=. ASCENT's
+legacy Rust CLI graph preparation remains unaccepted and has not yet been
+replaced. There is no claim of Rust-consumer or clean-checkout acceptance for
+this new route. No Rust dispatcher was added to ASCENT =build.ss=, no Gerbil or
+Gambit upstream source was edited, and performance work remains paused.
+
+* Native link ownership and first C ABI qualification
+
+The latest gate runs through the integration library's existing Justfile environment, not an
+independently assembled Cargo environment. Native tool PATH selection belongs
+to that Justfile; compiler and Gambit installation mappings use the existing
+GERBIL_HOME, GERBIL_GSC, GERBIL_GCC and GAMBOPT settings. No SDKROOT or RUSTFLAGS
+sysroot injection was added. The configured GCC remains the native selection.
+
+Dependency flags now originate in integration library build.ss through the standard
+pkg-config-libs function. The existing compiler graph carries those flags to
+the archive consumer. Rust no longer probes libcrypto/libssl/zlib/sqlite3 with
+another pkg-config provider, or supplements the receipt with LIBRARY_PATH.
+Missing referenced integration library archives still fail validation. Both focused regression
+checks passed: native receipt order preservation and missing-archive rejection
+without a host-package fallback. The newly proposed PKG_CONFIG_PATH workaround
+was withdrawn.
+
+The first actual C ABI build/test fixture passed via Justfile. Both the ordinary
+build.ss and native GxTest wrote the Rust host PID. The deliberate negative test
+returned 42; the following passing call returned 0. A missing directory returned
+70, and malformed UTF-8 left the output sentinel unchanged. This qualifies the
+focused integration library call boundary, not the ASCENT consumer or a clean checkout.
+
+A stronger execution-count assertion then exposed persistent GxTest objects:
+two passing-file calls executed three cases. That failure is retained in
+sdk-cabi-test-reuse-negative.log/status. The adapter now uses GxTest's own file
+selection and the native expander reload hook to reload only selected test
+entries. Shared library identities remain native. The unchanged count assertion
+now observes exactly two executions; the complete focused fixture and both link
+checks pass in sdk-cabi-test-entry-reload.log/status (host PID 73832).
+
+The native process-lifecycle fix scopes the actual Gambit SIGCHLD action to
+package tool calls and restores the original host action afterward. This avoids
+the observed unreaped compiler child. The tools retain Gerbil's process-global
+child semantics during a call and are intended for the existing build host
+without concurrent unrelated host children; no independent owner service was
+introduced. No upstream Gerbil/Gambit source was modified.
+
+The speculative additional staging ABI was withdrawn after a project-policy
+rejection; no waiver, named request framework, or compatibility path was added.
+All prior crashes, failed native builds, lockfile rejection and negative tests
+remain under .data/ascent-native-build-abi-20261102/. The ASCENT Rust consumer
+still uses the unaccepted old CLI route and its older integration library pin. Replacing that
+route and qualifying a clean checkout remain open; performance remains paused.
+
+* Build namespace convergence on the existing integration library PR branch
+
+The implementation location is the existing integration library PR #18 branch,
+=codex/typed-fold-aot=, in the actual integration library checkout. No additional implementation
+branch is introduced. The earlier isolated-checkout receipts remain historical
+source-specific evidence and do not qualify this change.
+
+The added Scheme module is now =scheme/build.ss=; its foreign entry bindings use
+=gerbil-scheme-rust/scheme/build=. Rust module ownership is =runtime/build.rs=
+and =abi_build.rs=. Existing public package-operation C symbols and runtime
+methods retain their operation names. The =package-tools= and =native-tools=
+feature switches and the dedicated package-tools fixture/recipe are removed.
+Build/test is part of the default integration library runtime; the existing =external-program=
+profile keeps consumer-owned linking. The default bootstrap uses one programme
+graph path while retaining generated-input validation.
+
+ASCENT consumes the default runtime build API without a separate enable switch.
+The published integration library dependency pin has not yet been promoted to this unqualified
+working-tree implementation. No temporary checkout path is committed as a
+dependency. Native runtime, Rust-consumer and clean-checkout acceptance must be
+reported independently; removing the fixture does not resolve or invalidate its
+previously recorded hang.
+
+Verification on the actual PR branch completed through the existing Justfile:
+AOT library tests: 22 passed, 6 existing ignored; default runtime lifecycle:
+1 passed (the selected existing scalar in-process test), exit 0. The latter
+compiled the default =build= graph and archive, linked the Rust consumer, and
+executed the existing lifecycle assertion. This is focused default-runtime
+qualification, not clean-checkout or package build/test-operation acceptance.
+Receipts: =.data/ascent-native-build-abi-20261102/sdk-build-namespace-*=.
+
+* PR 18 rebase and concurrent-change integration
+
+The actual integration library checkout on =codex/typed-fold-aot= was rebased from =f2c8ccf=
+to the existing remote PR head =6552c7f=. The full previous tracked and untracked
+working state remains in stash =6d0f754cb6e1192b5986a16e1aa7e1a31dcf19a6=.
+The rebase introduced no new branch. Restore produced 25 conflicted paths;
+original patches, restore diagnostics and per-block integration selections are
+retained under =.data/ascent-native-build-abi-20261102/rebase-integration=.
+
+Integration preserves the newer separate-procedure layout and compiler path
+relocation, owner-image admission, cancellation/drain checks, native source
+revisions, and concurrent source-supply changes. Existing PR build/test tests
+are migrated to the default =build= namespace rather than adding a new fixture
+or feature. Their original 15-second wall and 5-second output gates remain.
+Compiler-owned link modes are retained; dependency discovery belongs to the
+Scheme build declaration and Rust only validates the resulting library paths.
+
+The remote macOS C ABI job on =6552c7f= failed after build/test, stage and cleanup
+markers. The supervised child exited with SIGSEGV after
+=PACKAGE-C-ABI-CLEANUP-OK=; this is a natural-exit failure, not a timeout or a
+successful acceptance. The complete job log is retained as
+=ci-macos-cabi-6552c7f.log=. A cause and a verified repair are still pending.
+
+** Rebased focused results and actual-consumer linker failure
+
+After official regeneration, AOT validation passed 29 library tests and 19
+integration tests; seven existing library tests remain ignored. The default
+C ABI build/test target passed its cancellation, failure, staging, cleanup and
+natural-exit checks in 6.72 seconds. Strict Clippy passed after correcting four
+API documentation markup errors; the failed lint receipts are retained.
+
+A temporary acceptance-only consumer then attempted the actual ASCENT Library
+build and existing cost-kernel test through these public methods. Its ordinary
+unoptimized Cargo configuration failed during final linking, before any Library
+operation executed. The native Apple linker crash reports identify excessive
+recursion in =ld::AtomFileConsolidator::markLive= during dead stripping and a
+thread-stack protection fault (SIGBUS). The command contains no Nix paths; the
+Xcode linker and macOS integration library are recorded in the vendor-generated snapshot. This
+is distinct from the remote C ABI child's post-cleanup SIGSEGV and does not
+explain that earlier failure.
+
+The observed 11.0 Rust minimum versus 26.0 native-object warnings are recorded
+separately; no causal repair is inferred from them. Both native crash reports
+and the complete 179 MiB linker snapshot are retained under the ignored
+rebase investigation directory. No upstream linker, Rust linker flag, native
+compiler optimization, resource bound or compatibility layer was changed.
+ASCENT's existing Rust workspace already declares =opt-level = 2=; source-bound
+validation of that actual consumer proceeds under its unchanged configuration.
+
+** Native launcher correction and source-validation lock ownership
+
+The existing ASCENT Rust consumer first exposed a redundant
+=default-features = false= override of a workspace dependency. Removing that
+redundancy restores Cargo manifest inheritance without introducing a feature.
+The temporary source patch initially collapsed two intentionally distinct
+revisions of the old generator/resource crate; validation now patches only the
+three core integration library crates and leaves the old generator pin unchanged. All attempts
+are retained. The actual test uses a separately recorded frozen validation lock
+with =--locked=; the original production lock is restored when unchanged by
+other writers. Temporary paths are not production dependency declarations.
+
+The first actual-consumer native dependency compile then failed to find
+=assert.h=. A controlled preprocessor check established the cause: the Justfile
+prepended the directory of =xcrun --find ld=, invoking the raw Xcode compiler
+without the launcher's integration library selection. The corrected Justfile dynamically uses
+the directory of =command -v xcrun=. The identical header check changed from
+exit 1 to exit 0. No compiler or Apple SDK path is hardcoded, and neither SDKROOT nor
+Rust linker flags are added. The unchanged ASCENT consumer and frozen validation
+lock are rerun under that corrected native launcher selection.
+
+The post-launcher-fix default C ABI test relink also failed inside Apple ld.
+Two new native crash reports independently show the same markLive recursion
+and thread-stack exhaustion. Therefore the earlier successful C ABI invocation
+is retained as historical source/configuration evidence, not promoted to a
+current final acceptance. The failure is no longer confined to the temporary
+unoptimized client. No dead-strip disabling, linker substitution, resource
+increase or compiler-path fallback was introduced. The actual ASCENT Rust
+consumer is checked independently under its existing configuration.
+
+* Native integration-library repair checkpoint (2026-11-03)
+
+The original integration-library PR #18 now contains =9207638=, rebased on
+its concurrent =57d2cd9= / =2bc6ba1= updates. It separates eager scalar runtime
+initialization from native compiled build-library loading, uses native resolver
+observation and standard =gsc-options:=, and retains target system-library paths
+through the shared Scheme declaration. The existing native build/test C ABI gate
+passes locally with 12 workers, natural exit and original 15/5-second limits.
+Its native declaration tests include before/after failures and missing-metadata
+refusal. This is integration-library evidence, not ASCENT acceptance.
+
+ASCENT's four runtime-cohort references and lock resolution select that exact
+SHA; the retired build-only IR generator remains at =7ebc26d=. Resolving the
+new cohort adds its Tokio-based build-observer dependencies and removes the
+retired Rust pkg-config dependency. Existing registry package versions remain
+unchanged. The lock also reflects the existing, already-pending Library
+dependency declarations; no downstream test or budget is changed. No Cargo
+path patch is added. Clean integration-library checkout and the unchanged
+ASCENT =process_runtime= consumer gate remain separate until their results
+are recorded.
+
+* Default native package environment and dependency preparation
+
+The first unchanged ASCENT =process_runtime --no-run= consumer invocation at
+=9207638= failed with native result 70 while loading build.ss at line 6. Its
+Yuanxu library import was unavailable before local package selection. This is
+retained as =process-runtime-9207638-build.log=, not a passed build or test.
+
+Original integration-library PR #18 now contains =6874116=. The follow-up calls
+Gerbil's native =setup-local-pkg-env!= before build/main/spec/test expansion,
+retains the existing immutable owner selection and restores per-call standard
+paths. It adds an automatic-discovery case to the existing test package and
+preserves the original explicit-prefix case, 15/5-second gates and host capacity.
+Checked-artifact full workspace tests pass 685 aggregate cases with 15 ignored,
+and strict workspace lint passes. Its clean Git checkout and ASCENT consumer
+remain separate acceptance boundaries. No task, process count, cancellation
+assertion, compiler path or Library DSL behavior is changed.
+
+Native dependency preparation also exposed stale installed package metadata:
+Yuanxu was at =1934955= while the frozen declaration requires =85a969c=; its
+POO dependency requires =30733c3= while the installed tag was =099b381=.
+The incompatible-tag refusal is retained. No uninstall, forced checkout,
+manual tag-file edit or upstream source patch is used. GxPkg's exported native
+=pkg-update= API selects the declared dependency revision. The POO object is
+available from GitHub by SHA but absent from fetched branch refs; its exact
+object was fetched without changing the declared pin. The pre-existing
+untracked POO manifest was backed up before update.
+
+The installed tagged =gxpkg update package@SHA= command updated the checkout
+but then passed its tagged argument to dependency lookup and reported missing
+gerbil.pkg. This upstream command limitation is retained, not patched. Native
+=deps --install= resumes after the explicit version update. These preparations
+do not establish that a fresh prefix can install the old rebased SHA using only
+an ordinary branch-ref fetch. That clean-install limitation remains distinct
+from the in-process Library acceptance.
+
+* Final integration source and explicit downstream blocker
+
+The current original-PR source is =ff50ec4=, incorporating =9207638= and
+=6874116=. Its clean tracked checkout passes mandatory generated-SCM workspace
+tests and strict workspace Clippy, formatting, the native Scheme contracts,
+all four native link cases, standard compiler-options metadata and the real
+metadata linker control. The earlier =6874116= clone began with an empty target
+and passed complete native build/test acceptance; the later =ff50ec4= checks
+reuse that checkout's target and are not called a second cold build. No local
+path dependency or fallback loader is added.
+
+Native dependency installation remains unaccepted. The default serial invocation
+of POO =30733c3= stopped progressing with no compiler child and mostly native
+select waits in its read-only process sample. It was interrupted diagnostically;
+its nonzero result, partial artifacts and sample are retained. A single separate
+control used the existing ASCENT build entry's host-core policy (12), matching
+the C ABI's host-capacity policy without changing source pins, heap or time
+limits. That control performed additional real compilation and then also waited
+with no compiler child. Its second process tree and select sample are retained,
+and it was interrupted too. The core setting alone is therefore not a repair.
+Neither invocation is a natural-exit pass or a successful dependency install.
+
+No POO, Yuanxu, Gerbil or Gambit source was patched. The currently open Yuanxu
+PR #19 head =6e86abf= still declares the same POO =30733c3=; merely advancing
+Yuanxu would not remove this dependency condition. POO PR #13 is merged with
+head =25d9f6e=, but changing the declared dependency cohort is not silently
+substituted for the frozen consumer validation. The existing gerbil.pkg remains
+unchanged. The actual 12-process consumer was not run because its native
+prerequisites did not qualify; unexecuted coverage is not a zero-failure result.
+ASCENT's candidate runtime cohort is =ff50ec4=, not an accepted migration or
+performance promotion.

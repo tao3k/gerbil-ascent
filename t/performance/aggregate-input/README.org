@@ -1,0 +1,91 @@
+#+title: Aggregate input admission and reduction qualification
+
+* Frozen source and shared protocol
+
+Baseline =b3b66cc5849adc1a2af721c5e83ed4523a684d10=.
+Original and unchanged frozen =program/aggregators.ss= blob:
+=c28231f808a6f5215967cc2bfe18bc2c2bebf0dd=.
+The incoming =5809a93= changes provenance maintenance, not this source owner.
+
+Gerbil =1cfb032= =core/match.ss:638-672= owns structural dispatch;
+pinned POO =support/base.ss:10= supplies the explicitly imported unary
+=lambda-match= wrapper. =runtime/util.ss:268-283= defines item-before-accumulator
+fold order. A shared singleton projection replaces repeated length-based tuple
+destructuring. =with-single-column= validates the complete borrowed input before
+streamed arithmetic. Sum preserves =(+ item prior)=; mean counts during the
+ordered sum and converts the completed sum before division. Neither retains a
+copied column. Min/max retain their original multiargument apply and value list.
+Count retains its zero-column contract. Individual improper/cyclic tuples now
+receive a bounded shape diagnostic; outer inputs remain admitted proper lists.
+
+* Native complete grouped builtin calls
+
+ASP Scheme benchmark API runs 50 alternating old/new pairs. The accepted large
+fixture has eight groups of 1024 tuples each. Tuples contain the signed integer
+progression =(modulo n 97) - 48=. Each workflow calls both sum and mean for every
+group and returns all results. A complete progression cycle sums to zero; a
+separately calculated remainder progression provides the sum/mean oracle.
+Extrema and count have their own direct expected values. Every timed and
+allocation invocation must match each other, the frozen implementation and the
+independent oracle. Input groups are prepared outside measurement; shape
+admission, reductions and complete result construction are included.
+
+CPU is process user/system time. Allocation uses a separate semantic-equivalent
+invocation between forced collections and the VM counter in statistics slot 16.
+CPU excludes these forced collections. Gambit =lib/mem.c:5893-5928= sums all
+processor allocation counters at GC; =lib/_kernel.scm:3800-3809= distinguishes
+the live processor counter in slot 7 from this VM observation in slot 16.
+See [[https://github.com/gambit/gambit/blob/master/lib/mem.c#L5893-L5928][upstream VM accounting]] and [[https://github.com/gambit/gambit/blob/master/lib/_kernel.scm#L3800-L3809][statistics projection]]. Native local observations confirm
+the accepted grouped fixture has nonnegative counters in every sample.
+
+Before the grouped run, the target requires CPU <=90% of baseline and >=40
+faster pairs. Controls allow 110% CPU +20 microseconds; allocation allows 110%
++4096 bytes. These numeric thresholds are unchanged from the initial wide
+fixture. Builds and semantic qualification do not overlap timing lanes.
+
+| Scenario | Groups | Tuples/group | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+--------+--------------+------------+------------+-----------+-----------+--------------|
+| sum + mean | 8 | 1024 | 230 | 147 | 789168 | 3376 | 47 |
+| min + max | 8 | 1024 | 359 | 328 | 1573552 | 1573552 | 47 |
+| count | 8 | 1024 | 17 | 17 | 1072 | 1072 | 20 |
+| small sum + mean | 1 | 1 | 1 | 1 | 672 | 656 | 16 |
+| empty sum + mean | 1 | 0 | 1 | 1 | 496 | 496 | 17 |
+
+The grouped arithmetic target lowers CPU about 36.1% and VM allocation about
+99.6%. Extrema retains its allocation profile. Small CPU measurements are
+controls, not stable gains. These results qualify grouped builtin invocation,
+not an entire evaluator solve or all possible group sizes.
+
+* Rejected observations and limits
+
+The initial one-group 8192-tuple fixture produces a negative allocated-byte
+difference (-130784) despite scalar result parity and lower CPU. Replacing the
+direct helper with statistics slot 7 still yields a negative difference
+(-130768); collecting slot 16 before/after also fails monotonicity (-130496).
+These observations are rejected. The current SDK's wide recursive-call counter
+behavior is not repaired by this production change, and the original wide
+fixture does not pass allocation qualification. Its original contract is kept
+in cache as =benchmark-wide.ss=. No negative count is clamped, offset, omitted
+from an accepted sample or converted to a performance win.
+
+The grouped fixture is a separately admitted workload with the same total row
+count and numeric gates, not a repair of that wide fixture. A first source build
+also rejects the missing =lambda-match= import; the explicit pinned support
+import resolves it. All failed builds/observations, final logs, receipts and
+binaries stay under ignored =.cache/ascent/aggregate-input=. Root =build.ss=
+is unchanged; no SDK rebuild or new environment switch is introduced.
+
+* Semantic qualification
+
+Two Suites, 12 Cases pass with final =OK= and exit zero. Added coverage compares
+all 781 numeric sequences of lengths zero through four over five exact/inexact
+values, across four builtins (3124 comparisons). Signed zeros, infinities, NaNs,
+large exact/inexact mixtures and cancellation retain original observations.
+Complex sum/mean and complete-shape-before-arithmetic error priority are
+explicit gates. Malformed individual tuples are bounded, and caller tuple/list
+identity is retained. Existing public DSL tests cover grouped aggregates,
+custom reducers, empty cardinality, recursive closure aggregation and pattern
+errors. The direct source-loaded builtin pipeline also passes.
+
+Final native policy: 30 advisories, zero errors. This is not a warning-free
+repository or completed remote CI claim.

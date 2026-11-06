@@ -1,0 +1,88 @@
+#+TITLE: Dependency driven grounded withdrawal
+
+* Production flow and source study
+
+=candidate/support-cut.ss= owns one DRed dependency propagation. The retained
+maintenance owner validates selectors, copies tentative memberships, chooses
+ordered source seeds, and publishes only after propagation and detached root
+copying succeed. Overdeletion wakes dependent rules; restoration starts from
+remaining sources, candidate facts, empty rules and already founded bodies.
+An unsupported cycle cannot restore itself. Repeated premise occurrences retain
+their dependency entries and work charges.
+
+=candidate/support-dependencies.ss= provides the private final =support-rule=
+record and dependency admission shared with height computation. Each call owns
+its table and pending spine. There is no persistent index or cached annotation
+across cuts. Gerbil revision =1cfb032= provides the relevant patterns:
+=compiler/optimize-base.ss:24-29= initializes identity tables inside an owner;
+=std/struct/lru.ss:21-27= uses final records and typed internal slots;
+=core/more-sugar.ss:118-129= defines native condition-driven =until=.
+Native =andmap= keeps premise inspection short-circuit and budgeted.
+
+Admission is O(E+P); subsequent work depends on activated rules and inspected
+bodies, including repeated premises. No universal linear bound is claimed.
+The withdrawal work counter now charges dependency admission, queue events,
+activated rules/premises, affected retirement and ordered roots. Numeric counts
+can differ from full scans. The existing budget is unchanged, and exhaustion
+cannot publish tentative membership or partial rows.
+
+* Frozen complete consumer and fixed gates
+
+=reference.ss= freezes maintenance from =ee2c6efaa29a7bb1231eb73daf694b554cb52cd3=,
+original blob =be1e73c3624a59c144fe106eba9b52d5f47a9e33=. Its datum, provenance
+and height imports are redirected to the current Candidate modules. Both arms
+therefore share the current height kernel, isolating the withdrawal algorithm.
+The frozen withdrawal, state copying, preview and compaction algorithms remain
+intact.
+
+Public proof construction and independent certificate verification complete
+before timing under the unchanged 100000 proof budget. The 32-edge fixture
+reverses private copied support order without changing any edge or premise.
+Inside timing: create retained state, preview source withdrawal, accept or
+discard it, compact, compute complete heights, and read detached rows of both
+the chosen and original owners. Both arms must match independently specified
+rows and chain heights, including original-owner isolation.
+
+Before the first timing, gates were fixed at 20 alternating CPU pairs, 20 ASP
+API admissions and five dedicated cumulative allocation pairs. Large arms
+require <=90% baseline CPU and >=16 wins; small permits <=110% CPU +20 us.
+Allocation permits <=3x baseline +4096 bytes. No gate was changed or unchanged
+arm rerun to select favorable measurements. CPU arms run sequentially with
+natural GC; allocation samples use the native cumulative allocator counter.
+
+| Complete consumer | Old CPU us | New CPU us | Wins / 20 | Old bytes | New bytes |
+|-------------------+------------+------------+-----------+-----------+-----------|
+| Withdraw | 122 | 86 | 20 | 162720 | 133184 |
+| Restore through duplicate source | 306 | 128 | 20 | 260576 | 188800 |
+| Discard successful preview | 154 | 115 | 20 | 205760 | 176224 |
+| One-edge control | 12 | 14 | 4 | 36176 | 40592 |
+
+All fixed gates pass. Large-arm CPU falls 29.5%, 58.2% and 25.3%; allocation
+falls 18.2%, 27.5% and 14.4%. Small-input CPU and allocation increase, within
+the preset tolerances. Claims cover these complete retained consumers only,
+not solver throughput, certificate production/verification or other platforms.
+
+Shared-record height controls retain their original fixed gates and frozen
+=4528237= reference: chain 459 -> 84 us, withdrawn 468 -> 85 us (20 wins each),
+small 10 -> 10 us (15 wins). Allocation remains 66704 -> 115728,
+69792 -> 118816 and 15264 -> 25056 bytes. This control still has a transient
+allocation cost; it does not establish an additional height speedup over =ee2c6ef=.
+
+Official =gxi :gerbil/tools/gxtest -v 5= passes 56 Cases in six modules with
+final =OK=. Existing finite graph, conjunction, repeated withdrawal and budget
+rollback Cases remain unchanged. New Cases cover founded/unfounded cycles,
+empty bodies, repeated premises/seeds and frozen complete-consumer equality.
+ASP Policy passes the four production files and three native witness modules
+with zero findings. Receipts remain in ignored =.cache/ascent/support-cut/=.
+
+* Reproduce with native APIs
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib gxi t/performance/support-cut/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/support-cut/runner.ss withdraw .cache/ascent/support-cut/withdraw-final.ss
+#+end_src
+
+Other fixed arms are =restore=, =rejected= and =small=. The runner calls the
+ASP Scheme benchmark API directly. Build uses the installed SDK, native make
+and source-closure admission. No SDK/source rebuild or test process scheduler
+is added to the production build entry.

@@ -1,0 +1,102 @@
+#+TITLE: Weighted UF complete export and bound-axis query qualification
+#+LANGUAGE: en
+
+* Design and model contract
+Weighted source components retain separate target rectangles and their
+ordered member axes. Complete export expands the product into one owned outer
+collector with a syntax-bound tuple constructor. The native =with-list-builder= owns its head and tail; no reverse traversal is
+needed, and every public tuple is fresh. Visitors remain callback based
+for external consumers. No mutable UF node or shared reader cursor is retained.
+
+A uniform-schema indexed single-coordinate query with one axis owner binds
+its stored selected member once, then visits its ordered descriptor bucket.
+Right-axis multi-owner queries retain the previous frozen plan. Prefix keys,
+repeated constraints and mixed arities retain their checked query path.
+
+Gerbil's =std/list/list.ss= implements =push!/pop!= as scoped =defrule= syntax
+and uses accumulator folds to build owned spines. Its =std/struct/dag.ss= keeps
+invocation state separate from completed attributes. The product collector
+uses =std/list/list-builder.ss= and the same syntax/ownership discipline, with constructor syntax bound once
+instead of two higher-order callbacks per public row.
+
+Lean =collect_right_order= and =collect_product_order= describe the actual two
+accumulator loops, and =direct_product_export= proves their ordered Cartesian
+result. =bind_left_order= and =bind_right_order= prove descriptor-order binding;
+index ownership and schema admission remain explicit implementation refinement
+obligations. =WeightedExport.qnt= executes both accumulator loops and both axis
+queries, with retirement, public mutation and an independent sibling result.
+Order, source aliasing, shared sibling, wrong-axis and descriptor-count mutants
+must be rejected. Weighted mass is computed from both actual axes.
+
+* Fixed native A/B admission
+Baseline sources freeze =bdae4a23168c5dc0fe96b47fff81d94387849ae8= with only the
+reference UF import redirected to its frozen view module. Weighted 384 SCC and
+two grouped 192 SCC exports include freeze plus every public row. Left/right
+queries consume complete selected results over a prepared 384 SCC cut. Dense
+192 chain, sparse 128 disjoint edges and a small chain are controls.
+
+Thirty-two operations form a sample. The original eight-operation calibration
+missed the paired-win gate (14/20, then 15/20) despite a lower CPU median.
+Both failures remain recorded; the larger fixed sample retains natural GC and
+the identical CPU, allocation, win, heap and parent-timeout thresholds. There are 20 alternating natural-GC CPU pairs,
+20 ASP admissions, and five allocation pairs with GC outside the counter.
+Weighted/grouped export and both queries require CPU <=90% and >=16/20 wins.
+Every scenario retains allocation <=110% +8192 bytes: public row storage already
+has one outer cell and a fresh tuple per result, so this batch targets CPU rather
+than claiming that required public storage can be removed. Controls retain
+CPU <=110% +20us. ASP p95 <=999ms, parent timeout 90 seconds, interpreter heap
+3GB. Thresholds are fixed before measurement.
+
+Old/new complete answer sets are compared outside timing; separately allocated
+UF roots do not establish the same global hash traversal order. Fixed descriptor
+exports and queries within each cut are checked for exact order by native and
+independent Python tests. All logs, binaries and receipts stay under ignored
+=.cache/ascent/uf-weighted/=.
+
+* Final measurements and qualification
+The seven-scenario final run passes in 24.91/90 seconds. CPU medians below
+are microseconds per fixed 32-operation sample, with natural GC included.
+
+| Scenario | Baseline CPU | Candidate CPU | Reduction | Paired wins |
+|----------+--------------+---------------+-----------+-------------|
+| Weighted 384 SCC | 148051 | 121057 | 18.2% | 19/20 |
+| Two grouped 192 SCCs | 92040 | 79709 | 13.4% | 18/20 |
+| Indexed left query | 182 | 123 | 32.4% | 20/20 |
+| Indexed right query | 198 | 131 | 33.8% | 20/20 |
+| Dense chain control | 39034 | 34396 | control | 12/20 |
+| Sparse edges control | 2111 | 1766 | control | 18/20 |
+| Small chain control | 47 | 42 | control | 20/20 |
+
+All allocation bounds pass. Weighted/grouped export allocation is essentially
+unchanged; both queries decrease 0.54%. Fresh public tuple storage remains
+required. Initial collectors missed the paired-win gate. A later generic query
+constructor missed the query CPU gate; binding the admitted tuple constructor
+once resolved that regression. All unsuccessful runs remain recorded; no
+threshold or timeout was widened.
+
+Full Lean validation passes 158 jobs. Quint explores 478 generated / 217
+distinct states and rejects all five named mutants. Native validation passes
+five Suites / 34 Cases. Actual Library =059-current-001= freezes =057-current-001=
+other interfaces plus the final view implementation. Build/package/API exit
+zero in 101.94/120, 0.73/15 and 1.35/45 seconds. Its receipt records 132 inputs,
+127 linked Scheme sources and 1264 loading resources. Independent Python actual
+API and ABI each pass three Cases in 6.043/15 and 6.527/15 seconds with checked
+production source hashes.
+
+Previous full source CI at =bdae4a2= failed. This batch corrects its dense-cut
+fixture's comparison of heterogeneous physical units: logical count remains
+33153, while the new layout's exact 33635 units are checked independently.
+That CI also reports POO run/run-timeout contract failures outside this batch.
+Expanded dense regression is now qualified on the same independent producer
+and its complete debug helper graph: all nine Cases, MODULE-OK, HARNESS-OK and
+final OK pass without errors. The original constructor-entry failures remain
+recorded. The last entry rejection was an invocation mistake: =-v= requires a
+numeric verbosity argument; =-v test-file= parses the path as =#f=. The correct
+native invocation is =gxi :gerbil/tools/gxtest -v 5 test-file=. No Gerbil patch,
+timeout change or upstream rebuild is needed. The test-library helper now
+explicitly declares all six dense reference/support modules to prevent reuse
+of a partial helper graph.
+
+Concurrent Evidence interfaces, complete current consumer graphs, remote CI and
+portable wheels remain separate gates. Raw evidence is retained under
+=.cache/ascent/uf-weighted/=.

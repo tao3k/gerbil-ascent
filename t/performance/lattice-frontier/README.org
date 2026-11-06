@@ -1,0 +1,70 @@
+#+title: Lattice admission and ordered round publication
+
+* Production ownership
+
+One private frontier now owns lattice membership, the latest row and exact
+last-update sequence from initial admission through derived staging and round
+publication. Unique arrivals use their existing order; revisited keys sort only
+at publication. The engine retains joining, field checks, budgets and publication.
+Initial source admission records every accepted occurrence, including unchanged
+joins; derived admission records only effective changes. Reads do not change order.
+
+The native Gerbil =src/std/struct/lru.ss= illustrates compact final records and
+=using= field contracts. This implementation adapts those ownership idioms;
+it has no eviction or read-touch protocol. The initial linked-node experiment
+failed the unchanged repeated-key CPU gate and remains a negative result.
+
+* Native entry points
+
+Build only the project libraries with =:std/make=:
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" LIBRARY_PATH=/opt/homebrew/opt/openssl@3/lib gxi t/performance/lattice-frontier/build.ss "$PWD/.gerbil/lib"
+#+end_src
+
+Run the native suites through the official Gerbil test tool:
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 t/qualification/ascent-lattice-frontier-test.ss t/qualification/ascent-lattice-program-test.ss t/qualification/ascent-storage-batch-test.ss
+#+end_src
+
+Run each benchmark directly with =gxi= and ASP Scheme's benchmark API:
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/lattice-frontier/runner.ss sparse .cache/ascent/lattice-frontier/sparse-qualified.ss
+#+end_src
+
+Replace =sparse= with =repeated=, =source=, =distinct=, =cold=, =small= or =set=.
+The runner has no process launcher or custom test scheduler. Root =build.ss=
+registers the production module only. Logs and scalar receipts stay in =.cache=.
+
+* Matched comparison
+
+The frozen evaluator and initializer are from commit
+=8722780bb191e9c81fbfe2093b3c410f9e863df2=, original blobs
+=2e5bd12cf6f690581a52ef44ead609fcba9e1e34= and
+=e964b97814eb2d086466b6316b8d1cc90be8a5b4= respectively. Imports are redirected
+to the common production dependency closure, with the frozen evaluator using
+its frozen initializer. Both sides use identical public declarations, providers,
+plans, schemas and budgets. Prepared descriptors and schema caches are outside
+timing; fresh engines, complete ordered results and retained updates are inside.
+This comparison does not measure compiler or Program construction performance.
+
+Each scenario has 20 alternating process-CPU pairs, 20 ASP admissions and five
+allocation pairs. Complete results must match the frozen engine and independent
+source/key truth. Sparse requires 10% CPU improvement and 16 paired wins;
+controls require CPU <= 110% plus 20 microseconds. Allocation must be <= 110%
+plus 4096 bytes. These gates were fixed before measurement.
+
+Allocation uses =##get-bytes-allocated!= around the complete consumer and rejects
+negative differences. Current static executables produced nonmonotone counts;
+those receipts were rejected. Direct =gxi= with the same compiled project
+libraries qualified the counter. This is a runtime qualification boundary,
+not an established SDK root cause. Historical slot-16 allocation claims in the
+five earlier benchmark studies are withdrawn until their corrected runners
+are qualified; their CPU and semantic evidence is separate.
+
+* Final qualification
+
+Results and limitations are recorded in the large source flow audit. Native
+Gerbil testing passes 44 Cases across three suites in 14.41 seconds, including
+all 729 six-update traces, source occurrence order, callback/error order,
+budgets, resumed evaluation, custom storage and held publications. ASP Policy
+passes all three production owners with zero findings.

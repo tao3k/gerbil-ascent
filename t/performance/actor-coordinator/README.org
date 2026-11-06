@@ -1,0 +1,106 @@
+#+title: Actor coordinator recovery and final batch transfer
+
+* Production ownership
+
+=program/actor-round.ss= retains the bounded, round-owned worker pool. This
+change closes the task/coordinator protocol in two places:
+
+- One recovery boundary covers readiness, cancellation, merge and completion
+  callbacks. Successful owner loops no longer capture a continuation per hook.
+  Recovery records the first failure, clears pending admission, refuses any
+  outstanding credit and resumes draining. Final exception propagation occurs
+  outside this recovery boundary, after assigned tasks drain and the pool joins.
+  A separate failed? bit distinguishes absence from an arbitrary raised value,
+  including #f; later worker cleanup errors cannot replace that first value.
+- Execution returns its final partial batch with its done message. The worker
+  then waits for another assignment. The owner merges that bounded tail before
+  calling completed!, and admits successors only on the following loop. Failure
+  refuses the tail and closes idle workers. Full 32-row batches and 64-tick
+  checkpoints still require explicit credit during execution.
+
+Installed Gerbil =2591dcd= =runtime/error.ss:67-73= places continuation capture
+at an exception boundary; =std/make.ss:292-298,350-358= catches a worker-loop
+failure and treats work completion separately from closing/joining workers.
+These guide boundary placement. They do not implement ASCENT row semantics.
+Only the coordinator owns merge, dependency state and active-worker indexes.
+=std/sync/completion.ss:15-18= similarly separates readiness from stored values;
+ASCENT applies that distinction to failure presence rather than truth-testing
+the exception payload.
+
+Native Cases cover 0/1/31/32/33/64/65 rows, observing all rows in completed!,
+ready/merge/completion/cancellation faults for both one-row tails and multi-batch
+streams, first-exception identity, refused credit that bypasses task handlers,
+cleanup, worker reuse/join, dependency readiness, mailbox isolation and graph
+truth, and a #f merge failure followed by worker cleanup failures. Four linked
+native modules pass 46 Cases.
+
+* Direct A/B against the pushed pool implementation
+
+=reference.ss= is exactly =program/actor-round.ss= at
+=cf658f97dc9e8e62e38f551a5a283efd300932ed=. =cmp= verifies the unchanged source.
+=just performance-actor-admission coordinator= builds one static executable
+linking both kernels and the same native callbacks and measurement code.
+The test builder checks source fingerprints before/after compilation; both
+kernel module paths are checked against the explicit native Library.
+Production =build.ss= remains unchanged. No SDK source is rebuilt.
+
+The earlier admission baseline remains available with no argument. The optional
+=stream= lane runs only the stream fixture. Wide/backlog/small retain their
+previous shapes; stream uses four tasks, two workers and 4096 candidates per
+task, with checkpoints on every visit. The timed call includes the full round,
+owner merge and sorting result rows. Every result equals independent iota truth.
+
+Each launch runs 50 alternating pairs in separate CPU and allocation lanes.
+CPU samples run warmed, in one process, retaining the scalar user+system sum;
+natural GC stays inside timing. Allocation samples run one cold round per
+fresh native child process, alternating sides. Every child checks independent
+truth and its exit status is checked. Compilation and forced GC are outside
+measurement. Small CPU samples repeat 20 rounds; allocation samples run once.
+
+Allocation follows Gambit's own =time= implementation in =lib/_repl.scm=: take
+current allocated-byte field 7 before and immediately after the call, subtracting
+endpoint statistics-vector cost (field 9). Cleanup GC occurs afterward. Field
+16 belongs to the last-GC report in =lib/_nonstd.scm=; it is not used for this
+span. CPU and cold allocation describe distinct execution states.
+
+The existing gates remain: >=15% less CPU, >=20% less reported allocation and
+>=35/50 CPU wins for wide/backlog; small permits 5% + 15 us CPU and 2 KiB
+allocation overhead. No threshold was relaxed.
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| Wide | 1912 | 706 | 41160184 | 2965888 | 50/50 |
+| Backlog | 2660 | 1068 | 10501240 | 3275560 | 50/50 |
+| Small | 13.25 | 10.85 | 77344 | 47264 | 33/50 |
+
+The three default scenarios passed on three independent launches (900 paired
+samples). Wide CPU medians ranged old 1868-1912/new 660-706 us; backlog ranged
+old 2660-2672/new 1065-1078 us. Small ranged old 13.00-13.25/new 10.70-10.85 us.
+Cold allocation ranged old 41160184-41160696/new 2965888 bytes for wide and
+was stable at the table values for backlog/small. These matched entry receipts
+on one VM processor do not establish object sizes, RSS, multicore scaling,
+general solver throughput or deployed wall-time gains.
+
+* Rejected measurements and extended stream experiment
+
+Recovery-only candidate: wide CPU 985 -> 729 us, bytes 144422336 ->124366960,
+45/50 wins. Its allocation gate failed. A gxi-hosted final-protocol entry gave
+CPU 967 ->451 us, bytes 154940864 ->136392560, 48/50 wins, also failing
+allocation. Another hosted run gave much lower allocation; those percentages
+are not current qualification evidence.
+
+Earlier static measurements used last-GC field 16, first retaining the whole
+statistics vector and then retaining only scalars. Positive runs were followed
+by negative old-side allocation deltas (-25970720 bytes); fresh-process field
+16 observations also produced a negative delta (-25970592 bytes). Those
+measurements are rejected. The current field 7/9 endpoint follows Gambit's own
+=time= calculation and all three qualification launches have valid deltas.
+This does not establish a particular SDK bug. The SDK was not rebuilt.
+
+The optional stream experiment has independent truth parity but fails its
+unchanged performance gate: CPU 2717 ->2494 us, allocation 7071648 ->5511200
+bytes, 28/50 CPU wins. An earlier run also failed CPU/stability gates. The
+final-tail optimization mainly benefits short tasks; no qualified stream CPU
+speedup is claimed. The stream lane remains explicit and returns failure when
+its gate fails. Raw pairs and all failed logs remain under ignored
+=.cache/ascent/actor-coordinator/=.

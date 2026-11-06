@@ -1,0 +1,97 @@
+#+title: Initial compressed source publication and compiled routing
+
+* Gerbil source and shared construction flow
+
+Gerbil =1cfb032= =compiler/optimize-top.ss:259-262= traverses admitted identifier
+and expression lists together with multi-list =for-each=. Its constructor
+optimizer (=optimize-call.ss:390-415=) resolves metadata before expression
+emission. Apply those patterns where our planner already supplies correspondence
+and projection: =program/objects.ss:126-157= returns ordered columns and their
+exact ordered key terms in one admitted indexed atom.
+
+=program/view-state.ss= now traverses relation declarations and dense positions
+together instead of using =list-ref= for each eligible relation. Routing consumes
+atom slot 4's compiled key terms rather than projecting slot 1 again through
+slot 2's columns. No per-atom captured projection predicate is needed. The
+private =publish-source-cut!= owner binds journal-backed total and initial delta
+to one name/generation/revision, shared by initial and routed publication.
+Published exporter closures capture the frozen cut, never mutable routing state.
+
+The admitted schema and relation list have matching lengths. Eligibility and
+source property reads retain declaration order. Excluded relations are untouched;
+an unbound variable outside the compiled key cannot enable routing. No new
+Provider behavior, external dependency or environment control is introduced.
+
+* Native paired interval
+
+Baseline =86ad9ae3469565bea6229b71ef1d9197c6a82d63=. =reference.ss= is complete
+baseline view-state; its only modification redirects the source-replay import.
+Public ASP =make-benchmark-fixture= generated the fixture before measurement.
+Six shapes run 50 alternating pairs. Fresh source-owner buffers and POO source
+declarations are prepared outside timing. The timed interval initializes all
+eligible source cuts, processes rule-driven routing, checks routing flags and
+observes selected total/delta metadata and exports. Each pair compares exact
+name/generation/revision/lane/count and exporter truth against an independent
+expected shape. Source owners are empty here; populated exports and held cuts
+are qualified separately in unit tests.
+
+Fixed gates: many/sparse 4096-relation scenarios require CPU <=80% baseline and
+>=35 wins. Bound/literal 4096-atom controls plus small/empty allow <=105% +20us.
+Allocation is <=105% plus 4096 bytes. ASP pair p95 is <=999ms. Allocation uses
+a fixed =##get-bytes-allocated!= buffer, not retained heap. Timed processes run
+alone. Source admission, compilation, rule closure and whole solve are excluded.
+
+* Native entry points
+
+Use the existing installed Gerbil library and OpenSSL link environment:
+
+#+begin_src scheme
+;; gxi t/performance/view-source-publication/build.ss LIBRARY BINARY runner
+;; gxi t/performance/view-source-publication/build.ss LIBRARY QUALIFIER qualify
+;; BINARY many RECEIPT
+;; BINARY sparse RECEIPT
+;; BINARY bound RECEIPT
+;; BINARY literal RECEIPT
+;; BINARY small RECEIPT
+;; BINARY empty RECEIPT
+;; QUALIFIER
+#+end_src
+
+Qualifier Suites cover provider, relation and eqrel views. A new Case checks a
+populated initial source, literal-only projected keys despite unbound body
+variables, bound routing, exact revisions/lanes, excluded relations and held
+exports after owner mutation. Final =OK=, successful Cases and exit zero are
+required. Logs, binaries and raw receipts stay in ignored
+=.cache/ascent/view-source-publication/=.
+
+* Isolated native results
+
+Gerbil =1cfb032= / Gambit =ea114fc=; all six gates pass. Median CPU is in
+microseconds; bytes are allocation-counter differences in the measured interval.
+
+| Workflow | Old CPU | New CPU | Old bytes | New bytes | CPU wins |
+|----------+---------+---------+-----------+-----------+----------|
+| 4096 eligible relations | 10714 | 1880 | 4814464 | 4814464 | 50 |
+| 4096 relations, one eligible per 16 | 698 | 190 | 859344 | 859344 | 50 |
+| 4096 bound atoms, one source | 178 | 102 | 205904 | 9296 | 50 |
+| 4096 literal atoms, one source | 181 | 103 | 201568 | 4960 | 50 |
+| One source | 2 | 2 | 4960 | 4960 | 23 |
+| Empty | 1 | 1 | 0 | 0 | 18 |
+
+Many/sparse CPU reductions are approximately 82% /73%; allocation is unchanged.
+Compiled-key controls reduce CPU approximately 43% and allocation by 196608
+counter bytes each. Small/empty timings do not establish speed improvements.
+These are initial compressed-cut publication/routing results, not total solve,
+source admission, retained memory or deployed multicore gains.
+
+The first fixture used a POO method slot instead of a =rows:= data slot and was
+rejected before sampling. The corrected fixtures use the declaration's property
+contract. Diagnostics remain in cache; only =-final= receipts are admitted.
+
+Native qualification passes 3 Suites / 42 Cases, including graph histories,
+independent compressed provider truth, 512 three-node eqrel injection histories,
+held source/total/delta cuts, budget refusal/retry, callback error priority,
+cancellation and serial/actor publication. Per-Case success, final =OK= and
+exit zero are checked with =tools/assert-test-cases.awk=. Production policy
+checks the 86-source roster: 0 errors, 30 warnings. Frozen reference matches
+baseline Git source hash after the documented import normalization.

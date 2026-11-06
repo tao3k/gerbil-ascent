@@ -1,0 +1,106 @@
+#+title: Complete positive proof verification with local binding plans
+
+* Production ownership
+
+Baseline =7bb4ba0cfe372357d5a30cef644407fb77582a57=. The complete frozen
+=candidate/provenance.ss= is copied byte-for-byte into =reference.ss=;
+both Git blobs are =5ad5410081f196d67fa96f03d5329674ff5476dd=.
+The two sides have independent proof record types and independent producers.
+Both use the same snapshot validity, digest, schema and scalar semantics.
+
+=candidate/provenance.ss= owns external DAG admission and ordered predecessor
+replay. =candidate/proof-frame.ss= owns invocation-local syntax classification,
+variable slots and fixed scalar expressions. A fresh private frame belongs to
+one rule node; failed prefixes discard all partial writes. False is a bound
+scalar distinct from the private absent marker. First bindings, repeated terms,
+computed outputs, wildcard and literal terms retain their distinct operations.
+Only fixed pure guards can reuse a successful equal guard in that linear prefix.
+No producer indexes, verdicts or values survive between verifications.
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:45-63= chooses a known operation
+before execution; =compiler/optimize.ss:28-35= scopes its facts per invocation.
+The existing =core/expression-plan.ss= resolves ordered inputs to frame slots.
+Apply these patterns to a complete proof-check flow rather than introducing a
+general dispatch framework. Public candidate, snapshot and proof formats retain
+their owners. Producer probe accounting and verifier node limits do not change.
+
+* Fixed measurement contract
+
+ASP's =make-benchmark-fixture= generates =benchmark.ss= before compilation and
+sampling. Each complete consumer invokes the public verifier, including snapshot
+shape/content authentication, metadata preparation, all source/candidate/rule
+nodes, input references, head rows, query roots and full native answer equality.
+Inputs and independent scalar expected answers are prepared outside timing;
+cold additionally produces a fresh proof inside every timed call. Forged changes
+the last derivation row so the verifier must reject after checking its prefix.
+
+| Scenario | Source arity | Source rows | Timed operation | CPU gate |
+|----------+--------------+-------------+-----------------+----------|
+| wide | 32 | 512 | Complete wide-binding verification | <=90% old, >=16/20 wins |
+| mixed | 16 | 256 | Two positive atoms and scalar guards/computations | <=90% old, >=16/20 wins |
+| cold | 2 | 16 | Complete producer and verifier | <=110% old +20us |
+| forged | 2 | 256 | Complete rejection of changed last derivation | <=110% old +20us |
+| small | 2 | 2 | Complete small proof verification | <=110% old +20us |
+| source | 2 | 2 | Source-only proof verification | <=110% old +20us |
+
+Twenty alternating CPU pairs include natural GC; twenty separate ASP admissions
+time the optimized complete operation. Five alternating allocation pairs use
+=##get-bytes-allocated!= and reject negative differences. Allocation gate is
+<=110% old +8192 bytes; ASP p95 cap is 999ms. Heap is 3G and the complete
+six-scenario process has a 90-second watchdog. No gates changed after sampling.
+
+* Admitted local results
+
+| Consumer | Old CPU us | New CPU us | Wins /20 | Old bytes | New bytes |
+|----------+------------+------------+----------+-----------+-----------|
+| wide | 4224 | 3409 | 18 | 4403208 | 2499800 |
+| mixed | 1760 | 1410 | 20 | 1414512 | 796464 |
+| cold | 73 | 71 | 14 | 123632 | 121840 |
+| forged | 479 | 323 | 20 | 559288 | 220760 |
+| small | 9 | 12 | 2 | 16752 | 24592 |
+| source | 8 | 8 | 10 | 13808 | 13952 |
+
+All six original gates pass in one gxi process with six =SCENARIO-OK= markers,
+final =OK= and exit zero. Wide/mixed CPU decreases 19.3%/19.9%; allocations
+decrease 43.2%/43.7%. Small adds 3us and 7840 bytes and is a passing control,
+not a speedup. Results qualify these complete verification inputs, not whole
+reasoning/solver throughput. Native GxTest passes 63 Cases in six modules with
+complete markers and no errors. ASP Policy passes both production owners and
+the new Suite with zero findings. Remote CI is a separate qualification.
+
+* Rejected attempts and reproduction
+
+The syntax-only/alist variant fails the wide CPU gate (5524 ->5300us, 12 wins).
+The static frame executable reports a negative allocation delta (-298216 bytes)
+and is rejected. The existing lattice-frontier study records the same runtime
+qualification boundary; this does not establish an SDK root cause. Direct gxi
+loads the same compiled project libraries and qualifies the counter.
+The first dense-frame variant fails mixed (3423 ->3258us). Prefix specialization
+still fails mixed (1644 ->1510us), despite 20 wins. Direct term continuations and
+eliminating duplicate pure-guard actions complete this same production unit.
+Those rejected batches are not promoted through their individually passing
+wide receipts. A new forged-predecessor test initially expected a complete proof
+for an empty answer; the producer correctly returned unsupported. The repaired
+test changes a reference to another valid source node and checks exact rejection.
+
+Use the repository's normal Gerbil package environment and Darwin OpenSSL path.
+Native std/make owns freshness and GERBIL_BUILD_CORES owns parallel compilation:
+
+#+begin_src sh
+GERBIL_BUILD_CORES="$(getconf _NPROCESSORS_ONLN)" \
+  gxi t/performance/proof-verification/build.ss "$PWD/.gerbil/lib"
+gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 \
+  t/qualification/ascent-proof-verification-test.ss \
+  t/qualification/ascent-positive-provenance-test.ss \
+  t/qualification/ascent-grounding-plan-test.ss \
+  t/qualification/ascent-positive-nonmembership-test.ss \
+  t/qualification/ascent-finite-evidence-test.ss \
+  t/qualification/ascent-stratified-proof-test.ss
+GERBIL_LOADPATH="$PWD/.gerbil/lib" timeout 90s \
+  gxi -:max-heap=3G,debug=q :gerbil-ascent/t/performance/proof-verification/runner \
+  all .cache/ascent/proof-verification/
+#+end_src
+
+Raw logs, failures, module/source inventories and receipts remain only in ignored
+=.cache/ascent/proof-verification/=. Root =build.ss= registers one production
+module; tests and benchmark setup belong to their native test/performance modules.

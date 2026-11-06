@@ -1,0 +1,131 @@
+#+title: Interleaved UF admission and replay resource qualification
+
+* Source learning and ownership
+
+Gerbil =1cfb032= =std/hash/misc.ss:79-100= uses =let/cc= for a bounded
+decision with immediate rejection; =:112-118= separates absent membership from
+stored values, and =:206-215= expresses row deconstruction with =match=.
+The replay planner follows these contracts: deconstruct admitted row shapes,
+collect group-local endpoints, stop at the first over-capacity population, then
+allocate the matrix. Two-column rows use one immutable group key; three-column
+rows retain their actual group, including =#f=. This is an ownership flow rather
+than a general cache or a new scheduler.
+
+Planning inserts absent endpoints with =#f= placeholders into the table that
+will own replay nodes. =hash-key?= distinguishes those entries from absence;
+actual admission replaces each placeholder with its node. There is no second
+vertex set. Matrix dimensions equal the actual group population, capped at
+512 vertices. The 513th distinct endpoint rejects packed planning before matrix
+allocation and selects existing sparse replay. Repeated input count no longer
+decides resource eligibility. Consecutive-row reuse remains a planning fast path.
+
+Initial UF admission, packed replay and sparse UF replay retain at most 256
+successful input witnesses per invocation. Their monotone closure makes later
+equal injections empty, including across intervening inputs and event boundaries.
+Witnesses enter only after successful admission. Saturation stops recording new
+keys; it does not bypass native admission of unrecorded inputs. Every initial
+occurrence still runs its nonmutating source check first; every replay occurrence
+still visits its count consumer. Journals, held cuts, source occurrence counts,
+derived event order, output-budget preflight and failure readiness stay observable.
+EqRel and external field callbacks retain their existing paths. No mutable
+witness, matrix or node table is retained by a published cut.
+
+* Matched baseline and fixed gates
+
+Five source owners freeze =86f6f9e3928971420389c3d214865fd70b3128b6= with
+relative import relocation only. Complete engine legs freeze historical
+evaluator, initialization, view-state and view-replay. They share canonical
+current storage, native UF helpers and provider/type identity. Thus those legs
+qualify publication/replay changes with shared initial admission; they do not
+measure a complete historical dependency build.
+
+The separate =initial= target compares historical/current storage batch helpers,
+each with its own fresh owner and provider, sharing the unchanged native UF
+kernel. It checks 512 source occurrences and independently known closure/count
+129. This is isolated initial admission, not a complete-engine speed claim.
+Capture uses the same current prepared 1025-member SCC on both legs; population
+is excluded. Other complete-engine results must match historical row order,
+completion/path/rule metadata, relation sizes and independently calculated
+closure/uniqueness before timing.
+
+The native ASP fixture API fixes eleven scenarios before the first timing:
+
+| Scenario | Shape and measured lifecycle |
+|----------+------------------------------|
+| initial | Eight interleaved 64-edge stars; fresh batch admission/count/capture |
+| sparse | Same 512 occurrences; fresh engine/run and three full exports |
+| grouped | 16 groups, each 32 interleaved 16-edge stars; 8192 occurrences, three exports |
+| retained | Sparse source, eight appended chain edges, run/export every intermediate publication, three final exports |
+| capture | 64 unindexed captures of a prepared 1025-member SCC |
+| cold/small | One edge, fresh engine/run/export; cold analysis versus warm analysis |
+| packed | 64 unique star edges, fresh engine/run/three exports |
+| adjacent | 64 star edges followed by 300 equal adjacent inputs, three exports |
+| large | 600 unique star edges, exceeding packed capacity, three sparse exports |
+| eqrel | 16-edge chain, fresh EqRel engine/run/three full exports |
+
+One fixed 90-second invocation contains all eleven scenarios. Each has twenty
+alternating process CPU pairs (user + system, natural GC), twenty separate ASP
+admissions and five alternating allocation pairs. Allocation GC precedes the VM
+counter read; negative counter deltas reject. Targets =initial/sparse/grouped/
+retained= require CPU <=90% of baseline and >=16/20 wins. Controls require
+<=110% +20us. Every allocation median requires <=110% +8192 bytes. ASP p95
+must satisfy 999ms (500ms target +499ms regression budget). Failed attempts
+remain separate; never drop controls, widen bounds or combine samples.
+
+* Native reproduction
+
+Build with this unit's =build.ss= through =std/make= into canonical
+=.gerbil/lib=; the repository package build uses native concurrency.
+Run =gxi :gerbil/tools/gxtest -v 5= for the qualification module and linked
+source/admission/commit/storage/export suites. Source Policy checks production
+owners with the evaluator and initial-admission witness import closure.
+
+After other compilers and benchmarks naturally end, run
+=timeout 90s gxi :gerbil-ascent/t/performance/uf-reuse/runner all .cache/ascent/uf-reuse/=
+with the canonical library and a 3G heap bound. Freeze source, SSI, SCM, native
+object and contract fingerprints before/after timing. Logs, probes and individual
+receipts belong only in ignored =.cache/ascent/uf-reuse/=.
+
+* Accepted complete result
+
+All eleven fixed scenarios passed in one invocation with final =OK= and exit
+zero. The 172 selected source/compiler-artifact/contract fingerprints matched
+before and after. All five historical owner bodies matched their frozen commit
+after import relocation. Native package/unit builds passed; native GxTest passed
+8 Suites /65 Cases with =HARNESS-OK=, final =OK= and no ERROR/FAIL. Source Policy
+passed with zero findings.
+
+| Scenario | CPU old ->new us | Wins /20 | Allocation old ->new bytes |
+|----------+-----------------+----------+---------------------------|
+| initial | 424 ->338 | 20 | 556352 ->520016 |
+| sparse | 1987 ->1469 | 20 | 2589632 ->1013136 |
+| grouped | 14219 ->10219 | 18 | 11757888 ->5592912 |
+| retained | 6388 ->4893 | 20 | 8627456 ->2369504 |
+| capture | 37 ->36 | 14 | 256000 ->256000 |
+| cold | 535 ->534 | 10 | 1601840 ->1602848 |
+| small | 97 ->94 | 9 | 261440 ->262960 |
+| packed | 998 ->1062 | 1 | 956528 ->948624 |
+| adjacent | 1986 ->1716 | 9 | 1000616 ->993808 |
+| large | 5597 ->5930 | 2 | 18390224 ->18379776 |
+| eqrel | 142 ->141 | 11 | 464272 ->464272 |
+
+Initial admission CPU falls 20.3%, with 6.5% less allocation. Complete sparse,
+grouped and retained CPU medians fall 26.1%, 28.1% and 23.4%; allocation falls
+60.9%, 52.4% and 72.5%. Unique packed and large sparse controls cost an additional
+64us /333us CPU (+6.4% /+5.9%); both pass the predeclared bounds. Cold/small
+allocations grow by 1008 /1520 bytes. These costs remain visible and are not
+discarded in favor of duplicate-heavy targets. No first performance attempt was
+rejected, and no samples were combined.
+
+The shared branch advanced from the frozen baseline to =57cfda6= during this
+work; that other commit already captured the initial UF changes and qualification
+sources. The final planner cleanup and report complete the same batch. Artifact
+fingerprints, rather than branch name alone, guard the measured candidate.
+The baseline's remote run =38141084027= passed three oracle jobs and formal but
+failed scheme, including Session contract errors at =types.ss:238=. Local UF
+qualification does not close that separate remote failure.
+
+These figures qualify the declared input populations and complete publication
+lifecycles. They are neither peak RSS nor solve-only /SMP measurements. Remaining
+large flows include unique-vertex closure growth, the cost of planning unique
+packed populations, and actor pending-list selection.

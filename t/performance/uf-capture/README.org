@@ -1,0 +1,111 @@
+#+TITLE: UF singleton-source capture and indexed export qualification
+#+LANGUAGE: en
+
+* Implementation contract
+Only singleton source components with a nonempty compact successor set may
+concatenate frozen right axes. The diagonal comes first, followed by the exact
+compact birth order. Weighted source components retain their per-target
+rectangles. Weighted targets contribute every captured member in its existing
+order. Copies own only the new right spine; captured records retain no mutable
+UF nodes, adjacency arrays or planning tables.
+
+The view routing flow creates owner lookup tables inside one reader invocation.
+A right-axis query over multiple owners uses an immutable ordered descriptor
+plan captured once by the view constructor, including shared owners. Each
+descriptor selects a repeated member only once, and repeated descriptors keep
+their original occurrences. Other query shapes own a temporary lookup frame.
+Every coordinate is bound to its first query constraint. Repeated conflicting
+constraints still pass through exact matching. A one-owner hit retains the
+existing constant-time path. Multi-owner hits are translated once to a table
+keyed by the captured member-spine identity. Nested readers cannot reuse each
+other's query tables. Uniform descriptor families may scan in capture order
+when gathering and sorting k hits costs at least the n-descriptor scan; mixed
+arities keep checked routing, including its existing column admission behavior.
+
+Physical view units include copied member cells as well as descriptors. Their
+sizes differ, so this count is not used as an allocation or speed claim. Dense
+closures still require quadratic logical public row storage. This change
+reduces frozen descriptor/routing construction and repeated query owner scans.
+
+* Gerbil source learning
+Gerbil =std/list/list.ss= =group-same= scopes owned list collectors and reverses
+only completed owned spines. =std/struct/dag.ss= scopes visitation state to the
+call and caches completed attributes separately. The freeze and reader flows
+follow these ownership boundaries, without a persistent cursor or new public
+configuration switch.
+
+* Models established before qualification
+=ProviderRectangles.singleton_capture_order= proves the ordered concatenation
+law. =compact_capture_order/count/selection= prove the guarded complete
+transformation, weighted cardinality and exact filtering for arbitrary member
+lists. =conservative_selection= proves a complete candidate scan preserves
+ordered accepted rows. Native metadata consistency and schema admission remain
+separate refinement obligations.
+
+=RectangleCompaction.qnt= constructs scalar and weighted axes, target chunks,
+compact output, committed weighted count and two independent reader keys.
+It includes retirement after capture. Five mutants force heavy-source merging,
+reverse targets, alias retired source storage, charge descriptor count instead
+of row mass, or share reader selection state. Reader plans are captured with the cut and
+remain unchanged by source retirement. Each must fail its named law.
+This model executes the compaction transformation; it does not merely choose
+prewritten expected row lists. Existing lifetime and UF models remain separate.
+
+* A/B fixture
+The reference UF and view sources freeze =b77fdf19049326890aafbe1a207fce231cfae8a4=.
+Both kernels receive the same complete inputs; capture and full export remain
+inside timing. Only state preparation is outside. The query control measures
+complete selective consumption over a prepared indexed cut. Dense/grouped/
+indexed targets require CPU <=90%, at least 16/20 wins and allocation <=80%
++8192 bytes. Weighted/query/sparse/small controls retain CPU <=110% +20us and
+allocation <=110% +8192 bytes. ASP p95 remains <=999ms. CPU includes natural
+GC; allocation-leg GC is outside its counter. Eight fixed operations form a
+sample; 20 alternating CPU pairs, 20 ASP admissions and 5 allocation pairs
+must pass within the 90-second parent cap, with a 3GB interpreter heap cap.
+Complete old/new answer sets are compared before timing; independently allocated
+UF states have identity-hashed root traversal and need not share global order.
+Within each captured view, queries and retained cuts must preserve row order. The native test suite
+additionally uses an independent DFS oracle, retained-cut mutation and nested
+reader checks. Logs and binaries belong only to ignored cache.
+
+* Qualified native measurements
+Twenty alternating pairs, 20 ASP admissions and five allocation pairs per
+scenario pass the original gates. The complete seven-scenario run finishes in
+29.37 seconds under the 90-second parent limit. CPU includes natural GC.
+Numbers describe eight operations per sample, not one operation or all programs.
+
+| Scenario | Old/new CPU us | Old/new allocated bytes | Wins |
+|----------+----------------+-------------------------+------|
+| Dense 512 chain | 137921 / 66331 | 338425400 / 206516520 | 20/20 |
+| Four grouped 128 chains | 29976 / 20888 | 104230880 / 69068832 | 19/20 |
+| Indexed 192 chain | 60191 / 47319 | 114147856 / 81616160 | 19/20 |
+| Weighted 512 chain | 54630 / 50311 | 237047984 / 218293464 | 17/20 |
+| Indexed right query | 249 / 57 | 571936 / 225952 | 20/20 |
+| Sparse 128 edges | 455 / 519 | 1554784 / 1556064 | 0/20 |
+| Small chain | 12 / 13 | 51616 / 52896 | 2/20 |
+
+Dense/grouped/indexed export CPU improves 51.9%/30.3%/21.4%; allocated bytes
+improve 39.0%/33.7%/28.5%. Selective query CPU improves 77.1% and allocation
+60.5%. Weighted export is a control with a smaller improvement. Sparse and small
+controls pass their predefined additive and relative gates; neither is a speed
+improvement. Intermediate query regressions and an indexed 15/20 paired-win
+miss remain retained. Gates were not relaxed.
+
+Full Lean build passes 158 jobs. Quint explores 75 generated / 45 distinct
+states and rejects all five mutants. Native validation passes six Suites / 36
+Cases, including independent closure truth, duplicate descriptors and members,
+checked and admitted parts, mixed schema widths and retained cuts. The finite
+model is not a proof of all implementation inputs.
+
+Independent actual Library qualification uses frozen =055-current-002=
+interfaces plus the final production UF and relation-view sources in
+=/private/tmp/ascent-provider-057-current-001/=. Its build exits zero in
+116.36/120 seconds, with both modules actually compiled as Scheme and C.
+Package/API build exits zero in 0.78/15 and 1.61/45 seconds. Five independent
+Python closure/ownership checks pass on each backend: API 8.270/15 seconds, ABI
+7.650/15 seconds. Their receipt hashes match the live three checked production
+sources. The snapshot has 132 build inputs, 127 linked Scheme sources and 1264
+loading resources. This qualifies this UF fixture, not the concurrent Evidence
+interfaces, the complete current consumer graph, portable wheels or remote CI.
+A prematurely started incomplete-overlay build was interrupted and retained;
+the final build performs the source-byte guard and fresh compilation.

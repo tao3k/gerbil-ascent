@@ -1,0 +1,132 @@
+#+TITLE: Retained execution and result publication
+
+* Production flow and Gerbil study
+
+This unit covers =program/evaluate.ss=, private =program/execution-publication.ss=
+and public =program/result.ss=. The engine still owns source admission, ordered
+rule execution, round commits, budgets and recovery. One changed execution
+prepares a detached publication cut, constructs its Result, then adopts the
+private metadata cache. The cache owns no public Result or live engine vector.
+Clean calls already return the previous Result in the baseline; that behavior
+is preserved and is not counted as an optimization.
+
+The installed Gerbil =1cfb032= =std/struct/lru.ss:19-32= uses private final state
+records. =std/list/list-builder.ss:5-24= owns ordered tail mutation inside a
+hygienic constructor extent. =compiler/optimize-call.ss:45-72= resolves applicable
+operation/type evidence before specializing. Here snapshot identity and size
+establish metadata applicability after existing storage checks; unchanged
+private representation entries are shared while public methods copy them.
+Snapshot and representation preparation share one native =for/in-range= pass.
+The public size query uses =with-list-builder= to return fresh ordered pairs
+without converting both vectors to temporary lists. Public POO contracts and
+storage callback order remain unchanged.
+
+* Complete frozen baseline
+
+Baseline =07c03062b417a95c09e0aadb80b7bc9249fd8102= owns the full evaluator
+and Result implementation. =reference-result.ss= equals its original blob.
+=reference.ss= differs only by relative import relocation and routing the Result
+import to that frozen implementation. Reversing those relocations reproduces
+the evaluator blob byte for byte. Shared unchanged admission, planning, storage,
+indexes and component execution remain the production implementations.
+
+* Fixed paired scenarios
+
+Targets =wide= and =dirty= have 1026 and 258 declared relations respectively.
+A prepared retained engine holds a completed 16-edge recursive reachability
+program. Each measured call appends 16 distinct facts to one additional base
+relation, runs the full engine and demands names, all sizes and reachability
+rows after every update. Every update checks the complete projection against
+independent declaration-order truth and checks the changed relation's entire
+ordered row sequence against =1..count=. The returned normalized projection
+removes only the checked growing count so samples have a fixed return contract.
+Engine preparation is outside the target clock; admission, execution, commits,
+publication, reads and truth checks are inside. This is incremental publication
+throughput for programs with many unchanged relations, not initial solve speed.
+
+=cold= includes construction and complete retained execution. =duplicate= admits
+a duplicate then runs/reads the retained engine. =small= reads a clean two-relation
+engine. =fresh= constructs and fully evaluates an ordinary two-relation engine.
+The two target input counters advance equally across alternating CPU and
+allocation pairs. ASP admission owns a separate prepared state and cannot skew
+the subsequent paired inputs.
+
+Each scenario requires 20 alternating CPU pairs (natural GC), 20 ASP admission
+samples and five alternating allocation pairs. Allocation legs normalize their
+starting heap before reading the VM counter; that collection is outside the
+counter interval and does not change CPU sampling. Negative deltas are rejected.
+All six scenarios share a 90-second watchdog. Gates fixed before sampling:
+
+- Targets: CPU <=90% of baseline and at least 16/20 wins.
+- Controls: CPU <=110% of baseline +20us.
+- Allocation: <=110% of baseline +8192 bytes.
+- ASP p95 <=999ms, sample count 20, fixture contract admitted by the native API.
+
+* Native reproduction
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" just build
+GERBIL_BUILD_CORES="$(getconf _NPROCESSORS_ONLN)" \
+  GERBIL_PATH="$PWD/.gerbil" \
+  gxi t/performance/engine-publication/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 \
+  t/qualification/ascent-execution-publication-test.ss \
+  t/qualification/ascent-result-publication-test.ss \
+  t/qualification/ascent-timeout-test.ss \
+  t/qualification/ascent-eqrel-program-test.ss \
+  t/qualification/ascent-index-program-test.ss
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  timeout 90s gxi -:max-heap=3G,debug=q \
+  :gerbil-ascent/t/performance/engine-publication/runner all \
+  .cache/ascent/engine-publication/
+#+end_src
+
+On macOS apply the existing =justfile= compiler environment boundary to the
+family build (clear inherited Nix/SDK flags, resolve Homebrew OpenSSL). Root
+build uses native machine resource concurrency. No toolchain is rebuilt.
+Run A/B after the root build, without overlapping local build/test processes.
+Source and SSI manifests must match before and after measurement. Logs, raw
+samples, manifests and rejected series stay in ignored =.cache/ascent/=.
+
+* Rejected work
+
+An initial whole-cut caching hypothesis was rejected by baseline inspection:
+clean calls already bypass publication. Invalid fresh-result identity/spine
+expectations were replaced with baseline-compatible clean-call identity and
+changed-publication ownership checks before performance admission. The first
+allocation series produced a negative VM delta and was rejected. Allocation
+legs now normalize the starting heap, retaining negative-delta rejection.
+An unfused wide series improved CPU only 9.5%, below the fixed 10% gate. A later
+series incorrectly advanced the candidate's paired state through ASP sampling;
+its allocation numbers are invalid and retained as rejected evidence. Separate
+ASP state repairs matched inputs; no gate or scenario was removed or widened.
+
+* Final local qualification (2026-10-11)
+
+The final run follows the successful native root build. All six scenarios pass
+unchanged gates, with final =OK= and exit zero under the shared 90-second bound.
+Source and SSI hashes match before/after this series. Five native Suites pass
+58 Cases, including timeout/resumption, Provider failure/recovery, lattice and
+indexed updates, changed-cut ownership, public metadata mutation and baseline
+clean-result identity. ASP Policy passes the three production owners with zero
+findings. These are local receipts, not remote CI qualification.
+
+| Complete consumer | Old CPU us | New CPU us | CPU wins | Old bytes | New bytes |
+|-------------------+------------+------------+----------+-----------+-----------|
+| wide incremental  |       1770 |       1511 |       19 |  14300480 |   7347264 |
+| medium incremental|        632 |        532 |       20 |   5453120 |   3710016 |
+| cold retained     |        105 |        106 |       12 |    306192 |    306064 |
+| duplicate         |          3 |          2 |       11 |      4784 |      4672 |
+| clean small       |          2 |          1 |       13 |      4608 |      4496 |
+| fresh evaluation  |         33 |         33 |        8 |     97072 |     96912 |
+
+Targets improve CPU 14.6%/15.8% and allocation 48.6%/32.0%. Microsecond control
+differences are admitted bounds, not evidence of control speedups. Remaining
+engine work includes round workspace and SCC scheduling; this unit does not
+claim those algorithms improved. Raw final receipt:
+=.cache/ascent/engine-publication/complete-ab-release.log=.
+
+The preceding admitted series also passed all six gates (wide 1796 ->1533us,
+medium 638 ->523us, both 20/20 wins). The release series above follows the final
+fixture formatting/build and source/SSI identity check; both series are retained.

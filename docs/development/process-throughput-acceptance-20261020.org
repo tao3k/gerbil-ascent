@@ -1,0 +1,542 @@
+#+TITLE: Resident Scheme process owners and production throughput acceptance
+#+DATE: 2026-10-20
+
+* Scope
+
+This change removes the process-global single SERVICE queue from the Scheme
+application binding. It does not identify test preparation time with runtime
+throughput. The original preparation failures and performance ledger remain
+separate evidence; no timing threshold, heap limit, semantic corpus or formal
+control is removed by this change.
+
+* Production execution
+
+=ascent_scheme::ProcessPool= owns a fixed population of exec-isolated workers.
+Each worker initializes the statically linked application with the existing
+=gerbil-scheme-rust= single-processor initializer, checks its actual processor
+population, and keeps the VM on its original OS thread. A handshake checks the
+child PID, protocol version, owner domain and compiled Scheme/build identity.
+There is no per-request process spawn, copied dynamic-library image, second VM
+inside a worker, or runtime Rust/C compilation of user DSL.
+
+An =Engine= lazily owns one resident process. A caller-owned =ProcessPool(12)=
+explicitly owns twelve resident VMs; no hidden global pool multiplies test
+processes. Its engine clones and all
+module, value, inference, explanation and provenance leases retain that owner.
+Explicit callers can select =pool.owner(index)= with =Engine::on_process=;
+rebinding creates fresh native module caches and lease tracking. Rust thread
+capacity remains a separate setting. A single engine's opaque Scheme state is
+not concurrently entered by twelve threads.
+
+Worker setup, GC roots, native conversions and teardown remain upstream-owned.
+The application transport carries only owned typed data using binary bincode
+frames. Exact integers, real bit patterns and typed failures are preserved;
+no JSON or Scheme heap pointers cross process boundaries. Python calls the
+same Rust owners through PyO3. Its child entry imports the same extension with
+the caller's import paths; no Python FFI implementation is added.
+
+A worker's exported identities use a distinct domain modulo 2^32. Allocation
+checks the u64 ceiling before publication, never wraps, and never silently
+restarts a failed worker with recycled handles. Foreign native references
+therefore cannot accidentally resolve to the same local ordinal in another VM.
+Logical fact/work limits remain the existing typed session contracts; native
+per-VM capacity bounds remain in the original Scheme implementation.
+
+* Interruption and publication
+
+Controlled requests retain their original parent Control. Every child
+checkpoint, including acceptance and recovery suspension/resumption, obtains
+its decision from that exact original controller. The implementation does not
+batch away budget or clock checks. Accepted publication retains its existing
+linearization semantics; cancellation cannot turn a committed update into a
+canceled response. Disconnected callers retain the original operation-specific
+cleanup branches for module, value, source-result and explanation leases.
+
+Checkpoint transport is a possible performance cost, not an admitted optimization.
+The throughput experiment counts it explicitly. A dead worker is revoked;
+other worker processes remain independent. Normal owner teardown closes the
+socket and reaps the child; bounded fallback cleanup targets only that child.
+
+* Semantic qualification
+
+The existing complete native binding/archive suite continues to run with twelve
+Rust test threads and zero retries. Additional production-path coverage checks:
+
+- Twelve distinct process PIDs, domains and actual single-processor VMs.
+- Persistent lexical state, real callable application and complex native values.
+- Native handle domains and rejection of foreign references.
+- Cancellation during a running Scheme callback and recovery on that same VM.
+- Complete reachability, independent provenance replay, source-generation
+  revocation, input-fact rejection and timeout/cancellation rejection.
+- Real child-process failure without handle recycling or another VM's revocation.
+- Exact binary numeric/error round trips and rejection of truncated replies.
+
+The transport and scheduler are not claimed to have complete Lean source
+refinement merely because these tests pass. Existing Lean/Quint checks must
+still pass independently. Whole-VM cumulative allocation and previous compiler
+source-cost refinement gaps are not closed by adding process isolation.
+
+* Fixed-work production measurement
+
+The =process_throughput= Rust benchmark calls the public Engine, Module,
+ModuleValue and Session interfaces. It loads the original Scheme DSL once per
+session, warms it, then continuously replaces distinct input facts and obtains
+complete results. The independent Rust oracle checks every transitive closure
+tuple before an observation is published. All measured requests use the
+production default work/fact/time ceilings. No Rust Ascent production dependency
+or alternate evaluator is introduced.
+
+The matrix has Scheme populations 1, 3 and 12, each with one processor per VM,
+and a shared Rayon pool with 1, 3, 6 and 12 threads. Every configuration receives
+the same total work, twelve sustained clients and five predetermined samples.
+Scheme clients keep independent admission resources; Rayon clients explicitly share the specified
+Rust pool. Startup/loading/warmup are recorded separately from measurement.
+
+Per-request traces retain latency, batch-relative completion time, replacement
+cost, run/export cost and the full-answer digest. Summary records include
+throughput, p50/p95 latency, native call overlap, queue time, service time and
+checkpoint counts. VM-call overlap includes waits inside an ABI call and is not
+a claim of twelve simultaneously executing physical CPU cores. Actual parallel
+benefit is the measured throughput ratio. Rayon ratios are reported against both
+one VM and one Rayon thread.
+
+The Python driver performs orchestration and admission only. It records binary
+hashes, source head, CPU population, every planned run and foreign-compiler
+observations. It retains failures, does not retry them into admission, and never
+normalizes a slow measurement. Startup and teardown remain visible in process
+wall time. An optional input of the existing macOS experiment workflow runs this
+matrix on the three-core runner after all compilation; it adds no mandatory ABBA
+or new required CR performance threshold. Existing three-core/240-second source
+qualification and twelve-thread native tests remain unchanged.
+
+* Initial local evidence
+
+Strict package Clippy passed before final end-to-end execution. Early failed
+builds are retained: the inherited Nix cc wrapper could not find SDK libiconv,
+and the isolated prefix initially lacked compiled dependency carriers. The local
+build now uses the existing Apple toolchain/SDK and preinstalled dependency
+carriers, with fresh application outputs. This is not evidence of a cold-build
+speedup or a fresh dependency-source qualification.
+
+Runtime semantic, throughput and exact-head CI results must be appended only
+from completed runs. This initial record does not claim those gates have passed.
+
+* Completed local native semantic run
+
+After replacing the hidden global population with caller-owned processes, the
+complete native suite ran 54/54 tests at twelve test threads, with zero retries,
+zero skipped tests and no leaky status. Runtime was 172.843 seconds, independently
+of compilation. The new twelve-process production test passed in that run.
+
+Earlier failures remain retained: nonblocking accepted sockets caused EAGAIN on
+Darwin; the subsequent candidate still had an ASP test-layout violation and a
+complex-cell timeout under the hidden global population. The repaired run moved
+unit bodies to tests/unit, named the reply dispatcher, and removed hidden VM
+multiplication. It did not change the old complex-cell workload or its deadline.
+
+These results precede the final exact-head remote CI and release-profile
+throughput experiment. They do not establish runtime speedup or complete source
+refinement of the binary decoder and process scheduler.
+
+The final Rust/PyO3 Scheme interface also passed strict Clippy. A development
+profile semantic smoke used twelve resident VM processes and twelve Rayon
+threads through the new benchmark: complete answers matched, twelve VM calls
+overlapped, and the Rayon measured window had zero native VM calls. Foreign
+compiler activity and the development profile exclude these smoke timings from
+performance admission.
+
+The Linux source lane now invokes the existing =prepare-semantic-library=
+recipe before its unchanged timed source execution, matching the documented
+=test= dependency and the macOS controller's existing separation. Preparation
+remains separately visible; no Case is removed and no runtime timeout is raised.
+The prior macOS 240.238-second timeout remains a failure and is not claimed fixed
+by the process-runtime change.
+
+* Matched caller-concurrency correction
+
+The first dispatched throughput candidate used one caller per Scheme VM but
+always twelve Rayon callers. That confounded offered concurrency with VM
+population and is not an admitted scaling comparison. Run 39365176637 is retained
+as a superseded invalid control, not a successful measurement. The corrected
+benchmark has twelve caller/session streams for every 1/3/12 VM configuration
+and every Rayon configuration; the driver checks that receipt explicitly.
+Runtime algorithms, native semantic tests, work/fact budgets and deadlines are
+unchanged by this experiment-only correction.
+
+* Installed Python profile coverage
+
+The existing published/default wheel selects =rust-runtime=, which does not
+enter a Scheme VM. The =ProcessPool= API described here belongs to the explicit
+=scheme-runtime,rayon,extension-module= wheel profile. A successful default-wheel
+CI run is not acceptance of this separate profile. CI now builds and installs
+both wheels in separate environments and exercises twelve concurrent Scheme
+owners through the installed profile, including actual worker reaping.
+
+An explicit =ASCENT_SCHEME_WORKER= selects the installed =ascent-scheme-worker=
+executable before any language binding's default child entry. CI checks the
+actual Linux child executable, not merely its declared owner count. This also
+allows Python callers to reuse exactly the native process entry used by Rust.
+The Python-embedded child entry remains a separate lifecycle qualification;
+Darwin forced-stop observations on that entry have not been relabeled as passes.
+
+The first release throughput dispatch for =258a89f5= stopped before measurement:
+=Cargo bench= rejected =--release=. Commit =ef201391= uses the supported
+=--profile release= option. No timing from the failed dispatch is admitted.
+
+* First isolated fixed-work result
+
+Run [[https://github.com/tao3k/gerbil-ascent/actions/runs/39368776246][39368776246]], commit =ef201391=, completed all fourteen controls on a
+three-CPU macOS runner. Each control used twelve caller/session streams and five
+samples. The small workload completed 240 requests per sample (four chains of
+width eight); closure completed 120 (sixteen chains of width twelve). Full answer
+hashes matched across all configurations. Compiler observations and audit errors
+were zero. The following are medians of per-sample measurements, not pooled
+quantiles. VM speedups use one VM; Rayon speedups use one Rayon thread. Cross-
+backend throughput ratios are not parallel speedups.
+
+| Workload | Backend | Capacity | Requests/s | p50 ms | p95 ms | Within-backend speedup |
+|----------+---------+----------+------------+--------+--------+------------------------|
+| small | vm | 1 | 12.79 | 912.18 | 1109.82 | 1.000 |
+| small | vm | 3 | 37.35 | 292.81 | 468.83 | 2.920 |
+| small | vm | 12 | 32.07 | 372.15 | 582.46 | 2.507 |
+| small | rayon | 1 | 10631.46 | 0.97 | 1.91 | 1.000 |
+| small | rayon | 3 | 12389.81 | 0.87 | 1.43 | 1.165 |
+| small | rayon | 6 | 12960.95 | 0.84 | 1.44 | 1.219 |
+| small | rayon | 12 | 12953.19 | 0.81 | 1.70 | 1.218 |
+| closure | vm | 1 | 9.28 | 1308.20 | 1382.24 | 1.000 |
+| closure | vm | 3 | 28.97 | 397.22 | 527.14 | 3.122 |
+| closure | vm | 12 | 31.94 | 363.69 | 511.88 | 3.443 |
+| closure | rayon | 1 | 2348.55 | 4.99 | 5.29 | 1.000 |
+| closure | rayon | 3 | 3196.62 | 3.45 | 4.57 | 1.361 |
+| closure | rayon | 6 | 2611.13 | 3.60 | 8.37 | 1.112 |
+| closure | rayon | 12 | 3751.59 | 2.94 | 3.56 | 1.597 |
+
+The small VM workload had about 3,411 checkpoint RPCs per request. One VM spent
+77.65 ms/request inside native calls, including checkpoint waits, and 859.36 ms
+in its queue; twelve VMs reduced queueing to 0.89 ms but increased native-call
+elapsed time to 355.26 ms/request. This identifies control transport and service
+contention as investigation targets; these elapsed counters are not CPU time
+and do not isolate every cause. Every original checkpoint was retained.
+
+The closure workload had about 3,197 checkpoint RPCs/request. Source-run exports
+relations and a retained result handle rather than eagerly exporting every
+proof; the Rust result also retains its snapshot. The benchmark changes neither
+backend's provenance options. Independent provenance and generation revocation
+remain semantic acceptance, not an inference from equal row hashes.
+
+The first result proves fixed-work execution, not stable sustained Rayon
+performance: several Rayon batches lasted only tens of milliseconds. Per-sample
+throughput variation is retained in the artifact, including the small VM12
+negative result and the Rayon six-thread closure result. A second experiment
+adds a separate thirty-second continuously saturated interval per configuration,
+with twelve persistent client threads and the same resident owners. Every soak
+request still performs replacement, execution, full independent answer checking
+and result release. Its completed request counts intentionally differ, so those
+soak counts are never used as equal-work speedups.
+
+Continuous-load latency uses fixed 100-microsecond buckets (65,536 per caller).
+Only twelve bounded summaries are retained, not a row per completed request.
+Quantiles are reported as lower/upper intervals; the overflow bucket uses the
+observed maximum rather than pretending an exact quantile. Request limits,
+cancellation, result/proof ownership and the original gate deadlines are
+unchanged. No new required CR timing check is introduced.
+
+The installed Scheme-profile wheel also completed 120 concurrent native calls
+and 120 closure applications through twelve explicitly selected Rust workers;
+all twelve children were reaped normally. The native integration test now
+checks source replacement, provenance verification, revocation, cancellation
+and resource rejection concurrently in all twelve VM owners.
+
+* Remaining production costs and retained stress failure
+
+For finite work/fact ceilings, =Evidence.run= still requests the current
+=source-projection= and runs the Rust admission execution before invoking the
+Scheme session. Replacement also preserves its original admission path. These
+are real production costs and remain in the measurements. The comparison does
+not claim the two backends perform an identical number of internal operations;
+it fixes source inputs, request counts and complete answers. No admission pass
+was deleted to improve the Scheme number.
+
+The expanded local twelve-thread native suite retained a failure: 53/54 Cases
+passed in 230.333 seconds, while the unchanged 3,000-complex-cell run exhausted
+its original one-second limit. Several shutdowns also emitted forced-stop
+markers. This is not a clean semantic receipt, and no timeout or Case was
+weakened. The subsequent transport candidate keeps generated bincode bytes and
+one original controller decision per checkpoint, while using buffered reads
+and stack scratch for fixed control packets. Retirement now checks an already
+exited child before reporting a forced stop and also rejects abnormal exit
+statuses. Optional retirement tracing records actual transport/VM cleanup
+boundaries; it does not manufacture progress or bypass VM cleanup.
+
+* Native retirement root cause and phase correction
+
+The buffered candidate completed all 56 native Cases in 159.898 seconds with
+twelve test threads and zero retries. Its strict retirement audit still failed:
+several workers reached =vm-cleanup-begin= and were killed by the newly introduced
+two-second supervisor timer before =vm-cleanup-end=. That run remains rejected
+as full acceptance despite its passing Case assertions.
+
+A bounded twelve-process diagnostic captured the native stack inside
+=___cleanup_dyn_module -> dlclose -> notifyDebuggerUnload=, including synchronous
+dyld notifications. Only the selected owned supervisor was paused to preserve
+the child for sampling; this invalidates timing admission. That child completed
+native cleanup and exited normally. Its observed 4.476-second diagnostic interval
+includes the sampler and is not a performance measurement. The other eleven
+children still hit the artificial timer; their parent test exit status zero is
+not evidence that those children shut down correctly.
+
+The repair distinguishes active request drain from quiescent native destruction.
+The existing two-second drain deadline still bounds active or broken requests;
+it is not restarted to grant an additional interval. Once the request queue has
+quiesced, the upstream runtime completes its ordinary destructor and the parent
+reaps its actual status. No =mem::forget=, immediate process exit, skipped GC or
+successful label for a killed VM is used. Enclosing test/CI deadlines remain
+unchanged. Pool destruction initiates independent unleased retirements together,
+while engines/values retained outside the pool keep their owner process alive.
+A separate regression covers natural cleanup longer than the artificial timer.
+
+The installed Python pool factory reuses the original Engine constructor's
+backend and source/input ceiling validation. Its qualification explicitly selects
+=scheme=, checks both retained ceilings, and still exercises twelve resident VMs.
+
+* Checkpoint transport experiments and exact rejection records
+
+A diagnostic with twelve simultaneous copies of the 3,000-complex-cell Case
+located its timeout in =execute=, rather than result lookup or graph export.
+All twelve copies failed under their unchanged limits. This is diagnostic
+local stress, not a clean-host throughput receipt. It does not identify a
+single source function as the entire root cause.
+
+The first shared-checkpoint candidate was rejected. Its complete scheduled
+native run recorded 60 Cases: 58 passed, the complex-cell Case timed out, and
+the process-failure Case was interrupted after a confirmed peer-exit hang.
+Total supervisor elapsed time was 580.658 seconds. Passing assertions and
+partial measurements from that candidate are not acceptance.
+
+Native sampling found the parent polling during module expansion. The revised
+transport therefore uses the shared exchange only for =source-run= and
+=source-replace=. Loading, expansion and other operations retain the sleeping
+binary socket exchange. The shared exchange sends every signed work transition
+to the original bound parent Control, waits for that exact decision, and only
+then returns to Scheme. It does not cache positive decisions or sample the
+cancellation clock less frequently. The bound entry avoids the process-global
+weak-entry lookup, while executing the same =checkpoint_scope= body.
+
+The peer-exit hang had a platform-specific application cause. A minimal Darwin
+socket-pair probe after closing the peer reported zero events for =poll(events=0)=
+and =revents=17= for =poll(events=POLLIN)=. The failed child was already a zombie;
+the parent had not observed EOF. Liveness now declares read interest and peeks
+without consuming protocol bytes. Regression coverage checks an idle live peer,
+a pending valid frame, and EOF after closing the peer. No SDK patch is needed.
+
+The shared file contains only a private, fixed-size atomic request/decision
+slot, never Scheme pointers. Each process owns its own mapping lifetime.
+Acquire/release publication orders the signed work payload and response;
+a subsequent checkpoint cannot overtake its decision. The application still
+uses the released upstream VM initializer, GC and value conversions. This is
+an application control transport, not a second Scheme evaluator.
+
+These tests and implementation arguments are not a Lean proof of Rust/POSIX
+weak-memory or process-lifetime refinement. That source-refinement gap remains
+explicit. Existing formal CI is an independent obligation, and its success
+alone does not close this new transport's source-equivalence boundary.
+
+* Prior-head repeated fixed-work observation
+
+Commit =3d67b3510768daa96d692ee94e8d777180f8f3a9= completed full CI run
+=39371000357=. Its separate macOS source-semantic run =39371000301= failed the
+unchanged 240-second gate; the two workflow results must not be conflated.
+Fixed-work experiment =39371253206= admitted all fourteen configurations with
+matching answers. It measured small VM1/3/12 medians of 17.73/56.69/58.37
+requests/second, and closure VM1/3/12 medians of 15.73/51.16/54.05. These differ
+substantially from the earlier recorded control. They are retained as a second
+machine observation, not attributed to a transport optimization or described
+as evidence that variance has been resolved. Neither prior-head run includes
+the new thirty-second sustained window.
+
+* Current candidate validation boundary
+
+Strict =ascent-scheme --all-targets= Clippy completed with =-D warnings= in
+99 seconds for the scoped transport and EOF fix. The full twelve-thread native
+suite is being rerun without retries. Neither the prior 58 passing assertions
+nor the prior green head is reported as the current candidate's acceptance.
+The expanded installed-wheel qualification, exact-head CI and version-two
+sustained experiment must complete before reporting final current-head results.
+
+* Scoped candidate rejection and request-generation repair
+
+The scoped candidate's complete local run recorded 62 Cases in 370.815 seconds:
+60 passed and two failed, without forced-stop, shutdown-error or leak markers.
+The actual twelve-process failure/recovery Case passed. The failures were an
+ASP broad-public-function finding in =serve= and the complex-cell Case returning
+=Closed= during execution. The worker has been split into initialization,
+execution and lifecycle steps; neither the style rule nor Case was disabled.
+
+Source audit also identified a missing request-generation guard in the shared
+slot. Reusing phase values alone allowed a previous =COMPLETE= observation to
+be confused with a new ABI call. The child now publishes the current original
+Control identity after resetting the phase; the parent acquires that identity
+before observing the phase. A regression leaves an old completion in place and
+checks that it cannot finish the subsequent request. Interrupted nonblocking
+peer probes are handled transparently instead of being converted to a closed
+controller. These are concrete repairs, not a claim that the earlier =Closed=
+observation has been completely explained before the next native run.
+
+Strict all-target native Clippy for these fixes passed in 51.25 seconds.
+The next local semantic build was blocked before execution by Apple's linker,
+not admitted as a test result. Its saved native crash report identifies
+=EXC_BAD_ACCESS / SIGBUS= and excessive recursion in =AtomFileConsolidator::markLive=
+on a 544-KiB dispatch-worker stack. The same saved input set linked successfully
+with Xcode's already-installed =ld-classic=, preserving dead stripping. Local
+validation therefore records that explicit linker and a deployment target
+matching the installed SDK; no repository workaround or upstream SDK patch is
+added. Remote standard-toolchain acceptance remains independent.
+
+Installed Scheme-profile wheel qualification covers both the explicitly selected
+Rust helper and the default PyO3 worker entry. Both must retain the same twelve
+resident owner identities, original source/input ceilings, actual single-processor
+VM population, real calls/applications, and normal reaping of all twelve children.
+
+* Exact scoped-generation receipts and Linux scheduling follow-up
+
+For =ef5e78a3edc8dcd9764892d5b347b319e3e0b5c1=, the complete local native suite
+passed all 63 Cases with twelve test workers, zero retries and zero skips in
+194.855 seconds. There were no forced-stop, shutdown-error or transport-error
+markers. This uses the explicitly recorded installed classic linker. Its
+17-minute-23-second preceding Cargo cold build is not runtime throughput.
+
+CI run =39383692224= must be read by individual step verdicts: later wheel steps
+are intentionally allowed to continue after a semantic failure. Both installed
+Scheme-profile process-entry qualifications passed, including 120 real calls,
+120 callable applications and reaping twelve children each. Strict Clippy,
+formal, the original Scheme performance lane and all three oracles passed.
+The full Linux native run recorded 62/63 passing Cases in 60.941 seconds; the
+complex-cell Case exhausted its unchanged one-second evaluation budget. The
+separate complete Scheme source lane also hit its original overall deadline.
+Consequently this run is not full CI acceptance. A prior progress inference
+from a later running step was corrected after reading actual step conclusions.
+
+The Linux follow-up replaces the shared slot's active-yield wait with a bounded
+process-shared =FUTEX_WAIT=/=FUTEX_WAKE= exchange. It never uses the process-private
+futex flag, because each process maps the same backing file independently.
+The wait compares the observed atomic phase, preventing lost wakes. Generation
+publication precedes observation, and interrupted/spurious wakes recheck the
+protocol. A one-millisecond wait interval detects a dead peer; it is not an
+execution allowance and does not replace any checkpoint decision. The original
+parent controller still runs once for every signed work transition. This
+scheduling repair requires fresh Linux semantic and current-head CI receipts;
+Mac success alone does not admit it.
+
+* Complete sustained control before platform wait repair
+
+Experiment =39383877607= at =ef5e78a3= admitted all fourteen configurations:
+three CPUs, twelve persistent clients, clean source, complete matching fixed-work
+answers, all sustained requests independently checked, and no foreign compiler
+or audit errors. The request interval excludes preparation and native teardown.
+The following table retains the negative scaling rather than selecting faster
+samples. Fixed-work throughput is the median of the five predetermined samples;
+its ratio uses the corresponding VM1 or Rayon1 baseline. The sustained window
+has the same per-request workload but deliberately different completed counts,
+so it is not mislabeled as an equal-total-work comparison. P95 is the upper
+edge of the 0.1-ms histogram interval and includes client result verification.
+
+| Workload | Backend | Fixed req/s | Equal-work gain | Sustained req/s | Sustained p50 ms | Sustained p95 ms |
+|----------+---------+-------------+-----------------+-----------------+------------------+------------------|
+| small | VM1 | 29.93 | 1.000x | 24.22 | 379.7 | 769.6 |
+| small | VM3 | 34.15 | 1.141x | 34.03 | 323.1 | 632.0 |
+| small | VM12 | 40.72 | 1.360x | 39.50 | 269.8 | 447.4 |
+| small | Rayon1 | 6983.87 | 1.000x | 9110.62 | 1.1 | 2.4 |
+| small | Rayon3 | 14243.04 | 2.039x | 17325.93 | 0.7 | 1.3 |
+| small | Rayon6 | 13440.48 | 1.925x | 16300.64 | 0.7 | 1.5 |
+| small | Rayon12 | 13051.13 | 1.869x | 18420.93 | 0.6 | 1.3 |
+| closure | VM1 | 23.78 | 1.000x | 18.70 | 557.2 | 988.4 |
+| closure | VM3 | 45.20 | 1.901x | 40.52 | 262.4 | 481.8 |
+| closure | VM12 | 40.69 | 1.711x | 29.12 | 410.8 | 584.3 |
+| closure | Rayon1 | 1618.81 | 1.000x | 1663.87 | 6.5 | 11.9 |
+| closure | Rayon3 | 3141.73 | 1.941x | 2646.63 | 4.0 | 8.6 |
+| closure | Rayon6 | 2780.20 | 1.717x | 2503.09 | 3.7 | 11.8 |
+| closure | Rayon12 | 2478.23 | 1.531x | 2588.09 | 3.3 | 13.1 |
+
+In the closure sustained window, VM12 delivered 29.12 requests/second versus
+40.52 for VM3: a 28.1% regression despite twelve overlapping native calls.
+Measured overlap is not evidence of twelve executing CPU cores. The shared
+active-yield transport was therefore not accepted as a universal performance
+improvement. On macOS, production kernel checkpoints return to buffered binary
+socket IO, which sleeps while waiting for each original decision. Linux uses
+the process-shared futex exchange. No private Darwin wait ABI, additional SDK,
+control batching, or new application scheduling framework is introduced.
+The ready record identifies the actual compiled platform transport. These
+platform wait changes require a fresh same-matrix receipt at the new head.
+
+* Current socket/futex semantic and build receipts
+
+At =b91493afacbeccddc97c9f7f68f84bf23710f855=, strict all-target native Clippy
+passed in 2.93 seconds and the complete macOS buffered-socket native suite
+passed 63/63 Cases with twelve workers, zero retries and zero skips in
+297.573 seconds. Strict Scheme-profile PyO3 Clippy passed in 47.50 seconds.
+Both actual installed-wheel entries passed 120 calls plus 120 callable
+applications and reaped all twelve children. VM1/3/12 and Rayon12 functional
+soak smoke passed, explicitly not admitted as performance measurements.
+The local twelve-core host still had foreign Lean/gxi work during preflight,
+so no local capacity measurement was started and no other thread was contacted.
+
+The Linux futex implementation's prior-head CI semantic step passed under its
+original limits. Current main CI =39390280213= also passed Linux complete source
+semantics, formal, the original performance lane and all three oracles;
+individual Rust/PyO3 and downstream conclusions are checked independently.
+The separate macOS source gate remains an independent failure at 240 seconds.
+No source allocation or preparation issue is declared fixed from a green job.
+
+Production experiment =39390427481= failed before measurement. Its preserved
+structured compiler output identifies Xcode 26.6 / Apple clang 21 terminating
+with =Bus error: 10= while dead-stripping the worker binary. It links SDK objects
+built for macOS 26.0 using Rust's implicit 11.0 minimum. This is not runtime
+throughput and no numbers are admitted from that run. The optional build step
+now explicitly selects Xcode's shipped classic linker, already validated with
+the local saved identical linker inputs, and matches the immutable SDK's 26.0
+deployment target. The chosen flags and linker diagnostics are retained with
+the experiment. No SDK patch, build.ss orchestration, execution deadline,
+resource ceiling, semantic Case, performance threshold or concurrency count
+is changed by this compiler-invocation correction.
+
+* Retained classic-linker build failure
+
+Experiment =39394403373= at =b046e8b2= still failed before measurement. Xcode's
+classic linker was found and selected; the visible linker output contains
+compact-unwind warnings, while Cargo returned nonzero through the Gerbil
+process wrapper. No native linker crash report was captured. The previous
+SIGBUS diagnosis is not asserted as the complete cause of this new failure.
+The initial worker build now also preserves Cargo's structured compiler
+messages, as the benchmark build already does. This changes diagnostics only;
+it is not claimed as a performance repair or acceptance of the failed run.
+No timing result is extracted from either failed build.
+
+* Exact-head CI and separated macOS phases
+
+At =b5fbc58fc4911c0512d2582925787d22da33678e=, main CI =39397372718=
+completed successfully in all ten jobs. The native binding lane ran 63/63
+Cases with no skips. Each installed PyO3 worker entry validated twelve resident
+single-processor VMs, 120 calls and 120 callable applications, and reaped all
+twelve children. This is semantic and lifecycle acceptance, not a throughput
+measurement.
+
+Independent macOS source acceptance =39397372724= failed its original
+240-second execution gate with exit 124, zero foreign compilers and no audit
+errors. Cold preparation took 388.90 seconds, including 48.24 seconds of
+source-context loading and 327.22 seconds in make; warm preparation took
+12.13 seconds. The separate execution lasted 240.28 seconds: 51 batches had
+started and 39 completed; 423 Cases had started and 419 completed, with no
+recorded Case assertion failure. Unfinished work is not accepted as a pass.
+These observations do not establish the source-cost or allocation gaps as
+closed, and are not production request latency.
+
+The macOS workflow now exposes cold dependency preparation, warm reuse
+verification and complete source execution as independent steps on the same
+runner. Each retains its own input manifest, measurements and diagnostics.
+A failed warm cache check does not suppress complete semantic execution when
+preparation succeeded. Runtime remains one complete selection under one
+240-second timeout, with twelve VM workers, one processor per VM, the original
+heap and three available CPUs. Compiler input admission, source Suite carrier
+rejection, resource checks and the original generated formal regions remain
+unchanged. No per-shard replacement deadline, build.ss orchestration, SDK
+modification or mandatory timing experiment was added.

@@ -1,0 +1,129 @@
+#+title: Grouped and composite weighted UF query qualification
+
+* One selection flow
+Checked row visitors, admitted part visitors and complete selected materializers
+share one invocation-owned selection flow. Uniform indexed cuts bind each
+coordinate once, validate repeated equality constraints, and retain the first
+requested value. A key-tail marker distinguishes bound false values from
+unbound slots. Every route coordinate is range-checked before compilation,
+including queries already rejected by an absent key or contradictory repeat.
+
+When routing selects one or two descriptors, owner selection borrows frozen
+value hits instead of allocating an index of every unrelated group. Wider
+selections retain invocation-local owner tables. No additional frozen index,
+query cache, mutable reader cursor or public carrier is introduced. Mixed-width
+and nonindexed cuts retain their checked fallback. Returned rows and their
+outer spines remain detached; descriptor and member order is preserved.
+
+This follows Gerbil's private final carrier/typed field patterns in =std/cache.ss=
+and its scoped collector in =std/list/list-builder.ss=. Named pure algorithms
+own constraint compilation and frozen owner scans. The common visitor binds
+its expansion protocol once; consumers do not duplicate query orchestration.
+
+* Fixed native experiment
+The byte-exact baseline is =f024af5f7677e024329c51c62174da7b2e63f1f0=.
+=just performance-uf-query= uses the existing declarative native study builder
+and shared ASP paired-study runner. Both arms are compiled into one executable.
+The contract was fixed before measurement: 20 alternating natural-GC CPU pairs,
+20 ASP admissions and five normalized allocation pairs. Each allocation pair
+measures all eight trajectories in eight one-trajectory intervals; GC and result
+assembly stay outside those counters. CPU retains natural GC for all eight. CPU targets require
+<=90% and >=16/20 wins; controls require <=110% +20us. Grouped/reordered allocation
+targets require <=80%; other allocation controls require <=110% +8192 bytes.
+The parent study deadline remains 90 seconds, including native compilation.
+
+Each sample performs eight complete consumers. Grouped, reordered and wide
+consumers each execute 256 queries across 64 independent 128-member self owners.
+Wide queries repeat both endpoint conditions eight times. Conflict queries,
+nonindexed queries, four-member small queries, four complete single-axis queries
+and full view construction are controls. Independent Cartesian arithmetic checks
+cardinality and exact ordered rows outside measurement. Preparation is excluded
+from query timing; the separate construction control includes capture itself.
+
+* Proof and implementation correspondence
+Lean =ProviderRectangles= proves coordinate obligations equal the full condition
+list, contradictory repeated conditions admit no row, and first bindings refine
+all conditions under checked coverage/grounding. Exact acceptance preserves
+ordered output including duplicate rows. The premises explicitly separate
+coordinate admission and per-owner hash exactness; this is not a compiler proof.
+
+Quint =WeightedExport= models grouped composite selection, arbitrary condition
+order, repeated and contradictory conditions, exact group ownership, frozen
+captures, retirement and independent public readers. Named mutants cross group
+owners or ignore repeat conflicts; the existing axis/order/ownership faults
+remain. Native Cases exercise all four consumers, false values, malformed keys,
+mixed schemas, nested readers and public mutation. Python compares actual API
+and ABI results to independently computed grouped closure, then queries the
+held cut after mutable SCC owners have been replaced. Producer source digests
+must match the current core, view-state and UF implementation.
+
+* Evidence boundary
+Generated Libraries, compiler outputs, raw paired traces, formal counterexamples
+and all rejected attempts remain in ignored =.cache/=, never in Git. Prepared
+query improvements do not establish UF insertion, whole-engine, transport or
+peak-memory improvements. Remote exact-head CI and downstream consumers are
+separate qualification gates.
+
+The first complete allocation interval was rejected for a negative VM counter
+increment (-26668416 bytes), after its CPU pairs completed. The existing
+complete-lookup study already provides a bounded-interval allocation protocol;
+the shared paired runner now exposes that same optional protocol. All eight
+trajectories remain measured and gates/input/CPU intervals are unchanged. A
+negative subinterval still rejects the entire run. The original failure remains
+recorded and is not treated as passing allocation evidence.
+
+A complete intermediate run passed the three CPU targets but failed the fixed
+small-input allocation control (8320 ->17536 bytes). Dynamic aliasing of an
+optional-argument visitor introduced generic argument packing per descriptor;
+the selection flow now binds each visitor lexically using one scoped =defrule=.
+The failed control and a later source-drift rejection during native compilation
+are retained; neither is a final qualification.
+
+
+* Fixed final native run
+Run =fc6245d7-5706-4267-9e6a-29514c2ad98d= passes all eight scenarios in
+38.66/90 seconds, with no source drift:
+
+| Scenario | Baseline CPU us | Candidate CPU us | CPU wins | Baseline bytes | Candidate bytes |
+|----------+-----------------+------------------+----------+----------------+-----------------|
+| grouped | 17959 | 1237 | 20/20 | 47326464 | 3379072 |
+| reordered | 19349 | 2223 | 20/20 | 47367296 | 3379072 |
+| wide | 126297 | 68570 | 20/20 | 103052800 | 73758208 |
+| conflict | 67496 | 3537 | 20/20 | 77895296 | 2789248 |
+| single-axis | 9865 | 10005 | 6/20 | 50342016 | 50342016 |
+| unindexed | 871 | 870 | 10/20 | 1640064 | 1640064 |
+| small | 6 | 5 | 11/20 | 8320 | 17152 |
+| capture | 23061 | 23287 | 9/20 | 34970368 | 34970240 |
+
+Grouped/reordered/wide CPU decreases 93.11%/88.51%/45.71%; all three win 20/20.
+Grouped/reordered allocation decreases 92.86%/92.87%; wide decreases 28.43%.
+The small-input setup increases allocation by 8832 bytes for eight consumers;
+it passes only the declared absolute tolerance and is not an allocation win.
+Single-axis and capture CPU increase 1.42% and 0.98%, within controls; their
+allocation is unchanged or marginally lower. All results retain their full
+paired traces, natural-GC counts and API admissions in ignored run receipts.
+
+The baseline core SHA256 is =bf3c3e34fc221fa5d103d37c0e97eea2bafe003ff21999479e1cc1957efdf78e=.
+
+
+* Actual native bindings
+The current native producer passes Library/package/API builds in 74.26/120,
+0.64/15 and 1.54/45 seconds with upstream machine concurrency and no SDK
+rebuild. Its 132 build inputs /127 linked Scheme modules /1268 runtime
+resources bind the current core, view-state and UF source digests. Actual
+API and ABI each pass five independent weighted UF Cases in 5.389/15 and
+4.296/15 seconds, including grouped composite queries after SCC retirement.
+This producer snapshot also contains two stable capacity files owned by the
+consumer task; its interpretation/capacity qualification remains separate.
+
+
+* Complete local regression
+Full native source testing passes 166 modules /1314 Cases with zero errors in
+125.24 seconds; nine compiled performance modules pass all 12 Cases. The
+shared runner's existing seven-scenario membership study also passes under
+its unchanged gates, including every target at 20/20 wins. These checks verify
+the complete current physical snapshot. The UF commit excludes the two
+consumer-owned capacity edits, so its remote exact-head CI is a distinct gate.
+Lean passes seven jobs; Quint explores 955 generated /433 distinct states and
+rejects all 11 named mutants. Local structured evidence is stored only in
+=.cache/ascent/uf-query/qualification.json= and is source-bound.

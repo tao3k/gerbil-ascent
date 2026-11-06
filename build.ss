@@ -41,7 +41,9 @@
 
 (def (gerbil-ascent-compiler-targets targets)
   (map (lambda (target)
-         (append target gerbil-ascent-compiler-options)) targets))
+         (append (if (string? target) (list gxc: target) target)
+                 gerbil-ascent-compiler-options))
+       targets))
 
 (def (gerbil-ascent-module-link-options)
   (cond-expand (darwin "-Wl,-undefined,dynamic_lookup") (else "")))

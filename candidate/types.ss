@@ -130,21 +130,16 @@
 
 ;;; Module publication contract; candidate data contracts above are unchanged.
 
-(import (only-in :clan/poo/object .o .cc)
+(import (only-in :clan/poo/object .cc)
         (only-in :clan/poo/mop Type.)
-        (only-in :clan/poo/type Record)
-        (only-in :yuanxu/object-types/contracts YuanxuContract.))
+        (only-in :clan/poo/type Record))
 
 (export CandidateScopeContract)
 
 (def CandidateOperation (.cc Type. '.element? procedure?))
 
 (def CandidateScopeContract
-  (.cc YuanxuContract.
-    identity: 'ascent/candidate-scope
-    proto: (.o)
-    value-contract:
-    (Record
+  (.cc (Record
       inspect: (list CandidateOperation)
       snapshot: (list CandidateOperation)
       attempt: (list CandidateOperation)
@@ -155,4 +150,5 @@
       stratify: (list CandidateOperation)
       withhold: (list CandidateOperation)
       compare: (list CandidateOperation)
-      open-withdrawal: (list CandidateOperation))))
+      open-withdrawal: (list CandidateOperation))
+    identity: 'ascent/candidate-scope))

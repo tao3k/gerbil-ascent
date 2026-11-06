@@ -12,7 +12,7 @@
         (only-in :clan/poo/type Record)
         (only-in :clan/poo/object-contract ObjectContract.)
         (only-in :yuanxu/object-types/contracts
-                 YuanxuObjectContract. YuanxuContract.
+                 YuanxuObjectContract.
                  yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/provider
                  GerbilAscentIndexProviderContract gerbil-ascent-canonical-hash-index-provider?)
@@ -605,13 +605,10 @@
 ;;; The Module publishes these existing native operations. Engine state and
 ;;; candidate values retain their own contracts; publication is not execution.
 (def ProgramScopeContract
-  (.cc YuanxuContract.
-    identity: 'ascent/program-scope
-    proto: (.o)
-    value-contract:
-    (Record
+  (.cc (Record
       relation: (list +procedure+)
       program: (list +procedure+)
       evaluate: (list +procedure+)
       open-session: (list +procedure+)
-      solve: (list +procedure+))))
+      solve: (list +procedure+))
+    identity: 'ascent/program-scope))

@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test
+(import (only-in "../../build.ss" gerbil-ascent-library-modules)
+        :std/test
         (only-in :clan/poo/object .get .ref .all-slots object?)
         (only-in :clan/poo/mop validate)
         "../../init.ss")
@@ -53,15 +54,16 @@
         ((.ref left '.source-replacement) 'seed '((7)))
         (check-equal? ((.ref ((.ref left '.run)) 'rows-of) 'seed) '((7)))))
     (test-case "native compiler projection derives every owner from the same init"
-      (let ((spec ((.get gerbil-ascent.init.exports std-make-spec) '("init"))))
+      (let (modules (gerbil-ascent-library-modules))
         ;; The published Rules operations must own their native implementation;
         ;; a linked ABI import must not rely on a previous package installation.
-        (check-equal? (and (member "rules/module" (map cadr spec)) #t) #t)
+        (check-equal? (and (member "init" modules) #t) #t)
+        (check-equal? (and (member "rules/module" modules) #t) #t)
         (for-each (lambda (owner)
           (let (entry (string-append (symbol->string owner) "/interface"))
-            (check-equal? (and (member entry (map cadr spec)) #t) #t))) owners)
+            (check-equal? (and (member entry modules) #t) #t))) owners)
         (check-equal? (ormap (lambda (entry)
-          (or (string-prefix? "modules/" (cadr entry))
-              (string-prefix? "relations/" (cadr entry))
-              (string-prefix? "inference/" (cadr entry))
-              (string-prefix? "evidence/" (cadr entry)))) spec) #f)))))
+          (or (string-prefix? "modules/" entry)
+              (string-prefix? "relations/" entry)
+              (string-prefix? "inference/" entry)
+              (string-prefix? "evidence/" entry))) modules) #f)))))

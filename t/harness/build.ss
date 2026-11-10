@@ -17,14 +17,10 @@
                  asp-gerbil-scheme-native-import-closure)
         (only-in "artifact-admission.ss" artifact-support-cache artifact-support-interfaces artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 ;; BEGIN GENERATED PREPARATION IMPORT
-        (only-in "../../build.ss" gerbil-ascent-compiler-options)
-        (only-in :clan/poo/object .get) "../../init.ss"
+        (only-in "../../build.ss" gerbil-ascent-compiler-options
+                 gerbil-ascent-library-spec gerbil-ascent-library-modules)
 ;; END GENERATED PREPARATION IMPORT
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
-(def (gerbil-ascent-library-spec)
-  ((.get gerbil-ascent.init.exports std-make-spec) '("init")))
-(def (gerbil-ascent-library-modules) (map cadr (gerbil-ascent-library-spec)))
-
 (def package-library (path-expand "lib" (gerbil-path)))
 (def test-cache (path-expand ".cache/ascent/compiled-library"))
 (def (with-test-lane thunk)

@@ -39,6 +39,11 @@
 (def (gerbil-ascent-library-spec)
   ((.get gerbil-ascent.init.exports std-make-spec) '("init")))
 
+;; Native Make accepts both bare module paths and option-bearing targets.
+(def (gerbil-ascent-library-modules)
+  (map (lambda (target) (if (string? target) target (cadr target)))
+       (gerbil-ascent-library-spec)))
+
 (def (gerbil-ascent-compiler-targets targets)
   (map (lambda (target)
          (append (if (string? target) (list gxc: target) target)
@@ -78,7 +83,8 @@
 (def (gerbil-ascent-build-spec)
   (gerbil-ascent-compiler-targets
     (append (gerbil-ascent-library-spec) (gerbil-ascent-abi-spec))))
-(export gerbil-ascent-build-spec gerbil-ascent-rust-spec
+(export gerbil-ascent-library-spec gerbil-ascent-library-modules
+        gerbil-ascent-build-spec gerbil-ascent-rust-spec
         gerbil-ascent-compiler-options call-with-static-link-inputs main)
 (def (build-library spec . args)
   (defbuild-script spec

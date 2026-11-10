@@ -90,16 +90,12 @@ Consumers import Python only and supply ordinary DSL definitions. Scheme module
 imports, hygienic expansion, inference, aggregation, lattice and incremental
 state remain in the Library. Maintenance builds belong to Library `build.ss` /
 `defbuild-script` / upstream `std/make`, not a downstream compilation workflow.
-# Batched File Identity Transport
+# Installed Source Inventory
 
-Rayon-enabled wheels expose `ascent.build.file_identities(paths)`. One call
-returns a deterministic path-to-SHA256 mapping after deduplicating identical
-paths and hashing every file's current bytes. Rust performs the work with the
-GIL released. Relative paths, symlinks (including parent aliases), special files,
-missing files and detected changes during reading fail the entire call; no
-partial result or Python fallback is published. Empty input returns an empty
-mapping. This is identity transport, not evidence admission or a cached verdict.
-Callers retain their complete entry/exit source checks and execution deadlines.
+`ascent.build.runtime_identity()` verifies the wheel's embedded source inventory
+against the installed files and returns the source paths and SHA-256 digests.
+`ascent.build.PackageManifest` verifies build products and resources before
+publication. These checks read the current bytes on each verification.
 
 Build dependencies and policy tools use `opt-level=3`, as does Library release
 code (with thin LTO and overflow checks). `asp-rust` remains a development

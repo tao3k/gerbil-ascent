@@ -22,7 +22,7 @@ def inventoryPackageDeclarations : InventorySource → Nat
   | .buildEntry => 1
 
 def inventoryImportSchemeSource : String :=
-  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options)\n        (only-in :clan/poo/object .get) \"../../init.ss\"\n"
+  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options\n                 gerbil-ascent-library-spec gerbil-ascent-library-modules)\n"
 
 theorem module_data_avoids_package_declaration :
     inventoryPackageDeclarations .moduleData = 0 ∧

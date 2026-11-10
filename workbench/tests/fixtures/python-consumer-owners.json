@@ -237,9 +237,7 @@
       "test_pure_dsl_text_uses_unlimited_counts_but_respects_explicit_bounds"
     ],
     "test_file_identities.py": [
-      "test_changes_and_aliases_never_reuse_an_old_verdict",
-      "test_complete_installed_source_inventory_matches_actual_bytes",
-      "test_matched_source_bytes_three_alternating_pairs"
+      "test_complete_installed_source_inventory_matches_actual_bytes"
     ],
     "test_module_calls.py": [
       "test_cross_module_lattice_program_without_wire_projection",

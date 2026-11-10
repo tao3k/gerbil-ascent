@@ -6,8 +6,8 @@
         (only-in :std/make make)
         (only-in :gerbil/runtime/loader load-path set-load-path!)
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
-        (only-in "../../build.ss" gerbil-ascent-compiler-options)
-        (only-in :clan/poo/object .get) "../../init.ss"
+        (only-in "../../build.ss" gerbil-ascent-compiler-options
+                 gerbil-ascent-library-spec gerbil-ascent-library-modules)
         (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
         (only-in :std/misc/process run-process)
         (only-in :std/string/uuid random-uuid uuid->string)
@@ -18,9 +18,6 @@
                  artifact-sources artifact-matching-sources? artifact-directory!)
         "studies.ss")
 (export main build-study! resolve-study-arguments)
-
-(def (gerbil-ascent-library-spec) ((.get gerbil-ascent.init.exports std-make-spec) '("init")))
-(def (gerbil-ascent-library-modules) (map cadr (gerbil-ascent-library-spec)))
 
 ;; BEGIN GENERATED LOOKUP STUDY-PROFILE
 (def (study-build-spec module)

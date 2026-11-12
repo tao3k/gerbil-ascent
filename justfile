@@ -10,7 +10,7 @@ gerbil_environment := if os() == "macos" {
     ("env -u SDKROOT COMPILER_PATH=/usr/bin"
      + " LIBRARY_PATH=\"" + openssl_prefix + "/lib\""
      + " PKG_CONFIG_PATH=\"" + openssl_prefix + "/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}\"")
-} else { "env" }
+} else { "env COMPILER_PATH=/usr/bin" }
 gerbil_command := gerbil_environment + " gerbil"
 # Select the package prefix without changing the caller's tool search path.
 gerbil_package_prefix := '${GERBIL_PATH:-' + justfile_directory() + '/.gerbil}'

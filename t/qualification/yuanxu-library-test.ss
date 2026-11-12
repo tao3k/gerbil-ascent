@@ -18,23 +18,23 @@
         (for-each (lambda (owner)
                     (check-equal? (and (memq owner names) #t) #t)
                     ;; Demand actual source-bound scope admission for EVERY owner.
-                    (check-equal? (object? (.ref (.ref library owner) 'scope)) #t)) owners)
+                    (check-equal? (object? (.ref library owner)) #t)) owners)
         (check-equal? (and (memq 'relations names) #t) #f)
         (check-equal? (and (memq 'inference names) #t) #f)
         (check-equal? (and (memq 'evidence names) #t) #f)
         ;; Source epochs own nominal prototypes. Use the actual published
         ;; Types, never a different native import's lookalike prototype.
-        (let ((table (.get library table scope)) (program (.get library program scope)))
+        (let ((table (.get library table)) (program (.get library program)))
           (validate (.get table types scope) table)
           (validate (.get program types scope) program))
-        (let* ((rules (.get library rules scope))
+        (let* ((rules (.get library rules))
                (capacity ((.ref rules 'capacity)
                           (list (hash ("relation" "seed") ("rows" '((7))))) 1)))
           (check-equal? (procedure? (.ref rules 'recorded-module)) #t)
           (check-equal? (hash-ref capacity "status") "WITHIN_CAPACITY"))))
     (test-case "published native Program scope preserves sibling and revision isolation"
-      (let* ((scope (.get gerbil-ascent.init.exports Library program scope))
-             (table (.get gerbil-ascent.init.exports Library table scope))
+      (let* ((scope (.get gerbil-ascent.init.exports Library program))
+             (table (.get gerbil-ascent.init.exports Library table))
              (provider (.ref table 'hash-index-provider))
              (storage (.ref table 'set-storage-provider))
              (_provider (validate (.get table types index-provider) provider))

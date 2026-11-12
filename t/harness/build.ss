@@ -5,6 +5,7 @@
 (import (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         :gerbil/expander
         (only-in :std/make make)
+        (only-in :gerbil/runtime/loader load-path set-load-path!)
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
         :std/iter
         (only-in :std/list/list delete-duplicates/hash)
@@ -72,7 +73,17 @@
   (call-with-init-build-spec gerbil-ascent-library-spec
     (lambda (_native _arguments (prefix #f) (_libdir #f) (_bindir #f))
       (when prefix (error "unexpected foreign test-library package" prefix))
-      (prepare-test-library/native! tests source-suites? source-consumers))
+      ;; Compiler lookup changes belong to this build action. Restore them
+      ;; before Core rechecks the same admitted init/source input context.
+      (let ((paths (load-path)) (environment-path (getenv "GERBIL_LOADPATH" #f)))
+        (dynamic-wind
+          void
+          (lambda () (prepare-test-library/native! tests source-suites? source-consumers))
+          (lambda ()
+            (set-load-path! paths)
+            (if environment-path
+              (setenv "GERBIL_LOADPATH" environment-path)
+              (setenv "GERBIL_LOADPATH"))))))
     '("compile") package-library))
 
 (def (prepare-test-library/native! tests source-suites? source-consumers)

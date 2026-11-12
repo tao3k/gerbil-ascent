@@ -172,13 +172,13 @@ rejected projections/builds and diagnostic reader failures remain available.
 
 * Scope and nominal type identity
 
-The namespace exported by init contains inert Module views. Executable demand
-is explicit, for example:
+The namespace exported by init exposes each selected Module value directly.
+A consumer demands its published operations and Types, for example:
 
 #+begin_src scheme
 (import "init.ss" (only-in :clan/poo/object .get))
-(def program-scope (.get gerbil-ascent.init.exports Library program scope))
-(def table-scope (.get gerbil-ascent.init.exports Library table scope))
+(def program-scope (.get gerbil-ascent.init.exports Library program))
+(def table-scope (.get gerbil-ascent.init.exports Library table))
 (def program-type (.get program-scope types program))
 #+end_src
 
@@ -193,6 +193,13 @@ following Yuanxu's existing typed-scope pattern. The integration test validates
 those public Contracts again and passes Table providers into Program constructors
 within the same selected source context. It then exercises sibling Sessions,
 source replacement, withdrawal and restoration with independent exact rows.
+Candidate follows the same boundary for receipt values. It publishes
+=receipt-digest=, =receipt-status= and =receipt-rows= alongside =attempt=,
+=capture= and =verify=. Obtain these operations from the same Candidate Module;
+a getter from a separately imported module instance cannot read its nominal
+receipt type. The independent Library consumer checks current-source rejection
+and historical-snapshot acceptance through that public owner.
+
 No structural cast, prototype alias, permissive replacement Contract or previous
 validation result bridges different source epochs.
 

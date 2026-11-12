@@ -13,6 +13,9 @@
     inspect: candidate-inspect
     snapshot: reasoning-source-snapshot
     attempt: reasoning-attempt
+    receipt-digest: reasoning-receipt-candidate-digest
+    receipt-status: reasoning-receipt-status
+    receipt-rows: reasoning-receipt-rows
     capture: candidate-finite-evidence
     verify: candidate-verify-finite-evidence
     closure: gerbil-ascent-closure-candidates

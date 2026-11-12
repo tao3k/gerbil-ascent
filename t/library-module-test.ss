@@ -8,21 +8,21 @@
 (def library-module-test
   (test-suite "Native Library capability publication"
     (test-case "Inference publishes callable constructors in its owned source context"
-      (check-equal? (procedure? (.get gerbil-ascent.init.exports Library inference scope program)) #t)
-      (check-equal? (procedure? (.get gerbil-ascent.init.exports Library inference scope relation)) #t))
+      (check-equal? (procedure? (.get gerbil-ascent.init.exports Library program program)) #t)
+      (check-equal? (procedure? (.get gerbil-ascent.init.exports Library program relation)) #t))
     (test-case "Native providers and inference evaluate the published relations"
-      (let* ((make-program (.get gerbil-ascent.init.exports Library inference scope program))
-             (evaluate (.get gerbil-ascent.init.exports Library inference scope evaluate))
-             (index (.get gerbil-ascent.init.exports Library relations scope hash-index-provider))
-             (storage (.get gerbil-ascent.init.exports Library relations scope set-storage-provider))
+      (let* ((make-program (.get gerbil-ascent.init.exports Library program program))
+             (evaluate (.get gerbil-ascent.init.exports Library program evaluate))
+             (index (.get gerbil-ascent.init.exports Library table hash-index-provider))
+             (storage (.get gerbil-ascent.init.exports Library table set-storage-provider))
              (program (make-program
-                        (list ((.get gerbil-ascent.init.exports Library inference scope relation) 'edge 2 '((1 2) (2 3)) index storage))
+                        (list ((.get gerbil-ascent.init.exports Library program relation) 'edge 2 '((1 2) (2 3)) index storage))
                         '() 8 16 32))
              (rows ((.get (evaluate program) rows-of) 'edge)))
         (check-equal? (length rows) 2)
         (check-equal? (and (member '(1 2) rows) (member '(2 3) rows) #t) #t)))
     (test-case "Real query, independent finite replay and source-bound reuse"
-      (let* ((evidence (.get gerbil-ascent.init.exports Library evidence scope))
+      (let* ((evidence (.get gerbil-ascent.init.exports Library candidate))
              (snapshot ((.get evidence snapshot) 'library/reachability 1
                          '((edge 2 ((1 2) (2 3))))))
              (changed ((.get evidence snapshot) 'library/reachability 2
@@ -33,11 +33,11 @@
                        (query path 1 ?y) (limits 8 16 32)))
              (receipt ((.get evidence attempt) snapshot datum))
              (spec ((.get evidence inspect) snapshot datum))
-             (digest ((.get evidence digest) receipt))
-             (status ((.get evidence status) receipt))
-             (rows ((.get evidence rows) receipt))
-             (capture (.get gerbil-ascent.init.exports Library evidence scope capture))
-             (verify (.get gerbil-ascent.init.exports Library evidence scope verify))
+             (digest ((.get evidence receipt-digest) receipt))
+             (status ((.get evidence receipt-status) receipt))
+             (rows ((.get evidence receipt-rows) receipt))
+             (capture (.get gerbil-ascent.init.exports Library candidate capture))
+             (verify (.get gerbil-ascent.init.exports Library candidate verify))
              (certificate (capture snapshot spec digest status rows 1000)))
         ;; Independent expected reachability; no production-query output as oracle.
         (check-equal? status 'complete)

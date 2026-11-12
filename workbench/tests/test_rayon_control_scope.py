@@ -65,7 +65,7 @@ class RayonControlScope(unittest.TestCase):
     def test_build_only_producer_is_outside_the_vm_module_inventory(self):
         result = subprocess.run(
             ['gxi', '-:max-heap=2G', '-e',
-             '(import "./build-modules.ss") '
+             '(import "./build.ss") '
              '(for-each displayln (gerbil-ascent-library-modules))'],
             cwd=ROOT, capture_output=True, text=True, timeout=180, check=True)
         modules = result.stdout.splitlines()

@@ -7,8 +7,7 @@
         (only-in :gerbil/runtime/loader load-path set-load-path!)
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
         (only-in "../../build.ss" gerbil-ascent-compiler-options
-                 gerbil-ascent-library-spec gerbil-ascent-library-modules)
-        (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
+                 gerbil-ascent-library-modules)
         (only-in :std/misc/process run-process)
         (only-in :std/string/uuid random-uuid uuid->string)
         :std/encoding/json
@@ -20,9 +19,9 @@
 (export main build-study! resolve-study-arguments)
 
 ;; BEGIN GENERATED LOOKUP STUDY-PROFILE
-(def (study-build-spec module)
+(def (study-build-spec module library-modules)
   (normalize-spec
-    (if (member module (gerbil-ascent-library-modules)) module
+    (if (member module library-modules) module
       [gxc: module [extra-inputs: [(path-expand "init.ss") (path-expand "t/performance/run.ss")]]])
     gerbil-ascent-compiler-options))
 
@@ -31,15 +30,11 @@
 ;; Gerbil owns scheduling, dependencies and object/link completion. A study
 ;; supplies data, never a second compiler or a benchmark-specific build script.
 (def (build-study! study library binary)
-  (call-with-init-build-spec gerbil-ascent-library-spec
-    (lambda (_native _arguments (prefix #f) (_libdir #f) (_bindir #f))
-      (when prefix (error "unexpected foreign performance package" prefix))
-      (build-study/native! study library binary))
-    '("compile") library))
-(def (build-study/native! study library binary)
-  (let ((sources (artifact-sources))
-        (spec (map study-build-spec (study-modules study)))
-        (paths (load-path)))
+  (let* ((sources (artifact-sources))
+         (library-modules (gerbil-ascent-library-modules))
+         (spec (map (lambda (module) (study-build-spec module library-modules))
+                    (study-modules study)))
+         (paths (load-path)))
     (dynamic-wind
       (lambda () (add-load-path! library))
       (lambda ()

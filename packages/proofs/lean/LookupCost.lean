@@ -45,7 +45,7 @@ def admissionSchemeSource : String :=
   "  (def (visit-admitted-complete-key columns key point)\n    (let* ((offset (- (vector-length routes) 2))\n           (endpoints (list-tail key offset)))\n      (for-each (lambda (block)\n        (with (((rectangle prefix left right) block))\n          (when (matches-prefix? key prefix)\n            ;; Return the candidate's stored values directly, without\n            ;; allocating selected singleton spines or product collectors.\n            (let ((a (captured-point-member routes left offset (car endpoints)))\n                  (b (captured-point-member routes right (+ offset 1) (cadr endpoints))))\n              (when (and a b) (point prefix (car a) (car b))))))) (if small? blocks (selected columns key)))\n      #t))\n  (def (visit-complete-key columns key point)\n    (and complete-columns (equal? columns complete-columns)\n       (visit-admitted-complete-key columns key point)))\n"
 
 def studyProfileSchemeSource : String :=
-  "(def (study-build-spec module)\n  (normalize-spec\n    (if (member module (gerbil-ascent-library-modules)) module\n      [gxc: module [extra-inputs: [(path-expand \"init.ss\") (path-expand \"t/performance/run.ss\")]]])\n    gerbil-ascent-compiler-options))\n\n"
+  "(def (study-build-spec module library-modules)\n  (normalize-spec\n    (if (member module library-modules) module\n      [gxc: module [extra-inputs: [(path-expand \"init.ss\") (path-expand \"t/performance/run.ss\")]]])\n    gerbil-ascent-compiler-options))\n\n"
 
 -- Two valid allocator histories have identical observed snapshots but
 -- different heap-event allocation. A net counter is not a heap-event decoder.

@@ -174,6 +174,21 @@
         "skip-witness",
         "CompletePublication",
         12
+      ],
+      [
+        "empty-version",
+        "EmptyHitSound",
+        12
+      ],
+      [
+        "empty-owner",
+        "EmptyHitSound",
+        12
+      ],
+      [
+        "empty-key",
+        "EmptyHitSound",
+        12
       ]
     ]
   },
@@ -289,7 +304,7 @@
   "ClosedDslLowering": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "WholeChoice NoRetry FailurePrivate SnapshotRoots SnapshotWorkExact"
+      "invariants": "WholeChoice NoRetry FailurePrivate SnapshotRoots SnapshotWorkExact RoleSourceExact RoleHeadExact RoleUnknownClosed"
     },
     "faults": [
       [
@@ -315,6 +330,16 @@
       [
         "retain-snapshot-intermediate",
         "SnapshotWorkExact",
+        12
+      ],
+      [
+        "roleSource",
+        "RoleSourceExact",
+        12
+      ],
+      [
+        "roleHead",
+        "RoleHeadExact",
         12
       ]
     ]
@@ -1598,7 +1623,7 @@
   "ProviderFrontier": {
     "configuration": {
       "constants": "Fault = \"none\"\nSeeded = FALSE",
-      "invariants": "ExactFrontier FrontierComplete DeliveredExact ConsumerSnapshot",
+      "invariants": "ExactFrontier FrontierComplete DeliveredExact ConsumerSnapshot ProjectionExact ProjectionLiveBoundary ProjectionSupportBoundary EmptyOldPrefixSafe SmallProbeExact ProbeSupportExact",
       "main": "ProviderFrontierFixture"
     },
     "faults": [
@@ -1635,6 +1660,31 @@
       [
         "omit",
         "DeliveredExact",
+        12
+      ],
+      [
+        "forget-live",
+        "ProjectionLiveBoundary",
+        12
+      ],
+      [
+        "collapse-support",
+        "ProjectionSupportBoundary",
+        12
+      ],
+      [
+        "prune-unselected-old",
+        "EmptyOldPrefixSafe",
+        12
+      ],
+      [
+        "stale-small-probe",
+        "SmallProbeExact",
+        12
+      ],
+      [
+        "omit-small-probe",
+        "SmallProbeExact",
         12
       ]
     ]

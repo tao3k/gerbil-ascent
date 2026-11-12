@@ -21,7 +21,7 @@ class StudyProfileTests(unittest.TestCase):
             (root / 'gerbil.pkg').write_text('(package: ascent-profile-probe)\n')
             (root / 'justfile').write_text('# isolated build fixture\n')
             (root / '.cache/ascent/compiled-library').mkdir(parents=True)
-            for path in ['build-modules.ss', 't/performance/run.ss']:
+            for path in ['init.ss', 't/performance/run.ss']:
                 target = root / path
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(';; previous build profile\n')
@@ -43,7 +43,7 @@ class StudyProfileTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 return result.stdout
             invoke(f'''(import :std/make
- (only-in {json.dumps(str(project / 'build-modules.ss'))} gerbil-ascent-compiler-options))
+ (only-in {json.dumps(str(project / 'build.ss'))} gerbil-ascent-compiler-options))
 (make (list (append '(gxc: "core/relation-view") gerbil-ascent-compiler-options)
         "t/performance/profile-reference") srcdir: {json.dumps(str(root))}
  libdir: {json.dumps(str(library))} optimize: #t parallelize: 3)

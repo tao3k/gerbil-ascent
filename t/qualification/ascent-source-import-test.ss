@@ -4,6 +4,7 @@
 
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :gerbil/expander import-module)
+        (only-in :std/list/list group-n-consecutive)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/mop validate)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
@@ -122,7 +123,7 @@
           (check-equal? (preparation-batches-bounded? batches 174 workers) #t)) (list early staged))
         (check-equal? (source-test-batches profiled files "batched")
                       (cond-expand (darwin staged) (else early)))))
-    (test-case "exhaustive corpora are isolated without dropping or resizing other work"
+    (test-case "exhaustive corpora are isolated within unchanged ordinary capacity bounds"
       (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 37)))
              (heavy '("t/qualification/ascent-candidate-flow-test.ss"
                       "t/qualification/ascent-semi-naive-test.ss"))
@@ -133,8 +134,11 @@
                          (striped-module-files (list-sort string<? normal)
                            (testing-interface-worker-count (length files))))))
         (check-equal? (list-sort string<? (apply append batches)) files)
-        ;; Preserve every ordinary batch and isolated corpus, changing only order.
-        (let* ((ordinary (apply append (map (cut testing-interface-test-file-batches profiled <>) baseline)))
+        ;; The ordinary roster is refined to the existing capacity bound.
+        ;; Compute that bound independently of the dispatch implementation.
+        (let* ((workers (testing-interface-worker-count (length normal)))
+               (bound (ceiling (/ (length normal) (* workers workers))))
+               (ordinary (apply append (map (cut group-n-consecutive bound <>) baseline)))
                (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))
           (check-equal? batches (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
         (let* ((workers (testing-interface-worker-count (length normal)))

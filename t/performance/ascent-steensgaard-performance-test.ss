@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/runtime/gambit
         (only-in :std/test test-suite check-equal? check-exception)
-        (only-in :yuanxu/observability/testing-case yuanxu-test-case)
+        (only-in :tao3k/yuanxu/observability/testing-case yuanxu-test-case)
         (only-in :clan/poo/object .ref)
         :gerbil-ascent/applications/steensgaard
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)

@@ -4,11 +4,11 @@
 
 (import (only-in :std/test check-equal? test-case test-suite)
         (only-in :clan/poo/object .o .call .ref)
-        (only-in :yuanxu/observability/debug
+        (only-in :tao3k/yuanxu/observability/debug
                  yuanxu-debug-memory-snapshot
                  YuanxuDebugMemoryAnomaly?
                  YuanxuDebugDurationAnomaly?)
-        (only-in :yuanxu/observability/testing-case
+        (only-in :tao3k/yuanxu/observability/testing-case
                  yuanxu-testing-case-profile?)
         (only-in :gerbil-ascent/t/performance/ascent-ss-profile
                  ascent-ss-profile))

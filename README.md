@@ -34,7 +34,7 @@ root. Each `interface.ss` owns its Module declaration. Native Scheme consumers
 use `:gerbil-ascent/program/api`, `:gerbil-ascent/program/func` (constructors),
 `:gerbil-ascent/rules/func` and `:gerbil-ascent/table/func` directly.
 
-Source-bound Module APIs are demanded through `Library.<owner>.scope`; Program
+Source-bound Module APIs are demanded through `Library.<owner>`. Program
 and Table publish their corresponding `types` alongside their values. Nominal
 types from independent source contexts are not interchangeable. See the
 [Module migration audit](docs/yuanxu-module-convergence-20261102.org) for the

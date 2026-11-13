@@ -5,7 +5,6 @@
 (import (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
         :gerbil/expander
         (only-in :std/make make)
-        (only-in :gerbil/runtime/loader load-path set-load-path!)
         (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
         :std/iter
         (only-in :std/list/list delete-duplicates/hash)
@@ -13,7 +12,9 @@
         :std/os/flock :std/os/device
         "library-spec.ss"
         (only-in :std/string/path path-default-extension)
-        (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
+        (only-in :clan/poo/object .call .get)
+        (only-in "../../init.ss" gerbil-ascent.init.exports)
+        (only-in :tao3k/yuanxu/module-system/building/source-package call-with-build-input-path)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
                  asp-gerbil-scheme-native-import-closure)
         (only-in "artifact-admission.ss" artifact-support-cache artifact-support-interfaces artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
@@ -70,23 +71,16 @@
   ;; Module DSL fragments are native compiler inputs owned by init, not
   ;; standalone source modules. Keep their lowering and source-current guards
   ;; active during discovery and make, exactly as the production entry does.
-  (call-with-init-build-spec gerbil-ascent-library-spec
-    (lambda (_native _arguments (prefix #f) (_libdir #f) (_bindir #f))
-      (when prefix (error "unexpected foreign test-library package" prefix))
-      ;; Compiler lookup changes belong to this build action. Restore them
-      ;; before Core rechecks the same admitted init/source input context.
-      (let ((paths (load-path)) (environment-path (getenv "GERBIL_LOADPATH" #f)))
-        (dynamic-wind
-          void
-          (lambda () (prepare-test-library/native! tests source-suites? source-consumers))
-          (lambda ()
-            (set-load-path! paths)
-            (if environment-path
-              (setenv "GERBIL_LOADPATH" environment-path)
-              (setenv "GERBIL_LOADPATH"))))))
-    '("compile") package-library))
+  (def production (gerbil-ascent-library-modules (gerbil-ascent-library-spec)))
+  (begin0
+    (.call (.get gerbil-ascent.init.exports build) .with-compiler-inputs
+      (lambda ()
+        (call-with-build-input-path package-library
+          (lambda () (prepare-test-library/native! production tests source-suites? source-consumers))
+          make-source: (current-directory))))
+    ((.get gerbil-ascent.init.exports admit-current))))
 
-(def (prepare-test-library/native! tests source-suites? source-consumers)
+(def (prepare-test-library/native! production tests source-suites? source-consumers)
   (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
          (options-file (path-expand "gerbil-ascent/t/.compiler-options.sexp" library))
@@ -99,10 +93,10 @@
          (sources (artifact-sources))
          (inventory-seconds (build-elapsed started))
          (production-interfaces-admitted? #f)
-         (production-before (map production-output-time (gerbil-ascent-library-modules)))
+         (production-before (map production-output-time production))
          (modules
           (delete-duplicates/hash
-            (append (gerbil-ascent-library-modules)
+            (append production
               (preparation-support-roots source-suites? test-library-base
                 (preparation-selected-dependencies tests test-library-dependencies)
                 (cached-support-modules))) from-end?: #t)))
@@ -117,7 +111,7 @@
            ;; The ABI receipt cannot authorize native interface reuse.
            ;; Project current source; Gerbil alone decides compiled reuse.
            (production-current? #f)
-           (roots (preparation-projection-roots (gerbil-ascent-library-modules)
+           (roots (preparation-projection-roots production
                     modules tests source-consumers production-current?)))
       (set! production-interfaces-admitted? production-current?)
       (when production-current?
@@ -137,7 +131,6 @@
       ;; without forcing the entire already declared production catalog from
       ;; source again. Gerbil owns interface loading and dependency expansion.
       ;; Prepare through Gerbil once, then use ASP's resident-context projection.
-      (add-load-path! (current-directory))
       (displayln "BUILD-TEST-LIBRARY-PHASE projection-input-admission wall-seconds="
                  (build-elapsed phase))
       (when admitted-projection
@@ -152,7 +145,7 @@
           ;; interfaces. Source consumers/support roots and explicit reload keep
           ;; Gerbil's source path. Actual compiler imports always bypass the hook.
           (call-with-preparation-production-interfaces
-            production-current? library (append (gerbil-ascent-library-modules) admitted-support)
+            production-current? library (append production admitted-support)
             (lambda ()
               (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)))
           (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
@@ -165,8 +158,14 @@
                 ;; under the active owner, which checks source currentness and
                 ;; compiler identity before and after each role acquisition.
                 (call-with-preparation-production-interfaces
-                  production-current? library (append (gerbil-ascent-library-modules) admitted-support)
-                  (lambda () (asp-gerbil-scheme-native-import-closure (current-directory) roots)))))
+                  production-current? library (append production admitted-support)
+                  (lambda ()
+                    ;; ASP's native projection prepends its declared source
+                    ;; root once. End that verified transition before Make.
+                    (call-with-build-input-path #f
+                      (lambda ()
+                        (asp-gerbil-scheme-native-import-closure (current-directory) roots))
+                      make-source: (current-directory))))))
           (set! modules
             (delete-duplicates/hash
               (append modules
@@ -182,7 +181,6 @@
     (call-with-output-file [path: module-file truncate: #t]
       (lambda (out) (write modules out) (newline out)))
     ;; Upstream make checks production, reference and consumer currentness.
-    (add-load-path! library)
     (setenv "ASCENT_TEST_LIBRARY" library)
     (setenv "ASCENT_PERFORMANCE_MODULES" module-file)
     (setenv "GERBIL_LOADPATH"
@@ -204,7 +202,7 @@
         ;; Reuse admitted interfaces there too, but never as compiler inputs:
         ;; Gerbil's driver binds current-compile-context for actual builds.
         (call-with-preparation-production-interfaces
-          production-interfaces-admitted? library (append (gerbil-ascent-library-modules) admitted-support)
+          production-interfaces-admitted? library (append production admitted-support)
           (lambda ()
             (make (map (cut normalize-spec <> gerbil-ascent-compiler-options) all) srcdir: (current-directory) libdir: library
                   build-deps: (path-expand "build-deps" test-cache)
@@ -222,7 +220,7 @@
       (displayln "BUILD-TEST-LIBRARY production-rebuilt="
                  (length (filter (lambda (same?) (not same?))
                                  (map equal? production-before
-                                      (map production-output-time (gerbil-ascent-library-modules))))))
+                                      (map production-output-time production)))))
       (displayln "BUILD-TEST-LIBRARY-OK wall-seconds="
                  (exact->inexact (/ (- (current-jiffy) started) (jiffies-per-second))))
       (force-output))))

@@ -7,7 +7,7 @@
         (only-in :std/time/precise current-time-precise
                  PreciseTime-seconds PreciseTime-nseconds)
         (only-in :clan/poo/object .o .ref)
-        (only-in :yuanxu/observability/testing-case yuanxu-test-case/with)
+        (only-in :tao3k/yuanxu/observability/testing-case yuanxu-test-case/with)
         (only-in :gerbil-ascent/t/performance/ascent-ss-profile ascent-ss-profile)
         (only-in :gerbil-ascent/t/qualification/ascent-rule-program-fixture
                  ascent-rule-fixture-program)

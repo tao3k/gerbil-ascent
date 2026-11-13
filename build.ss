@@ -3,46 +3,37 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (for-syntax (only-in :std/source this-source-file)
-                    (only-in :yuanxu/module-system/building/source-package register-module-build-source!)))
+                    (only-in :tao3k/yuanxu/module-system/building/source-package register-module-build-source!)))
 (begin-syntax
   (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent))
-(import (only-in :gerbil/expander core-import-module)
-        (only-in :clan/poo/object .o)
-        (only-in :yuanxu/module-system/building/source-closure for-each-build-module)
-        (only-in :yuanxu/module-system/source/static-inputs module-static-compiler-inputs)
-        (only-in :yuanxu/module-system/building/artifacts call-with-static-compiler-inputs)
-        (only-in :clan/poo/object .get) "init.ss"
+(import (only-in "init.ss" gerbil-ascent.init.exports std-make-spec)
+        (only-in :clan/poo/object .call .get .o)
+        (only-in :gerbil/expander core-import-module import-module current-expander-compiling?)
+        (only-in :tao3k/yuanxu/module-system/building/artifacts
+                 call-with-static-compiler-inputs)
+        (only-in :tao3k/yuanxu/module-system/building/source-closure
+                 for-each-build-module)
+        (only-in :tao3k/yuanxu/module-system/building/source-package
+                 call-with-build-input-path)
+        (only-in :tao3k/yuanxu/module-system/source/static-inputs
+                 module-static-compiler-inputs)
         (only-in :std/build-script defbuild-script)
-        (only-in :yuanxu/module-system/building/interface call-with-init-build-spec)
         (only-in :std/make pkg-config-libs)
-        (only-in :std/source this-source-file)
-        (only-in :gerbil/runtime/loader add-load-path! load-path set-load-path!))
+        (only-in :std/source this-source-file))
 
 ;; BEGIN GENERATED PREPARATION COMPILER
 ;; Existing Gambit header policy; this limits C function size, not VM concurrency.
 (def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
 ;; END GENERATED PREPARATION COMPILER
 
-;; The package owns its ABI roots; Core owns borrowed compiler inputs and their
-;; source guards. Traverse actual native imports, not an installed-file catalog.
-(def (call-with-static-link-inputs root entries owned-identities action)
-  (def contexts '())
-  (def seen (make-hash-table-eq))
-  (for-each
-    (lambda (entry)
-      (for-each-build-module (core-import-module (path-expand entry root))
-        (lambda (context) (set! contexts (cons context contexts))) seen))
-    entries)
-  (def inputs (module-static-compiler-inputs (reverse contexts) owned-identities))
-  (call-with-static-compiler-inputs (.o static-inputs: inputs) action))
-
 (def (gerbil-ascent-library-spec)
-  ((.get gerbil-ascent.init.exports std-make-spec) '("init")))
+  ;; Yuanxu owns the selected modules. Publish ASCENT's library entry as well.
+  (append std-make-spec '("init")))
 
 ;; Native Make accepts both bare module paths and option-bearing targets.
-(def (gerbil-ascent-library-modules)
+(def (gerbil-ascent-library-modules (spec (gerbil-ascent-library-spec)))
   (map (lambda (target) (if (string? target) target (cadr target)))
-       (gerbil-ascent-library-spec)))
+       spec))
 
 (def (gerbil-ascent-compiler-targets targets)
   (map (lambda (target)
@@ -83,39 +74,52 @@
 (def (gerbil-ascent-build-spec)
   (gerbil-ascent-compiler-targets
     (append (gerbil-ascent-library-spec) (gerbil-ascent-abi-spec))))
+
+;; Gambit writes generated C beside borrowed static Scheme. Yuanxu owns the
+;; writable extent and checks the original inputs across the link.
+(def (call-with-static-link-inputs root entries owned-identities action)
+  (def contexts [])
+  (def seen (make-hash-table-eq))
+  (for-each
+    (lambda (entry)
+      (for-each-build-module (core-import-module (path-expand entry root))
+        (lambda (context) (set! contexts (cons context contexts))) seen))
+    entries)
+  (def inputs (module-static-compiler-inputs (reverse contexts) owned-identities))
+  (call-with-static-compiler-inputs (.o static-inputs: inputs) action))
+
 (export gerbil-ascent-library-spec gerbil-ascent-library-modules
         gerbil-ascent-build-spec gerbil-ascent-rust-spec
         gerbil-ascent-compiler-options call-with-static-link-inputs main)
-(def (build-library spec . args)
-  (defbuild-script spec
-    optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
-  (apply main args))
+
+(def (with-compiler-inputs spec action)
+  (def root (path-directory (this-source-file)))
+  (def entries
+    (filter-map (lambda (target)
+                  (and (eq? (car target) exe:)
+                       (string-append (cadr target) ".ss")))
+                spec))
+  (def owned
+    (map (lambda (name)
+           (string->symbol (string-append "gerbil-ascent/" name)))
+         (gerbil-ascent-library-modules spec)))
+  (.call (.get gerbil-ascent.init.exports build) .with-compiler-inputs
+    (lambda ()
+      (call-with-build-input-path (path-expand "lib" (gerbil-path))
+        (lambda ()
+          ;; The build script has already imported the source-only declaration.
+          ;; Use the compiler context for the public init product.
+          (parameterize ((current-expander-compiling? #t))
+            (import-module (path-expand "init.ss" root) #t))
+          (call-with-static-link-inputs root entries owned action))
+        make-source: root))))
 
 (def (main . args)
-  (let* ((build? (or (null? args) (equal? (car args) "compile")))
-         (root (path-directory (this-source-file))))
-    ;; Consume the exact init-owned library specification before adding package
-    ;; compiler options and ABI link outputs. Core retains its source/product guards.
-    (call-with-init-build-spec gerbil-ascent-library-spec
-      (lambda (native arguments (prefix #f) (libdir #f) (bindir #f))
-        (when prefix (error "unexpected foreign package build group" prefix))
-        (def targets (gerbil-ascent-compiler-targets (append native (gerbil-ascent-abi-spec))))
-        (def (run)
-          ;; Linker output resolution is scoped to compilation. Restore it
-          ;; before Core rechecks the init-owned source identities.
-          (if build?
-            (let (paths (load-path))
-              (dynamic-wind
-                (lambda () (add-load-path! (path-expand "lib" (gerbil-path))))
-                (lambda () (apply build-library targets arguments))
-                (lambda () (set-load-path! paths))))
-            (apply build-library targets arguments)))
-        (if build?
-          (call-with-static-link-inputs root
-            (filter-map (lambda (target)
-                          (and (pair? target) (eq? (car target) exe:)
-                               (string-append (cadr target) ".ss"))) targets)
-            (map (lambda (target) (string->symbol (string-append "gerbil-ascent/" (cadr target)))) targets)
-            run)
-          (run)))
-      args (path-expand "lib" (gerbil-path)))))
+  (def spec (gerbil-ascent-build-spec))
+  (defbuild-script spec
+    optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
+  (def (dispatch) (apply main args))
+  ;; Gerbil handles the commands and flags. Only compilation borrows inputs.
+  (if (or (null? args) (equal? (car args) "compile"))
+    (with-compiler-inputs spec dispatch)
+    (dispatch)))

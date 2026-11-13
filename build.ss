@@ -18,7 +18,6 @@
         (only-in :tao3k/yuanxu/module-system/source/static-inputs
                  module-static-compiler-inputs)
         (only-in :std/build-script defbuild-script)
-        (only-in :std/make pkg-config-libs)
         (only-in :std/source this-source-file))
 
 ;; BEGIN GENERATED PREPARATION COMPILER
@@ -27,8 +26,14 @@
 ;; END GENERATED PREPARATION COMPILER
 
 (def (gerbil-ascent-library-spec)
-  ;; Yuanxu owns the selected modules. Publish ASCENT's library entry as well.
-  (append std-make-spec '("init")))
+  ;; Scheme-only preparation does not compile the ABI link inputs.
+  (append (filter (lambda (target)
+                    (match target
+                      ([exe: . _] #f)
+                      ([gxc: (or "interface/c-api" "interface/runtime") . _] #f)
+                      (else #t)))
+                  std-make-spec)
+          '("init")))
 
 ;; Native Make accepts both bare module paths and option-bearing targets.
 (def (gerbil-ascent-library-modules (spec (gerbil-ascent-library-spec)))
@@ -50,30 +55,23 @@
   (gerbil-ascent-compiler-targets
     `((gxc: "interface/hybrid" "-ld-options" ,(gerbil-ascent-module-link-options)))))
 
-(def (gerbil-ascent-abi-spec)
-  (let* ((c-dir (path-expand "bindings/c" (path-directory (this-source-file))))
-         (c-options (string-append "-fPIC -I" c-dir))
-         (executable-link-options (string-append
-           (pkg-config-libs "openssl") " " (getenv "LDFLAGS" "")))
-         (module-link-options (gerbil-ascent-module-link-options))
-         (library-link-options (string-append
-           (cond-expand
-             (darwin "-dynamiclib -Wl,-install_name,@rpath/libascent.dylib -Wl,-undefined,dynamic_lookup -Wl,-no_compact_unwind")
-             (else "-shared"))
-           " " executable-link-options)))
-    `((gxc: "interface/c-api" "-ld-options" ,module-link-options)
-      (gxc: "interface/runtime"
-            (extra-inputs: (,(path-expand "runtime.c" c-dir)
-                            ,(path-expand "ascent.h" c-dir)))
-            "-cc-options" ,c-options "-ld-options" ,module-link-options)
-      (exe: "interface/entry" bin: "libascent"
-            "-cc-options" ,c-options "-ld-options" ,library-link-options)
-      (exe: "interface/develop" bin: "ascent-develop"
-            "-ld-options" ,executable-link-options))))
-
 (def (gerbil-ascent-build-spec)
+  (def c-dir (path-expand "bindings/c" (path-directory (this-source-file))))
+  (def c-options (list "-cc-options" (string-append "-fPIC -I" c-dir)))
+  (def (with-c-inputs target)
+    ;; Yuanxu v0.1.0 accepts native option strings in Module Build values.
+    ;; STD Make also accepts this input plist, which tracks the C header.
+    (match target
+      ([gxc: "interface/runtime" . options]
+       `(gxc: "interface/runtime"
+              (extra-inputs: (,(path-expand "runtime.c" c-dir)
+                              ,(path-expand "ascent.h" c-dir)))
+              ,@c-options ,@options))
+      ([exe: "interface/entry" . options]
+       (append target c-options))
+      (else target)))
   (gerbil-ascent-compiler-targets
-    (append (gerbil-ascent-library-spec) (gerbil-ascent-abi-spec))))
+    (map with-c-inputs (append std-make-spec '("init")))))
 
 ;; Gambit writes generated C beside borrowed static Scheme. Yuanxu owns the
 ;; writable extent and checks the original inputs across the link.

@@ -26,5 +26,6 @@
         module-id: 'candidate
         contract: CandidateScopeContract))
     scope-contract: InterfaceScopeContract
-    exports: InterfaceAPI)
+    exports: InterfaceAPI
+    projections: (list Build))
   features: (.o))

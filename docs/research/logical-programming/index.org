@@ -12,7 +12,6 @@ Application Evidence and model efficacy studies are owned by POO Flow; see
 | Derivation height | [[file:proof-height.org][Proof height]] | candidate/support-height.ss | MinimumHeight |
 | Source withdrawal | [[file:withholding.org][Withholding]] | candidate/withdrawal-session.ss | SourceUpdateFrame and DependencyInvalidation |
 | Scoped queries | [[file:scoped-witness.org][Scoped witnesses]] | generic rule/query admission | ScopedWitness |
-| Closure before choice and branch-local reuse | [[file:finite-choice.org][Finite-choice logic programming / Dusa]] | existing session reuse and native matching; study only | No finite-choice implementation proof claimed |
 
 An abstract theorem is not native compiler correctness, external authentication,
 or a model-efficacy result. Native correspondence and resource acceptance remain

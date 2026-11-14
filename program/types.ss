@@ -14,9 +14,9 @@
         (only-in :tao3k/yuanxu/object-types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
-        (only-in :gerbil-ascent/table/provider
+        (only-in "../table/provider.ss"
                  GerbilAscentIndexProviderContract gerbil-ascent-canonical-hash-index-provider?)
-        (only-in :gerbil-ascent/table/storage
+        (only-in "../table/storage.ss"
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
 (export

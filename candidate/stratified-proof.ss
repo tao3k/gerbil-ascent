@@ -6,21 +6,21 @@
 ;;; Check an externally supplied, founded derivation against an exact finite
 ;;; stratum replay. This is a bounded proof for one inspected candidate, not
 ;;; provenance completeness or source authentication. The producer is separate.
-(import :gerbil-ascent/candidate/stratified-plan
-        (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
-        (only-in :gerbil-ascent/candidate/closure-index
+(import "stratified-plan.ss"
+        (only-in "datum.ss" reasoning-bounded-data?)
+        (only-in "closure-index.ss"
                  make-closure-index closure-index-rows closure-index-member? closure-index-source)
-        (only-in :gerbil-ascent/candidate/types
+        (only-in "types.ss"
                  reasoning-snapshot-relations
                  reasoning-candidate-relations
                  reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query)
-        (only-in :gerbil-ascent/candidate/program candidate-variable?)
-        (only-in :gerbil-ascent/candidate/funs
+        (only-in "program.ss" candidate-variable?)
+        (only-in "funs.ss"
                  candidate-schema-of candidate-required-entry
                  candidate-bind-atom
                  candidate-strata-of)
-        (only-in :gerbil-ascent/candidate/finite-evidence
+        (only-in "finite-evidence.ss"
                  candidate-verified-finite-closure))
 
 (export candidate-verify-stratified-proof)

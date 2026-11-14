@@ -2,10 +2,10 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/candidate/datum
+(import (only-in "datum.ss"
                  reasoning-bounded-data? candidate-copy-pairs)
-        (only-in :gerbil-ascent/candidate/program scalar?)
-        (only-in :gerbil-ascent/candidate/checked-program
+        (only-in "program.ss" scalar?)
+        (only-in "checked-program.ss"
                  reasoning-receipt-bound? reasoning-receipt-status
                  reasoning-receipt-query reasoning-receipt-rows))
 (export reasoning-compare-rows reasoning-compare-attempts reasoning-feedback?

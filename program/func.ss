@@ -7,9 +7,9 @@
 
 (import (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop .defgeneric validate)
-        (only-in :gerbil-ascent/table/provider
+        (only-in "../table/provider.ss"
                  gerbil-ascent-hash-index-provider)
-        (only-in :gerbil-ascent/table/storage
+        (only-in "../table/storage.ss"
                  gerbil-ascent-set-storage-provider)
         (only-in "types.ss"
                  gerbil-ascent-make-term-value gerbil-ascent-make-atom-value

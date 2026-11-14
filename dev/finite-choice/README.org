@@ -1,0 +1,43 @@
+#+TITLE: Ground finite-choice reference
+#+LANGUAGE: en
+
+* Authority
+
+[[https://arxiv.org/html/2405.19040v3#S2.SS1][Finite-Choice Logic Programming, Section 2.1]]
+defines a solution as a reachable, saturated consistent database.
+The Scheme oracle enumerates finite ground programs from the empty database.
+Each rule body is a list of attribute and value pairs. A closed head supplies
+a list of allowed values, including an empty list for a forbidden body.
+An open head supplies one value. Attribute and value identities are
+nonnegative integers.
+
+* Correspondence
+
+| Paper notion | Lean | Scheme oracle |
+|--------------+------+---------------|
+| Consistent database | =Database= | Ordered partial assignments |
+| Body satisfaction | =enabled= | =enabled?= |
+| One rule evolution | =evolve= | =rule-extensions=, with stuttering successors omitted |
+| Reachability and saturation | =Reachable= and =saturated= | Visited databases and the completed rule scan |
+
+If an enabled open head sees an unset attribute, its possible strict extension
+prevents saturation. A compatible prior assignment makes an open head
+saturated. A closed head is saturated exactly when the assigned value is among
+its alternatives. An enabled closed head that excludes a previously assigned
+value rules out all descendants of that database. The Scheme search discards
+that branch, retaining the alternatives already queued from other databases.
+An interruption raised by the caller escapes the search.
+
+The independent test enumerates all partial assignments over two keys and two
+values. It checks candidate saturation directly and works backwards to find
+an order in which supported assignments could have been introduced. Source
+tests cover 256 programs in both rule orders and selected conflicts,
+unsupported cycles and interruption.
+
+* Checks
+
+Use =just check-lean-file FiniteChoice.lean= through the locked LeanPoo Guard
+and =gerbil test dev/finite-choice/oracle-test.ss=. The Lean model proves local
+saturation and assignment preservation. The next refinement obligation binds
+the Scheme search to reachability and proves exhaustive enumeration under a
+finite state budget. Dynamic grounding and an ASCENT DSL entry remain open.

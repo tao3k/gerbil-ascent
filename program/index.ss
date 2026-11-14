@@ -5,6 +5,7 @@
 ;;; One engine's physical indexes over live all/delta vectors. Metadata plans
 ;;; stay immutable; source admission and row/version publication stay in evaluate.
 (import (only-in :std/iter for for/fold in-vector in-range)
+        (only-in :std/list/list length<=n?)
         (only-in :std/list/list-builder with-list-builder)
         :gerbil-ascent/core/relation-view
         (only-in :gerbil-ascent/core/index-publication
@@ -72,15 +73,25 @@
 ;;; One value-keyed admission per equal row class; transient packet counts
 ;;; use this version-owned member identity instead of rehashing wide rows.
 (defstruct provider-row-member (ordinal key occurrences))
-(defstruct provider-row-witness (members counts))
+(defstruct provider-row-witness (members counts single-column))
 
 (def (checked-provider-rows rows terms witness key)
   ;; Shape admission and spine detachment share one bounded traversal. The
   ;; entire packet still precedes membership, coverage and term callbacks.
   ;; The witness belongs to this physical entry's all/delta version.
-  (let ((snapshot (gerbil-ascent-index-row-snapshot/arity rows (length terms)))
-        ;; Dense ordinals belong to this witness version, never to provider rows.
-        (seen (make-hash-table)) (matched 0))
+  (let* ((snapshot (gerbil-ascent-index-row-snapshot/arity rows (length terms)))
+         ;; Ordinals are fixnum hash lengths from this witness version.
+         ;; The specialized constructor costs more on small packets.
+         (seen (if (length<=n? snapshot 32)
+                 (make-hash-table)
+                 (make-hash-table-immediate)))
+         (key (if (provider-row-witness-single-column witness) (car key) key))
+         (matched 0) (occurrences 0))
+    ;; Gerbil invokes the updater synchronously. Reuse it across this packet.
+    (def (count-occurrence enumerated)
+      (when (>= enumerated occurrences)
+        (error "ASCENT index provider returned duplicate row"))
+      (+ enumerated 1))
     (for-each
      (lambda (row)
        (let (member (hash-get (provider-row-witness-members witness) row))
@@ -88,10 +99,8 @@
            (error "ASCENT index provider returned foreign row"))
          ;; Initial source snapshots can contain equal row occurrences.
          ;; Reject only enumeration beyond this lane/version's admitted count.
-         (let (enumerated (or (hash-get seen (provider-row-member-ordinal member)) 0))
-          (when (>= enumerated (provider-row-member-occurrences member))
-           (error "ASCENT index provider returned duplicate row"))
-          (hash-put! seen (provider-row-member-ordinal member) (+ enumerated 1)))
+         (set! occurrences (provider-row-member-occurrences member))
+         (hash-update! seen (provider-row-member-ordinal member) count-occurrence 0)
          (when (equal? (provider-row-member-key member) key) (set! matched (+ matched 1)))))
      snapshot)
     ;; Represented occurrences cover this key iff their count equals the
@@ -105,22 +114,28 @@
 ;; : (-> ProviderRowWitness Rows Columns ProviderRowWitness)
 (def (extend-provider-row-witness! witness rows columns)
   (let ((members (provider-row-witness-members witness))
-        (counts (provider-row-witness-counts witness)))
+        (counts (provider-row-witness-counts witness))
+        (column (provider-row-witness-single-column witness)))
     (for-each
      (lambda (row)
        (let* ((member (or (hash-get members row)
-                         (let (fresh (make-provider-row-member (hash-length members) (row-key row columns) 0))
+                         (let (fresh (make-provider-row-member
+                                      (hash-length members)
+                                      (if column (list-ref row column) (row-key row columns))
+                                      0))
                            (hash-put! members row fresh) fresh)))
               (key (provider-row-member-key member)))
          (provider-row-member-occurrences-set! member
            (+ 1 (provider-row-member-occurrences member)))
-         (hash-put! counts key (+ 1 (or (hash-get counts key) 0))))) rows))
+         (hash-update! counts key 1+ 0))) rows))
   witness)
 
 ;; : (-> Rows Columns ProviderRowWitness)
 (def (build-provider-row-witness rows columns)
   (extend-provider-row-witness!
-   (make-provider-row-witness (make-hash-table) (make-hash-table)) rows columns))
+   (make-provider-row-witness (make-hash-table) (make-hash-table)
+                              (and (null? (cdr columns)) (car columns)))
+   rows columns))
 
 ;;; Index ownership includes discovery of the logical lookup requirements.
 ;;; The three execution owners supply admitted metadata, never row snapshots

@@ -80,8 +80,11 @@
               (check-equal? (length targets) 1)
               (check-equal? (take (car targets) (length expected)) expected)
               (check-equal? (and (member name library) #t) #f)))
-          '((gxc: "interface/c-api" "-ld-options")
-            (gxc: "interface/runtime" "-ld-options")
+          `((gxc: "interface/c-api" "-ld-options")
+            (gxc: "interface/runtime"
+              (extra-inputs: (,(path-normalize (path-expand "bindings/c/runtime.c"))
+                              ,(path-normalize (path-expand "bindings/c/ascent.h"))))
+              "-ld-options")
             (exe: "interface/entry" bin: "libascent" "-ld-options")))
         (check-equal? (map cadr (filter (lambda (target)
                                         (and (pair? target) (eq? (car target) exe:))) spec))

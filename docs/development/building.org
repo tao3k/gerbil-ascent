@@ -3,10 +3,10 @@
 * Build ownership
 
 Yuanxu collects Module targets and their options. =interface/build.ss= declares
-the single =libascent= link and its compiler options. =build.ss= adds the C source
-and header prerequisites using =std/make='s native property and passes the
-targets to =std/build-script= once. Its compile extent keeps the Yuanxu
-source guards and gives Gambit's linker private copies of borrowed static Scheme.
+the single =libascent= link, its compiler options, and the runtime target's
+native =std/make= property list with C source and header prerequisites.
+=build.ss= passes these targets to =std/build-script= once. The same Yuanxu
+projection gives Gambit's linker private, checked copies of borrowed static Scheme.
 Gerbil's =std/make= and compiler own dependency tracking, currentness, job execution,
 and draining. =just develop= opens the installed Gerbil interpreter.
 Test preparation uses Yuanxu's =package-library-spec= to follow the imports of

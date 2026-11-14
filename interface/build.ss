@@ -18,7 +18,9 @@
             " " executable-link-options)))
     (def c-options (string-append "-fPIC -I" (this-source-path "../bindings/c")))
     `((gxc: "c-api" "-ld-options" ,module-link-options)
-      (gxc: "runtime" "-ld-options" ,module-link-options "-cc-options" ,c-options)
+      (gxc: "runtime"
+        (extra-inputs: ("bindings/c/runtime.c" "bindings/c/ascent.h"))
+        "-ld-options" ,module-link-options "-cc-options" ,c-options)
       (exe: "entry" bin: "libascent" "-ld-options" ,library-link-options "-cc-options" ,c-options))))
 
 (.def Build

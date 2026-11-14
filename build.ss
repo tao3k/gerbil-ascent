@@ -7,18 +7,11 @@
 (begin-syntax
   (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent))
 (import (only-in "init.ss" gerbil-ascent.init.exports)
-        (only-in :clan/poo/object .call .get .o)
-        (only-in :gerbil/expander core-import-module)
-        (only-in :tao3k/yuanxu/module-system/building/artifacts
-                 call-with-static-compiler-inputs)
-        (only-in :tao3k/yuanxu/module-system/building/source-closure
-                 for-each-build-module)
+        (only-in :clan/poo/object .call .get)
         (only-in :tao3k/yuanxu/module-system/building/source-package
                  call-with-build-input-path)
-        (only-in :tao3k/yuanxu/module-system/source/static-inputs
-                 module-static-compiler-inputs)
         (only-in :std/build-script defbuild-script)
-        (only-in :std/list/list filter-map find)
+        (only-in :std/list/list filter-map)
         (only-in :std/source this-source-file))
 
 ;; BEGIN GENERATED PREPARATION COMPILER
@@ -51,47 +44,20 @@
      [gxc: "interface/hybrid" "-ld-options"
       (cond-expand (darwin "-Wl,-undefined,dynamic_lookup") (else ""))])])
 
-;; Gambit writes generated C beside borrowed static Scheme. Yuanxu owns the
-;; writable extent and checks the original inputs across the link.
-(def (call-with-static-link-inputs source owned-identities action)
-  (def contexts [])
-  (for-each-build-module (core-import-module source)
-    (lambda (context) (set! contexts (cons context contexts))))
-  (call-with-static-compiler-inputs
-    (.o static-inputs: (module-static-compiler-inputs (reverse contexts) owned-identities))
-    action))
-
 (export gerbil-ascent-build-projection gerbil-ascent-library-modules
         gerbil-ascent-rust-spec
-        gerbil-ascent-compiler-options gerbil-ascent-compiler-target
-        call-with-static-link-inputs main)
+        gerbil-ascent-compiler-options gerbil-ascent-compiler-target main)
 
 (def (main . args)
   (def projection (gerbil-ascent-build-projection))
-  (def targets (.get projection spec))
-  (def spec
-    (map (lambda (target)
-           (gerbil-ascent-compiler-target
-             (match target
-               ;; Yuanxu's Module contract admits string options. Insert
-               ;; std/make's native dependency property at the call boundary.
-               ([gxc: "interface/runtime" . options]
-                [gxc: "interface/runtime"
-                 [extra-inputs: ["bindings/c/runtime.c" "bindings/c/ascent.h"]]
-                 options ...])
-               (else target))))
-         targets))
+  (def spec (map gerbil-ascent-compiler-target (.get projection spec)))
   (defbuild-script spec optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
   (if (or (null? args) (equal? (car args) "compile"))
-    (let* ((root (path-directory (this-source-file)))
-           (link (find (lambda (target) (and (pair? target) (eq? (car target) exe:))) targets))
-           (source (path-expand (string-append (cadr link) ".ss") root)))
+    (begin
       (.call projection .prepare-compiler-contexts)
       (.call projection .with-compiler-inputs
         (lambda ()
           (call-with-build-input-path (path-expand "lib" (gerbil-path))
-            (lambda ()
-              (call-with-static-link-inputs source
-                (.get projection compiler-identities) (cut apply main args)))
-            make-source: root))))
+            (lambda () (.call projection .with-static-inputs (cut apply main args)))
+            make-source: (path-directory (this-source-file))))))
     (apply main args)))

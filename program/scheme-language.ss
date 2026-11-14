@@ -433,6 +433,16 @@
     ((_ clause ...)
      (syntax (relational-choice-collect () () () clause ...)))))
 
+(defsyntax (relational-choice-rule stx)
+  (syntax-case stx ()
+    ((_ kind name (key ...) (value ...) head body ...)
+     (with-syntax ((origin (datum->syntax #f
+                             (vector (stx-source (syntax head))
+                                     (map stx-source (syntax->list (syntax (body ...))))))))
+       (syntax (make-relational-choice-head 'kind 'name
+                (list (relational-term key) ...) (list (relational-term value) ...)
+                (list (relational-atom body) ...) 'origin))))))
+
 (defsyntax (relational-choice-collect stx)
   (syntax-case stx (relation choice rule open closed limits)
     ((_ (ordinary ...) (names ...) (heads ...)
@@ -444,15 +454,13 @@
     ((_ (ordinary ...) (names ...) (heads ...)
         (rule (closed (name key ...) (value ...)) body ...) rest ...)
      (syntax (relational-choice-collect (ordinary ...) (names ...)
-              (heads ... (make-relational-choice-head 'closed 'name
-                           (list (relational-term key) ...) (list (relational-term value) ...)
-                           (list (relational-atom body) ...))) rest ...)))
+              (heads ... (relational-choice-rule closed name (key ...) (value ...)
+                           (closed (name key ...) (value ...)) body ...)) rest ...)))
     ((_ (ordinary ...) (names ...) (heads ...)
         (rule (open (name key ...) value) body ...) rest ...)
      (syntax (relational-choice-collect (ordinary ...) (names ...)
-              (heads ... (make-relational-choice-head 'open 'name
-                           (list (relational-term key) ...) (list (relational-term value))
-                           (list (relational-atom body) ...))) rest ...)))
+              (heads ... (relational-choice-rule open name (key ...) (value)
+                           (open (name key ...) value) body ...)) rest ...)))
     ((_ (ordinary ...) names heads (rule head body ...) rest ...)
      ;; The ordinary collector retains rule origins and declaration checks.
      (syntax (relational-choice-collect (ordinary ... (rule head body ...)) names heads rest ...)))

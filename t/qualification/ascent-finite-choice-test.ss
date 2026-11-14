@@ -99,6 +99,33 @@
         (check-equal? (relational-choice-solve program state-budget: 1) [])
         (check-exception (relational-choice-solve program state-budget: 0)
                          RelationalChoiceLimit?)))
+    (test-case "closed intersection is deduced before scheduling optional choices"
+      (let (program
+             (relational-choice-program
+               (choice color (node value))
+               (rule (closed (color 0) (0 1)))
+               (rule (closed (color 0) (1 2)))
+               (rule (open (color 1) ?value) (color 0 ?value))
+               (limits 16 16 16)))
+        (check-equal? (model-colors (relational-choice-solve program state-budget: 3))
+                      '(((0 . 1) (1 . 1))))
+        (check-exception (relational-choice-solve program state-budget: 2)
+                         RelationalChoiceLimit?)))
+    (test-case "distinct named and anonymous body witnesses count as distinct grounding rows"
+      (let* ((edges '((0 1) (0 2)))
+             (make-program
+              (lambda (limit)
+                (relational-choice-program
+                  (relation edge (from to) edges)
+                  (choice color (node value))
+                  (rule (open (color ?from) 1) (edge ?from ?to))
+                  (rule (open (color ?from) 1) (edge ?from ?_))
+                  (limits 8 limit 16)))))
+        ;; Both rules have two grounded instances, although all four offer
+        ;; the same value for the same attribute.
+        (check-exception (relational-choice-solve (make-program 3) state-budget: 2) true)
+        (check-equal? (model-colors (relational-choice-solve (make-program 4) state-budget: 2))
+                      '(((0 . 1))))))
     (test-case "the exact distinct-state bound succeeds and a shorter budget raises"
       (let (program
             (relational-choice-program

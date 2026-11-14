@@ -72,8 +72,12 @@ Only positive relational atoms are admitted in rule bodies. Consequently a
 range-restricted rule can only copy existing scalars or use its finite set of
 literals. This gives a finite universe for a fixed finite input.
 
-=lower-relational-choice-program= lowers offer keys and values into the head
-of a private ordinary relation. At each source cut the existing checked
+=lower-relational-choice-program= compiles each choice rule into a separate
+private derived relation with the rule's reader origin. Its rows hold the
+values of all distinct body variables, followed by the attribute arguments
+and offered values. Each anonymous occurrence receives a fresh binding.
+The grounding rows preserve distinct witnesses that propose the same value.
+Exact repeat firings of one row are coalesced by ordinary Set storage. At each source cut the existing checked
 planner validates body bindings and the retained Session reaches deterministic
 closure. Traversal to a direct child appends a single source row, letting
 the existing semi-naive scheduler extend physical indexes and discover new
@@ -89,7 +93,7 @@ Fairness and completeness do not assume shareable indexes between siblings.
 | =worklist_counts_preserved= and =worklist_budget_decreases= | =search= removes one seen entry per successful iteration |
 | =finite_databases_count= | Each finite attribute has one unset state plus its admitted values |
 | =register_successors_closes_cut= and =worklist_drain_covers_discovery= | =enqueue!= retains fresh successors and exhaustion leaves all seen states processed |
-| =exhausted_answers_exact= | All pending entries are drained before =ascent-accept-publication!= |
+| =exhausted_deduction_answers_exact= | All pending entries are drained before =ascent-accept-publication!= |
 
 The final acceptance boundary is outside the grounding Session. Intermediate
 commits leave the outer cancellation and work policy active. Budget exhaustion
@@ -97,13 +101,33 @@ raises =RelationalChoiceLimit= and completed models become visible only when
 the whole search is exhausted. The state budget counts distinct assignments;
 existing per-cut fact budgets and execution checkpoints also apply.
 
-The Lean theorem assumes that the Scheme grounding step emits exactly the
-enabled ground heads for the current deterministic closure. The native Suite
-checks that premise on all 16 edge subsets of a small diamond and independent
-ground search. It also exercises native append and sibling replacement paths,
+=grounding_distinguishes_instances= proves the binding prefix distinguishes
+ground instances. =grounding_delta_exact= composes the existing compiled
+positive traversal, key-bucket and first-fresh pivot results. Its conclusion
+is an exact membership equivalence for the previously completed cut and the
+new pivot run. The Scheme reader and its macro expansion, per-version
+mutable index storage and actual Session messages have no full refinement
+proof to the model. The theorem assumes the admitted rule and exact row
+views defined by =IndexedIteration.Valid= and =RowsAdmitted=.
+
+For each unassigned key, the search intersects every currently enabled closed
+offer and records open offers separately. An empty intersection or an
+incompatible prior assignment rejects the state. A singleton intersection
+schedules only that assignment. With no forced deduction, the search visits
+allowed alternatives of all currently enabled keys so that a later rule can
+authorize a different value on an open key. =closed_intersection_forced=,
+=forced_step_reachable= and =forced_step_preserves_model= establish that
+prioritizing the singleton preserves every compatible saturated model and
+consumes a valid semantic edge. =missing_assignment_has_offer= establishes
+progress towards a compatible reachable model with a missing assignment.
+=compatible_model_has_scheduled_step= retains such a step under the deduction
+policy. =exhausted_deduction_answers_exact= proves the result equivalence when
+the worklist is exhausted and the target has finite support, by induction on
+the remaining keys. The native Suite compares with independent ground search
+on all 16 edge subsets of a small diamond. It also exercises native append and
+sibling replacement paths,
 mutation of returned query rows, exact/insufficient state budgets, native
 fact exhaustion, and cancellation in grounding and at final publication.
-The Lean model does not extract Scheme source or establish the general
-grounding refinement. The implementation uses fact-set search with on-demand
-grounding. The paper's constraint-propagation search and cross-branch prefix
-reuse remain separate obligations.
+The implementation uses fact-set search with on-demand grounding and
+singleton propagation. Watched constraints, propagation trace witnesses for
+public provenance queries, and cross-branch prefix reuse remain open.

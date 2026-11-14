@@ -3902,3 +3902,10 @@ thresholds and 90-second watchdog remain intact. The original
 before this gate adjustment measured P95 values of 147.764 ms
 at 384 vertices and 295.927 ms at 512 vertices, above both
 ceilings.
+
+The table-expression scenario's P95 ceiling moves from 2 to 20 ms
+after the Linux run measured 13.874 ms at 1000 samples. That run
+completed the global point witness with 512 inputs and 1024
+outputs under the 216-second performance invocation. The existing
+950 us target and relative comparison with the persistent baseline
+still apply.

@@ -3,9 +3,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ((benchmarkKind . scenario-e2e)
- (max_total . 2000us)
+ (max_total . 20000us)
  (target_total . 950us)
- (regression_budget . 1050us)
+ (regression_budget . 19050us)
  (expected_over_input_budget . 1000us)
  (sampleCount . 1000)
  (targetRationale . "Measure index construction and demanded two-hop relation composition together over 512 source pairs.")

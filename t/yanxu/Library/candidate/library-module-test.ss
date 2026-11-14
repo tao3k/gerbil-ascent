@@ -2,11 +2,18 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :clan/poo/object .get)
-        "../init.ss")
+        "../../../../init.ss")
 (export library-module-test)
 
 (def library-module-test
   (test-suite "Native Library capability publication"
+    (test-case "Yuanxu discovers this Suite under the selected Candidate owner"
+      (let* ((qualification (.get gerbil-ascent.init.exports tests qualification))
+             (candidate ((.get qualification .select) '(candidate)))
+             (program ((.get qualification .select) '(program)))
+             (file (path-expand "t/yanxu/Library/candidate/library-module-test.ss")))
+        (check-equal? (.get candidate spec) (list file))
+        (check-equal? (.get program spec) '())))
     (test-case "Inference publishes callable constructors in its owned source context"
       (check-equal? (procedure? (.get gerbil-ascent.init.exports Library program program)) #t)
       (check-equal? (procedure? (.get gerbil-ascent.init.exports Library program relation)) #t))

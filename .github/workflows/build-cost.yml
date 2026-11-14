@@ -359,14 +359,6 @@ jobs:
           key: ${{ steps.dependencies-cache.outputs.cache-primary-key }}
       - name: Build current Scheme package
         run: gerbil build
-      - name: Check development policy
-        run: just check-policy
-      - name: Verify supported SDK compiler profile and allocation counters
-        run: |
-          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_compiler_cost.py -v
-          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_reference_cache.py -v
-          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_study_profile.py -v
-          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_source_semantic_ci.py -v
       - name: Prepare complete source semantic dependencies
         id: semantic-preparation
         run: |
@@ -446,6 +438,7 @@ jobs:
           name: macos-prepared-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/macos-semantics
       - name: Verify source and SDK identity before loading compilation
+        id: restore-compilation
         run: |
           test "$(cat "$RUNNER_TEMP/macos-semantics/head")" = "$(git rev-parse HEAD)"
           fingerprint="$(sha256sum "$GERBIL_HOME/bin/gxi" "$GERBIL_HOME/bin/gsc" "$GERBIL_HOME/include/gambit.h" "$(command -v gcc-16)" "$(gcc-16 -print-prog-name=cc1)" "$(xcrun --find ld)" "$GERBIL_PREFIX/gerbil-build-receipt.json" | sha256sum | cut -d ' ' -f 1)"
@@ -462,6 +455,16 @@ jobs:
           set -o pipefail
           { time -p timeout "$ASCENT_GXTEST_TIMEOUT" just test-file t/qualification 2G; } 2>&1 | tee "$RUNNER_TEMP/macos-semantics/semantics.log"
           python3 tools/ci/build-cost-control.py --verify-source-log "$RUNNER_TEMP/macos-semantics/semantics.log" --output "$RUNNER_TEMP/macos-semantics/verified"
+      - name: Check development policy
+        if: ${{ !cancelled() && steps.restore-compilation.outcome == 'success' }}
+        run: just check-policy
+      - name: Verify supported SDK compiler profile and allocation counters
+        if: ${{ !cancelled() && steps.restore-compilation.outcome == 'success' }}
+        run: |
+          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_compiler_cost.py -v
+          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_reference_cache.py -v
+          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_study_profile.py -v
+          PYTHONPATH=workbench/src python3 -m unittest discover -s workbench/tests -p test_source_semantic_ci.py -v
       - name: Preserve semantic diagnostics and every batch log
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

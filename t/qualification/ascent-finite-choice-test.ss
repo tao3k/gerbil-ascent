@@ -126,6 +126,55 @@
         (check-exception (relational-choice-solve (make-program 3) state-budget: 2) true)
         (check-equal? (model-colors (relational-choice-solve (make-program 4) state-budget: 2))
                       '(((0 . 1))))))
+    (test-case "deduction records both grounded constraints and returns detached evidence"
+      (let* ((program
+              (relational-choice-program
+                (relation left (node witness) '((0 7)))
+                (relation right (node witness) '((0 8)))
+                (choice color (node value))
+                (rule (closed (color ?node) (0 1)) (left ?node ?_))
+                (rule (closed (color ?node) (1 2)) (right ?node ?_))
+                (rule (open (color 1) ?value) (color 0 ?value))
+                (limits 16 16 16)))
+             (model (car (relational-choice-solve program state-budget: 3)))
+             (read-proof (lambda () (relational-program-query model 'color provenance?: #t)))
+             (proof (read-proof))
+             (deduction (car proof))
+             (supports (list-sort (lambda (a b) (< (car a) (car b))) (caddr deduction))))
+        (check-equal? (map car proof) '(deduction branch))
+        (check-equal? (map cadr proof) '((color 0 1) (color 1 1)))
+        (check-equal? (map car supports) '(0 1))
+        (check-equal? (map cadr supports) '(closed closed))
+        (check-equal? (map cadddr supports) '(((left 0 7)) ((right 0 8))))
+        (check-equal? (map (cut list-ref <> 4) supports) '((0 1) (1 2)))
+        (check-equal? (vector? (caddr (car supports))) #t)
+        (check-equal? (cadddr (car (caddr (cadr proof)))) '((color 0 1)))
+        (set-car! (cadr deduction) 'altered)
+        (set-car! (cadddr (car supports)) '(altered))
+        (set-car! (list-ref (car supports) 4) 90)
+        (vector-set! (caddr (car supports)) 0 #f)
+        (check-equal? (cadr (car (read-proof))) '(color 0 1))
+        (check-equal? (map cadddr (caddr (car (read-proof))))
+                      (map (lambda (support) (if (= (car support) 0) '((left 0 7)) '((right 0 8))))
+                           (caddr (car (read-proof)))))
+        (check-equal? (relational-program-query model 'color) '((0 1) (1 1)))))
+    (test-case "each sibling keeps its own grounding support after replacement"
+      (let* ((models (check-chain '((0 1) (1 2))))
+             (proofs (map (lambda (model) (relational-program-query model 'color provenance?: #t)) models)))
+        (for-each
+         (lambda (model proof)
+           (let (chosen (caddr (cadr (car proof))))
+             (check-equal? (length proof) 3)
+             (for-each
+              (lambda (step)
+                (check-equal? (caddr (cadr step)) chosen)
+                (check-equal? (and (member (cdr (cadr step)) (relational-program-query model 'color)) #t) #t))
+              proof)
+             (for-each
+              (lambda (step)
+                (check-equal? (member `(color 0 ,chosen) (cadddr (car (caddr step))))
+                              `((color 0 ,chosen) (path 0 ,(cadr (cadr step))))))
+              (cdr proof)))) models proofs)))
     (test-case "the exact distinct-state bound succeeds and a shorter budget raises"
       (let (program
             (relational-choice-program

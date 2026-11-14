@@ -3,18 +3,21 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import "func.ss" "scheme-checked.ss" "scheme-session.ss"
-        (only-in "scheme-query.ss" relational-program-query)
+        (only-in "scheme-query.ss" relational-program-query
+                 relational-program-solution-with-provenance)
         :gerbil-ascent/core/execution-control
         (only-in :clan/poo/object .ref)
-        (only-in :std/list/list split-at drop delete-duplicates/hash)
+        (only-in :std/list/list split-at take drop delete-duplicates/hash)
         (only-in :std/error deferror-class))
 
 (export make-relational-choice-head lower-relational-choice-program
         relational-choice-solve RelationalChoiceLimit?)
 
 (defstruct relational-choice-head (kind relation keys values body origin))
-(defstruct relational-choice-offer (relation kind attribute bindings width))
-(defstruct choice-constraint (closed open) final: #t)
+(defstruct relational-choice-offer (relation kind attribute bindings width ordinal rule premises))
+(defstruct choice-constraint (closed open closed-support) final: #t)
+(defstruct choice-entry (state parent addition trace) final: #t)
+(defstruct choice-step (assignment kind support) final: #t)
 (defstruct relational-choice-program (grounding offers choice-names))
 (deferror-class RelationalChoiceLimit ())
 
@@ -26,6 +29,7 @@
                          (cons (.ref relation 'name) (.ref relation 'arity)))
                        relations))
          (offers (map (lambda (head) (gensym 'choice-offer)) heads)))
+    (def ordinal 0)
     ;; Name each wildcard occurrence to retain the matching row identity.
     ;; All other variables retain their existing binding and equality checks.
     (def (compile-head head offer)
@@ -42,7 +46,7 @@
                          (gerbil-ascent-variable (gensym 'choice-witness)) term))
                  (variable (and (eq? (.ref term 'kind) 'variable) (.ref term 'value))))
             (when (and variable (not (hash-get seen variable)))
-              (hash-put! seen variable #t)
+              (hash-put! seen variable (hash-length seen))
               (set! bindings (cons term bindings)))
             term))
         (let* ((body
@@ -50,14 +54,24 @@
                        (gerbil-ascent-atom (.ref atom 'relation)
                          (map capture-term (.ref atom 'terms))))
                      (relational-choice-head-body head)))
-               (terms (append (reverse! bindings) keys values)))
-          (list
-           (relational-with-role (relational-source offer (length terms) []) 'derived)
-           (relational-rule/reader-origin
-            (list (gerbil-ascent-atom offer terms)) body
-            (relational-choice-head-origin head))
-           (make-relational-choice-offer offer (relational-choice-head-kind head)
-             name (hash-length seen) (length keys))))))
+               (terms (append (reverse! bindings) keys values))
+               (rule (relational-rule/reader-origin
+                      (list (gerbil-ascent-atom offer terms)) body
+                      (relational-choice-head-origin head)))
+               (premises
+                (map (lambda (atom)
+                       (cons (.ref atom 'relation)
+                         (map (lambda (term)
+                                (let (value (.ref term 'value))
+                                  (if (eq? (.ref term 'kind) 'variable)
+                                    (hash-ref seen value)
+                                    (list value))))
+                              (.ref atom 'terms)))) body))
+               (compiled (make-relational-choice-offer offer (relational-choice-head-kind head)
+                           name (hash-length seen) (length keys) ordinal rule premises)))
+          (set! ordinal (+ ordinal 1))
+          (list (relational-with-role (relational-source offer (length terms) []) 'derived)
+                rule compiled))))
     ;; Monotone positive bodies are the premise for factoring deterministic
     ;; closure through Session. Choice predicates have a single writer.
     (for-each
@@ -84,6 +98,33 @@
     (cons (cons id value) state)
     (cons (car state) (insert-choice (cdr state) id value))))
 
+;; A completed solution retains one derivation in deduction order. The
+;; grounded supports are owned rows from the predecessor cut of each step.
+(def (explain-choice trace names name)
+  (unless (memq name names) (error "choice provenance requires a choice relation" name))
+  (filter-map
+   (lambda ((step :- choice-step))
+     (ascent-execution-checkpoint! 1 0)
+     (and (eq? name (car step.assignment))
+          (list step.kind (append step.assignment [])
+            (map (lambda (support)
+                   (ascent-execution-checkpoint! 1 0)
+                   (let ((offer (car support)) (row (cdr support)))
+                     (using (offer :- relational-choice-offer)
+                       (let (bindings (list->vector (take row offer.bindings)))
+                         (list offer.ordinal offer.kind
+                               (relational-rule-origin offer.rule)
+                               (map (lambda (premise)
+                                      (ascent-execution-checkpoint! 1 0)
+                                      (cons (car premise)
+                                        (map (lambda (term)
+                                               (if (pair? term) (car term)
+                                                 (vector-ref bindings term)))
+                                             (cdr premise)))) offer.premises)
+                               (append (drop row (+ offer.bindings offer.width)) []))))))
+                 step.support))))
+   (reverse trace)))
+
 ;; Each invocation owns its Session and worklist. A direct child appends one
 ;; assignment; crossing to another branch installs an atomic source cut.
 (def (relational-choice-solve program state-budget: budget)
@@ -99,13 +140,16 @@
   (def pending [])
   (def models [])
   (def current [])
-  (def (enqueue! state parent addition)
+  (def (enqueue! state parent addition trace (kind #f) (support []))
     (checkpoint!)
     (unless (hash-get seen state)
       (when (>= (hash-length seen) budget)
         (raise (RelationalChoiceLimit "finite-choice state budget exhausted" irritants: (list budget))))
       (hash-put! seen state #t)
-      (set! pending (cons (vector state parent addition) pending))))
+      (set! pending
+        (cons (make-choice-entry state parent addition
+                (if kind (cons (make-choice-step (source-row addition) kind support) trace) trace))
+              pending))))
   (def (attribute-id name args)
     (let (key (cons name args))
       (or (hash-get attributes key)
@@ -116,36 +160,39 @@
   (def (source-row assignment)
     (let (key (hash-ref keys (car assignment)))
       (cons (car key) (append (cdr key) (list (cdr assignment))))))
+  ;; BEGIN GENERATED CHOICE BRANCH
+  (defrule (install-choice-cut current? child? current-expr append-expr replace-expr)
+    (if current? current-expr
+      (if child? append-expr replace-expr)))
+  ;; END GENERATED CHOICE BRANCH
   (def (install-state! session state parent addition)
-    (cond
-      ((eq? state current) (relational-program-session-run session))
-      ((eq? parent current)
-       (let (row (source-row addition))
-         (relational-program-append-source! session (car row) (cdr row))
-         (relational-program-session-run session)))
-      (else
-       (let (rows (make-hash-table-eq))
-         (for-each (lambda (assignment)
-                     (checkpoint!)
-                     (let (row (source-row assignment))
-                       (hash-put! rows (car row)
-                         (cons (cdr row) (hash-ref rows (car row) [])))))
-                   state)
-         (relational-program-transaction! session
-           (map (lambda (name) (cons name (reverse! (hash-ref rows name [])))) names))))))
-  (def (process! state result)
+    (install-choice-cut (eq? state current) (eq? parent current)
+      (relational-program-session-run session)
+      (let (row (source-row addition))
+        (relational-program-append-source! session (car row) (cdr row))
+        (relational-program-session-run session))
+      (let (rows (make-hash-table-eq))
+        (for-each (lambda (assignment)
+                    (checkpoint!)
+                    (let (row (source-row assignment))
+                      (hash-put! rows (car row)
+                        (cons (cdr row) (hash-ref rows (car row) [])))))
+                  state)
+        (relational-program-transaction! session
+          (map (lambda (name) (cons name (reverse! (hash-ref rows name [])))) names)))))
+  (def (process! state result trace)
     (let/cc reject
       (let ((constraints (make-hash-table-eqv)) (order []) (forced #f))
-        (def (register! id open? values)
+        (def (register! id open? values support)
           (let (constraint
                 (or (hash-get constraints id)
-                    (let (fresh (make-choice-constraint #f []))
+                    (let (fresh (make-choice-constraint #f [] []))
                       (hash-put! constraints id fresh)
                       (set! order (cons id order))
                       fresh)))
             (using (constraint :- choice-constraint)
               (if open?
-                (set! constraint.open (cons (car values) constraint.open))
+                (set! constraint.open (cons support constraint.open))
                 (let (allowed
                       (if constraint.closed
                         (filter (lambda (value)
@@ -154,7 +201,8 @@
                                 constraint.closed)
                         (delete-duplicates/hash values)))
                   (when (null? allowed) (reject (void)))
-                  (set! constraint.closed allowed))))))
+                  (set! constraint.closed allowed)
+                  (set! constraint.closed-support (cons support constraint.closed-support)))))))
         (for-each
          (lambda (offer)
            (checkpoint!)
@@ -168,14 +216,17 @@
                          (open? (eq? offer.kind 'open)))
                     (if prior
                       (unless (or open? (member (cdr prior) values)) (reject (void)))
-                      (register! id open? values)))))
+                      (register! id open? values (cons offer row))))))
               (relational-program-query result offer.relation))))
          (relational-choice-program-offers program))
-        (def (schedule! id value)
+        (def (schedule! id value kind support)
           (checkpoint!)
-          (enqueue! (insert-choice state id value) state (cons id value)))
+          (let (assignment (cons id value))
+            (enqueue! (insert-choice state id value) state assignment
+              trace kind support)))
         (if (null? order)
-          (set! models (cons result models))
+          (set! models (cons (relational-program-solution-with-provenance result
+                               (cut explain-choice trace names <>)) models))
           (begin
             (for-each
              (lambda (id)
@@ -188,17 +239,25 @@
             ;; scheduling. An open offer may be superseded by a value whose
             ;; supporting rule has yet to become enabled.
             (if forced
-              (schedule! (car forced) (cdr forced))
+              (let (support (choice-constraint-closed-support (hash-ref constraints (car forced))))
+                (schedule! (car forced) (cdr forced) 'deduction support))
               (for-each
                (lambda (id)
                  (let (constraint (hash-ref constraints id))
-                   (for-each (cut schedule! id <>)
-                     (or (choice-constraint-closed constraint)
-                         (choice-constraint-open constraint)))))
+                   (using (constraint :- choice-constraint)
+                     (if constraint.closed
+                       (for-each (lambda (value) (schedule! id value 'branch constraint.closed-support))
+                                 constraint.closed)
+                       (for-each (lambda (support)
+                                   (let ((offer (car support)) (row (cdr support)))
+                                     (using (offer :- relational-choice-offer)
+                                       (schedule! id (list-ref row (+ offer.bindings offer.width))
+                                                  'branch (list support)))))
+                                 constraint.open)))))
                order)))))))
   ;; Intermediate Session commits are private. Keep cancellation and all
   ;; work charges active, but linearize only the final public model list.
-  (enqueue! [] #f #f)
+  (enqueue! [] #f #f [])
   (parameterize
     ((current-ascent-execution-control
       (and control (lambda (work facts) (control (if (= work -1) 0 work) facts)))))
@@ -206,12 +265,12 @@
       (let search ()
         (unless (null? pending)
           (checkpoint!)
-          (let* ((entry (car pending))
-                 (state (vector-ref entry 0)))
+          (let (entry (car pending))
             (set! pending (cdr pending))
-            (let (result (install-state! session state (vector-ref entry 1) (vector-ref entry 2)))
-              (set! current state)
-              (process! state result))
+            (using (entry :- choice-entry)
+              (let (result (install-state! session entry.state entry.parent entry.addition))
+                (set! current entry.state)
+                (process! entry.state result entry.trace)))
             (search))))))
   (let (result (reverse! models))
     (ascent-accept-publication!)

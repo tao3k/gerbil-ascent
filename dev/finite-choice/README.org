@@ -101,14 +101,25 @@ raises =RelationalChoiceLimit= and completed models become visible only when
 the whole search is exhausted. The state budget counts distinct assignments;
 existing per-cut fact budgets and execution checkpoints also apply.
 
-=grounding_distinguishes_instances= proves the binding prefix distinguishes
-ground instances. =grounding_delta_exact= composes the existing compiled
-positive traversal, key-bucket and first-fresh pivot results. Its conclusion
-is an exact membership equivalence for the previously completed cut and the
-new pivot run. The Scheme reader and its macro expansion, per-version
-mutable index storage and actual Session messages have no full refinement
-proof to the model. The theorem assumes the admitted rule and exact row
-views defined by =IndexedIteration.Valid= and =RowsAdmitted=.
+** Grounding refinement
+
+| Scheme boundary | Kernel-checked obligation |
+|-----------------+---------------------------|
+| =relational-choice-rule= calls =relational-term= and =relational-atom= in premise order. =capture-term= retains a named identity and gives each anonymous occurrence its own identity. | =capture_terms_exact= equates the captured terms with their named and anonymous occurrence semantics. =wildcard_fresh= establishes disjointness and =captured_occurrences_determine_row= proves that the bindings identify the matched tuple. |
+| =compile-head= puts distinct binding ordinals before the attribute and offered values. The evidence reader reconstructs the original premises by those ordinals. | =grounding_distinguishes_instances= recovers distinct binding prefixes. =ground_captured_terms_exact= establishes that rendering a captured premise is exact for the binding environment. |
+| =program/index.ss= admits a current entry by lane version, revokes it before mutation and publishes only a completed rebuild or extension. =table/index-sharing.ss= numbers inserts and invalidates cached projections on extension. | =CachePublication.extend_program_exact= and =rebuild_program_exact= describe the emitted publication code. =visible_bucket_exact= composes versioned lookup with exact bucket membership. =bucket_cache_extension_exact= proves that warm empty and nonempty views remain coherent after insertion. =CurriedDictionary.numbered_prefix_restore= establishes ordered prefix lookup over the modeled curried store, including insert batches. |
+| =install-state!= reads the current result, appends one choice on a direct child, or replaces every choice source atomically. | =branch_message_installs_exact_cut= gives the source set seen by each message and =replace_removes_sibling= frames out the previous choice cut. Formal CI compares the executable dispatch macro with Lean's rendering of =branchAction=. |
+| A completed monotone append reuses the previous cut and runs first-fresh delta pivots. A sibling branch has its own completed cut. | =grounding_after_message_exact= composes these cases and =grounding_delta_exact=, proving membership equivalence with the full consequence on the installed cut. |
+
+The composed membership theorem still uses the admitted rule and row views
+from =IndexedIteration.Valid= and =RowsAdmitted=. The correspondence relies on
+Gerbil reader hygiene and scalar equality, hash get/put coherence, and valid
+mutable lane ownership. The complete expander output and scheduler state are
+not extracted into Lean. In particular, the theorem covers the chosen cut's
+semantics while the production replacement path can reuse unaffected positive
+relations. =SourceUpdateFrame.completed_reuse= proves the related dependency
+frame with its compiled-read correspondence premise. A full proof of that
+premise for native Session messages and mutable cache state remains open.
 
 For each unassigned key, the search intersects every currently enabled closed
 offer and records open offers separately. An empty intersection or an
@@ -125,9 +136,23 @@ policy. =exhausted_deduction_answers_exact= proves the result equivalence when
 the worklist is exhausted and the target has finite support, by induction on
 the remaining keys. The native Suite compares with independent ground search
 on all 16 edge subsets of a small diamond. It also exercises native append and
-sibling replacement paths,
-mutation of returned query rows, exact/insufficient state budgets, native
-fact exhaustion, and cancellation in grounding and at final publication.
-The implementation uses fact-set search with on-demand grounding and
-singleton propagation. Watched constraints, propagation trace witnesses for
-public provenance queries, and cross-branch prefix reuse remain open.
+sibling replacement, exact and insufficient budgets, and cancellation at
+grounding and publication.
+
+** Derivation witness query
+
+#+begin_src scheme
+(relational-program-query completed-model 'color provenance?: #t)
+#+end_src
+
+For a choice relation this returns a detached derivation in assignment order.
+Each step contains its kind (=deduction= or =branch=), a relation-prefixed row,
+and a list of supports. A support contains the choice rule ordinal, head kind,
+reader origin, ordered grounded premises, and the original offered values.
+A closed step retains the enabled constraints used to select the value. An
+open branch retains one enabling rule instance. The retained path belongs to
+the published solution and cannot read the current mutable Session or mix
+sibling cuts. The query runs the existing execution checkpoints. It reports a
+witness for the selected path. Exhaustive alternate derivations, recursive
+expansion of ordinary premise rows, cross-interface RuleModule =explain=,
+watched constraints and cross-branch prefix reuse remain open.

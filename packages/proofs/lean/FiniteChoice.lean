@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import FiniteHeight
 import IndexedIteration
+import PhysicalBuckets
 
 /-! Ground fact-set semantics from Finite-Choice Logic Programming, §2.1.
 Attributes and ground values use natural-number identities. The database is a
@@ -333,6 +334,292 @@ theorem grounding_delta_exact {Key Value : Type} [DecidableEq Value]
     by_cases prior : IndexedIteration.consequence rule rows old item
     · exact Or.inl ((IndexedIteration.full_run_exact rule rows domain valid covered old item).mpr prior)
     · exact Or.inr (IndexedIteration.pivot_run_complete rule rows domain valid covered old next grows monotone item consequence prior)
+
+/-- The choice macro feeds the ordinary admitted atom grammar. Named
+identities and anonymous body positions occupy disjoint identity spaces. -/
+def captureTerm {Value : Type} (position : Nat) : AtomicBinding.Term Value → AtomicBinding.Term Value
+  | .literal value => .literal value
+  | .variable name => .variable (2 * name)
+  | .wildcard => .variable (2 * position + 1)
+
+def captureTerms {Value : Type} (position : Nat) : List (AtomicBinding.Term Value) →
+    List (AtomicBinding.Term Value)
+  | [] => []
+  | term :: rest => captureTerm position term :: captureTerms (position + 1) rest
+
+def matchesOccurrence {Value : Type} (named anonymous : Nat → Option Value) (position : Nat) :
+    List (AtomicBinding.Term Value) → List Value → Prop
+  | [], [] => True
+  | .literal expected :: terms, value :: row =>
+      expected = value ∧ matchesOccurrence named anonymous (position + 1) terms row
+  | .variable name :: terms, value :: row =>
+      named name = some value ∧ matchesOccurrence named anonymous (position + 1) terms row
+  | .wildcard :: terms, value :: row =>
+      anonymous position = some value ∧ matchesOccurrence named anonymous (position + 1) terms row
+  | _, _ => False
+
+theorem capture_terms_exact {Value : Type} (position : Nat)
+    (terms : List (AtomicBinding.Term Value)) (row : List Value) (env : AtomicBinding.Env Value) :
+    AtomicBinding.Matches (captureTerms position terms) row env ↔
+      matchesOccurrence (fun name => AtomicBinding.lookup (2 * name) env)
+        (fun slot => AtomicBinding.lookup (2 * slot + 1) env) position terms row := by
+  induction terms generalizing row position with
+  | nil => cases row <;> rfl
+  | cons term rest ih =>
+    cases term <;> cases row <;>
+      simp [captureTerms, captureTerm, AtomicBinding.Matches, matchesOccurrence, ih]
+
+theorem wildcard_fresh (position name other : Nat) (different : position ≠ other) :
+    2 * position + 1 ≠ 2 * name ∧ 2 * position + 1 ≠ 2 * other + 1 := by omega
+
+/-- A completed row representation recovers the exact values of every named
+and anonymous occurrence, including repeated variables and literals. -/
+theorem captured_occurrences_determine_row {Value : Type} (position : Nat)
+    (terms : List (AtomicBinding.Term Value)) (left right : List Value)
+    (env : AtomicBinding.Env Value)
+    (a : AtomicBinding.Matches (captureTerms position terms) left env)
+    (b : AtomicBinding.Matches (captureTerms position terms) right env) : left = right := by
+  induction terms generalizing position left right with
+  | nil => cases left <;> cases right <;> simp_all [captureTerms, AtomicBinding.Matches]
+  | cons term rest ih =>
+    cases left with
+    | nil => cases term <;> simp [captureTerms, captureTerm, AtomicBinding.Matches] at a
+    | cons leftHead leftTail =>
+      cases right with
+      | nil => cases term <;> simp [captureTerms, captureTerm, AtomicBinding.Matches] at b
+      | cons rightHead rightTail =>
+        cases term <;> simp only [captureTerms, captureTerm, AtomicBinding.Matches] at a b
+        all_goals
+          have head : leftHead = rightHead := by
+            first | exact a.1.symm.trans b.1 | exact Option.some.inj (a.1.symm.trans b.1)
+          rw [head, ih (position + 1) leftTail rightTail a.2 b.2]
+
+/-- Once the named and fresh slots of each premise have been captured,
+serializing their shared environment keeps matching and decoding in agreement. -/
+def groundTerms {Value : Type} (env : AtomicBinding.Env Value) :
+    List (AtomicBinding.Term Value) → Option (List Value)
+  | [] => some []
+  | .literal value :: rest => (groundTerms env rest).map (value :: ·)
+  | .variable name :: rest => do
+      let value ← AtomicBinding.lookup name env
+      (groundTerms env rest).map (value :: ·)
+  | .wildcard :: _ => none
+
+theorem ground_captured_terms_exact {Value : Type} (position : Nat)
+    (terms : List (AtomicBinding.Term Value)) (row : List Value) (env : AtomicBinding.Env Value) :
+    groundTerms env (captureTerms position terms) = some row ↔
+      AtomicBinding.Matches (captureTerms position terms) row env := by
+  induction terms generalizing row position with
+  | nil => cases row <;> simp [captureTerms, groundTerms, AtomicBinding.Matches]
+  | cons term rest ih =>
+    have tailExact : ∀ tail, groundTerms env (captureTerms (position + 1) rest) = some tail ↔
+        AtomicBinding.Matches (captureTerms (position + 1) rest) tail env := ih (position + 1)
+    cases tail : groundTerms env (captureTerms (position + 1) rest) with
+    | none =>
+      simp only [tail, reduceCtorEq, false_iff] at tailExact
+      cases term with
+      | literal value =>
+        cases row <;> simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, tailExact]
+      | «variable» name =>
+        cases found : AtomicBinding.lookup (2 * name) env <;> cases row <;>
+          simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, tailExact, found]
+      | wildcard =>
+        cases found : AtomicBinding.lookup (2 * position + 1) env <;> cases row <;>
+          simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, tailExact, found]
+    | some values =>
+      simp only [tail, Option.some.injEq] at tailExact
+      cases term with
+      | literal value =>
+        cases row <;> simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, ← tailExact]
+      | «variable» name =>
+        cases found : AtomicBinding.lookup (2 * name) env <;> cases row <;>
+          simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, ← tailExact, found]
+      | wildcard =>
+        cases found : AtomicBinding.lookup (2 * position + 1) env <;> cases row <;>
+          simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, ← tailExact, found]
+
+/-- Membership at the current version. The version test precedes the cache
+read in the Scheme owner. Extension invalidates every cached query view. -/
+def visibleBucket {Key Row : Type} (version : Nat) (key : Key)
+    (cache : Option (Nat × (Key → List Row))) (physical : Key → List Row) : List Row :=
+  match cache with
+  | some (saved, buckets) => if saved = version then buckets key else physical key
+  | none => physical key
+
+theorem visible_bucket_exact {Key Row : Type} (keyOf : Row → Key) [DecidableEq Key]
+    (version : Nat) (key : Key) (rows : List Row) (prior : PhysicalBuckets.Buckets Key Row)
+    (history : List Row) (cache : Option (Nat × (Key → List Row)))
+    (exactPrior : ∀ query, prior query = rows.filter (fun row => decide (query = keyOf row)))
+    (validCache : ∀ saved buckets, cache = some (saved, buckets) → saved = version →
+      ∀ query, buckets query = PhysicalBuckets.extend (PhysicalBuckets.prepend keyOf) prior history query)
+    (row : Row) :
+    row ∈ visibleBucket version key cache (PhysicalBuckets.extend (PhysicalBuckets.prepend keyOf) prior history) ↔
+      (row ∈ rows ∨ row ∈ history) ∧ key = keyOf row := by
+  have direct := PhysicalBuckets.extension_coverage keyOf history prior key row
+  rw [exactPrior key] at direct
+  have selected : row ∈ PhysicalBuckets.extend (PhysicalBuckets.prepend keyOf) prior history key ↔
+      (row ∈ rows ∨ row ∈ history) ∧ key = keyOf row := by
+    rw [List.mem_filter] at direct
+    simpa only [decide_eq_true_eq, ← or_and_right, or_comm] using direct
+  cases found : cache with
+  | none => simpa [visibleBucket] using selected
+  | some pair =>
+    obtain ⟨saved, buckets⟩ := pair
+    by_cases current : saved = version
+    · simpa [visibleBucket, current, validCache saved buckets found current key] using selected
+    · simpa [visibleBucket, current] using selected
+
+/-- A cache miss records precisely the current lookup. A nonempty insert
+batch invalidates both positive and empty views, while an empty batch does
+not change the store. -/
+structure BucketCache (Key Row : Type) where
+  physical : Key → List Row
+  views : Key → Option (List Row)
+
+def BucketCache.coherent (cache : BucketCache Key Row) : Prop :=
+  ∀ key rows, cache.views key = some rows → rows = cache.physical key
+
+def BucketCache.query [DecidableEq Key] (cache : BucketCache Key Row) (key : Key) :
+    List Row × BucketCache Key Row :=
+  match cache.views key with
+  | some rows => (rows, cache)
+  | none => (cache.physical key,
+      {cache with views := fun other => if other = key then some (cache.physical key) else cache.views other})
+
+def BucketCache.extend [DecidableEq Key] (cache : BucketCache Key Row) (keyOf : Row → Key)
+    (batch : List Row) : BucketCache Key Row :=
+  match batch with
+  | [] => cache
+  | _ :: _ => ⟨PhysicalBuckets.extend (PhysicalBuckets.prepend keyOf) cache.physical batch, fun _ => none⟩
+
+theorem bucket_cache_query_exact [DecidableEq Key] (cache : BucketCache Key Row) (key : Key)
+    (coherent : cache.coherent) : (cache.query key).1 = cache.physical key ∧ (cache.query key).2.coherent := by
+  cases found : cache.views key with
+  | some rows => simpa [BucketCache.query, found] using And.intro (coherent key rows found) coherent
+  | none =>
+    simp only [BucketCache.query, found, true_and, BucketCache.coherent]
+    intro other rows stored
+    by_cases hit : other = key
+    · subst other
+      simpa using stored.symm
+    · exact coherent other rows (by simpa [hit] using stored)
+
+theorem bucket_cache_extension_exact [DecidableEq Key] (cache : BucketCache Key Row)
+    (keyOf : Row → Key) (batch : List Row) (key : Key) (row : Row)
+    (coherent : cache.coherent) :
+    (cache.extend keyOf batch).coherent ∧
+      (row ∈ ((cache.extend keyOf batch).query key).1 ↔
+        (row ∈ batch ∧ key = keyOf row) ∨ row ∈ cache.physical key) := by
+  have valid : (cache.extend keyOf batch).coherent := by
+    cases batch with
+    | nil => exact coherent
+    | cons head tail => simp [BucketCache.extend, BucketCache.coherent]
+  refine ⟨valid, ?_⟩
+  rw [(bucket_cache_query_exact (cache.extend keyOf batch) key valid).1]
+  cases batch with
+  | nil => simp [BucketCache.extend]
+  | cons head tail => exact PhysicalBuckets.extension_coverage keyOf (head :: tail) cache.physical key row
+
+/-- Branch Session messages are determined by the current cut and the parent
+of the pending entry. Source vectors model the complete choice relation set. -/
+inductive GroundingMessage (Key Row : Type) where
+  | run
+  | append (key : Key) (row : Row)
+  | replace (rows : Key → List Row)
+
+def applyGroundingMessage {Key Row : Type} [DecidableEq Key] (current : Key → List Row) :
+    GroundingMessage Key Row → Key → List Row
+  | .run => current
+  | .append key row => fun source => if source = key then current source ++ [row] else current source
+  | .replace rows => rows
+
+theorem replace_removes_sibling {Key Row : Type} [DecidableEq Key]
+    (old next : Key → List Row) (key : Key) (row : Row) :
+    row ∈ applyGroundingMessage old (.replace next) key ↔ row ∈ next key := Iff.rfl
+
+/-- The branch choice is driven by two identity tests on the immutable
+worklist entries. The renderer feeds this same tree to the Scheme expander. -/
+inductive BranchAction where
+  | run
+  | append
+  | replace
+  deriving DecidableEq
+
+def branchAction (sameCut directChild : Bool) : BranchAction :=
+  if sameCut then .run else if directChild then .append else .replace
+
+def branchLeaf (action : BranchAction) : String :=
+  match action with
+  | .run => "current-expr"
+  | .append => "append-expr"
+  | .replace => "replace-expr"
+
+def branchSource : String :=
+  "  (defrule (install-choice-cut current? child? current-expr append-expr replace-expr)\n" ++
+  "    (if current? " ++ branchLeaf (branchAction true false) ++ "\n" ++
+  "      (if child? " ++ branchLeaf (branchAction false true) ++ " " ++
+  branchLeaf (branchAction false false) ++ ")))\n"
+
+def groundingMessage {State Key Row : Type} [DecidableEq State]
+    (current state parent : State) (key : Key) (row : Row) (rows : Key → List Row) :
+    GroundingMessage Key Row :=
+  match branchAction (decide (state = current)) (decide (parent = current)) with
+  | .run => .run
+  | .append => .append key row
+  | .replace => .replace rows
+
+theorem branch_message_installs_exact_cut {State Key Row : Type} [DecidableEq State] [DecidableEq Key]
+    (view : State → Key → List Row) (current state parent : State) (key : Key) (row : Row)
+    (appendCut : parent = current → state ≠ current →
+      view state = applyGroundingMessage (view current) (.append key row)) :
+    applyGroundingMessage (view current) (groundingMessage current state parent key row (view state)) = view state := by
+  by_cases same : state = current
+  · simp [groundingMessage, branchAction, applyGroundingMessage, same]
+  · by_cases child : parent = current
+    · simpa [groundingMessage, branchAction, same, child] using (appendCut child same).symm
+    · simp [groundingMessage, branchAction, applyGroundingMessage, same, child]
+
+/-- The choice Session uses the whole initial or replacement cut and the
+indexed first-fresh partition on admitted append cuts. Here the read view is
+constructed from the installed source cut plus its positive closure. -/
+theorem grounding_after_message_exact {Key Value : Type} [DecidableEq Key] [DecidableEq Value]
+    (installed : Key → List (List Value)) (message : GroundingMessage Key (List Value))
+    (close : (Key → List (List Value)) → SemiNaive.Database (List Value))
+    (rule : IndexedIteration.Rule Key Value (List Value))
+    (rows : IndexedIteration.Rows Key Value (List Value)) (domain : Key → List Value → Prop)
+    (valid : IndexedIteration.Valid domain rule) (covered : IndexedIteration.RowsAdmitted domain rows)
+    (monotone : IndexedIteration.RowsMonotone rows)
+    (appendGrowth : ∀ key row item, close installed item →
+      close (applyGroundingMessage installed (.append key row)) item)
+    (row : List Value) :
+    let previous := close installed
+    let current := close (applyGroundingMessage installed message)
+    (match message with
+     | .append _ _ => row ∈ IndexedIteration.fullRun rule rows previous ∨
+         row ∈ IndexedIteration.pivotRun rule rows previous current
+     | _ => row ∈ IndexedIteration.fullRun rule rows current) ↔
+    IndexedIteration.consequence rule rows current row := by
+  cases message with
+  | run => exact IndexedIteration.full_run_exact rule rows domain valid covered _ row
+  | replace _ => exact IndexedIteration.full_run_exact rule rows domain valid covered _ row
+  | append key item =>
+    apply grounding_delta_exact rule rows domain valid covered _ _ (appendGrowth key item) monotone
+    intro value prior
+    obtain ⟨env, path, emitted⟩ := prior
+    refine ⟨env, ?_, emitted⟩
+    have liftPath (atoms : List (PositiveConsequence.Atom Key Value)) (seed output : AtomicBinding.Env Value)
+        (body : ProviderFrontier.body (PositiveConsequence.transition (rows (close installed))) atoms seed output) :
+        ProviderFrontier.body
+          (PositiveConsequence.transition (rows (close (applyGroundingMessage installed (.append key item)))))
+          atoms seed output := by
+      induction atoms generalizing seed with
+      | nil => exact body
+      | cons atom rest ih =>
+        obtain ⟨middle, first, tail⟩ := body
+        refine ⟨middle, ?_, ih middle tail⟩
+        exact PositiveConsequence.transition_monotone _ _
+          (monotone _ _ (appendGrowth key item)) atom seed middle first
+    exact liftPath _ _ _ path
 
 def constrainedValues (seed : List Nat) (restrictions : List (List Nat)) : List Nat :=
   seed.filter fun value => restrictions.all fun allowed => allowed.contains value

@@ -72,8 +72,7 @@ the new entry point does not qualify arbitrary Scheme or macro expansion.
 
 * Native build ownership
 
-The root =build.ss= declares =libascent= and =ascent-develop=. Build them with
-=gerbil build= and run source tests with =gerbil test=. Gerbil and Yuanxu own
+The Interface Module declares the =libascent= target. Build it with =gerbil build= and run source tests with =gerbil test=. Gerbil and Yuanxu own
 source projection, dependency resolution, output currentness and compilation.
 
 ASCENT has no =libascent.json= publisher, output-generation scanner, private

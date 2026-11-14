@@ -84,14 +84,13 @@ jobs:
             !.gerbil/lib/gerbil-ascent
             !.gerbil/lib/static/gerbil-ascent__*
             !.gerbil/bin/libascent*
-            !.gerbil/bin/ascent-develop*
           key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
           rm -rf .gerbil/lib/gerbil-ascent
           rm -f .gerbil/lib/static/gerbil-ascent__*
-          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
+          rm -f .gerbil/bin/libascent*
       - name: Install declared Gerbil dependencies
         if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
@@ -110,7 +109,6 @@ jobs:
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
             .gerbil/bin/libascent*
-            .gerbil/bin/ascent-develop*
           key: ascent-compiled-v3-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
       - name: Admit restored compiler inputs
         env:
@@ -263,14 +261,13 @@ jobs:
             !.gerbil/lib/gerbil-ascent
             !.gerbil/lib/static/gerbil-ascent__*
             !.gerbil/bin/libascent*
-            !.gerbil/bin/ascent-develop*
           key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
           rm -rf .gerbil/lib/gerbil-ascent
           rm -f .gerbil/lib/static/gerbil-ascent__*
-          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
+          rm -f .gerbil/bin/libascent*
       - name: Install declared Gerbil dependencies
         if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
@@ -289,7 +286,6 @@ jobs:
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
             .gerbil/bin/libascent*
-            .gerbil/bin/ascent-develop*
           key: ascent-compiled-v3-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
       - name: Admit restored compiler inputs
         env:
@@ -491,14 +487,13 @@ jobs:
             !.gerbil/lib/gerbil-ascent
             !.gerbil/lib/static/gerbil-ascent__*
             !.gerbil/bin/libascent*
-            !.gerbil/bin/ascent-develop*
           key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.capacity.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Remove restored application outputs
         run: |
           # Dependency caches never authorize reuse of this checkout's library.
           rm -rf .gerbil/lib/gerbil-ascent
           rm -f .gerbil/lib/static/gerbil-ascent__*
-          rm -f .gerbil/bin/libascent* .gerbil/bin/ascent-develop*
+          rm -f .gerbil/bin/libascent*
       - name: Install declared Gerbil dependencies
         if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
         run: |
@@ -517,7 +512,6 @@ jobs:
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
             .gerbil/bin/libascent*
-            .gerbil/bin/ascent-develop*
           key: ascent-compiled-v3-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.shard }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
       - name: Admit restored compiler inputs
         env:

@@ -333,7 +333,6 @@ jobs:
             !.gerbil/lib/gerbil-ascent
             !.gerbil/lib/static/gerbil-ascent__*
             !.gerbil/bin/libascent*
-            !.gerbil/bin/ascent-develop*
           key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.preparation.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
       - name: Install declared Scheme dependencies
         # A compatible, admitted prefix already contains these exact declarations.
@@ -355,7 +354,6 @@ jobs:
             !.gerbil/lib/gerbil-ascent
             !.gerbil/lib/static/gerbil-ascent__*
             !.gerbil/bin/libascent*
-            !.gerbil/bin/ascent-develop*
           key: ${{ steps.dependencies-cache.outputs.cache-primary-key }}
       - name: Build current Scheme package
         run: gerbil build

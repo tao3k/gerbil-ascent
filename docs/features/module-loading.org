@@ -7,12 +7,8 @@
 The local implementation keeps Gerbil's loader, expander and =std/make= as
 their respective owners. It adds no alternative compiler or module registry.
 
-- =interface/develop.ss= supplies the =ascent-develop= executable through the
-  existing production build specification. Its production runtime dependencies
-  are linked together. =just develop= starts the upstream REPL with ASCENT
-  syntax and engine exports available. The compiler's SDK metadata path is
-  retained explicitly because a linked executable's Gambit directory can
-  differ from the interpreter's installation prefix.
+- =just develop= starts the Gerbil interpreter with ASCENT syntax and engine
+  modules loaded. The production build links =libascent= for C ABI consumers.
 - =python/src/ascent_engine/artifact.py= retains process-local successful
   hashes. Every construction still checks device, inode, size, modification
   time and change time. Changed files are hashed again; same-length changes
@@ -38,8 +34,8 @@ their respective owners. It adds no alternative compiler or module registry.
 
 * Measured local results
 
-All measurements are local macOS observations on 2026-10-13. They do not
-establish remote CI, Linux performance or portable-wheel qualification.
+These local macOS measurements on 2026-10-13 describe the former linked
+development shell. The current development command uses the Gerbil interpreter.
 [[file:../../.cache/ascent/archived-runs/docs/features/module-loading-qualification.json][The qualification receipt]] contains source hashes, SDK identity, raw
 samples, log hashes and the tested engine library identity. Concurrent unrelated
 checkout edits are not qualified by this receipt.
@@ -121,18 +117,12 @@ Inside the shell, use the installed upstream forms:
 (enter! "scenario.ss")
 #+end_src
 
-Trusted local batch evaluation is also available through
-=.gerbil/bin/ascent-develop --eval 'Scheme forms'=. It supports multiple
-top-level forms and returns a failure status on an error.
+Use Gerbil's =-L= and =-e= options for batch evaluation.
 
-Linked production modules are runtime builtins: changing their implementation
-requires rebuilding and restarting the shell. Scenario source modules can be
-reloaded in the existing process. Existing procedures, sessions or evidence
-must not be advertised as automatically updated by a source reload.
+#+begin_src sh
+gerbil interactive -L :gerbil-ascent/program/api -e '(displayln gerbil-ascent-program)'
+#+end_src
 
-The [[https://gerbil.scheme.org/guide/shell.html][official shell documentation]] explains interactive contexts and reloads;
-names must be checked against the installed SDK. The
-[[https://gerbil.scheme.org/reference/dev/build][official build documentation]] describes executable build specifications and
-full-program optimization. This change uses ordinary =exe:= declarations;
-it does not introduce full-program optimization or promise a general runtime
-hot-swap mechanism.
+Existing procedures, sessions and evidence keep the definitions they captured
+before a source reload. The [[https://gerbil.scheme.org/guide/shell.html][Gerbil shell documentation]]
+describes interactive contexts and reloads.

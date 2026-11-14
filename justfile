@@ -37,9 +37,9 @@ default:
 build:
     GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gerbil_command }} build
 
-# Linked production closure; upstream REPL utilities handle source reloads.
+# Gerbil owns the REPL; load the installed ASCENT modules into it.
 develop:
-    {{ gerbil_environment }} GERBIL_PATH="{{ gerbil_package_prefix }}" "{{ gerbil_package_prefix }}/bin/ascent-develop"
+    {{ gxi_command }} -L :std/interactive -L :gerbil-ascent/program/syntax -L :gerbil-ascent/program/api -L :gerbil-ascent/interface/engine-api -
 
 # Install tools explicitly, after production dependencies have selected their versions.
 prepare-dev:

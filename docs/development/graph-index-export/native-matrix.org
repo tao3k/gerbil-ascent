@@ -1445,3 +1445,43 @@ and derives the available selection budget from the original CPU
 ratio and allowance. The original receipt gives complete-transaction
 medians. It cannot attribute the 0.362 ms gap over the ceiling to any
 one interval.
+
+The declaration control completed 50 native pairs over the three
+original cuts and checked every result against independent grounding.
+Fresh rule construction plus the rest of declaration took a median
+7.039 ms per three cuts. Prebuilt rules with a new Program and the usual
+root validation took 5.584 ms and won 44/50 pairs. The paired median
+saving was 1.421 ms. The control establishes the removable portion for
+this diagnostic. Both arms still pay for relation construction, handle
+checks and root validation. It supplies no authority to reuse public
+rule objects or successful contract checks.
+
+The update observer completed 50 alternating ten-transaction pairs on
+the released SDK. The following owner-thread CPU medians are per
+transaction. Each transaction checked the complete ordered results
+against the same independent expectation.
+
+| Phase | Reference (ms) | Candidate (ms) | Median paired increase (ms) |
+|-------+----------------+----------------+-----------------------------|
+| Eligibility, source comparison and dependency closure | 3.204 | 3.498 | 0.278 |
+| Engine construction, including source admission and reuse seeding | 1.410 | 1.683 | 0.217 |
+| Run | 0.065 | 0.069 | 0.002 |
+| Observe all output rows | 0.122 | 0.128 | 0.007 |
+| Total of timed intervals | 4.874 | 5.464 | |
+
+Phase medians do not sum to the median total. This diagnostic places
+the largest overhead before rule execution. The isolated source
+traversal candidate passed five activation semantic Cases, including
+timeout resumption, but its original performance Case reached the
+90-second watchdog without delivering a receipt. Its source is not
+included in this change. The frozen SDK's baseline performance Case
+printed a pass with negative allocation medians in both arms, which
+cannot qualify cumulative allocation.
+
+The ordered UF export was also tested on the released SDK with the
+2 GiB heap cap and original 90-second watchdog. At 384 vertices all
+100 CPU pairs, 100 admissions and five allocation pairs completed.
+Candidate wall P50, P95 and max were 159.176, 259.922 and 295.716 ms.
+The 100 ms gate failed. At 512 vertices all 100 CPU pairs completed;
+the watchdog ended the run after 23 of 100 admissions. It produced
+no P95 receipt. The earlier private runtime's results are separate.

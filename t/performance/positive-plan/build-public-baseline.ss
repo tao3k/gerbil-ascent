@@ -1,0 +1,6 @@
+(import (only-in :std/make make))
+(make '("program/evaluate")
+      srcdir: (getenv "ASCENT_BASELINE_SRC")
+      libdir: (getenv "ASCENT_BASELINE_LIB")
+      build-deps: (getenv "ASCENT_BASELINE_BUILD_DEPS"))
+(exit 0)

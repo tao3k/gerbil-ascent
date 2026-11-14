@@ -1,0 +1,288 @@
+#+title: Closed DSL Lowering
+
+* Cause and design
+
+The failing consumer request spent its original 9.677-second remaining budget
+inside =open_sources=, loading dynamic macro phases. A native sampler attributed
+832 of 833 samples to dynamic loading; later file observations showed forward
+progress through SDK generation files. These observations establish expensive
+cold phase loading, not a permanent lock deadlock. Link-preserving resources,
+SDK-path controls and loader-flag controls alone still timed out.
+
+=interface/closed-source.ss= recognizes a complete, closed source shape before
+constructing any declaration. It then calls the existing POO relation, term,
+clause, rule and Program/Fragment constructors. Composition, preparation,
+source admission, execution, result ownership and publication remain in their
+existing modules. Unrecognized syntax uses the original upstream macro path.
+Construction or execution errors never trigger a second lowering attempt.
+
+This follows Gerbil's =compiler/optimize-call.ss:89-129=: establish calling shape
+and binding conditions before applying a specialization. It also follows the
+explicit syntax dispatch in =compiler/optimize-xform.ss:16-40=. It is a bounded
+specialization of an existing language, not a general Scheme evaluator.
+
+* Recognition obligations
+
+- Relations have empty initial rows and explicit canonical scalar predicates.
+- Terms are variables, wildcards or scalar literals; positive and negative
+  atoms and multiple heads keep their original constructor order.
+- Guards use declared variables and a fixed set of canonical primitives.
+  =and=/=or= retain Scheme values and short-circuit errors. The existing engine
+  still requires the final guard result to be boolean.
+- Guard inputs cannot shadow operator/syntax bindings. A single native syntax
+  factory generates fixed arities 0–32 and the matching recognition bound.
+  Wider guards and unknown expressions select the original macro path.
+- Macros, includes, callbacks, initial facts, storage extensions and explicit
+  bounds select the macro path before any constructors run.
+- The existing bounded reader and the full declaration/source checks remain
+  authoritative. Guards are not promoted into checked projection operators.
+
+* Verification layers
+
+The complete immutable zero-argument =define-evidence= inventory has a matching
+closed scope. Admission stores constructor closures, never previously created
+Evidence values. Every invocation calls the original declaration/value
+constructors anew. Duplicate constructors, unknown explicit exports, helpers,
+parameters, explicit explanation callbacks and foreign imports select the
+original module path before declaration construction. The existing trust,
+reader and scope-charge checks still precede either route.
+
+=ClosedEvidenceScope.qnt= models whole-scope selection, fresh invocation and
+unchanged scope charging, with partial-selection, cached-instance and rejected
+publication mutations. The Lean scope model records constructor equivalence
+and distinct invocation identities under an explicit freshness assumption.
+Native original-macro tests supply the implementation correspondence; neither
+formal model proves arbitrary Scheme semantics or the parser implementation.
+
+=ClosedDslLowering.lean= proves closure compilation equivalent to direct
+expression interpretation under the same primitive bindings, including error
+propagation and Scheme truth for scalar zero. It is a mathematical expression
+model, not an extracted proof of the Scheme parser or runtime.
+
+=ClosedDslLowering.qnt= checks whole-source selection, one construction attempt
+and private failure. Partial selection, retry and rejected-owner mutations
+produce counterexamples. Native tests separately compare identical datums with
+a forced original macro expansion, including fixed/incorrect guard arity,
+short-circuit errors, recursion and wider-guard fallback. Python tests exercise
+the ordinary native SourceSession lifecycle and admission contracts.
+
+* Qualification boundary
+
+The earlier noninstrumented artifact was built in 98.260 seconds under the
+unchanged 120-second library deadline, using native 12-core scheduling. Package
+publication took 2.351/15 seconds; API publication took 2.419/45 seconds. Its
+135 native inputs were unchanged during the build, and all 2,233 packaged
+resource hashes matched. Gerbil and its configuration were unchanged.
+
+Instrumented source-open diagnostics measured 1.936 seconds for the complete
+execution rules and 1.199 seconds for the complete review policy under the
+original 9.677-second request budget. Those measurements only cover session
+creation and their own historical source identity. They are not final consumer,
+current-graph, or GitHub CI qualification. Final receipts must separately bind
+the noninstrumented artifact, all facts and queries, and each original deadline.
+
+Negative and censored runs remain under ignored =.cache/=. No diagnostic scripts
+or raw logs are build inputs or tracked artifacts.
+
+The first complete 105-case review on the fixed Library returned 96 PASS and
+9 ERROR in 56.609/60 seconds. Its first failing fixture shared a ten-second
+context across three requests: the first consumed 6.013 seconds, leaving only
+2.314 seconds for the next. The consumer removed repeated path resolution
+inside an already verified request boundary and redundant startup/parent seal
+scans. Each request still performs complete before/after checks, including all
+4,687 host-tool files, and the owner performs a complete terminal check. The
+original automatic concurrency review subsequently passed all 105 cases with
+zero skips in 52.714/60 seconds, with independent receipt readback. A two-worker
+diagnostic timed out and was retained as DENY; it did not become the default.
+These consumer results qualify that review scope only. Full consumer/current
+graph and final GitHub CI remain separate gates.
+
+That earlier fixed artifact also passed the two native GxTest semantic cases in
+36.589/120 seconds, with all CASE/MODULE/HARNESS and terminal OK markers. A new
+15-second ABI diagnostic confirmed the closed guards, composition and source
+lifecycle cases, then timed out at a four-input guard that deliberately selects
+the general macro path. The process was killed and reaped, and quiescence was
+confirmed. That negative control remains a cold general-expansion limitation;
+it is not counted as an eight-case or complete ABI/API pass. The API arm had
+not run when this diagnostic stopped. Earlier fixture/harness errors remain
+recorded separately.
+
+The subsequent declaration-scope and 0–32 guard candidate built in
+112.362/120 seconds with native 12-core scheduling, unchanged source input
+hashes and no SDK rebuild. Package and API publication took 3.057/15 and
+2.946/45 seconds; all 2,243 resources matched. This supersedes the earlier
+artifact identity, not its recorded failures. Actual consumer, full native
+regression and exact-head CI qualification are still required for this candidate.
+
+The original eight SourceSession cases now pass with this artifact on both
+bindings: ABI 0.721/15 seconds and API 2.317/15 seconds, with no timeout and
+quiescent process groups. The consumer's two original cold Evidence regressions
+pass in 2.126/15 seconds; the historical censored 15-second runs remain failures.
+This is an observed bound closure, not an uncensored matched A/B percentage.
+The three native original-macro comparison Cases passed in 36.458/120 seconds
+with unchanged 137 source inputs. Lean passed; the new Quint scope model and
+all three expected counterexamples passed. These focused gates do not replace
+the full consumer/current graph or complete native source suite.
+
+* Official compiled module loading
+
+Compiled-module calls use Gerbil's own =tools/gxtest.ss= and =tools/gxprof.ss=
+flow: =import-module= with evaluation enabled, public phase-zero export lookup,
+=core-resolve-module-export=, and =eval= of the actual runtime binding identifier.
+Each call reads the current binding and checks that it is callable. Runtime
+loading remains owned by the upstream loader; ASCENT has no separate export
+registry or loader. Unknown public exports and noncallable values are rejected.
+
+The previous call path constructed a fresh top context, imported core, emitted
+an =only-in= import through =eval-syntax= and then expanded the identifier on
+every export call. The consumer's original module-call controls still exhausted
+15 seconds on that path, despite the separate pure declaration improvement.
+Those failed controls are preserved. The direct official import/export path
+requires its own artifact-bound cold qualification before it can close that gate.
+
+The native sampler located the cold delay inside upstream dynamic loading:
+811 of 812 samples reached =dlopen=; 797 reached =mapSegments/fcntl=. A later
+sample during import reached the same code-validation path. Packaging under
+the sandbox had retained 390 native generation inodes but copied 1,853 assets;
+SDK generation bytes matched while their new inodes differed. Authorized
+publication using the existing immutable-generation transfer contract retained
+the original SDK inodes without changing content, generation names, signatures,
+permissions or SDK configuration. Metadata remains copied and independently
+hash checked. No original deadline was raised.
+
+The initial inode control completed in 4.495/15 seconds but returned an error:
+an extra =runtime-binding?= check wrongly rejected the upstream import-binding
+wrapper of a public reexport. That failed control remains recorded. The final
+implementation follows =gxtest= directly: evaluate the resolved binding id,
+then check the returned value is a procedure. It reads the binding every call.
+
+The subsequent noninstrumented candidate built in 66.229/120 seconds with
+137 unchanged source inputs. Publication took 1.627/15 and 1.952/45 seconds,
+with 962 retained generation inodes, 1,290 copied metadata assets and 2,252
+matching resource hashes. Its seven original module-call Cases passed in both
+bindings: ABI 6.239/15 and API 1.912/15 seconds, exit zero and quiescent owners.
+These are bounded cold controls, not an uncensored A/B speedup percentage.
+The consumer's original seven regressions independently passed in
+6.180/15 seconds with zero skips, unchanged per-path source/resource/binding
+hashes and quiescent owners. Its sealed 105-case review, complete consumer/
+current graph, native regression and exact-head CI remain separate gates.
+
+The complete standard source test entry passed 169 modules and 1,348 Cases
+in 89.101/180 seconds with native 12-worker dispatch, no CASE/CHECK errors,
+unchanged 137 production source inputs and quiescent owners. Cold AOT support
+preparation subsequently exhausted its original 120-second deadline after
+staging the executable; that timeout remains a failed run. Hot upstream
+currentness and finalization passed in 53.995/120 seconds with
+=production-rebuilt=0=. This hot result does not qualify cold preparation.
+
+* Source observation equality and complete transport checks
+
+The actual source-audit trace found 7.600 seconds in the first
+=make-observation-contract= construction. Its general =not (equal? V W)= guard
+was outside the original primitive inventory, so whole-source eligibility chose
+the upstream macro path. The second declaration without that guard took 0.012
+seconds. The native primitive table now includes the ordinary binary =equal?=
+procedure, with the same arity and protected-binding checks. No constructor or
+expected answer participates in selection. Native comparisons include strings,
+integers, nested pairs, vectors, differing scalar types and wrong arity. Lean's
+expression model includes finite pairs/text and canonical equality examples;
+its existing structural equivalence theorem still assumes identical primitives.
+
+The new noninstrumented candidate built in 40.261/120 seconds, with 137 unchanged
+source inputs and the same SDK. Package/API publication took 1.438/15 and
+1.924/45 seconds, preserving 974 immutable generations and copying 1,290
+metadata assets; all 2,264 resource hashes matched. Four original-macro native
+Cases passed in 11.968/120 seconds. Lean passed with no admitted theorem.
+
+Full Python discovery exposed a separate wire-shape mismatch: untyped Datalog
+compilation returned tuple rows, whereas the native DAG returns JSON arrays.
+The producer now emits list rows directly, retaining sorting, deduplication and
+scalar tags. Strict native and Python source-authority checks remain intact.
+The original repeat/withdrawal regressions and an exact JSON round-trip check
+cover the corrected boundary. A missing runner wire-fixture environment caused
+another zero-Case failure; the fixture is now generated through the native movie
+wire entry. Both failures remain recorded.
+
+All 33 Python test files subsequently passed under both requested binding
+configurations: 66 complete process groups, single total 107.416/120 seconds,
+zero timeouts and quiescent owners. Backend-aware controls exercise both actual
+bindings; tests explicitly selecting the ABI remain ABI tests under either
+configuration. This inventory result does not assert two physical backends for
+those fixed ABI tests. Consumer/source-audit/current-graph qualification must
+bind this newer source, binding tree and artifact identity separately.
+
+The consumer then executed the original source-audit Case with the new equality
+artifact in 2.082/15 seconds and all seven original regressions in 5.064/15
+seconds. Both exited zero with no timeout, quiescent owners and unchanged
+137 source inputs, 2,264 resources, the complete binding tree and consumer Python
+sources. Earlier instrumented source-audit timing does not establish a stable
+speedup percentage. New-seal review, full consumer/current graph and GitHub CI
+still have their own gates; historical missing artifact bytes are not replaced.
+
+The latest complete consumer inventory ran all 1,301 expected tests with zero
+skips and zero assertion failures in 199.939/300 seconds, with unchanged inputs
+and quiescent owners. Four errors remained, all from the same missing six
+historical files in the registered current view. The source audit, original
+seven cases and new-seal 105-case review passed independently; this does not
+qualify the complete current graph. No absent original bytes, historical hashes,
+source receipts, outcomes or gate predicates were rewritten to make it pass.
+
+Final local regression for the equality candidate passed 169 Scheme modules and
+1,349 Cases in 155.789/180 seconds, with zero CASE/CHECK errors and unchanged
+production inputs. Native DSL preparation passed in 56.142/120 seconds with
+=production-rebuilt=0=, then the complete 15-module/227-Case DSL entry passed in
+26.517/120 seconds. The 137 Python unit tests passed in 11.288 seconds under
+formal process-observation permissions; an earlier sandbox run's three =ps=
+permission failures remain negative evidence. Full consumer/current graph and
+new exact-head CI remain incomplete while the six original view assets are absent.
+
+* Historical custody and the next current view
+
+The missing originals retain their original paths and SHA-256 values. Exact-byte
+search checked 12,951 loose-file candidates, additional parent-workspace and
+installed-runtime candidates, Git blobs, all ten preflight source archives,
+198 other source archives and 2,330 benchmark archives. The archive checks
+finished without read errors and found no matching original. Matching names,
+nearby revisions and regeneration cannot establish custody of those bytes.
+Search receipts remain in ignored =.cache/ascent/compiled-resources/=.
+
+The consumer preserves the old view, whose SHA-256 is
+=c3fafd3e1b005ae28c0a4c0b26c97a8b46499e48fc6b50807a61350fd6f12081=,
+and records all six absent references as historical DENY. Its separately
+appended continuation source view binds a real 22-file source lock and 958
+observed source/configuration paths. This is a new source observation, not
+recovery of the old generated C files, executables or archive, and not native
+SMP acceptance. The historical failures retain their original identities.
+
+The new-view consumer run ended in 217.077/300 seconds with 1,316 executed
+tests, zero skips and zero assertion failures, but 24 errors and an incomplete
+inventory marker. The lifecycle cases passed; unregistered protocol-model
+references remain a separate consumer contract failure. Overall qualification
+is still DENY. The source identity remains 137 unchanged native inputs and
+Library SHA-256
+=7bba72f34f72d563f0697f2b3ebb08dd58a59a6555c10fec2f59fcdae0cdb29b=.
+
+A separate instrumented lifecycle Case completed in 8.141/15 seconds with
+unchanged inputs, exit zero and quiescent ownership. Its sample reached native
+=dlopen= and debugger notifications. Earlier loading attempts and instrumentation
+prevent treating this as a cold-start repair or matched performance improvement.
+The official macro route still handles explicit explanation callbacks and
+expression terms; no view-specific interpreter or shortened DSL was introduced.
+Unified submission remains gated on complete consumer/current-graph acceptance
+and subsequent CI on the actual new commit.
+
+The next attempt was rejected in 1.294/300 seconds because the consumer's
+=completed_producer.py= changed after sealing. This is a source-identity failure,
+not a completed test inventory. The rejection is retained; the consumer must
+seal the actual updated implementation before running the complete graph again.
+
+The freshly sealed current-graph attempt 017 subsequently passed the complete
+consumer inventory: 1,332 expected and executed tests, zero errors, failures or
+skips, complete inventory and unchanged inputs. Validation took 222.110 seconds;
+the whole graph parent exited zero in 236.155/300 seconds with quiescent
+ownership. The 105-case sealed domain passed in 26.081/60 seconds. Independent
+consumption readback reported =CURRENT= and =frameworkValidation PASS= for graph
+SHA-256 =27420fe6b97d84de10eb8b8c66a5b58ba1cde191f197647d8d59e7727927bab5=.
+The scope remains framework tests and real ASCENT inference; native Gambit
+acceptance, stable cold performance and the six original historical bytes are
+not established by this result. Exact-head GitHub CI is a subsequent gate.

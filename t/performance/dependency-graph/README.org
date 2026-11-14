@@ -1,0 +1,80 @@
+#+title: Dense dependency traversal and frame representation
+
+=core/dependency-graph.ss= now gives edge advancement, SCC completion and
+parent return separate local owners. One final private =graph-frame= replaces
+the pair-of-pairs frame. Discovery state is =#f= (unseen), a fixnum (active), or
+=#t= (completed), removing the separate on-stack bitmap. Caller adjacency is
+read-only; the private frame mutates only its remaining suffix pointer.
+
+The installed Gerbil =1cfb032= compiler uses =match= / =ast-case= to expose
+expression shape and =using (... :- !class)= to express already-established
+type facts (e.g. =optimize-call.ss:259=). Here =enter= is the sole constructor
+of frames, and =advance= / =leave= retain that invariant. =using= applies only
+to these private records; public vertices and vector accesses keep their
+checked operations. No blanket unsafe declaration or SDK rebuild is used.
+
+* Matched native SCC boundary
+
+=reference.ss= is the entire dependency graph module at
+=6345d82d4540921a434d685da8a145ac3dc5b3a0=, unchanged. Both complete modules are
+linked into the same native executable. The public ASP =make-benchmark-fixture=
+generated =benchmark.ss= before sampling; =benchmark-run/result= owns the
+50-sample series and duration verdict. Each leg collects GC first, times 32
+complete SCC calls, and alternates execution order. Construction, exact ordered
+output checking, adjacency preservation and old/new closure comparisons for
+every seed vertex are outside timing. These are SCC-call CPU/allocation
+measurements, not complete program compilation, solving or wall-time gains.
+
+Fixed gates: <=105% old CPU + 20 us; <=128 extra allocated bytes; at least
+8 bytes saved per vertex on the four 1024-vertex graphs; ASP receipt must pass.
+The same thresholds and deadlines survived all rejected experiments.
+
+| Shape | CPU us old / new | Bytes old / new | Verdict |
+|-------+------------------+-----------------+---------|
+| empty | 0.031 / 0.031 | 144 / 128 | pass |
+| small cycle | 0.094 / 0.094 | 912 / 800 | pass |
+| chain 1024 | 64.250 / 54.813 | 246628.5 / 230502 | pass |
+| cycle 1024 | 94.031 / 41.094 | 197524.5 / 182943 | pass |
+| branching 1024 | 64.469 / 55.125 | 246628.5 / 231017 | pass |
+| cross/self edges 1024 | 80.844 / 83.969 | 248946 / 231532 | pass |
+
+Chain/branch CPU falls about 15%, cycle CPU about 56%; cross-edge CPU rises
+3.9%. Large graph allocation falls 6.3–7.4%. CPU observations are local
+matched samples; do not turn them into an application speed claim.
+
+Direct nested frame matching, named-loop isolation and split pair transitions
+all failed the original chain allocation gate: 246628.5 -> 246886 bytes.
+A record with repeated checked access passed allocation but failed the cross-edge
+CPU gate: 78.719 -> 137.938 us. Private type-directed field access admitted
+the final representation. Rejected source snapshots and receipts remain under
+ignored =.cache/ascent/dependency-graph/=.
+
+* Reproduce
+
+From the repository root, using the installed project Gerbil and existing
+library (prepare with =just prepare-test-library=):
+
+#+begin_src sh
+LIBRARY_PATH="$(brew --prefix openssl@3)/lib" \
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" \
+gxi -:max-heap=3G,debug=q t/performance/dependency-graph/build.ss \
+  "$PWD/.gerbil/lib" "$PWD/.cache/ascent/dependency-graph/benchmark"
+timeout 60s .cache/ascent/dependency-graph/benchmark -:max-heap=1G,debug=q \
+  .cache/ascent/dependency-graph/receipt.sexp
+#+end_src
+
+Pass =qualify= as the builder's third argument, with a distinct output path,
+to link the existing SCC summary, Session deletion and positive component
+Suites. =std/test= owns the Cases and final verdict. All logs, binaries and raw
+pair receipts belong under ignored =.cache/=; production =build.ss= is unchanged.
+
+* Semantic and policy closure, 2026-10-09
+
+The three existing native Suites pass 50 Cases and end with =HARNESS-OK=,
+=OK= and exit 0. Coverage includes every three-node graph (all 512 masks,
+reversed/repeated edges), 20000-node chains and cycles, all changed-source
+subsets against independent matrix reachability, retained Session withdrawal,
+and positive SCC workers at one/two/four concurrency settings. Case progress
+is real test progress; no deadline was increased. The original Suite assertions
+remain unchanged. The 85-production-module native policy scan reports zero
+errors and 27 existing warnings, with no dependency-graph finding.

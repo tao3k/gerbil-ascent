@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+name: Design contracts
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sysml:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install Python development dependency manager
+        run: python -m pip install uv==0.11.3
+      - name: Install only locked design dependencies
+        run: uv sync --project workbench --only-group design --locked
+      - name: Check verdict handling and API deadlines
+        env:
+          PYTHONPATH: workbench/src
+        run: uv run --project workbench --only-group design --locked python -m unittest discover -s dev/sysml -p test_design.py
+      - name: Check architecture contracts and named counterexamples
+        run: uv run --project workbench --only-group design --locked python workbench/src/ascent_workbench/design.py
+      - name: Retain design evidence including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: design-contracts
+          path: .cache/ascent/design-checks/run.*/
+          if-no-files-found: warn

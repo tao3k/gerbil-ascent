@@ -1,0 +1,83 @@
+#+title: SCC execution metadata construction
+
+* Contract and ownership
+
+=program/component-plan.ss= owns full-survivor publication, projected ordered
+outputs, and predecessor registration. Empty heads publish nothing; all heads
+in one SCC reuse the exact admitted plan. Projected plans share body actions,
+slot count, purity and frame conditions. IDs, member order, reverse source-rule
+order and reverse first-encounter predecessor order remain unchanged.
+
+Membership starts with the existing first predecessor. A second distinct ID
+creates a sparse table; sufficient occupancy promotes to a byte bitmap.
+Promotion requires at least 32 IDs and count/128 occupancy: one byte holds eight
+IDs while a hash entry contains at least two eight-byte words. Sparse graphs
+therefore avoid a dense bitmap per component. All membership storage belongs
+to construction and is absent from returned components.
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:89-113,190-232= checks contracts
+before shape-directed transformations and keeps common transformations under
+named owners. Its =runtime/table.ss:439-465= owns synchronous update/publication.
+These ideas apply here as private functions and =match= branches. No extensible
+public model or dispatch protocol is introduced for private construction state.
+
+* Matched native evidence
+
+=reference.ss= freezes =b903be7975637a7dfd502f52d276046680d7d8b0:program/component-plan.ss=.
+Both sides use the same current graph and positive-plan modules and receive the
+same admitted metadata. Timed intervals cover complete SCC metadata construction,
+including graph partitioning. Input generation and normalization occur outside.
+No expression compilation, cache hit, coordinator execution or solver speed is
+claimed. Every pair compares complete ordered component metadata.
+
+=benchmark.ss= was generated with public =:asp-gerbil-scheme/benchmark-api=;
+=runner.ss= uses its contract validation and =benchmark-run/result=. Each shape
+has 50 alternating old/new pairs, GC before each interval, process user+system
+CPU, and root-processor cumulative allocated bytes. Both sides are compiled
+symmetrically. The measured lane has no other qualification/build lane launched
+by this run. Values are medians, not wall-clock latency.
+
+| Shape | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins/50 |
+|-------+------------+------------+-----------+-----------+-------------|
+| 2048 single-owner rules | 1780 | 152 | 7292304 | 1442080 | 50 |
+| 8192 vertices, duplicated fan-in edges | 196002 | 1091 | 3866800 | 4206352 | 50 |
+| 1024 owners, duplicated multiheads | 171 | 174 | 1018856 | 1027144 | 13 |
+| 2048-vertex sparse chain | 178 | 139 | 1196224 | 1212656 | 49 |
+| Three vertices and two rules | 3 | 2 | 8768 | 6000 | 27 |
+| Empty graph | 1 | 1 | 144 | 160 | 18 |
+
+Rules and fan-in require >=20% CPU reduction and >=35 wins. Controls permit 5%
+CPU regression plus 20us resolution allowance; all shapes permit <=10%
+allocation growth plus 4096 bytes. All six final gates pass. Tiny absolute CPU
+values do not establish a speedup. Multihead CPU is 1.8% worse. Fan-in trades
+8.8% additional allocation for 99.4% lower construction CPU.
+
+The first hash-only predecessor experiment failed the unchanged allocation
+gate: 190512 -> 1721us, 3866800 -> 4724800 bytes (+22.2%). It was replaced by
+occupancy-based bitmap promotion; the failed receipt remains in ignored cache.
+
+* Native qualification and reproduction
+
+=t/qualification/ascent-component-construction-test.ss= checks every one of the
+512 directed three-node graphs with repeated edges and five head shapes,
+full-survivor identity, empty heads and empty graphs. A 129-node fixture checks
+bitmap promotion and a noncontiguous SCC against independently derived
+predecessor order. Existing positive-plan and positive-component Suites cover
+real expression compilation, multihead truth, seeded rows, snapshots, actor
+worker counts, cancellation and failed merges.
+
+Use the installed SDK and canonical =.gerbil/lib=; build only project modules:
+
+#+begin_src sh
+LIBRARY_PATH="$(brew --prefix openssl@3)/lib" GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/component-construction/build.ss "$PWD/.gerbil/lib" "$PWD/.cache/ascent/component-construction/runner" runner
+GERBIL_HOME=/opt/homebrew/opt/gerbil-scheme@0.19/current GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" .cache/ascent/component-construction/runner fanin .cache/ascent/component-construction/fanin.sexp
+#+end_src
+
+Run the six shapes sequentially. Build =qualify= with the same entry and lane
+argument, then require each Case success, =test-result-ok?=, final =OK= and exit
+zero. Binaries, logs and raw paired receipts belong to ignored
+=.cache/ascent/component-construction/=.
+
+Local qualification: three Suites, 57 successful Cases, final =OK= and exit 0.
+The production policy roster reports 30 findings, zero errors and
+=POLICY-NATIVE-OK=. Raw execution evidence remains in ignored cache.

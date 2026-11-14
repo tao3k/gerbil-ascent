@@ -1,0 +1,804 @@
+#+title: Incremental reasoning
+#+language: en
+
+[[file:../graph-index-export-algorithms-20261112.org][Audit index]]
+
+* Projection matrix metadata admission
+
+The 18-scenario projection batch passed all four index-projection and
+all five index-sharing scenarios. All nine slot-projection scenarios
+failed the initial oracle before measuring a pair. The frozen compiler
+returns a three-field plan and the current compiler returns five fields.
+The original whole-vector equality rejected the additional fields and
+fresh procedure identities. The updated test compares the full ordered
+slot data from the original plan, checks both ordered outputs against
+the same independent answer, retains the selected-action identity check
+and runs the current positive certificate checker. The sample counts
+and performance limits remain the ones in the original contract. The
+changed source compiled in a fresh native overlay. All nine scenarios
+reached their original paired gate and failed it. For example, sparse
+improved from 1,152.5 to 960.5 microseconds CPU but grew from 820,360 to
+1,000,752 allocation-counter bytes. The test correction therefore exposes
+a real performance failure after ordered parity, rather than counting the
+original setup failure as an allocation result. Evidence:
+=/private/tmp/ascent-native-projection-18.dYIa9W/= and
+=/private/tmp/ascent-slot-projection-corrected.uiw0kc/=.
+
+The negative allocation investigation also identifies an unconditional
+escape continuation around the evaluator's round and stratum loops.
+An isolated candidate replaces that escape with the already existing
+completion flag. The deadline is still tested after commit. When a
+round expires, its resumable cursor is retained and the outer stratum
+does not advance. Lean Guard accepted the local decision equivalence.
+The isolated native build passed, and 41 Cases across round workspace,
+lattice, Actor Session and positive provenance passed with that evaluator
+resolved. These include retained timeout cuts, cancellation, source and
+output budgets, and proof publication. The source and object hashes were
+rechecked. The original =index-build:solve= launch exited 137 at its
+watchdog before emitting a result. All 50 pairs completed in each of the
+three activation cases. The larger two still reported negative deltas and
+failed, and the small case failed with nonnegative but larger allocation.
+The evaluator candidate stays outside production. Evidence:
+=/private/tmp/ascent-round-completion.Mkm9kv/= and
+=/private/tmp/ascent-round-completion-perf.mgGP6o/=.
+
+The 93-scenario native batch completed with 52 passes and 41 failures.
+All 65 compiled input hashes matched after the run. Two failed
+=component-scope= scenarios completed their CPU pairs before the existing
+allocation lane rejected nonmonotonic VM counters. Other failures include
+original CPU/allocation threshold failures after ordered parity. Evidence:
+=/private/tmp/ascent-native-remainder-93.GG6MkA/results.tsv=.
+
+The generated Scheme descriptor checker now walks term/action and
+column/key pairs with direct tail loops. It keeps the independent slot map,
+proper-spine and count preflights, and first-rejection order. The locked
+LeanPoo Guard built all 182 proof and test jobs. The guarded renderer
+reproduces the Scheme source and the Rust output is byte-identical.
+Native Gerbil passed all 45 compiler-certificate and positive-plan Cases.
+
+All nine original slot-projection scenarios completed their 50 pairs
+with the compiled checker. Relative to the preceding candidate, the
+reported allocation counter dropped by 3,104 bytes in eight scenarios
+and 3,568 bytes below the former boundary. All nine still failed the
+unchanged gate. For sparse keys the candidate reported 997,648 bytes
+against the original reference's 820,360 bytes. This makes the eliminated
+continuation/list-dispatch charge measurable but leaves the larger
+compiler and execution gap open. The weighted UF fixture times complete
+list construction and then keeps only =(length rows)= summaries between
+trajectories. These checker changes do not enter that direct path.
+Evidence: =/private/tmp/ascent-descriptor-tail.azZX2R/= and
+=/private/tmp/ascent-descriptor-tail-lean-build.log=.
+
+The phase probe used the same compiled modules with full ascending keys and
+checked four exact join results per execution. Six observations of eight
+operations per arm separated compilation, standalone certification, and
+frame construction plus traversal. At width 2,048, old and current
+compilation reported 651,000 and 827,648 allocation-counter bytes per
+operation. Standalone certification reported 175,880 bytes. Old and current
+execution reported 418,405 and 418,917 bytes. Certification accounts for
+nearly all of the observed compile allocation difference at this width.
+The small and former-boundary cases show the same concentration in
+compilation. Keep the independent certificate and improve its private
+symbol map and ordered key selection. These are diagnostic observations
+under normalized GC, not original gate samples. Evidence:
+=/private/tmp/ascent-descriptor-tail.azZX2R/descriptor-phase.log=.
+
+The next change reserves the checker map from a bounded hint, no larger
+than the first actual source atom's width. Monotone key columns walk the
+source spine once, including repeated columns. Reverse and mixed-order
+columns use the existing vector path. Lean =collectForward_exact= checks
+the ordered lookup equivalence, =cursorAdvances_exact= gives the cursor
+work, and =certificateCapacity_bounded= checks the reservation bound.
+The compiler separately reserves from variable occurrences in its first
+atom, so the independent certificate still reconstructs its own map.
+
+| Width | Metric (counter bytes per operation) | Tail checker | Bounded checker and cursor | Also reserve compiler map |
+|-------+--------------------------------------+--------------+----------------------------+---------------------------|
+|  2048 | Independent certificate              |      175,880 |                     40,184 |                    40,184 |
+|  2048 | Complete compilation                 |      827,648 |                    691,952 |                   572,656 |
+|   128 | Complete compilation                 |       67,696 |                     54,200 |                    42,736 |
+
+The combined candidate passed sparse, reverse, repeat and single under
+their original 50-pair native gates. Full, below-boundary, boundary,
+small and empty failed. The 2,048-column full case lowered allocation
+below its frozen reference, while the CPU median was 857 versus 437.5
+microseconds. All 45 native compiler-certificate and positive-plan Cases
+passed with the combined overlay. The focused Guard also proved
+=boundSlot_inverse=: a certified name directory with unique entries can
+check an already bound slot by index. The Scheme checker still uses the
+independent name map for bound lookups. These are slot-projection results.
+The direct weighted UF
+fixture does not call this compiler or certificate. Evidence:
+=/private/tmp/ascent-descriptor-forward.JhcYHp/= and
+=/private/tmp/ascent-compiler-slots.53feqR/=.
+
+Wide certificates now retain an inverse directory of their own accepted
+names. A bound action in the directory checks its exact slot, the current
+scope extent and symbol identity. Fresh actions still check and update
+the independent name map. The reserved directory is bounded by the same
+hint; slots beyond that reservation use the original map. Lean
+=boundSlot_inverse= supplies the equality under unique accepted names.
+The native corruption controls reject both a forged name and a slot that
+has not yet been admitted. The guarded renderer's Rust output matched
+the existing bytes.
+
+At width 2,048, the standalone certificate CPU median changed from
+404.625 to 233.687 microseconds in the phase probes, while its allocation
+counter rose from 40,184 to 56,648 bytes. Five original native scenarios
+passed with the inverse directory, adding the 128-column boundary case.
+Full, below-boundary, small and empty still failed. In the =full= gate
+the inverse candidate's CPU median was 569.5 microseconds against the
+frozen reference's 342.0 microseconds. The complete read-only key fusion
+candidate was also proved and tested. It added no gate pass, and the
+complete compile phase median was 469.313 versus 453.25 microseconds
+with the inverse-only candidate. The fusion is outside production.
+Evidence: =/private/tmp/ascent-descriptor-inverse.EK6wKl/= and
+=/private/tmp/ascent-descriptor-readonly.4ZDYpy/=.
+
+* Index rule occurrences by their admitted output relation
+
+POO PR #17 at =7d68b830= resolves membership requests against the partition
+owned by the same publication. It avoids rebuilding the input membership
+index for a rejected edit. Accepted topology edits still rebuild their
+required support. In ASCENT, source replacement retains the declaration
+and its dependency analysis. The corresponding reusable unit is the
+lowered stratum roster, including repeated rule occurrences and ordered
+multi-head projections. The production dependency pin remains
+Yuanxu =bbcb8fe9= and POO =6cf940be=. The experiment transfers the
+ownership and lookup algorithm from the inspected POO revision.
+
+=program/planning.ss= attaches a lazy output index to declarations with at
+least 256 rules. =program/update-selection.ss= builds one ordinal entry per
+stratum occurrence. Each output relation owns a bucket of occurrence
+references; a repeated head enters the bucket once but stays repeated in
+the rule. A selection checks roster identity and relation count. It reads
+the affected bitmap and sums the lengths of the reached buckets. The
+sparse path gathers those entries, sorts a private spine by descending
+ordinal, skips adjacent duplicates, and prepends into the original strata.
+The same projection function preserves ordered heads and lowered slots in
+both paths. If =hits * integer-length(hits)= exceeds the number of
+occurrences, the selector uses the ordered full scan. The cutoff and
+256-rule admission threshold are implementation choices. They are not
+performance thresholds or a measured universal crossover.
+
+The native work consists of an initial roster/head traversal and index
+storage, a subsequent affected-bitmap scan and bucket probes, a sort of the
+gathered entries, and head projection for the selected occurrences. The
+bounded sort estimate excludes physical allocation, GC and the cost of
+creating the affected bitmap. Dense fallback pays the preliminary bucket
+probes as well as the ordered scan. Source rows, rule frames, and
+provenance are excluded from the index. The per-cut engine continues to own
+them. Lean =SourceUpdateFrame.RuleActivation.sorted_gather_preserves_projection=
+proves ordered output and deduplication for exact buckets. The native
+Suite exercises dense fallback, mismatched roster identity, repeated
+heads, the same rule object occurring twice, and separate stratum order.
+The guarded Lean file passed without warnings. The strict SysML structural
+check passed. Neither result is a proof of native allocation or collector
+behavior.
+
+The production comparison separates the compiled index from the cost of
+running the query. The local MiniDusa Racket
+=private/runtime.rkt:find-facts= filters its database. The published Dusa
+compiler =src/language/compile.ts= generates keyed indices for binarized
+prefix predicates. The ASCENT output index applies the same general
+restriction of work to matching keys at the scheduler boundary. The Ascent paper's delta
+transformation continues to control which rows participate in recursion.
+[[https://arxiv.org/abs/2405.19040][Finite-Choice Logic Programming]]
+and [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Seamless Deductive Inference via Macros]].
+
+A native selection-only study used the same compiled selector in both
+arms, with and without the retained index. One rule matched among the
+indicated number of occurrences on a fixed two-relation schema. It
+verified the exact selected roster on every one of 1,000 alternating
+pairs per scale and checked dense selection separately. Index build
+figures are single observations. Sparse P95 near 1.2 microseconds is near
+the available wall clock granularity.
+
+| Occurrences | Index build (ms) | Scan P95 (ms) | Indexed P95 (ms) |
+|-------------+------------------+---------------+------------------|
+|       1,000 |            0.013 |         0.018 |            0.001 |
+|      10,000 |            0.060 |         0.178 |            0.001 |
+|     100,000 |            0.544 |         1.636 |            0.001 |
+
+The same-engine source replacement control used 1,000 real rules with
+1,000 matched pairs. Both arms used the exact same compiled engine. One
+received the existing analysis with its output index and the other
+received the same analysis without that field. Each result matched the
+independent expected active rule count and all 1,000 ordered output
+relations. The wall P95 was 48.893 ms with the scan and 48.772 ms with the
+index. The maxima were 51.571 ms and 54.498 ms. The output index removes
+a scan from rule selection. Whole-engine source replacement still pays
+declaration eligibility, source seeding, frame activation, and
+publication. The measured difference in P95 does not establish a
+material end-to-end gain.
+
+The exact candidate native image passed 45 Cases across three suites.
+The six existing selected-activation scenarios each completed 50
+matched pairs. =sparse=, =partial= and =all= passed.
+=update= and =lifecycle= failed with invalid negative allocation deltas
+and CPU medians of 4.661/5.150 ms and 4.708/5.192 ms. =small= failed
+with 973,764.8/1,019,412.8 counter bytes and 623.2/654.0 microseconds.
+Negative deltas are retained as invalid observations. The original
+gates and references remain in force.
+
+The earlier tiny-round and direct source-fold experiment passed 52
+native Cases and reduced the incremental fixed solve allocation by
+9,072 counter bytes. Four original index/storage engine gates still
+failed, so the candidate and its provisional proofs were kept out of
+the workspace sources. The allocation split had observed 13,424
+additional engine bytes and 19,920 additional evaluation bytes in
+both widths, plus 5,312 bytes in the separate result read. Those are
+native counter deltas with no collections, not physical retained
+bytes. Evidence: =/private/tmp/ascent-index-solve-phases.cKTQZY/=
+and =/private/tmp/ascent-tiny-round-solve.RA9WPE/=.
+
+Selection and engine receipts:
+=/private/tmp/ascent-poo-rule-output.x2MmDj/=.
+
+The scaling control is available through the native test entry. Select a
+prefix built from the measured source before running it.
+
+#+begin_src sh
+timeout --kill-after=3s 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^rule-output-index-test$' benchmarks/rule-output-index-test.ss
+#+end_src
+
+** Source replacement phase attribution
+
+The evaluator was allocating frames for the entire declaration even on
+a completed-result reuse path, then activating the selected subset again.
+The whole-program Actor eligibility and prefix preparation read only plan
+slot 5, and scalar pivot pruning only updates slot 4 on a non-reuse path.
+The candidate reads the same immutable roster for policy and allocates
+only the selected frames during replacement. A later dirty invocation
+still activates the full declaration through the existing branch.
+=SourceUpdateFrame.RuleActivation.selected_frame_slots_le= bounds the
+initial selected frame slots under the preserved slot-extent premise.
+
+The native phase study executed 1,000 replacements per compiled variant
+and independently checked all 1,000 result relations after each
+replacement. The cases alternate neither machines nor engine binaries
+within one process. The table uses medians of the ten 100-request batch
+medians. Admission is =gerbil-ascent-prepare-session-reuse= and
+construction is =gerbil-ascent-make-engine-state=. Evaluation is
+=engine-state-run= and reading calls the result's =rows-of= for each output.
+
+| Variant | Admission (ms) | Construction (ms) | Evaluation (ms) | Read (ms) | Total (ms) | GC count | GC CPU/collection (ms) |
+|---------+----------------+-------------------+-----------------+-----------+------------+----------+------------------------|
+| Full frame allocation | 3.336 | 3.525 | 0.113 | 0.253 | 7.227 | 57 | 39.431 |
+| Selected frames       | 3.377 | 3.543 | 0.115 | 0.257 | 7.301 | 56 | 39.349 |
+
+The frame change removes definite work and has no demonstrated
+end-to-end latency gain in this one-slot workload. The 48 ms paired P95
+coexists with stable 7.1 to 7.6 ms batch medians in the phase study.
+Collections averaged about 39 ms of CPU each. This is aggregate
+attribution. Exact per-request P95 attribution requires a collection
+counter recorded at each phase boundary. The two largest ordinary
+phases are reuse admission and reconstruction.
+The next algorithm boundary is a declaration-bound admission witness for
+owned closed rules and a relation-state publication that preserves
+unaffected private indexes. Such a witness requires proof that changing a
+source cut cannot change its declaration, rule callbacks, or provider
+eligibility. It must preserve source-value checks and fail closed for
+opaque inputs. Any retained mutable state must remain owner-local and
+publish after cancellation, resource and provenance checks.
+
+The combined candidate reproduced three original performance gate passes
+and three failures. The reported negative allocation samples remain
+invalid. The strict weighted full-list result is a separate contract.
+At 512 vertices, 32 independent complete exports require 25,165,824
+distinct pairs and at least 603,979,776 bytes of pair payload under the
+recorded layout. In the strict native measurement its P95 was
+265.005 ms and its collector median was 160.267 ms. Matching by affected
+rule or SCC cannot reduce the number of pairs this contract requires.
+A factorized or indexed consumer can avoid full expansion when its own
+contract asks for a key, visitor or typed buffer. The full-list gate
+must still measure the ordinary list result.
+
+Evidence for both phase lanes and the original gates:
+=/private/tmp/ascent-poo-selected-frames.GHlxbV/=.
+
+The final source uses =delay-atomic=, matching the existing source-snapshot
+ownership discipline. The native retained-update suite passed all seven
+Cases, including a 256-rule indexed update that pauses, resumes, and later
+reactivates the whole roster after an append. The two companion suites
+passed 39 Cases on the preceding combined variant. The checked-in scaling
+test ran against the final artifacts and completed all 3,000 matched
+selections.
+
+| Occurrences | Index build (ms) | Scan P95 (ms) | Indexed P95 (ms) |
+|-------------+------------------+---------------+------------------|
+|       1,000 |            0.013 |         0.018 |          0.00095 |
+|      10,000 |            0.087 |         0.181 |          0.00119 |
+|     100,000 |            0.545 |         1.710 |          0.00310 |
+
+The build, test source, and compiled artifact hashes were checked at the
+start and end of the final control. The pre-atomic complete update gate
+failures still prevent release qualification.
+
+A second native phase control recorded the collector count at the
+admission, construction, run and result-read boundaries of each
+replacement. All 1,000 replacements matched the independent expected
+output. P95 was 48.776 ms overall, 13.466 ms for 944 requests without a
+collection, and 80.390 ms for 56 requests with a collection. The
+collection counts by phase were 0, 53, 3 and 0. This identifies engine
+construction as the phase in which the collector most often ran in
+this cohort. It does not identify the allocation site that filled the
+preceding interval. The boundaries sample process counters and have
+their own fixed instrumentation cost.
+
+Evidence: =/private/tmp/ascent-poo-selected-frames.GHlxbV/tail.log=.
+
+** Retain the fresh engine's empty membership
+
+The completed-result seed loop fetched each unaffected result and allocated
+a second membership table even when both the fresh source and completed
+relation had zero rows. A Set table installed by source admission already
+represents this cut. An empty lattice likewise has its own initial key
+table. The empty branch now retains those private tables. The result read,
+existing budget check and publication are still executed. Nonempty cuts
+keep the original seeding and membership logic. No table is borrowed from
+a completed result or another engine.
+
+Guarded Lean =SeedMembership.reuse_empty_seed_table= proves the empty
+membership equality under exact source membership, and
+=seed_tables_partition= counts the Set tables avoided. The exact candidate
+passed 33 Cases across the retained-update, lattice and Actor Session
+suites. The original =update=, =lifecycle= and =small= gates each completed
+50 pairs and remain failed. Their CPU medians were 4.695/5.076,
+4.737/5.177 and 0.627/0.660 ms respectively. The first two allocation
+receipts contain invalid negative observations. The small gate observed
+973,764.8/1,017,076.8 counter bytes.
+
+The same instrumented low-level engine workload completed another 1,000
+replacements after the change. Each replacement checked completion,
+active-rule count and every output relation. The reference and candidate
+ran in separate native test processes on the same SDK and heap limit.
+
+| Variant | Wall P95 (ms) | No-GC P95 (ms) | GC-only P95 (ms) | GC requests | Admission/build/run/read collection counts |
+|---------+---------------+----------------+-----------------+-------------+--------------------------------------------|
+| Fresh table for empty seed | 48.776 | 13.466 | 80.390 | 56 | 0/53/3/0 |
+| Retain private empty table | 9.261  |  7.310 | 49.018 | 47 | 0/28/19/0 |
+
+The reduced collection frequency crosses the percentile's five percent
+boundary in this cohort. Requests that collect still incur a long pause.
+The workload constructs a replacement engine directly and does not pass
+the public Session's owned-publication handoff. The public entry and the
+original performance gates have separate results. Evidence:
+=/private/tmp/ascent-poo-empty-owned-state.7P7Usc/=.
+
+A separate public Session test used =gerbil-ascent-session-replace-sources!=
+on a single retained Session. It alternated the replaced value for 1,000
+requests per variant, checked all 1,000 output relations after each
+request, and verified that the original held result was unchanged. The
+same public transaction includes the owned-publication handoff. The
+replacement clock excludes reading and checking returned rows.
+
+| Variant | Wall P95 (ms) | Maximum (ms) | Requests with a collection |
+|---------+---------------+--------------+----------------------------|
+| Fresh table for empty seed | 7.347 | 55.366 | 42 |
+| Retain private empty table | 6.859 | 58.373 | 36 |
+
+The public P95 improved by 6.6 percent and the maximum increased.
+This workload already had a collection rate below five percent in
+both variants. The large tail improvement in the direct engine control
+must not be transferred to the public Session result. Both public
+native Cases passed. Exact receipts are =public-before.log= and
+=public-after.log= in the candidate evidence directory.
+
+The existing Quint =SessionPublication= gate compiled from source and
+passed its positive check. All three expected counterexamples
+(early publication, bounded publication, and snapshot aliasing) were
+observed. This gate exercises the transaction protocol model. The
+Scheme table and ordered scheduler correspondences have separate
+native and guarded Lean evidence.
+
+* Checked source membership and relation-owned replacement
+
+The reference POO Graph revision implementation was inspected at local
+=67cfc17=, including =7d68b83= for partition membership preflight. Its
+=owned-component-revision= edits the predecessor's owned component source,
+uses the partition's inverse ownership, and rebuilds code only for edited
+groups unless support is explicitly complete. The published =d43578f=
+benchmark measured 0.061--0.096 ms CPU for a prepared million-owner edit,
+with one owner check, two opened buckets and two rank writes. It excludes
+cold SCC construction and later order enumeration. The corresponding
+full-owner scan cost 552.426--604.882 ms. The frozen ASCENT native comparison
+uses the same POO artifact in both arms, =424e5250=.
+
+An ASCENT source edit ordinarily preserves rule topology. Reusing POO's
+dynamic topological repair for an unchanged dependency graph would duplicate
+work. The relevant operation is selecting the affected relation closure and
+retaining the admitted state of every untouched relation. The rule output
+index already does the former for activation. On 1,000 real rules, the old
+control measured 48.893 ms scan P95 and 48.772 ms indexed P95 for a full
+replacement. The timed path still rebuilt source and relation state. The
+selector-only timings expose the cost of one operation inside that path.
+
+=program/reuse.ss= also classified a completed fact by walking the admitted
+base with =member= whenever the relation had a field checker. For =B= base
+rows and =U= distinct completed rows this can make up to =B*U= equality
+comparisons. Each absent row incurs =B= comparisons, even when the relation
+was untouched by the edit. The Set initialization path already inserts the
+same admitted base rows into its exact =equal?= membership index. A privately
+recaptured checked Session now reads that table after the original per-row
+check. The fresh table for completed membership stays separate. Every source
+occurrence still consumes its original budget, and the first occurrence of a
+completed fact consumes derived budget only if it is absent from the base.
+The rule/provider eligibility check, rollback and final publication retain
+their existing order. Caller-owned declarations keep the original fallback.
+
+=SourceUpdateFrame.SeedMembership.indexed_derived_rows= checks the exact
+classifier correspondence and =indexed_seed_probe_saving= states the
+full-miss probe reduction. Native correspondence depends on the Set source
+table representing the actual admitted rows and the private checked predicate
+lists remaining closed. Hash probes have collision and allocation costs.
+=benchmarks/source-reuse-index-test.ss= measures 1,000 real checked Session
+transactions per scale. It checks the untouched ordered result against the
+predecessor and independently checks the materialized membership. The clock
+includes source capture, preparation, evaluation and publication. Result
+validation is outside the clock. The native cancellation and provenance
+controls are independent of this timing comparison.
+
+The frozen reference and corrected candidate each ran two native test
+processes per width, in reference/candidate/candidate/reference order. Each
+process completed 1,000 real transactions at Gambit's default live ratio,
+under the same 2 GiB heap cap and 90-second watchdog. The table shows both
+process observations as ranges. No forced collection entered the timing
+loop. Candidate artifact and benchmark source hashes matched at the closing
+fence. The workload has a 50 percent overlapping incoming relation. A list
+walk visits every base hit position once and every base row for each miss,
+for =B*(B+1)/2 + B*(B/2)= comparisons. The indexed loop uses =3*B/2=
+source membership lookups. These are source-level work counts for this
+fixture, not measurements of hash bucket traversals.
+
+| Base rows | Reference wall P95 (ms) | Candidate wall P95 (ms) | Reference max (ms) | Candidate max (ms) | Reference / candidate CPU median (ms) |
+|-----------+-------------------------+-------------------------+--------------------+--------------------+---------------------------------------|
+|       256 |             1.129-1.647 |             0.315-0.317 |      32.540-36.164 |        0.502-0.535 |               1.055-1.062 / 0.287-0.288 |
+|      1024 |           13.336-25.217 |             0.861-0.870 |      47.055-86.015 |      31.007-33.256 |            13.120-13.475 / 0.798-0.803 |
+
+At 1024 rows the source classifier avoids 1,049,088 list element
+comparisons in favor of 1,536 index lookups. Six of 1,000 candidate
+requests collected in each process at that width, compared with seven in
+each reference process. The maximum therefore remains sensitive to heap
+history. The result covers replacement of an independent source with a large
+unchanged mixed Set relation. It does not measure complete UF export,
+dense edits or SCC topology changes. Evidence:
+=/private/tmp/ascent-checked-source-index.O0XJ0n/=.
+
+The corrected candidate passed all 27 native Session withdrawal Cases,
+including duplicate base occurrences, exact derived budget, failed batch
+rollback and older held results. The first candidate's missing false
+fallback made Gerbil return a truthy void from a conditional. Nine ordinary
+Session Cases exposed the error before the corrected artifact was timed.
+Their original logs remain under =first-candidate/=. The locked LeanPoo
+Guard accepted both new theorems, and the strict SysML structure passed.
+The same compiled candidate passed 47 further Actor, cancellation, and
+positive and stratified provenance Cases. Quint =SessionPublication=
+passed the unchanged positive check and produced the three expected early,
+bounded, and alias publication counterexamples. The initial sandboxed
+formal run could not query macOS physical memory. The same existing recipe
+passed with host access.
+
+The next owner boundary is the completed relation cut. A prepared sparse
+source edit should carry the exact changed slots and read the existing SCC
+successor index. Outside the transitive cut, immutable ordered rows, membership
+and index version belong to the predecessor. Any first write needs a fresh
+engine-local owner. Inside the cut, maintain source multiplicity and use the
+existing semi-naive evaluator for additions. Deletion needs exact rederivation
+or a specialized checked delta algorithm with alternate supports. A naive
+support decrement can retain self-supporting cycles. Source and derived counts,
+completedness, occurrence identity and provenance must all agree before one
+atomic publication. Dense edits require a full-cost fallback. Qualification
+must include both kinds of edit, cold construction, sparse fan-out, a dense
+SCC, skewed joins and result consumption, with requests large enough to expose
+allocation and GC tails.
+
+The Ascent paper gives the semi-naive delta and indexing baseline. Dusa's
+published implementation generates keyed prefix indices after binarization;
+the local MiniDusa Racket =find-facts= is an independent scan reference. The
+resulting ASCENT design should index checked stable prefixes when both fact
+and prefix arrivals can drive work. Cyclic multiway joins warrant a separate
+comparison with a worst-case-optimal join. Complete mutable list export still
+charges the full output size. It has its own GC and allocation acceptance.
+
+- [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Seamless Deductive Inference via Macros]]
+- [[https://arxiv.org/abs/2405.19040][Finite-Choice Logic Programming]]
+- [[https://www.cs.ox.ac.uk/people/boris.motik/pubs/hmh22modular-materialisation.pdf][Modular Materialisation of Datalog Programs]]
+- [[https://arxiv.org/abs/1203.1952][Worst-case Optimal Join Algorithms]]
+
+* Dependency selection phase attribution
+
+The frozen update-dependencies cases passed exact bitmap parity but failed
+all four performance gates. A separate phase observation used the same four
+declarations, 100 alternating samples with ten calls in each interval and
+the original reference and current native artifacts. It checked independent
+phase entry results and complete bitmap equality before timing.
+
+| Scenario | Reference/current eligibility CPU (us) | Reference/current full selection CPU (us) |
+|----------+----------------------------------------+-------------------------------------------|
+| chain unchanged | 99.3 / 133.2 | 113.6 / 145.5 |
+| chain changed | 99.0 / 132.9 | 113.5 / 145.7 |
+| wide unchanged | 468.5 / 504.4 | 513.8 / 517.3 |
+| wide changed | 467.9 / 504.6 | 508.0 / 520.4 |
+
+The phase observation locates the large common cost in eligibility before
+the successor walk. The isolated alternative kept every term observation
+through POO's revision-aware inline access sites and read the previous cut
+directly as a vector. The original 100-pair gates still failed on all four
+scenarios. It won 99 and 100 wide pairs, but wide candidate CPU medians
+483.4 and 484.0 us missed the original 10 percent reduction. The narrow
+cases remained slower than their reference. The inline sites increased
+allocation in all four cases relative to the frozen current artifact.
+The candidate remains isolated. Evidence:
+=/private/tmp/ascent-dependency-reads.HKmSAF/=.
+
+* Live layout reads in dependency eligibility
+
+An isolated factory-marker experiment passed all four original performance
+Cases. Its premise was false. Updating a provider or a term kind directly in
+the live POO instance changed the result of ordinary field demand while the
+object revision stayed equal. The marker-only candidate admitted both
+changed values. The native reference refused them. The revised path uses
+factory metadata to select the layout representation and reads the live
+cell on every occurrence. The term keeps one invocation-local owner, shape
+and offset. Relations share only offsets with the same shape and read their
+own receiver's cells. Missing values take ordinary demand. Active POO
+observations and prechecks use the original getter route.
+
+Re-reading through the live HashTable preserved these semantics but missed
+all four original performance gates. Reading the same current layout cells
+by guarded offset passed both wide Cases. It initially missed both narrow
+allocation gates at 22,820.8 and 25,892.8 bytes. Hoisting the per-term and
+per-head predicates out of the per-atom traversal reduced these to 1,684.8
+and 4,756.8 bytes in the isolated build, while keeping the same checks and
+their order. All four Cases then passed their 100-pair gates. These values
+are allocator-counter deltas for the original batched benchmark. They do
+not estimate total process memory.
+
+The source tests preserve two counterexamples at a matching object
+revision, exact precheck demand order and a getter that changes a term
+between its head and body visits. The Lean model binds the factory stamp
+guard, separates the cell address from its current value, and verifies
+ordinary demand in observation mode. Equality between an actual current
+POO layout cell and ordinary lookup remains a native premise. Guarded
+rendering checks the two modified generated Scheme regions byte for byte.
+
+Isolated experiment evidence: =/private/tmp/ascent-dependency-factory-fields.i5nL5g/=,
+=/private/tmp/ascent-dependency-live-fields.jdnuGP/=,
+=/private/tmp/ascent-dependency-live-layout.Haegjb/= and
+=/private/tmp/ascent-dependency-layout-scan.XljclB/=.
+
+The workspace versions of =program/types.ss= and
+=program/update-selection.ss= were rebuilt from source and checked in the
+same native test entry. All 28 Session withdrawal Cases passed, including
+the within-walk getter mutation. A companion native run passed all 50
+Actor, cancellation, provenance and weighted detachment Cases. The complete
+guarded Lean build completed 183 jobs. Both changed generated regions
+matched their guarded Lean output.
+
+| Original scenario | Reference/current CPU median (us) | Reference/current allocation counter bytes | CPU wins |
+|-------------------+-----------------------------------+--------------------------------------------+----------|
+| chain unchanged   | 114.5 / 113.6 | 17396.8 / 1684.8   | 76 / 100 |
+| chain changed     | 114.1 / 114.5 | 20420.8 / 4756.8   | 34 / 100 |
+| wide unchanged    | 509.5 / 380.0 | 822356.8 / 1684.8  | 100 / 100 |
+| wide changed      | 507.5 / 380.5 | 823892.8 / 3268.8  | 100 / 100 |
+
+All four native Cases passed their original gates with the same bitmap
+parity and artifact identities before and after measurement. The benchmark
+permits a five percent CPU margin for both chain controls. Its wide gates
+require a ten percent CPU reduction, twenty percent allocation reduction,
+and at least 75 CPU wins. The default collector policy, 2 GiB cap, and
+90-second scenario watchdog were used. Exact evidence:
+=/private/tmp/ascent-dependency-layout-final.m3w2Ue/=.
+
+The same rebuilt image passed the original seven weighted scenarios and
+both strict scale Cases at explicit =live-ratio=8=. The 384- and 512-vertex
+P95 values were 40.868 and 56.709 ms, with maxima of 47.280 and 63.086 ms.
+Each strict Case completed its 100 CPU pairs and 100 admissions, with 32
+complete exports per admission and five allocation pairs. The 2 GiB cap,
+90-second watchdog, and relative and absolute gates applied. The default-GC
+export latency remains open. These are separate receipts from the original
+235-scenario matrix, which predates the layout changes. Evidence:
+=/private/tmp/ascent-dependency-layout-final.m3w2Ue/weighted/=.
+
+* Factor duplicate relation edges before stratification
+
+The mixed preflight fixture has four rules, sixteen heads per rule, and
+sixteen reads of one source per rule. The occurrence-based path constructs
+1,024 dependency records for sixteen unique source/head pairs. Repeated
+ordinary and strict reads constrain the same two levels. Any strict
+occurrence raises the required difference for that pair from zero to one.
+
+For at most 32 dense relation IDs on the supported fixnum representation,
+=core/rule-semantics.ss= builds masks for heads, ordinary heads, readers,
+and explicit strict readers per rule. For each distinct source it unions
+the ordinary and strict head masks into invocation-owned rows. An explicit negative or aggregate read
+contributes all the rule's heads to the strict row. A lattice source
+contributes only the ordinary heads. The resulting support graph uses
+the existing SCC algorithm and shares component propagation with the
+occurrence path. A strict internal edge triggers an occurrence replay in
+the original forward order, retaining the last matching diagnostic.
+The large-graph path keeps its ordered records. The positive-only early
+return still avoids building any graph.
+
+Guarded Lean =strict_dependency_factors_by_rule= connects the reader and
+head unions to the original rule-local dependency relation.
+=stratification_constraints_by_support= proves equality of all feasible
+labelings, and =strict_cycle_by_support= proves that a strict internal
+edge is detected from the same support. =diagnostic_replay_exact= proves
+that forward last-match and the old reverse first-match select the same
+occurrence. The source still relies on the native dense ID admission and
+the existing SCC order guarantee. The bounded cost model counts 132
+head, clause and row-merge steps before SCC conversion in the frozen
+fixture. It does not assign equal clock cost to these operations.
+
+The first compiled packed candidate passed the original positive,
+negative, aggregate, lattice and cold Cases, each with 50 paired samples.
+The three previously failed mixed Cases reduced the reported allocation
+from 236,618 bytes to 10,490, 10,490 and 10,634 bytes, and their CPU medians
+were 24.500/2.375, 22.750/2.375 and 23.375/2.625 microseconds.
+The warm and small whole-solve Cases remained above their unchanged
+gates. The initial source qualification reached its 90-second deadline
+in the independent exhaustive label oracle after 24 successful Cases.
+Evidence: =/private/tmp/ascent-strata-support.IlVVTr/=.
+
+* Packed native round frontier
+
+The native round workspace previously allocated one hash table for the
+nonempty delta frontier and another for relation ordinals grouped by stratum.
+Each reset and commit gathered and sorted the selected ordinals. For at most
+32 relations on hosts where the mask fits a fixnum, the same workspace now
+keeps the frontier in one fixnum. Reset snapshots the selected ordinals
+before invoking any reset and then visits the set bits in ascending order.
+It rebuilds the frontier from the final delta sizes after every reset returns.
+Larger workspaces retain the sparse tables and sort. The original provider
+eligibility, staged write marks, publication checks and evaluator checkpoints
+remain in force.
+
+Lean Guard checked =round_reset_union= and =round_commit_union=. The model
+relates ordered ordinal filtering to the old frontier plus current-stratum
+nonempty totals at reset, and to the old frontier plus staged writes at
+commit. Native controls cover the 32/33 representation boundary, duplicate
+writes, timeout resumption, retained appends, stratum handoff, callback order
+and rejection before retry.
+
+The compiled overlay used the existing evaluator, reference artifacts,
+50-pair scenarios and original limits. Allocation counter measurements:
+
+| Scenario | Frozen reference bytes | Previous matrix bytes | Packed frontier bytes |
+|----------+------------------------+-----------------------+-----------------------|
+| rule-bindings small | 17412.8 | 46196.8 | 37380.8 |
+| rule-bindings guards | 633940.8 | 239460.8 | 230644.8 |
+| rule-bindings patterns | 1260532.8 | 896772.8 | 887956.8 |
+| strata-preflight small | 107613 | 142461 | 133645 |
+
+All four completed their original samples and failed their full performance
+gates. The small cases still exceed their allocation allowances. The large
+binding cases meet the allocation improvement but miss their CPU thresholds.
+The bounded workspace removes 8,816 counter bytes in each measured scenario.
+The strict weighted UF provider materializes a solved relation directly and
+does not use this round workspace.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/round-bitmap.nuvpW8/=.
+
+The integrated version shares SCC propagation with the occurrence path.
+Native compilation of the two qualification Suites and their independent
+fixture allowed all 28 Cases to finish under the same 90-second watchdog.
+The checks enumerate all 512 three-node graphs and their independent
+minimum-label assignments, compare the competing error messages, and test
+the last packed bit and first fallback at 32 and 33 relations. The full
+guarded Lean build completed 183 jobs.
+
+| Original scenario | Reference/candidate CPU median (us) | Reference/candidate counter bytes | Original gate |
+|-------------------+-------------------------------------+-----------------------------------+---------------|
+| positive  | 4.875/1.000   | 132154/1450    | pass |
+| negation  | 20.250/2.500  | 236618/11786  | pass |
+| aggregate | 20.125/2.500  | 236618/11786  | pass |
+| lattice   | 20.625/2.875  | 236618/11930  | pass |
+| cold      | 710.5/741.5   | 1633192/1215752 | pass |
+| warm      | 163.0/232.0   | 262408/368872 | fail |
+| small     | 57.938/79.625 | 106685/141533 | fail |
+
+Each scenario completed the original 50 paired samples. Both whole-solve
+failures exercise all-positive programs and do not use the packed strict
+graph. Evidence: =/private/tmp/ascent-strata-final.Eo9U1V/=.
+
+Fifty alternating phase samples on each of the two exact program shapes
+checked the complete ordered rows against the independent constant answer.
+No collections or invalid allocation observations occurred inside the
+three observed phases. The phase instrumentation and its medians are
+separate from the original benchmark verdict.
+
+| Shape | Phase | Reference/candidate CPU median (us) | Reference/candidate counter bytes |
+|-------+-------+-------------------------------------+-----------------------------------|
+| warm  | construction | 59/98 | 44608/74896 |
+| warm  | run          | 145/210 | 183888/254720 |
+| warm  | result reads | 133/125 | 32800/38112 |
+| small | construction | 32/62 | 8768/20704 |
+| small | run          | 24/47 | 7232/24832 |
+| small | result reads | 86/85 | 29824/35136 |
+
+The next source attribution belongs inside engine construction and
+evaluation, where both shapes show excess CPU and allocation. The public
+result read has more counter bytes and no corresponding CPU increase in
+this paired phase study. Evidence: =engine-phases.log= in the same
+directory.
+
+The refreshed matrix uses a frozen copy of the current Scheme sources,
+native objects and the same 235 original scenario entries. It adds the
+two strict scale cases to the execution ledger. On that image both strict
+cases completed 100 pairs and 100 admissions at the explicit 8 percent
+profile, with 60.993/82.808 ms P95/max at 384 vertices and
+55.958/60.960 ms at 512. All seven original weighted Cases also passed.
+The full ledger and its closing artifact fence are kept separately in
+=/private/tmp/ascent-current-native-matrix.ibMO0Y/=. The completed weighted
+receipts do not determine the remaining matrix verdict.
+
+* Empty view routing on a Set-only engine
+
+=program/evaluate.ss= determines whether the engine has any view-backed
+relations. It also allocates generation, journal and route buffers and
+runs source-cut initialization for engines with no eligible relation.
+Rule routing traverses every rule body on the unordered path. The
+candidate moves the roster test before allocation and uses the standard
+=vector-any= over the existing provider vectors. The same identity
+predicate guards both publication phases. Engines with any eligible
+view retain the original source and rule routing logic.
+
+Lean Guard checked =no_view_owners_no_publications=. The model assumes
+that clause ordinals came from the admitted declaration roster. It
+proves the ordered eligible declaration and clause lists are empty
+under the branch's predicate. The theorem models the publication
+effect boundary. The native comparison measures the traversal cost.
+
+The frozen SDK built both evaluator sources through =gerbil build=.
+Nine original 50-pair scenarios ran through =gerbil test= for each arm
+with their original workloads, gates, 2 GiB cap and 90-second watchdog.
+The candidate saved 400 to 1,488 counter bytes per measured solve.
+Small rule binding fell from 46,196.8 to 45,796.8 bytes. Warm strata
+fell from 369,272 to 367,784 bytes and its measured CPU median from
+242.5 to 235.0 microseconds. The wide index solve went from 1,283.0
+to 1,771.2 microseconds in the measured comparison. The nine gates
+remained failed in both arms. The candidate stays in isolation.
+The strict weighted fixture invokes the UF provider directly.
+
+The candidate passed all 77 Cases across Provider views, Actor Session,
+timeouts, positive provenance, and Session deletion. The source and
+implementation object hashes matched after those runs.
+
+An earlier comparison inherited symlinks to the common compiled
+implementation. Its logs are excluded. The corrected comparison
+replaced the links in each private arm with the corresponding build.
+The common build's three fenced evaluator artifacts were restored
+byte-for-byte after a copy followed those links. All 3,537 entries
+in the previous matrix fence matched after restoration. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/view-owner-fast-path.vnJbaS/=
+(=fenced-*= logs and =checked-artifacts.sha256=).
+
+* Source-only roster and completed-result seeding
+
+The direct replacement-engine entry accepts a public completed result
+without an owned publication. On that path =gerbil-ascent-publication-size=
+returns false for every relation, so no source-only relation can skip
+the ordinary seeding loop. The previous constructor walked every rule
+head and allocated the relation bitmap for each update. The trial
+constructs that bitmap only when it receives a publication. When the
+loop needs the public reader, it still demands =rows-of= at each
+original relation boundary. Repeated capsule fields are read once and
+the two size vectors share one traversal of each completed row list.
+
+=SourceUpdateFrame.SeedMembership.absent_publication_requires_seed=
+checks the no-publication case. The source correspondence depends on
+the existing matching-result guard in =program/result.ss= and the
+natural-number sizes in the fresh engine. A matching publication
+still applies the affected set, source-only and lattice checks, and
+exact count comparison before using already admitted source rows.
+The lemma does not estimate time spent in eligibility, seeding or GC.
+
+The isolated comparison keeps the original 50-pair update, lifecycle
+and small gates. In the preceding whole matrix on the still-accounting
+runtime, all six selected-activation Cases passed. The same runtime's
+earlier separate =update= Case failed on CPU. Both receipts remain part
+of the evidence. The isolated build, Suite logs and comparison are
+under =.cache/ascent/yuanxu-v0.1.0/reuse-publication-cut.wxuy3vze/=.

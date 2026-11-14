@@ -1,0 +1,208 @@
+#+title: Canonical Operator declaration construction and root publication
+
+* Complete production flow
+
+Baseline =652934cd728d7edee32df020af75e9632dffc755=.
+=reference.ss= freezes =program/operator.ss= (original blob
+=76b1fd04ce11e5251be193f95465a5c34e880957=). Only its five relative imports
+are qualified. Descriptor admission, lexical lowering, POO contracts and native
+execution are shared dependencies. The frozen facade never selects the new
+construction receiver. =program/objects.ss= adds a Fragment root receiver and
+shares the existing private declaration extent with the Program receiver.
+=program/types.ss= supplies the private root responsibility refinement; the
+public contracts remain the shared baseline contracts.
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:45-63= resolves call applicability
+before selecting specialized behavior. =compiler/optimize.ss:28-35= owns its
+facts in an invocation extent. Apply those contracts to both Operator public
+publication methods: resolve constructors from the final POO receiver, test
+all three procedure identities, construct canonical children privately, then
+recursively validate the entire published Program or Fragment after restoring
+ordinary declaration checks. Any custom relation, rule or terminal constructor
+retains immediate checks, callbacks and error order. POO remains the extension
+axis; this is no alternate declaration model or persistent validation cache.
+
+* Fixed consumers and gates
+
+Prepare independent old/new graphs before clocks. Every timed call performs
+complete public compilation and alpha-normalizes all relations, source rows,
+ordered rule heads/bodies, every variable binding, source handles and output.
+Fragment additionally resolves all exported labels and consumes fresh handles.
+The mixed graph includes join, equality selection, reversed projection, mapping,
+union and lexical relation fix. A separately specified singleton oracle is
+checked through real admission/solve/query for both sides in the native
+qualification Suite before sampling.
+Cold additionally performs complete fresh solve/query inside every timed call.
+
+| Scenario | Input width | Complete consumer | CPU gate | Minimum wins /20 |
+| program | 64 | Program compilation and all declarations | <=90% old | 16 |
+| fragment | 64 | Fragment compilation, declarations, exports | <=90% old | 16 |
+| cold | 8 | Program compilation, admission, solve and query | <=110% old +20us | 0 |
+| custom | 16 | Extended receiver compilation and declarations | <=110% old +20us | 0 |
+| small | 2 | Mixed graph Program compilation and declarations | <=110% old +20us | 0 |
+| empty | 0 | Nullary source Program compilation and declarations | <=110% old +20us | 0 |
+
+Twenty alternating CPU pairs include natural GC; twenty separate native ASP
+=benchmark-run/result= admissions execute the optimized complete consumer.
+Five alternating allocation pairs use cumulative =##get-bytes-allocated!=, without per-leg forced GC
+inside the calls. Allocation gate <=110% old +8192 bytes. Runtime heap 3G;
+90-second measurement deadline. Gates are fixed before sampling; failures
+remain failures. Construction results do not establish solver or actor speed.
+
+* Reproduction and evidence ownership
+
+Use the existing repository =GERBIL_PATH= and =GERBIL_LOADPATH= settings and
+Darwin OpenSSL library path. Native =std/make= builds the owned modules using
+machine CPU capacity, with source hashes checked before/after compilation:
+
+#+begin_src sh
+gxi t/performance/operator-publication/build.ss "$PWD/.gerbil/lib" "$PWD/.cache/ascent/operator-publication/benchmark"
+gxi -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 \
+  t/qualification/ascent-operator-publication-test.ss \
+  t/qualification/scheme-operator-test.ss \
+  t/qualification/scheme-higher-order-test.ss \
+  t/qualification/ascent-typed-sharing-test.ss \
+  t/qualification/ascent-candidate-flow-test.ss
+timeout 90s .cache/ascent/operator-publication/benchmark -:max-heap=3G,debug=q \
+  all .cache/ascent/operator-publication/
+#+end_src
+
+=all= evaluates the six consumers sequentially in one native process. Independent
+Cases/Suites remain scheduled by native =gxtest=. Compilation, tests, policy and
+other benchmark jobs must finish before the measurement window. Raw logs,
+receipts and repair attempts belong only under ignored =.cache/=.
+
+* Native qualification and repair ledger
+
+The complete final native run has 89 =CASE-OK= and five =MODULE-OK= markers,
+with no =ERROR=/=FAIL= and final =HARNESS-OK=/=OK=, exit zero. All ten new
+Cases are included, covering private prototype/responsibility inheritance,
+root-local Term checks, nonatom clauses and partial-construction failures.
+Existing typed, candidate-flow and operator extension/fixed-point tests remain
+included. Final ASP Policy passes with zero findings.
+
+The native builder generates =benchmark.ss= through ASP =make-benchmark-fixture=,
+then applies the explicitly recorded fixed consumer settings before checking
+=benchmark-fixture-contract-pass?=. It writes only when the datum differs.
+This generation runs before source inventory and before any timing samples;
+it does not adapt gates to measurements.
+
+Two initial compiler attempts fail on an incomplete facade form; a subsequent
+fixture attempt fails on an unavailable =list-index= binding. The export consumer
+now uses its own small ordered relation-position lookup. The first four-module
+harness run reports the fixture import error despite exiting zero and is rejected.
+Later qualification requires every native completion marker. Policy first finds
+an ambiguous old public signature containing a literal bar; the signature is
+rewritten as a named compiler-owner contract, with the constructor/publication
+boundaries documented. All repair logs remain under ignored =.cache/= and are
+excluded from timing. No performance gate, sample count or deadline is relaxed.
+
+A first source-driver attempt reaches 15 of 20 Program CPU pairs before the
+unchanged 90-second watchdog expires. Another task starts native compilation
+inside that window; the entire attempt is rejected for both overlap and timeout,
+with no admitted median. =all-rejected-overlap-timeout.log= retains its partial
+progress. The occupation check now includes parent recovery commands, not only
+short-lived compiler/benchmark children. The common Scheme driver is compiled
+through Gerbil =compile-exe= for the final series. Consumer source, sample counts,
+relative gates and the 90-second watchdog remain unchanged; the installed SDK
+is not rebuilt. No result is inferred from the rejected partial series.
+
+The first isolated native-driver attempt also expires at the same 90-second
+watchdog, after twenty CPU pairs, twenty ASP admissions and four allocation pairs
+for Program. No median is admitted; =all-native-rejected-gc-timeout.log= remains.
+Inspection of ASP =src/benchmark/gate.ss:121-130= shows one collection per group
+of twenty samples. The local driver had additionally collected before ASP and
+before every allocation leg. Those duplicate full-heap pauses are removed.
+CPU retains its one series precondition and natural timed collections; ASP keeps
+its own group precondition. Allocation still uses five alternating exact
+=##get-bytes-allocated!= deltas, whose cumulative counter is monotone across
+collections. It measures allocated bytes, not post-collection heap occupancy.
+The consumer graphs, frozen source, all relative gates, sample counts and the
+90-second watchdog are unchanged. Both failed driver protocols remain recorded;
+the next series qualifies the revised common driver only.
+
+The next complete Program series fails ASP p95: 1.054665 seconds exceeds the
+unchanged 999ms cap. CPU 424333 ->123618us (20/20 wins) and allocation
+607527912 ->182529984 bytes pass their relative gates, but the overall receipt
+is =fail=. =program-rejected-p95.ss= and =all-native-rejected-p95.log= remain;
+these numbers are not admitted improvement evidence.
+
+Production is subsequently extended through =program/types.ss=: one private
+responsibility refinement checks each shared generated Term identity once per
+root. Every list/atom/rule/root responsibility and nonatom clause contract still
+runs; only successful immutable Term shape checks are reused within that private
+publication. The refinement explicitly binds its parent's existing prototype.
+Inherited =proto: (.o)= is a constructor evaluated for each receiver; failing
+to bind the parent prototype caused a rejected minimal probe, retained in
+=root-probe.log=. Parent responsibilities are inherited and root values retain
+no checker. Public declaration contracts and custom constructor paths never use
+this private memo. Empty roots use the original root contract directly.
+
+A constructor import/owner roster repair and a guard fixture with missing explicit
+input-variable arguments are also retained as failed build/qualification logs.
+The other module successes do not override its failed new Case. The final
+qualification reruns all five modules with the corrected entire new module.
+The production extension does not change consumer
+inputs, reference imports, sample counts, CPU/allocation gates or the ASP cap.
+
+The first root-refinement series completes Program with passing gates but the
+entire six-scenario process expires at 90 seconds during Fragment CPU pair 12.
+=all-native-rejected-whole-timeout.log= and
+=program-rejected-whole-timeout.ss= retain the partial batch; it is not promoted
+as a complete qualification. Inspection finds duplicated independent solve/query
+oracles in the sampling driver, already covered for both sides by the native
+Suite. Those untimed oracles now belong exclusively to that Suite. Sampling
+still compares every full consumer against the frozen alpha projection, and
+the cold consumer still performs fresh admission/solve/query inside every timed
+call. No input, complete timed consumer, sample count, gate or deadline changes.
+The common driver revision must pass the entire series afresh.
+
+Two Suite-oracle driver attempts are rejected when other native recovery and
+parser jobs restart during Program sampling. Our watchdogs are terminated;
+=all-native-rejected-restarted-overlap.log= and
+=all-native-rejected-restarted-overlap-2.log= are retained. No
+statistics from that window qualify the batch; other jobs are allowed to end
+naturally before the next exclusive window.
+
+After a two-minute idle observation, the next entire process still expires at
+the unchanged 90-second watchdog during Program CPU pair 16. It remains rejected
+in =all-native-rejected-startup-timeout.log=; there is no admitted complete batch.
+The user requests native Gerbil test diagnosis before further performance work.
+The installed Gerbil source =std/make-test.ss= passes both single-worker and
+parallel-worker incremental build Cases with final =OK= and exit zero. A fresh
+project =gxtest= run passes 79 Cases in four existing modules, also with complete
+markers, no errors and exit zero. A process sample during project test startup
+shows dynamic loading in Darwin =dyld/dlopen= (file/signature mapping and monitor
+notifications), not a Scheme Case deadlock. Later exhaustive graph progress
+reaches 512/512 and the complete harness finishes. The sample belongs to the
+test startup and does not establish the benchmark timeout's root cause. Further
+performance admission remains pending; no gate is widened or timeout promoted.
+
+* Complete admitted batch
+
+The subsequent exclusive native run passes all six original scenario gates in
+one process, with six =SCENARIO-OK= markers, final =OK= and exit zero under the
+unchanged 90-second watchdog. Source and native executable SHA-256 values match
+the versions used by the complete Suite and the corrected independent-oracle
+Suite. No production, fixture, sample count or admission threshold changed
+between the retained startup timeout and this admitted run.
+
+| Complete consumer | Old median CPU us | New median CPU us | Wins /20 | Old allocated bytes | New allocated bytes |
+|-------------------+-------------------+-------------------+----------+---------------------+---------------------|
+| Program | 319287 | 53961 | 20 | 607511288 | 104913000 |
+| Fragment and exports | 320101 | 53643 | 20 | 607446200 | 104823896 |
+| Cold admission, solve and query | 131342 | 84976 | 20 | 225152992 | 152864520 |
+| Custom constructor | 92505 | 92119 | 11 | 166506192 | 166506880 |
+| Small mixed graph | 22961 | 7178 | 20 | 37866864 | 11680464 |
+| Nullary source | 821 | 704 | 17 | 1394160 | 1040048 |
+
+Program and Fragment improve CPU by 83.1% and 83.2%; both reduce allocation by
+82.7%. The custom constructor retains its ordinary admission flow and passes
+the regression control, including 688 additional bytes. Cold is a complete
+small-input lifecycle control; its result does not establish general solver
+throughput. These are matched local measurements, not remote CI qualification.
+
+The native receipts, source inventory and =all-native-current.log= stay under
+ignored =.cache/ascent/operator-publication/=. Earlier failures remain rejected.
+Native build scheduling uses the existing =GERBIL_BUILD_CORES= setting selected
+from machine capacity; no SDK patch or source toolchain rebuild is required.

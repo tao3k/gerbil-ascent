@@ -1,0 +1,116 @@
+#+title: Sparse UF publication/export and immutable cut capture
+
+* Source and ownership
+
+The evaluator, export owner and private UF replay implementation freeze
+=3d74647dcc4a23c74cbd56e93b6d9cba91a582a5=. Only reference import locations
+change. Complete engines share current storage dispatch, initialization and
+live insertion/capture helpers to preserve canonical provider/type identity.
+The historical export owner reconstructs its own historical private UF state.
+This qualifies export with shared live helpers, not an entire historical binary.
+The capture scenario separately compares historical and current UF owners;
+provider population happens before timing and is excluded from its CPU claim.
+
+Gerbil =1cfb032= =std/list/list.ss:365-376= and
+=compiler/optimize-top.ss:704-711= restore order by destructively reversing
+private collectors. Native UF capture now borrows immutable member spines:
+merges prepend through functional =append= and replace node fields, never mutate
+captured pairs. Reach tables and nodes remain private. Only invocation-owned
+rectangle descriptor lists use =reverse!=; public exported rows remain detached.
+
+UF's single admission kernel preflights the entire injection, commits its graph
+and invokes a publication continuation. Frozen frontiers and synchronous replay
+share that kernel. Replay can decline obsolete frontiers without allocating a
+view or query wrappers, while reconstructing state for later suffix injections.
+A core rectangle writer selects two/three-column constructors outside the
+Cartesian traversal, with generic arbitrary-prefix construction preserved.
+EqRel and UF export select their replay kernel once per export. Packed replay
+selection, source/derived order and injection budget boundaries remain intact.
+
+* Fixed contract before sampling
+
+ASP's native fixture API generates =benchmark.ss=. All eight scenarios run in
+one fixed 90-second invocation: 20 alternating process-CPU pairs with natural
+GC, 20 independent ASP admissions and five allocation pairs. GC precedes only
+allocation legs outside the counters; negative deltas reject. Targets require
+<=90% baseline CPU and >=16/20 wins. Controls allow <=110% plus 20us;
+allocation <=110% plus 8192 bytes; ASP p95 <=999ms (500ms target +499ms budget).
+A rejected attempt retains all receipts and cannot donate individual passes.
+
+| Scenario | Work | Gate |
+|----------+------+------|
+| sparse | 64 star edges, 300 duplicates; fresh engine/run/three full exports | target |
+| grouped | 16 UF groups, 16 star edges and 300 duplicates each; three exports | target |
+| retained | sparse start; eight appends/publications/intermediate exports, three final exports | target |
+| capture | prepared 1025-member SCC; 64 immutable cut captures/counts | target |
+| cold | declaration/analysis, one UF edge, complete export | control |
+| small | warm analysis, one UF edge, complete export | control |
+| packed | 64 UF star edges; bounded packed replay, three exports | control |
+| eqrel | 16 EqRel chain edges; three complete exports | control |
+
+Capture excludes insertion, row export and indexed queries; its result is a
+cut-capture improvement, not whole-engine speed. Every complete-engine leg
+checks exact historical row order and completion/path/rule metadata against a
+reference independently admitted by mathematical closure truth, size and row
+uniqueness. Capture independently checks 1025 squared rows and 1026 units.
+
+* Native reproduction
+
+Compile with native =std/make= through =build.ss= using the package's canonical
+=.gerbil/lib= root. Run the repository's native package build, source Policy,
+and =gxi :gerbil/tools/gxtest -v 5= regression suites before final timing.
+Run =gxi :gerbil-ascent/t/performance/uf-export/runner all .cache/ascent/uf-export/=
+under =timeout 90s= after other compiler/benchmark jobs naturally finish.
+Source and compiled-interface fingerprints must match before and after timing.
+Logs and machine receipts stay under ignored =.cache/ascent/uf-export/=.
+
+* Rejected first attempt
+
+The first complete attempt stopped at sparse: 1966 ->1822us (7.3%), 18/20 wins,
+allocation 3668496 ->3064304 bytes. It misses the fixed 10% CPU threshold and
+remains rejected under =.cache/ascent/uf-export/before-repeat-admission/=.
+No later admission combines its samples. Native optional-arity fixture routing
+was repaired before this first timing; the earlier regression failure was not
+a timing result and is not a production compiler-fix claim.
+
+The candidate additionally reuses the zero frontier of consecutive identical
+injections within its monotone replay invocation, including across source and
+derived event boundaries. A first admitted injection has already checked the
+same fixed budget. Duplicate writer transitions still receive count zero;
+there is no output, state mutation, suffix split or change to derived ordering.
+Only the previous borrowed row reference lives in the export invocation; no
+row cache is retained by a published cut. Nonconsecutive duplicates still use
+the normal kernel, and the journal itself is never deduplicated or mutated.
+
+* Admitted complete attempt
+
+All eight scenarios pass in one fixed 90-second run, with 70 source/SSI/contract
+fingerprints unchanged before/after. The final native package build exits zero;
+seven native Suites pass 50 Cases with no ERROR/FAIL, HARNESS-OK and final OK.
+Three production source Policy owners pass with zero findings. References match
+the exact baseline after import relocation. Regression includes all 512
+three-node graphs, read-only rejected admission, held indexed/unindexed cuts,
+public row mutation, generic rectangle prefixes and mixed event histories.
+
+| Scenario | CPU us old -> new | Change | Wins | Allocation bytes old -> new |
+|----------+------------------+--------+------+-----------------------------|
+| sparse | 1941 ->1612 | -17.0% | 19/20 | 3668496 ->2935232 |
+| grouped | 11551 ->6773 | -41.4% | 18/20 | 313636592 ->303819216 |
+| retained | 6035 ->4840 | -19.8% | 19/20 | 11115280 ->8341632 |
+| capture | 199 ->38 | -80.9% | 20/20 | 3407872 ->256000 |
+| cold | 540 ->540 | 0.0% | 10/20 | 1601856 ->1601344 |
+| small | 94 ->93 | -1.1% | 12/20 | 261456 ->261456 |
+| packed | 995 ->996 | +0.1% | 11/20 | 1073504 ->1073504 |
+| eqrel | 142 ->144 | +1.4% | 7/20 | 464112 ->464208 |
+
+Complete-engine target allocation falls 20.0% /3.1% /25.0%; prepared cut capture
+falls 92.5%. Packed costs +1us CPU and EqRel +2us/+96 bytes; both remain admitted
+by original controls. All scenarios preserve 20 CPU pairs, 20 distinct native
+ASP admissions and five allocation pairs. Grouped still allocates 303819216
+bytes per complete execution: replay export improves, but the shared live
+initialization/insertion path remains expensive. This result neither qualifies
+solve-only speed nor general multicore scaling. Capture's 80.9% is limited to
+prepared provider cut capture and must not be reported as whole-engine speed.
+
+The prior pushed head's GitHub run =38134602414= failed in Session POO contract
+validation (=types.ss:238=). Local admission does not establish remote CI closure.

@@ -1,0 +1,93 @@
+#+TITLE: Lexical instance resolution and identity union publication
+
+* Production flow
+=program/operator-lowering.ss= resolves and validates each free parameter once
+before instance memo lookup. Parameter emission consumes that checked value.
+The invocation-local association list remains the lexical environment; no
+mutable scope table, new runtime option or public receiver was introduced.
+
+Ordinary and fixed-point union producers now share a private publication
+protocol. Each producer emits resolved relation handles in its original order.
+The publisher constructs one copy rule per distinct handle, suppressing
+repeated handles before allocating variable terms and atoms. A first handle
+uses an inline slot; an identity table is allocated only when a second distinct
+handle appears. Different relation handles remain distinct even if their source
+rows are equal. Private output relations, lexical instances and source labels
+are preserved. Constructor calls for semantically duplicate rules are removed;
+unique-input constructor ordering remains unchanged.
+
+Gerbil SDK 1cfb032 =src/gerbil/compiler/optimize-call.ss:43-80= resolves a receiver
+once and carries the checked result through dispatch. The lowering resolver
+uses that same checked-result flow. The union publisher uses native eq tables
+and a synchronous producer/consumer contract, matching the ownership pattern
+of =src/std/list/list-builder.ss=. It is a private compilation protocol rather
+than another public generic receiver hierarchy.
+
+* Evidence scope and retained negative result
+The initial experiment only combined repeated binding checks. Complete lowering
+with production relation and rule constructors measured CPU 890338 -> 883496us
+(0.8%), 25/50 wins; allocation was essentially unchanged. It failed the 20%
+performance gate. The raw receipt is retained in ignored
+=.cache/ascent/binding-resolution/binding-only-failed.ss=. This small change
+alone is not claimed as a performance improvement.
+
+Final A/B fixtures exercise the complete lowering flow, including graph
+admission, lexical analysis, memoization, scope resolution, production POO
+relation/term/atom/rule construction and result publication. Only fixture
+creation and comparison are outside timing. Both compiled lanes use identical
+flags. Every relation, source label and output handle is alpha-normalized;
+every rule preserves rule-local variable sharing. Since the optimization
+intentionally removes duplicate rules, the comparison removes duplicate
+normalized baseline signatures while retaining first occurrence order. Raw
+rule-count and distinct-source unit tests qualify that normalization boundary.
+
+=reference.ss= freezes =cb27f3751657a4a3c5e638bb8dea161d0f615467:program/operator-lowering.ss=;
+only three relative imports become absolute production module imports. Both
+lanes use the already corrected lexical analysis. Public ASP benchmark APIs
+create and run the fixture contract. Fifty alternating pairs require >=20% CPU
+reduction and 35/50 wins for shared and closed duplicate-union graphs. Unary,
+tiny and source-only controls allow 110% plus 20us; allocation limits are 110%
+plus 4096 bytes. No own build/test lane runs during timing; global machine
+isolation is not claimed. These are lowering receipts, not full solve timings.
+
+* Reproduce
+#+begin_src sh
+LIBRARY_PATH="$(brew --prefix openssl@3)/lib" GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" gxi -:max-heap=3G,debug=q t/performance/binding-resolution/build.ss "$PWD/.gerbil/lib" "$PWD/.cache/ascent/binding-resolution/runner" runner
+GERBIL_HOME=/opt/homebrew/opt/gerbil-scheme@0.19/current GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib:$PWD" .cache/ascent/binding-resolution/runner shared .cache/ascent/binding-resolution/shared.ss
+#+end_src
+Repeat separately for unary, closed, small, empty. Compile =qualify= after timing.
+Receipts, logs, binaries and fixture generators remain in ignored =.cache=.
+
+* Final native results
+| Complete lowering | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|-------------------+------------+------------+-----------+-----------+----------|
+| 32 bindings, 128 shared union nodes | 347604 | 231114 | 687055656 | 461630024 | 50/50 |
+| 32 bindings, 128 unary nodes control | 241049 | 236767 | 463457336 | 463549640 | 29/50 |
+| Closed 128-node duplicate-union graph | 258436 | 139264 | 499625192 | 274110656 | 50/50 |
+| Tiny repeated union | 4010 | 2167 | 7815200 | 4291296 | 50/50 |
+| Source-only control | 126 | 126 | 390528 | 390528 | 22/50 |
+
+All final gates passed. Shared/closed target CPU falls 33.5%/46.1%; allocation
+falls 32.8%/45.1%. Unary allocation increases 0.02%; no unary improvement is
+claimed. Source-only CPU and allocation are flat. The tiny fixture contains
+repeated union copies, so it also benefits; it is not a no-union speed claim.
+
+The first qualification rejected three legacy expectations that counted
+semantically duplicate copy rules: the deep diamond graph expected 46 rather
+than 24, the recursive mapping expected 5 rather than 4, and equal-input
+applications expected 3 rather than 2. Expectations now express one copy per
+resolved input; relation/source counts and independent solved-row assertions
+remain unchanged. Different-input applications still require four rules.
+The original failed log remains ignored as =qualify-old-count-expectations.log=.
+
+Original lowering blob: =d0c02086cedd2df0686460904643dc93425707b2=.
+Reference after import normalization: =c2285cf242f14778fa2ce7595b144a5c7408ab9a=.
+
+* Final qualification
+Four Suites and 79 Cases passed with final =OK= and exit 0. Tests verify raw
+ordinary/fixed union rule counts, equal-row distinct source handles, lazy
+constructor ordering, cached graph topology, distinct transform instances,
+pre-constructor escape rejection and existing independently solved results.
+Direct source loading/execution passed =SOURCE-LOWERING-OK= using a repeated
+source with two preserved relations and one copy rule. Production policy
+completed with 30 findings, zero errors and =POLICY-NATIVE-OK=; warnings remain.

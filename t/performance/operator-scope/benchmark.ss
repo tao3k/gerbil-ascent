@@ -1,0 +1,31 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+;;; Generated with :asp-gerbil-scheme/benchmark-api#make-benchmark-fixture.
+((benchmarkKind . scenario-e2e)
+ (max_total . 999ms)
+ (target_total . 500ms)
+ (regression_budget . 499ms)
+ (expected_over_input_budget . 0ms)
+ (targetRationale . "Diagnostic p95 for one checked old/new pair including preconditioning and semantic validation; relative admission uses only inner compile CPU/allocation")
+ (sampleCount . 50)
+ (rule . ASCENT-OPERATOR-SCOPE)
+ (feature . shared-lexical-compilation)
+ (optimizationFocus . "Deduplicate lexical identities and reuse invocation-owned graph analysis")
+ (inputShape . "One bound parameter in a shared union DAG; independent old/new descriptors")
+ (expectedOutcome . "Equal emitted graph and native row set ((7)); matched compile CPU and allocation")
+ (measurementPhases compile-baseline compile-current normalize-graph solve-check)
+ (tags native paired compile scope)
+ (baseline . f8ad9d9f39edfdabad2a14e9edd83985309acc33)
+ (scenarios
+  (diamond (depth . 14) (cpuRatio . 1/5)
+           (allocationRatio . 1/5) (minimumCpuWins . 35))
+  (shared-diamond (depth . 18) (cpuRatio . 4/5)
+                  (allocationRatio . 13/20) (minimumCpuWins . 35))
+  (scaled-diamond (depth . 19) (cpuRatio . 4/5)
+                  (allocationRatio . 13/20) (minimumCpuWins . 35))
+  (deep-diamond (depth . 22) (cpuRatio . 1/5)
+                (allocationRatio . 1/5) (minimumCpuWins . 35))
+  (small (depth . 1) (cpuRatio . 21/20)
+         (allocationRatio . 1) (minimumCpuWins . 0)
+         (cpuOverheadSeconds . 1/50000) (allocationOverheadBytes . 2048))))

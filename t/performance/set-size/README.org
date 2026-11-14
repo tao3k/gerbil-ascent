@@ -1,0 +1,55 @@
+#+title: Built-in Set cardinality qualification
+
+The frozen evaluator is committed =d918a35=, including multiple-frontier
+pruning. Only relative imports and evaluator export names are relocated.
+The candidate counts pending rows once. Historical cardinality is advanced
+by that batch size only for exact built-in Set storage with exact built-in
+hash indexing, and never for lattice relations. Custom storage/index
+Providers retain the full historical recount. Initial duplicate source
+rows and separate retained-session update accounting are unchanged.
+
+The earlier unrestricted count experiment preceded frontier pruning and
+failed admission. This slice is separately measured against =d918a35=;
+it does not reuse that earlier baseline or multiply different-workload gains.
+
+=just set-size-benchmark= compiles both evaluators with identical settings.
+It uses 20 warmups and 1000 alternating old/new pairs per chain shape.
+Programs and immutable declaration caches are shared; row state is fresh.
+Construction and independent exact ordered-row checks are outside timing;
+engine construction and complete solves are included. Shapes 16 and 256
+require median nonregression. Shape 1024 also requires >=900 strict wins.
+No gate is relaxed. All final sample arrays and source manifests are retained.
+
+Both final runs pass all gates with =OK= and exit 0. Values are nanoseconds:
+
+| edges | old p50 run 1/2 | new p50 run 1/2 | strict wins run 1/2 |
+|-------+-----------------+-----------------+---------------------|
+| 16 | 18000 / 18000 | 18000 / 18000 | 417 / 446 |
+| 256 | 325000 / 323000 | 292000 / 290000 | 907 / 919 |
+| 1024 | 1732000 / 1723000 | 1161000 / 1154000 | 924 / 942 |
+
+The 1024-edge whole-solve gains are 1.492x/1.493x. These qualify the
+constructed chain workload. The small shape is a nonregression control.
+
+Ten semantic Cases pass, including custom storage expansion and its exact
+callback observations, multi-atom gates, indexed-prefix callbacks, duplicate
+source rows, independent two-node graph goldens, retained-session updates,
+lattice replacement, and timeout resumption. =semantics.log= contains all
+=CASE-OK= markers, =MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0.
+
+Final-source =just build= and =just check-policy= pass (37 modules,
+findings=0, errors=0). The complete qualification suite =just test=
+passes all 40 modules and 315 Cases with =GERBIL_BUILD_CORES=12=
+(configured jobs=12, admitted modules/workers=7, exclusive modules=33).
+All 40 native logs in =receipts/qualification/= include =MODULE-OK=,
+=HARNESS-OK=, final =OK= and process exit 0. The main suite log is also
+retained. The frozen reference matches committed =d918a35= after only
+import relocation and evaluator alpha-renaming. Remote CI is unrun.
+
+The complete original =just performance= entrypoint also passes all
+17 entries with exit 0. Each scenario keeps its original fixture,
+1000-sample count and time/memory budgets. The full raw log is retained
+as =receipts/performance.log=; it contains 21 benchmark summaries.
+This is one full local run, not remote CI or repeated whole-suite stability.
+The suite source manifest covers production evaluator, build and scheduling
+entrypoints, qualification fixtures and SS sources. No dependency pin changed.

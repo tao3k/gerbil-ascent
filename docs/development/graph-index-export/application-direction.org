@@ -1,0 +1,573 @@
+#+title: Application selection and Lean obligations
+#+language: en
+#+property: STATUS application-unselected
+
+[[file:../graph-index-export-algorithms-20261112.org][Audit index]]
+
+* Decision under study
+
+** Application and algorithm decision record
+
+The application remains unselected. Use repeated mask edits on a
+retained scoped-query cut as a research workload. The caller's required
+observations determine which model and algorithm can apply. The
+full-list weighted UF gate qualifies the kernel's complete Scheme
+output. The typed Rust reply has its own caller contract and comparison.
+
+| Decision | Evidence that would support it | Current state |
+|----------+--------------------------------+---------------|
+| Select scoped dependency inspection | A caller specifies the lifetime of a cut, graph and edit distributions, every observed relation, order and evidence, and the request budget | Candidate with an existing public interface and semantic controls. No downstream trace has been established. |
+| Reuse a fixed graph across mask-only edits | The real source cut and both index projections satisfy the Lean premises. A matched recomputation control agrees on rows, order, provenance, held cuts and failures | Set semantics modeled. Native ordered publication, transaction and provenance refinement remain open. |
+| Add a distance index | The admitted sort and original ordinals recover exactly the reference order. Measured guard savings repay index construction, lookup, order restoration and publication over a cut | Lean establishes exact per-bucket headroom. The native ordered join, trace and crossover remain open. |
+| Use endpoint searches | A caller contract permits a result restricted to endpoints and explicitly names its evidence. Measured search, output and evidence costs fit that workload | Lean proves membership of the selected-pair answer and final trace from exact frontiers. The complete exact layers cannot be recovered from shortest distances alone. Native frontier, evidence and costs remain open. |
+
+The decision compares complete lifecycles through the public entry point.
+Track cold construction, graph and mask edits, read selection, ordered
+publication, allocation and collection separately. A change can establish
+a worthwhile gain in one of these measures. Selecting an implementation
+for an application also depends on the declared workload and its complete
+request budget.
+
+** Existing contract and workload hypothesis
+
+Keep the prepared full-list weighted UF gate as a kernel qualification.
+For an application experiment, take one existing consumer with a
+distinguishable read and edit pattern. The candidate here is bounded
+dependency-graph inspection using the existing scoped-query Program and
+Session. A caller asks whether a declared pair survives the masks of all
+required groups and requests its supporting shortest-path evidence.
+Within one graph version the caller repeatedly edits a scope's blocked
+vertices and checks a set of pairs.
+
+The constructor and reader already exist in
+[[file:../../../applications/scoped-composition.ss][scoped-composition.ss]].
+The native operation publishes a bounded graph and its evidence, then
+reads =group_answer=, =answer_trace= and, when requested, reconstructs
+a path via =visit-rows= on =mask_shortest= and =mask_predecessor=.
+See the [[file:../../features/scoped-witness/query.org][existing query contract]].
+The hypothesis is that a localized mask edit can reuse the graph's
+path facts and preserve the final rows of unaffected pairs. Both reused
+and recomputed rows must describe the newly published cut. The scope
+of the experiment is mask-only edits. Edge, hop-limit, candidate,
+endpoint selection and group changes exercise the existing evaluation
+path and serve as controls.
+
+The source audit found an exported constructor, its registration in
+[[file:../../../applications/objects.ss][the application object]], and
+qualification callers. Those establish a callable workload. They supply
+no distribution of downstream graph sizes, edit types or requested
+evidence. Application selection remains pending a workload trace or
+declared downstream requirement that supplies those inputs.
+
+The dependency-graph workload is a hypothesis tied to this existing
+public contract. Its reusable unit is an admitted graph cut with fixed
+edges, vertex domain and hop limit. The edit stream changes only
+=mask_blocked= and keeps endpoint selections, candidate pairs and group
+membership fixed. Its complete response includes the public witness
+and predecessor relations, the group answer and every supporting trace.
+Read-only, sparse-edit and broad-edit lifecycles are separate controls.
+
+| Caller requirement | Existing experiment or entry | Decision status |
+|--------------------+------------------------------+-----------------|
+| Complete detached Scheme relation | Weighted UF =rows-of= with the existing paired dense-cycle fixture | Mandatory kernel gate. Both widths failed the recorded [[file:native-matrix.org::*Integrated strict export control][staged integration control]]. |
+| Selected dependency pairs with evidence after a mask edit | Existing scoped-query Session, checked =visit-rows= and shortest-path reconstruction | Candidate application. Locality and endpoint search are modeled. Native edit, reuse and costs still need to be established. |
+| Complete signed-64 rows consumed by Rust | Existing typed =source-run= response | Separate application and result contract. Tail remains open in the matched request comparison. |
+
+** Application input required for a decision
+
+For a downstream dependency inspection workload, record the admitted
+graph and request trace or cite the requirement that supplies it.
+Record vertex and edge counts, hop limits, read and edit counts per
+cut, which edits change only masks, the resulting incoming and
+outgoing bucket sizes, the rows retained by the caller, and whether
+each request needs all intermediate relations and ordered evidence.
+Synthetic sparse, dense, and high-fanout cases test the candidate's
+limits. The application decision remains open until the downstream
+workload establishes which costs and observations matter.
+
+* Lean model and implementation obligations
+
+For fixed edge relation E and hop limit K, an exclusion witness z for
+pair (s,t) exists exactly when the two shortest segment lengths
+from s to z and z to t sum to at most K. Each required group accepts
+the pair if one of its member scopes supplies an admitted branch.
+The final trace exposes all supporting group/scope rows and their
+shortest distance. Equal Boolean answers alone are insufficient.
+
+The query and edit laws and cost comparison are in
+[[file:../../../packages/proofs/lean/ScopedQuerySpec.lean][ScopedQuerySpec]].
+The bounded path semantics and group composition laws each have one
+definition site. The existing finite corpus imports those definitions.
+The first combined focused check reached its wall deadline. Importing
+the corpus in a separate edit module then exceeded the focused check's
+memory guard. The specification modules separate the generic laws from
+that corpus. The locked LeanPoo Guard accepted =ScopedQuerySpec.lean=
+with the existing 30-second, 1024 MiB and heartbeat arguments, exit 0
+in 10.804 seconds, with no retained helper threads. This checks the
+generic statements. The native refinement and timings remain separate.
+
+An earlier guarded complete library check on the repaired source built
+the scoped specifications, their corpus consumers and the weighted
+capacity module. It reached 183 of 185 build jobs before the existing
+180-second wall watchdog returned 124. After the performance matrix,
+the guarded 185-job inventory completed naturally in 37.644 seconds
+with the latest weighted capacity proofs. The final receipt is
+=.cache/ascent/yuanxu-v0.1.0/collector-pause-budget.Ap5jRP/full-lean.log=.
+
+The endpoint-search extension passed the focused Guard in 9.641
+seconds. The complete 185-job Lean build then passed under the same
+locked Guard in 28.738 seconds. The check logs are in
+=.cache/ascent/yuanxu-v0.1.0/endpoint-search.W8kJEG/=. These receipts
+cover the new theorems and their Lean dependents.
+
+| Obligation | Lean | Gerbil source and evidence still required |
+|------------+------+-------------------------------------------|
+| Bounded path and total-hop exclusion | =via_iff_shortest= and =query_trace_complete= | Verify the lowered path, mask and join rules in =applications/scoped-reachability-mask.ss= and the composition in =applications/scoped-composition.ss=. The retained finite corpus provides a cross-check. |
+| Which mask edits can change a result pair | =AffectedByMaskEdit= and =unchanged_outside_affected_mask_pairs= | Prove that the edit roster covers every changed mask membership and that the existing index or traversal enumerates every pair in the modeled join. Both inserting and withdrawing a blocked vertex can affect a pair. Count examined and affected pairs independently. |
+| Preserve alternative supporting scopes and distance | =query_trace_mask_frame= | Map retained and recomputed =answer_trace= rows to the same cut and preserve observable row order, existing predecessor access and provenance. Other exposed relations, including intermediate branch and witness tables, retain their existing semantics and require their own correspondence. |
+| Propagate repaired witness membership to all exposed downstream relations | =repaired_mask_suffix_eq_recompute= and =mask_suffix_branch_eq_selected= | Bind the actual Scheme strata and cut to the model. Compare every ordered intermediate relation and each derivation, including when an answer stays true while its supporting scopes change. |
+| Commit and failure semantics | Existing [[file:../../../packages/proofs/lean/SourceUpdateFrame.lean][SourceUpdateFrame]] laws give a source-frame model | Bind each cache read and publish to the actual Session cut. Exercise an old held result, stale replacement, cancellation during the edit, each resource refusal and rollback. Show that incomplete updates expose no new cut. |
+| End-to-end break-even | =mask_edit_reuse_break_even= | Measure affected-pair search, repair, actual row visits and all other elapsed work against complete recomputation with identical requested rows and path evidence. The arithmetic theorem takes costs as inputs. It supplies no coefficients. |
+
+** Exact edit scope for the public witness relation
+
+=MaskWitness= models the existing bounded =mask_witness= rule.
+=mask_witness_changes_iff= proves that one row changes exactly when the
+scope selects both endpoints, that scope's membership of the witness
+vertex changes, and the two shortest segments through the vertex fit the
+total hop limit. The same law covers insertion and withdrawal. Group
+membership and final candidate selection are absent from this rule.
+Use the final-pair frame only for =group_answer= and =answer_trace=.
+A repair that restricts all witness work to final candidate pairs can
+omit rows that the current Result exposes.
+
+=witness_pairs_exact= proves the enumerator's membership against that
+delta. For a changed key =(scope,z)=, join the selected incoming
+shortest-distance bucket at =z= with the selected outgoing bucket at
+=z= and keep exactly the pairs whose distances sum to at most K.
+=witness_pair_checks= gives the exact number of bound checks for a
+direct nested scan. The total across edited keys is the sum of the
+products of the two bucket lengths. Charge building and retaining
+the buckets, looking up both buckets for each edited key, repairing
+rows, and publishing provenance separately. Sparse edits can still
+touch a dense bucket; edit count alone cannot set a crossover.
+
+=repaired_mask_witness_eq_recompute= checks the complete edit
+procedure at the level of row membership. Take a fixed admitted graph
+cut and a complete inventory of changed =(scope,blocked-vertex)= keys.
+For each changed key, join the incoming and outgoing shortest-distance
+buckets. For each qualifying pair, insert the row if the new mask
+blocks the vertex and withdraw it otherwise. Keep the old membership
+for every other row. Lean proves that this produces exactly the
+membership obtained by complete recomputation, for any edit with those
+premises. The proof includes scopes outside required groups and pairs
+outside the final candidate set.
+
+The table below binds each premise to the existing Gerbil entry and
+records the remaining implementation work.
+
+| Lean premise or conclusion | Current source | Required source evidence |
+|----------------------------+----------------+--------------------------|
+| Fixed graph, hop bound and endpoint selections | =gerbil-ascent-bounded-scoped-reachability-mask-program= derives =mask_hop= and =mask_shortest= from =mask_vertex= and =mask_edge= | Establish the input and edit boundary on the reused cut. The ordinary Session can append a =mask_shortest= row, which invalidates the graph-derived-distance premise. |
+| Exact inventory of changed keys | Session buffers replacements and prepares a prospective source cut in =replace-sources/idle!= | Derive additions and withdrawals from the admitted old and new =mask_blocked= sets. Edits of any other source must use the current evaluation path. |
+| Exact incoming and outgoing shortest buckets | The =mask_witness= rule joins =mask_start=, =mask_target=, =mask_blocked= and two =mask_shortest= atoms | Prove both bucket projections against the completed relations of the same cut. Old witness rows alone cannot enumerate an insertion. |
+| Witness membership equals recomputation | The public Result exposes =mask_witness= independently of the group answer | Prove ordered publication, original derivation evidence and held-cut observations. Qualify refusal, cancellation and rollback on the real Session and its existing budgets. |
+
+The scoped-query optimization is eligible for a native experiment on
+that admitted mask-only lifecycle. Selecting it for an application also
+requires a concrete downstream read/edit trace and a measured lifecycle
+gain with the required evidence and complete response. The theorem
+proves membership for the stated model. =repaired_mask_suffix_eq_recompute=
+lifts that equality through the stratified rules for =mask_rejected=,
+=branch_answer=, =group_witness=, =group_support=, =group_missing=,
+=group_failure=, =group_answer= and =answer_trace=. The witness remains
+an exposed relation. =mask_suffix_branch_eq_selected= relates the first
+negative stratum to the bounded path predicate. This models recomputing
+the downstream strata from the repaired witness. Their incremental
+evaluation, ordered output, derivation order, and commit behavior are
+separate source obligations. The Scheme Session currently has no repair
+path that implements the witness premises.
+
+The focused specification passed the locked LeanPoo Guard after
+adding the repair and order-cost laws. The complete 185-job proof
+inventory then finished with exit zero. The source hashes and Guard
+receipts are in
+=.cache/ascent/yuanxu-v0.1.0/will-retained-export.hkn4W2/=.
+
+** Distance-ordered witness search
+
+For one edited key let =I= and =O= count the incoming and outgoing
+entries, and let =R= count accepted pairs. The direct join checks
+=I*O= sums. If an outgoing index enumerates entries in nondecreasing
+distance, a scan for one incoming entry can stop at the first sum
+above the hop bound. =witness_prefix_exact= proves it selects exactly
+the same entries as filtering that index. =witness_prefix_checks=
+counts each accepted entry and one failed comparison if a rejected
+suffix exists. =witness_prefix_join_checks= bounds total comparisons
+by =R+I=. =sparse_prefix_checks_save= establishes a strict reduction
+if =R+I < I*O=. When all sums fit, =dense_prefix_checks_equal=
+proves that the two methods perform the same number of comparisons.
+An edit may touch one key and still have this dense shape.
+
+The existing =mask_witness= rule reads the two shortest-distance
+atoms and then tests the hop bound. Its actual join orientation and
+candidate count must come from native counters. The equation =I*O=
+describes the explicit nested comparison baseline. The current native
+comparison count and elapsed cost require separate evidence.
+
+*** Exact cost test for this candidate
+
+Let =F= count incoming occurrences for which the outgoing bucket has
+at least one distance beyond the bound. In an index that is a
+distance-ordered permutation of the original occurrences,
+=witness_prefix_join_checks_exact= proves that the scan makes exactly
+=R+F= guard checks. Count occurrences in both =R= and =F=. This also
+covers empty buckets and multiple entries with the same distance.
+
+=witness_prefix_budget_iff= gives the strict crossover for one bucket
+when equivalent guard checks have a common cost =c= in the chosen
+additive work unit. The extra cost of the prefix route must satisfy
+=extra < c * (I*O - (R+F))=. Equality breaks even. The dense case
+leaves zero guard savings. =equal_bucket_sizes_do_not_select_prefix=
+uses the same hop limit and two incoming and two outgoing entries in
+both examples. The dense case needs four checks and the sparse case
+needs two. The sparse case gains with one extra guard-equivalent unit
+and breaks even with two. A threshold on bucket length alone would
+give both cases the same decision.
+
+Map =I= and =O= to the two =mask_shortest= probes in the actual
+=mask_witness= join after endpoint selection. Map =R= to the input
+occurrences passing its hop guard, before publication deduplication.
+Match both probes to the same admitted cut and preserve occurrence
+identity through the distance index. Charge index construction and
+invalidation once per applicable cut and charge order restoration,
+publication, and evidence on each request that performs them. A trace
+of a different join orientation uses that join's measured counts.
+The theorem prices modeled guard work. Whole-request wall time,
+allocation, and retained memory each require their own ledger.
+
+The focused check and the complete 185-job Lean build completed under
+the locked LeanPoo Guard in 2.006 and 10.127 seconds. The receipts are
+=focused.log= and =full.log= under
+=.cache/ascent/yuanxu-v0.1.0/application-decision-20261114/=. These
+checks establish the conditional cost comparison and the counterexample.
+The source premises and the downstream lifecycle remain open.
+
+=distance_order_changes_witness_order= gives a two-row counterexample
+to publishing the sorted traversal directly. With exact bucket
+membership and the original bucket's order, =restore_witness_bucket_order=
+proves that a stable filter by the accepted entries recovers the original
+ordered list, including repeats. This reference restoration scans the
+whole bucket. An ordinal-based alternative must establish the same
+list and charge ordinal capture, maintenance and restoration. Native
+source correspondence still has to identify the existing publication
+order and carry the original derivation evidence. The order theorem
+covers one bucket. Transaction and provenance refinement remain open.
+
+=prefix_with_full_order_restore_cannot_save_visits= rules out the
+full-bucket restoration strategy as a way to reduce bucket visits.
+Across the same incoming entries it revisits =I*O= outgoing entries
+just to restore order, then adds every visit made by the prefix scan.
+Use it as an order oracle. =restore_witness_prefix_by_ordinal= proves
+that numbering the original occurrences, scanning in distance order,
+and sorting only the accepted prefix by original ordinal returns the
+same list as stable filtering of the original bucket. The permutation
+premise binds both the original row and its ordinal and preserves
+repeated occurrences. Equal distances can appear in either order in
+the search index. The proof concerns one bucket. The producer must
+still establish the original outer join and publication order. The
+ordinal index's build, lookup, accepted-prefix sorting, and publication
+costs must all be charged, including when all pairs fit.
+
+Compare three algorithms over the same admitted edit/read trace. First
+measure ordinary full recomputation and identify the native join.
+Then measure retained graph strata with the native witness join and
+ordinary downstream evaluation. Finally compare the direct affected-key
+join and the distance-ordered probe against that retained-graph
+control. This separates removing graph recomputation from narrowing the
+witness join. Include the distance index's construction and maintenance,
+all accepted and rejected comparisons, restored rows, published evidence,
+and the elapsed and allocation cost of each stage. In the dense control
+the index has no comparison saving to repay these costs. Use the existing
+=lifecycle_reuse_break_even= relation for each measured unit and check
+complete-request wall time separately.
+
+The locked LeanPoo Guard accepted the focused specification and the
+full 185-job library in 2.056 and 22.420 seconds respectively. The
+receipts are in =.cache/ascent/yuanxu-v0.1.0/strict-watchdog-phases.aEPdGc/=
+as =scoped-prefix-lean.log= and =full-lean.log=. No native distance index
+was introduced for this experiment.
+
+** Source correspondence for mask repair
+
+The source mapping is the two =mask_shortest= atoms, endpoint selection
+atoms and total-hop guard in
+[[file:../../../applications/scoped-reachability-mask.ss][the bounded producer]].
+The witness law covers row membership. The mapping must still prove that
+the native shortest relations are derived from the admitted graph alone,
+that affected keys reach the actual publication, and that ordered rows
+and derivation evidence remain observable across held cuts. Current
+ordinary Session source operations require a separate permission check
+before a narrower edit contract can be assumed.
+
+The scope law is sufficient. When one edited witness can affect a pair
+the experiment must repair or recompute the pair. Its answer may
+coincidentally remain true through a second supporting scope, while
+its trace changes. =lost_scope_changes_trace= establishes the removed
+trace row independently of the later Boolean answer. The affected
+join uses the completed =mask_shortest= relation on both sides of an
+edited vertex. Joining only the old =mask_witness= rows would miss
+newly blocked vertices. Source validation of the join, edit roster and
+publication remains open. The modeled affected set conservatively
+includes pairs even when a scope does not select one of their endpoints.
+
+** Search algorithm and its application boundary
+
+For selected endpoint requests, one forward bounded breadth-first search
+per distinct start and one bounded search over incoming edges per distinct
+target are sufficient to decide the total-hop witness predicate. The
+frontier contains exactly the vertices first reached at its distance.
+The reverse-distance theorem preserves the directed suffix from a blocked
+vertex to the target. Record all shortest last edges when retaining
+predecessor evidence. A single parent can reconstruct a path. The
+published =mask_predecessor= relation includes every qualifying last edge.
+
+| Question | Lean result | Native correspondence required |
+|----------+-------------+--------------------------------|
+| Does expansion discover exactly the shortest layer? | =EndpointSearch.next_frontier_exact= and =distance_unique= | Each search expands the preceding layer, deduplicates by admitted vertex identity and records seen vertices before expanding the next layer. |
+| Are incoming buckets the right suffix index? | =EndpointSearch.shortest_reverse= and =via_endpoint_searches= | Reverse the exact admitted directed edges, preserving the same vertex domain, hop limit and graph cut in both directions. |
+| Can predecessor evidence survive a distance search? | =EndpointSearch.predecessor_from_shortest_frontier= | Enumerate every qualifying last edge and preserve publication order. The path reader uses the first matching predecessor. |
+| Which selected-pair results follow from the frontiers? | =EndpointSearch.selected_pair_projection= | Check forward and reverse frontier membership through K on the same admitted cut. Validate every final group/scope/distance trace row. Row order, chosen path and derivation evidence each need their own correspondence. |
+| Can a shortest-distance table recover the public =mask_hop=? | =EndpointSearch.exact_layers_not_determined_by_shortest= | Two one-vertex graphs have identical shortest distances and disagree on the one-hop row. The current entry must preserve the exact layers and the other exposed relations. |
+| When can endpoint searches reduce expansion? | =EndpointSearch.root_visit_bound=, =expansionCeiling= and =fewer_dense_expansion_visits= | Count admitted adjacency entries and actual visits, using entry identity when values repeat. Establish once-per-root expansion and record both directions separately. |
+| How much output must the complete relation represent? | =complete_graph_hop_output_lower_bound= | For a complete directed admitted graph with self-loops, a full enumeration contains at least N + K*N*N distinct hop tuples. Count the actual derived and output rows and retain the configured refusal when the budget is too small. |
+
+Let S and T count distinct search roots across a fixed graph cut and
+let M count stored directed adjacency entries in either orientation.
+Under the once-per-root premise, expansion examines at most
+=(S+T)*M= entries. For a complete directed graph with self edges and
+K >= 1, an all-source forward join examines M entries from the
+identity layer and N*M from each of the K-1 additional input
+layers, where N counts vertices. The modeled strict expansion saving
+holds if S+T < 1+(K-1)*N and M > 0. This comparison concerns the
+specified forward join orientation. Native join order and counters
+must establish the baseline visit count. It leaves adjacency build,
+visited storage, mask joins, provenance, publication, selected reads
+and allocation/GC to the measured end-to-end comparison.
+
+The output bound applies independently of the expansion strategy. For
+80 vertices and K=4, the complete hop relation alone requires 25,680
+rows, even when the caller supplies one candidate pair. In the standard
+constructor, the hop relation starts empty, and
+[[file:../../../program/evaluate.ss::ASCENT derived fact budget exceeded][candidate publication]]
+charges new facts against the configured derived and output limits. A
+complete result for that graph would exceed both default limits (10,000
+derived facts and 20,000 output facts) before counting the other relations.
+Record the refusal in the dense control. For any timed dense case,
+record the actual constructor limits and all completed output rows.
+Lean counts necessary tuples. Wall time, allocation and collection
+still require measurement.
+
+The current Program exposes its complete hop, shortest, predecessor,
+branch and witness relations on the published Result. A prospective
+endpoint-only producer would require an explicit consumer contract
+with that narrower observation set. The existing Result interface also
+requires equality for the intermediate relations. Under the current
+contract, investigate retaining
+the graph-derived relations across mask-only edits and improving
+read access without dropping their rows. Treat endpoint search as a
+separate algorithm hypothesis until a caller and its required
+observations have been established.
+
+** First source boundary to qualify
+
+=applications/scoped-reachability-mask.ss= lowers the total-hop comparison
+to a host closure passed to =gerbil-ascent-guard=.
+=program/update-selection.ss:gerbil-ascent-update-eligible?= requires
+a registered closed procedure for each guard. Consequently this
+constructor cannot currently use the existing dependency-based reuse
+path on that declaration. Verify the observation at the public
+Session before attempting pair-level repair.
+
+The existing checked operators can express the bound as integer
+addition followed by strict comparison against K+1.
+=hop_guard_closed_equiv= gives its mathematical equivalence on
+generated shortest distances. The constructor emits integer literals
+for =mask_hop= from 0 through K. The =mask_shortest= head copies this
+same distance column, and the two =mask_shortest= atoms precede the
+guard. The source refinement must establish that no caller source,
+injection or update can supply another kind of distance to these
+columns. The current ordinary Session resolves replacement names from
+the full relation roster in =program/session.ss:position-of=. The
+batch path checks arity and field predicates at
+=replace-sources/idle!=. Those checks alone do not establish that
+=mask_hop= and =mask_shortest= are derived-only. Include direct
+replacement and append attempts against both carriers as controls
+before relying on the invariant. Preserve the existing observation
+and refusal order, source permissions, work budgets and provenance.
+Two checked clauses may add binding and allocation costs. Measure
+those costs together with the graph work saved. Compare the original
+opaque path, the existing dependency-based reuse path after
+qualification, and any later pair-level candidate.
+
+For selected reads, [[file:../../../program/result.ss::(def (gerbil-ascent-visit-snapshot!][the Result visitor]]
+validates key columns and delegates selection to a relation view when
+one exists. For an ordinary snapshot it scans the rows, tests the keys
+and copies the matching row spines. [[file:../../../applications/scoped-composition.ss::(def (gerbil-ascent-scoped-query-path][The path accessor]]
+performs one shortest-distance lookup and one predecessor lookup per
+hop. Record the snapshot kind, rows examined and matching rows for
+each call. A selective key alone establishes no index benefit.
+
+* Experiment needed before selection
+
+Use the retained scoped-query corpus and its deliberate faults as the
+initial semantic controls. For large workloads, bind the generated
+graph, masks, candidate pairs, and chronological edit/read stream to
+the source revision before collecting timings. Use at least 1,000
+requests per measured shape. Include a sparse graph with localized
+edits, a high-fanout witness, a dense component, a withdrawn witness
+with an alternative support, and a broad edit affecting most pairs.
+Keep the graph size, degree and query distribution explicit. The
+current constructor seeds =mask_hop= from every vertex, even when
+the caller selects only one pair. Include that all-source work in
+the cold ledger and charge every =mask_predecessor= and witness
+row retained for future queries. =complete_graph_positive_layer=
+establishes the dense control: with self edges present, every
+positive layer contains all N squared ordered pairs. Across K
+positive layers and the identity layer, the constructor can expose
+N + K times N squared hop rows, even for one candidate pair.
+Measure exact stored cardinalities, prefix firings and refused
+cases before selecting a workload or changing what is published.
+
+Use =gerbil test= through the existing source entry and one VM. Compare
+complete recomputation to any candidate through the same public
+Session, using an independent bounded-walk evaluator on the semantic
+controls. Separately measure cold construction, warm reads, edit to
+publication, and the full edit-plus-read trajectory. Record rule
+firings, index build/extend/probe work, inspected and repaired pairs,
+ordered rows and path cells emitted, cumulative allocation and GC.
+Time the same request end to end with a disjoint wall partition.
+Track throughput, P50, P95, maximum, and memory for each shape.
+Use =lifecycle_reuse_break_even= to charge initial construction once
+per cut and sum the paired edit/read costs of the same lifecycle.
+An extra setup cost must be smaller than the accumulated per-request
+savings. Keep separate ledgers for elapsed time, candidate visits,
+cumulative allocation and retained memory. The Lean arithmetic applies
+within each unit. The wall tail is an additional gate.
+Evaluate the 100 ms P95 target on complete requests with evidence.
+For a 1,000-request sample, the 950th nearest-rank observation must
+be strictly below 100 ms. Report censored requests and resource
+refusals alongside the elapsed results. Align receipts by request
+ordinal and verify exact answers and evidence before comparing costs
+or setting a production cutoff.
+
+Keep the original 38 groups and 235 scenarios, the 384/512 weighted
+gate, and their cancellation, resource and provenance requirements.
+Select the application only after these conditions hold:
+
+1. The caller specifies which relations, row order and evidence it
+   observes, how long a graph cut lives, and how often it changes.
+2. The Scheme mapping establishes the graph/edit/read premises and
+   the transaction and provenance obligations above. Compare every
+   exposed relation against the reference on the current entry.
+3. Matched end-to-end evidence pays for cold construction and update
+   work over the declared lifecycle. Report CPU, allocation, GC,
+   throughput and latency for every shape, including adverse
+   fanout and dense cases. The end-to-end target applies to complete
+   requests with their required evidence.
+
+The scoped-query candidate is pending all three conditions.
+
+* Native semantic observation
+
+The new Test Case uses a diamond with two supporting scopes in one
+required group. Blocking one intermediate vertex in one scope
+removes exactly its trace row. The answer and shortest predecessors
+remain equal. Withdrawing the mask restores both trace rows, and the
+previously held cuts retain their own trace rows.
+
+The focused native suite used the staged matrix library, one VM,
+the 2 GiB cap and the original 90-second watchdog. It emitted all
+nine Case markers, including the 1,536-request corpus and the new
+mask-edit control, and the final module and harness markers. The
+parent returned 124. The observations support the Case behavior;
+the suite did not satisfy natural process completion. These checks
+shared the host with the serial matrix and establish no elapsed
+performance comparison. The Guard and Gerbil logs and timestamped
+windows are in
+=.cache/ascent/yuanxu-v0.1.0/application-direction.HN1zrN/=.
+
+** Source controls for the next application decision
+
+A native =gerbil test= Case changed only =mask_blocked= for a scope
+outside every required group. The selected endpoint pair in that
+scope was outside =group_candidate=. The new cut gained exactly one
+=mask_witness= row while =group_answer= and =answer_trace= were equal
+to the held cut. Withdrawing the mask removed the witness; the held
+cut retained the witness it had published. This is a counterexample to
+using final candidate pairs as the repair domain for the public witness
+relation.
+
+A second Case used the ordinary Session's =append-source!= to supply
+a negative =mask_shortest= distance. The new cut exposed the supplied
+row and the held cut did not. This confirms that the proposed
+graph-derived-distance invariant needs an admission and Session
+boundary before it can authorize reuse. A legal mask-only transition
+on an admitted cut still fits the mathematical model.
+
+Ascent section 5 motivates probing admitted column indices rather than
+scanning unrelated rows. Dusa section 7.1 motivates recording the
+prefix firings as well as the cost of their lookups. At Racket revision
+=8d74d1f=, =private/runtime.rkt:find-facts= calls
+=private/database.rkt:db-filter= for ordinary predicates, scanning
+the fact set. Count that work separately when using the Racket
+implementation as a comparison. See
+[[file:research-and-design.org::*Paper-to-source decisions][the paper-to-source mapping]].
+
+The two application Cases and two independent complete-list ownership
+Cases passed with exit zero through the packaged =gerbil test= command,
+the 2 GiB heap limit and the 90-second watchdog. The two focused Lean
+checks and the full 185-job library completed with exit zero under the
+locked LeanPoo Guard. The complete Lean run took 43.996 seconds.
+After adding the exact bucket enumerator and its visit count, the
+focused check passed in 13.134 seconds and all 185 jobs passed in
+19.321 seconds. These are proof-check durations.
+The test source, binary and module hashes, proof input hashes and
+receipts are in
+=.cache/ascent/yuanxu-v0.1.0/application-witness-delta.mmbH8J/=.
+The first direct binary invocation omitted the packaged load-path
+setup. The next diagnostic used an incorrect first-row ordering
+assumption; the final control selects a known position in the existing
+fixture. Both failed diagnostics remain in the same evidence directory.
+These controls establish public observations on the staged library.
+The native repair, the ordered publication and provenance refinement,
+and the matched application cost comparison remain open.
+
+** Lean receipt for downstream membership and bucket order
+
+The locked LeanPoo Guard accepted the extended =ScopedQuerySpec.lean=
+and all 185 jobs in the full library. The focused and full checks
+took 1.654 and 9.176 seconds respectively, with zero additional helper
+threads. The input hashes and command receipts are in
+=.cache/ascent/yuanxu-v0.1.0/application-model.crhdnH/=. The build
+covered the mathematical model. Application selection still depends
+on the caller contract, Scheme refinement and the performance evidence
+listed above.
+
+** Lean receipt for the endpoint projection and dense output bound
+
+The guarded =ScopedQuerySpec.lean= check passed in 7.120 seconds.
+All 185 jobs passed in 37.355 seconds under the locked LeanPoo Guard.
+The receipts are in
+=.cache/ascent/yuanxu-v0.1.0/pure-action-spine.bRvJDAKO/=.
+
+The current complete result requires exact layers and existing
+evidence. The research path within that contract is to reuse the
+verified graph relations across a mask-only edit. The Scheme cut,
+ordered publication, derivations and the repair cost still need to
+be tied to the model. The endpoint projection is eligible for an
+experiment only once a caller specifies that it observes selected-pair
+answers and identifies the evidence and ordering it requires.
+The proof supplies membership of the final trace for each selected
+pair. It does not specify that caller's evidence, the throughput or
+the latency of the Gerbil implementation.

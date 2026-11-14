@@ -1,0 +1,148 @@
+#+title: Scheme Coding Style: Build and test boundaries
+
+[[file:../scheme-coding-style.org][Coding Style index]]
+
+Production build declarations, native test ownership and startup constraints. Study notes and receipts retain their original revision and scope;
+historical source paths and timings are not current qualification claims.
+
+* Feature: production build declarations separated from native test execution
+
+=std/build-script.ss:35= supplies =defbuild-script= directly over a build
+specification. ASCENT previously wrapped that native =main= with test-file
+selection, test inventories, compilation, lane locking and performance dispatch.
+That mixed build and test ownership and encouraged fixture-specific branches.
+
+=build.ss= contains production module declarations,
+the ASP package specification, and native =defbuild-script=. Its exported
+production module list is shared data, with no test imports or dispatch.
+=std/source this-source-file= is imported explicitly because the native build
+macro requires it; it previously arrived through the removed process imports.
+
+* Current entry contracts
+
+| Source | Responsibility |
+|--------+----------------|
+| =build.ss= | Production declarations and upstream build specification |
+| =t/harness/build.ss= | Compile the native test dependency closure with =std/make= |
+| =t/harness/library-spec.ss= | Shared fixtures and test-to-fixture dependency data |
+| =t/harness/test.ss= | ASP capacity/profile projection and observed native GxTest batches |
+| =t/qualification/*-test.ss= | Semantic Suites and Cases owned by =std/test= |
+| =t/performance/*-test.ss= | Compiled allocation and timing qualification Cases |
+| =t/performance/studies.ss= and =run.ss= | Declared experiments and one native build/run implementation |
+| =t/performance/reference-studies.ss= and =reference-run.ss= | Legacy reference experiments with their original budgets and gates |
+| =t/model/= and =t/research/= | Model correspondence and independent research consumers |
+| =packages/proofs/quint/{prepare,check}.sh= | Pinned tool preparation and existing exhaustive protocol checks |
+| =workbench/tests/= | Host orchestration and admission unit tests |
+| =workbench/source_tests/= | Maintainer SDK-dependent Scheme source and toolchain controls |
+| =workbench/engine_tests/= | Installed-wheel consumers with no external SDK requirement |
+| =tools/ci/= | CI SDK installation only |
+
+=Justfile= recipes select an entry and its arguments. Compilation, scenario
+selection and receipt validation belong to their Scheme modules; benchmark
+receipt paths are arguments rather than study-specific environment variables.
+The public recipe names remain the invocation contract. Each experiment run
+owns a unique receipt directory; a rejected or interrupted run cannot inherit
+a previous PASS. Source admission includes the extracted Quint drivers and
+backend pin as well as Scheme files and the build entry.
+
+Production build recipes invoke =gerbil build=. Compilation capacity uses
+=GERBIL_BUILD_CORES= and the ASP native capacity initializer; Gerbil =std/make=
+owns dependency order, workers, currentness and completion. The installed SDK
+is used without rebuilding Gerbil or Gambit.
+
+Ordinary tests keep Gerbil's =gxtest= discovery and =std/test= assertions. The
+batch adapter projects ASP testing capacity and memory/isolation profiles,
+retains separate worker logs, drains every worker before reporting failure,
+and rejects ERRORs or missing Cases. Process exit and completed native verdicts
+are both required. The source Case deadline remains 180 seconds. =just test= first prepares its
+native support Library with real-activity supervision, including previously
+compiled fixtures. Native make owns import currentness; this prevents a warm
+fixture from retaining private calls into an older producer. Optimized compilation
+may continue beyond 120 seconds while real output or measured process-group CPU
+advances. The existing supervisor uses five-second startup/inactivity checks;
+there is no synthetic heartbeat. Darwin reads public =proc_pid_rusage= counters,
+and Linux reads =/proc= user/system and reaped-child CPU ticks. This keeps short
+compiler children visible after the parent reaps them. Closed output pipes do
+not disable stall detection; failed leaders cannot leave compiler descendants
+holding the command open. Tests and benchmark runtime limits remain separate.
+The adapter is explicitly a qualification boundary, not a second assertion
+framework. Build and test capacity are separate native contracts.
+
+The selected UF experiment snapshots its six study inputs and two exact Git
+reference files, compiles that closure, then writes its contract once. It does
+not copy the whole checkout or overwrite the historical lookup contract.
+Compilation uses the same activity supervisor; its measurement deadline remains
+90 seconds. The standard paired-study entry similarly supervises compilation
+while retaining each native measurement child's fixed 90-second deadline. Study provenance
+does not qualify the complete provider or downstream consumers.
+
+All generated Libraries, receipts, logs and source snapshots stay under ignored
+=.cache/= or the existing package prefix. Historical results below retain their
+original source revision and do not qualify the current checkout.
+
+* Test startup and the POO Flow Core Case dependency
+
+The installed Gerbil v0.19 =tools/gxtest.ss= calls =import-module=
+with evaluation for each test source before it prints =HARNESS=. Its
+=std/test= files declare =test-suite= and =test-case= directly. The
+installed =gerbil/main.ss= maps =gerbil test= directly to =gxtest=,
+while =gerbil env= invokes =gxpkg env= first. In =std/make.ss=,
+=GERBIL_BUILD_CORES= defaults to zero workers unless set explicitly;
+the Ascent =just build= recipe already sets the detected core count.
+
+Timestamped local runs separate the phases. A minimal native Case
+reached =HARNESS= at 9.1 s and exited at 11.3 s. Importing POO Flow
+Core's =testing-case= without using its Case macro reached =HARNESS=
+at 22.4 s and exited at 32.4 s. The indexed-program module reached
+=HARNESS= at 33.5 s, completed its eight Cases at 35.5 s, and exited
+at 45.9 s. An installed Gerbil =std/string/misc-test.ss= module using
+the same =gerbil test= command reached =HARNESS= at 20.2 s and exited
+immediately after its 31 Cases. These observations locate substantial
+time before Case execution and after =OK=; they do not attribute the
+time to a particular library. Later host load exceeded 100, so the
+isolated Core-module split is not yet a measured startup improvement.
+
+The Core checkout has its own capitalized =Justfile=. Its test recipe
+used =gerbil env gxtest=; the local Core change now uses the standard
+=gerbil test= entrypoint with the same bounded timeout and receipts.
+It also prints start and elapsed-time markers so a long module import
+is visible. The extracted =observability/debug-memory.ss= keeps the
+memory and duration Case boundary apart from tracing and slot debug;
+the compatibility export in =debug.ss= preserves existing imports.
+The isolated Core build with explicit =GERBIL_BUILD_CORES=12= and the
+=t/core-test.ss= and =t/observability-feedback-test.ss= modules passed.
+Using that isolated Core build as =GERBIL_PATH=, the Ascent
+=just test-file t/qualification/ascent-index-program-test.ss= also
+passed all eight Cases, =MODULE-OK=, =HARNESS-OK=, final =OK=, and
+process exit 0.
+Startup latency remains an open performance question until matched
+measurements under a stable host load are available.
+
+* Shared production identity in reference fixtures
+
+A frozen reference algorithm retains its own implementation but imports shared
+production dependencies through canonical =:gerbil-ascent/...= Library names.
+Do not use relative production source paths alongside native Library imports.
+Gerbil's expander caches library and normalized file paths separately; importing
+a source path can evaluate another context with the same runtime namespace.
+POO prototypes and private structure identities are therefore part of the
+module-loading contract, even when both files contain identical declarations.
+
+The source-import regression checks prototype identity after late fixture
+imports and admits both held and fresh reference Sessions. Its negative control
+restores one relative =program/types.ss= import and produces a real native
+=ERROR CHECK=. This protects the reference/production boundary without altering
+reference algorithms, weakening validation, or resetting contract caches.
+
+
+** Native linker precedence through the package interpreter
+
+The package =gxi= command must preserve the environment boundary after adding
+its package binary directory. Previously its second =PATH= assignment expanded
+the original shell PATH and replaced the sanitized ordering, letting an
+inherited Nix =ld= override the native linker used by Homebrew GCC. Replaying
+the same objects under the native PATH linked successfully. The interpreter
+now keeps package binaries followed by =/usr/bin:/bin= before inherited tools.
+A regression injects an executable foreign linker at the inherited PATH head
+and checks the interpreter still resolves the native linker. No SDK source or
+compiler optimization setting is changed.

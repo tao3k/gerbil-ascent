@@ -1,0 +1,107 @@
+#+title: Complete native round workspace qualification
+
+* Ownership and source study
+
+The full evaluator is frozen at =cf706aee296a1d11ca2824c045a65f27dca3c7c7=.
+Only relative imports are relocated. Both engines share unchanged dependencies,
+the same installed Gerbil =1cfb032= and the same compiled native library root.
+
+Gerbil =src/gerbil/compiler/optimize-base.ss:334-340= creates a private method
+table only when needed. =src/std/list/list-builder.ss:5-24= expresses an
+owner-controlled collection through hygienic syntax. ASCENT applies these
+patterns to an explicit retained frontier and an invocation-owned write set:
+rows, row admission, callbacks and physical indexes remain with the engine.
+Gerbil =src/std/struct/lru.ss:45-67= binds typed record projections directly
+with =using=; the workspace uses the same expression form. The private records
+are final; their factories own all mutable containers. The eligibility boundary
+also omits view-injection and lattice staging vectors from native Set/hash
+rounds. Single-relation engines retain direct traversal.
+
+Canonical Set/hash lanes use sparse delta reset and commit selection. A reset
+visits the retained nonempty frontier and nonempty totals of the new stratum.
+A commit visits the union of the preceding frontier and actual admitted writes,
+in ascending declaration order. Only after the whole commit succeeds does the
+write set become the next frontier. Empty unchanged lanes keep their native
+version-owned index entry. Custom providers, views and lattice joins preserve
+the existing complete traversal and version behavior. Source appends register
+new frontier members; a partial timeout retains its already committed frontier.
+
+* Gates fixed before timing
+
+Each scenario consumes the complete engine and all published sizes/rows.
+Declarations and immutable analysis are prepared outside warm clocks; every
+measured leg constructs its engine and executes through complete publication.
+Cold includes declaration construction. Independent expected closure membership
+is checked in every leg; sorted rows only normalize enumeration for comparison.
+
+| Scenario | Complete workload | CPU gate |
+|----------+-------------------+----------|
+| wide | 128 callback recursion steps, 512 unused relations | <=90% baseline, >=16/20 wins |
+| chain | 96 alternating counter/relay steps, 1024 unused relations | <=90% baseline, >=16/20 wins |
+| cold | Full declaration/analysis/engine for one recursion step | <=110% baseline +20us |
+| indexed | Keyed 31-edge transitive closure through native SCC workers | <=110% baseline +20us |
+| small | Warm one-step callback engine | <=110% baseline +20us |
+| serial | 16 callback recursion steps, one worker, no padding | <=110% baseline +20us |
+
+Every scenario has 20 alternating process CPU (user+system) pairs with natural
+GC, 20 separate ASP consumer admissions and five alternating VM allocation
+pairs. Allocation alone collects before each leg; negative counters reject.
+Allocation must be <=110% baseline +8192 bytes. ASP p95 must be <=999ms.
+The entire six-scenario run has one fixed 90-second bound. No environment
+selector, Python harness, subprocess scheduler or upstream source build is used.
+
+* Reproduction
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" gxi t/performance/round-workspace/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" timeout 90s just build
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  timeout 90s gxi -:max-heap=3G,debug=q :gerbil/tools/gxtest -v 5 \
+  t/qualification/ascent-round-workspace-test.ss t/qualification/ascent-timeout-test.ss \
+  t/qualification/ascent-index-program-test.ss t/qualification/ascent-eqrel-program-test.ss \
+  t/qualification/ascent-storage-batch-test.ss
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  timeout 90s gxi -:max-heap=3G,debug=q \
+  :gerbil-ascent/t/performance/round-workspace/runner all .cache/ascent/round-workspace/
+#+end_src
+
+Raw logs, discarded results and source/SSI identities belong only in ignored
+=.cache/ascent/round-workspace/=. Final admission follows native root build.
+Local semantics, matched CPU/allocation and remote CI are separate evidence.
+
+* Final local admission
+
+After the final root native build, all six scenarios pass in one 90-second
+invocation, with 20 CPU pairs, 20 ASP admissions and five allocation pairs each.
+38 source/SSI hashes remain unchanged across the complete series. Seven native
+Suites pass 113 Cases, including exhaustive 512-graph positive-plan parity,
+round-by-round timeout snapshots, high-slot retained source append, duplicate
+no-op identity, negative-stratum handoff, multihead callback multiplicity/order,
+callback rejection/retry, provider failures and published snapshot ownership.
+ASP Policy passes both production owners with zero findings. Native GxTest
+ends with =HARNESS-OK=, =OK= and exit zero, without failed Cases.
+
+| Scenario | Baseline CPU us | Candidate CPU us | CPU reduction | Wins | Baseline bytes | Candidate bytes |
+|----------+-----------------+------------------+---------------+------+----------------+-----------------|
+| wide | 1863 | 503 | 73.0% | 20/20 | 1345464 | 1363784 |
+| chain | 2914 | 802 | 72.5% | 20/20 | 2198160 | 2245184 |
+| cold | 2021 | 2006 | control | 14/20 | 6038944 | 6039216 |
+| indexed | 1588 | 1574 | control | 12/20 | 3460560 | 3474304 |
+| small | 13 | 12 | control | 9/20 | 39520 | 39792 |
+| serial | 25 | 25 | control | 10/20 | 83280 | 76832 |
+
+The sparse frontier trades 1.4% /2.1% extra allocation for the two target CPU
+reductions; this is retained evidence, not an allocation improvement claim.
+The initial passing candidate used three temporary provider-vector lists and
+allocated 1437624 /2392896 bytes. Native =for/fold= eliminates those lists;
+the earlier complete series and receipts remain under ignored
+=.cache/ascent/round-workspace/before-vector-iteration/= and the adjacent log.
+The fixed contract and scenarios were unchanged between these code candidates.
+
+Other compilation, Rust benchmark, Gerbil tests and Java model checking were
+allowed to finish naturally before admission. Ambient desktop and persistent
+=devenv= activity remained. The claim is matched process CPU with natural GC,
+not an exclusive-host wall-clock or general multicore scaling guarantee.
+Raw final data is =.cache/ascent/round-workspace/complete-ab.log= plus the six
+=-final.ss= receipts; identity, native build, Suite and Policy logs are adjacent.
+No raw logs or generated native build products are tracked.

@@ -1,0 +1,127 @@
+#+title: Complete view publication and ordered export qualification
+
+* Source and ownership
+
+The complete evaluator, view publication/export owner and EqRel replay kernel
+freeze =3cfbb1a7e17beb98097510a07cecf2a9b2478284=. References change only import
+locations. Both complete engines share current storage dispatch/initialization,
+UF kernels and other unmodified execution dependencies. The reference export
+owner uses its frozen EqRel replay implementation; canonical live engine
+insertion uses the current kernel on both sides. This qualifies the complete
+publication/export path with those shared helpers, not a historical binary of
+every dependency at the baseline commit.
+
+Installed Gerbil =1cfb032= =std/list/list.ss:365-376= collects private buckets
+and applies =reverse!= to their owned headers. =compiler/optimize-top.ss:704-711=
+reverses its invocation-owned keyword accumulator. These ownership patterns
+support destructive order restoration only on freshly allocated collector
+spines; borrowed journal/member/input spines and held frozen cuts remain intact.
+
+EqRel has one admission kernel for both frozen engine frontiers and synchronous
+ordered replay. A private continuation selects the publication representation
+after full count preflight and component commit. One interleaved writer is
+shared by full frontier visitation and synchronous replay. The replay writer
+factory receives the entire injection count and can decline an old frontier
+while still reconstructing its component state. No per-injection temporary
+EqRel view, view-key validation or visitor wrapper is needed for ordered replay.
+No tuple cache, cursor, replay state or graph is retained by the published cut.
+The admitted width selects a two-column or grouped three-column constructor
+once outside the Cartesian writer, replacing per-row generic append. One
+event-owned collector is reused across its synchronous injection callbacks.
+
+Fallback export restores derived batch order through =reverse!=/ =append!=
+on its fresh collectors and returns =reverse!= of its private output. Source
+versus derived order, grouped width, suffix admission and no split-injection
+checks are preserved. UF's bounded packed replay and sparse fallback selection
+remain unchanged; fallback collector ownership applies to both storage kinds.
+
+* Fixed contract before sampling
+
+ASP's native fixture API generates =benchmark.ss=. One fixed 90-second run
+contains eight complete-engine scenarios. Each leg creates a fresh engine,
+publishes a complete result and exports all relation rows. Retained work adds
+eight source updates, publications and intermediate exports. Targets repeat
+complete exports three times, which deliberately measures ordered export cost.
+Declaration/analysis is warm except in the cold control. Historical exact row
+order is compared with the complete reference, while an independent pair
+matrix checks closure and all relation sizes before sampling. Every leg is
+compared against that checked result, including completion/path/rule metadata.
+
+| Scenario | Work | Gate |
+|----------+------+------|
+| eqrel | 128 chain edges, 300 duplicates, three complete exports | target |
+| grouped | 32 independent nine-node EqRel groups, three exports | target |
+| retained | 64 initial edges, eight source appends/publications and three final exports | target |
+| cold | declaration/analysis, one EqRel edge and full export | control |
+| small | warm analysis, one EqRel edge and full export | control |
+| uf | 64 UF chain edges and 300 duplicates, sparse fallback export | control |
+| derived | Set source, 16 rule-derived EqRel edges and three exports | control |
+| native | 64 UF chain edges, bounded packed replay and three exports | control |
+
+There are 20 alternating process-CPU pairs with natural GC, 20 separate ASP
+admissions and five alternating allocation pairs. Collection precedes only
+allocation legs and is outside allocation counters; negative deltas reject.
+Targets require <=90% baseline CPU and >=16/20 wins. Controls allow <=110%
+plus 20us. Allocation allows <=110% plus 8192 bytes. ASP p95 <=999ms retains
+the 500ms target and 499ms budget. Failed controls cannot be dropped or mixed
+with another attempt; the whole-run bound never widens.
+
+* Native reproduction
+
+Use the repository's native compiler environment with
+=gxi t/performance/view-export/build.ss "$PWD/.gerbil/lib"=, then =just build=.
+Run =gxi :gerbil/tools/gxtest -v 5 t/qualification/ascent-view-export-test.ss=;
+require final =OK= and no ERROR/FAIL, not only exit zero. Run
+=gxi -:max-heap=3G,debug=q :gerbil-ascent/t/performance/view-export/runner
+all .cache/ascent/view-export/= under =timeout 90s= against the canonical
+package library. Logs and receipts stay ignored under =.cache/ascent/view-export/=.
+Final timing follows root native build, a quiet machine and stable source/SSI
+fingerprints. Upstream Gerbil/Gambit is not rebuilt. Remote CI is separate.
+
+* Rejected initial candidate
+
+The first fixed run passed EqRel (1849 ->1560us, 18/20 wins) but rejected
+grouped (1026 ->973us, 16/20), whose 5.2% reduction missed the original 10%
+target. Its allocation improved, which did not clear the CPU gate. Receipts
+remain rejected in =.cache/ascent/view-export/before-specialized-writer/=.
+The candidate was changed to select row constructors once and reuse the
+event-owned collector. Fixtures, targets, controls, sample counts, gates and
+whole-run timeout remain unchanged. Earlier passing samples are not combined
+with a later run. One initial held-cut Case also failed because its reference
+session had not run before append; its failed test log remains preserved.
+
+* Qualified complete-engine results
+
+The final single 90-second invocation passes all eight original scenarios.
+All 68 source/SSI/contract fingerprints remain stable after native root build.
+Numbers are paired process-CPU medians in microseconds and separate VM
+allocation medians in bytes. Every ASP admission passes its 20-sample p95 gate.
+Control wins are descriptive and do not imply a separate speedup claim.
+
+| Scenario | Baseline CPU | Candidate CPU | Wins | Baseline bytes | Candidate bytes |
+|----------+--------------+---------------+------+----------------+-----------------|
+| eqrel | 1644 | 1250 | 20/20 | 11823760 | 8996416 |
+| grouped | 1048 | 917 | 20/20 | 3750608 | 3131984 |
+| retained | 1491 | 1155 | 19/20 | 12143120 | 9271296 |
+| cold | 620 | 621 | 10/20 | 1891920 | 1891648 |
+| small | 91 | 93 | 10/20 | 252576 | 252176 |
+| uf | 4570 | 4615 | 9/20 | 10273536 | 9911920 |
+| derived | 173 | 163 | 17/20 | 614576 | 516272 |
+| native | 2554 | 2571 | 8/20 | 3617456 | 3617456 |
+
+Target CPU falls 24.0%, 12.5% and 22.5%; allocation falls 23.9%, 16.5%
+and 23.6%. UF fallback adds 45us CPU (1.0%) despite 3.5% less allocation;
+the unchanged packed UF control adds 17us (0.7%) with unchanged allocation.
+Small adds 2us. These costs remain qualified under the fixed controls.
+Target workloads include repeated complete exports; they do not establish
+the same speedup for a solve without row export or arbitrary graph shapes.
+
+Eight native Suites pass 95 Cases after the final native root build, including
+512 three-node graph comparisons of synchronous versus frozen frontier order,
+grouped/false-key selection, budget refusal before writer selection, declined
+output state reconstruction, retained timeout/source cuts, duplicate callbacks
+and held result detachment. ASP source Policy passes both production owners
+with zero findings. Prior exact-head CI at =3cfbb1a= failed during source Suite
+execution at Session POO contract validation (=types.ss:238=). This local
+qualification does not establish its root cause, remote CI closure or general
+multicore scaling.

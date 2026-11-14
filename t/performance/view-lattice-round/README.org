@@ -1,0 +1,157 @@
+#+title: Complete native view and lattice round qualification
+
+* Source and publication ownership
+
+The full evaluator and round workspace are frozen at
+=d8d872c9ab4438783ba145abe38b011eaf89948d=. Only evaluator import locations
+change. The reference evaluator imports its frozen workspace; other dependencies
+are shared unchanged. Both engines use installed Gerbil =1cfb032= and the
+same native library root. No upstream compiler is rebuilt.
+
+Gerbil =src/std/struct/lru.ss:19-32,45-67= uses private final records and typed
+=using= projections to express mutation of affected owners.
+=src/gerbil/compiler/optimize-base.ss:334-340= creates private state only when
+needed; =src/std/iter/macros.ss:289-297= provides native accumulator iteration;
+=src/std/list/list-builder.ss:5-24= provides ordered collection syntax.
+ASCENT extends its retained layout and invocation-owned write set to exact
+native Set/hash, EqRel/hash, UF/hash and native lattice/hash key tables.
+One factory fold records the required staging capabilities; absent view or
+lattice consumers do not allocate their staging vectors. Single-relation and
+custom-provider engines keep complete traversal and existing version semantics.
+
+Reset visits retained nonempty deltas plus nonempty totals of the newly admitted
+stratum. Commit visits old frontier members and actual writes in ascending
+declaration order. A native view extension is recorded even when it emits no
+new rows: extension makes the storage owner pending, and that owner must return
+to ready after the entire round publishes successfully. Admission precedes
+clearing the write set; failures retain the replay requirement. Effective
+lattice keys enter the write set once while retaining existing join order.
+Source view append registers its published frontier. Empty unchanged lanes
+retain valid native version-owned indexes and view cuts.
+
+Reset selection uses =with-list-builder= to combine old frontier members and
+nonempty seed slots without copying a hash table. Stratum slot lists are unique;
+membership in the retained frontier excludes duplicates. Sorting preserves
+declaration order; only after all resets succeed is the retained frontier
+rebuilt. No temporary hash owner is needed for this immutable selection list.
+
+An invocation owns one slot-mark vector and a touched-slot list. Dense admitted
+relation indices give constant-time deduplication without another hash receiver.
+Publication still sorts touched destinations with the retained frontier. Success
+clears only touched marks, then discards the write list; it never sweeps the mark
+vector between rounds. The vector is allocated once per invocation, not per
+round. The retained stratum/frontier owners remain separate from this workspace.
+
+* Gates fixed before timing
+
+Every leg constructs and solves a complete engine with one worker, then consumes
+all relation sizes and rows. Warm declarations and immutable analysis are
+prepared outside clocks; cold includes their construction. Mathematical expected
+results independently check UF reflexivity and star reachability, maximum
+lattice joins and Set callback recursion. Sorting normalizes enumeration only.
+
+| Scenario | Complete workload | CPU gate |
+|----------+-------------------+----------|
+| view | UF recursive star to 64, 512 unused views | <=90% baseline, >=16/20 wins |
+| lattice | Maximum recursion to 128, 512 unused lattices | <=90% baseline, >=16/20 wins |
+| mixed | UF recursion and downstream maximum, 384 alternating unused owners | <=90% baseline, >=16/20 wins |
+| cold | Declaration, analysis and one lattice step | <=110% baseline +20us |
+| small | Warm one-step lattice plus empty Set | <=110% baseline +20us |
+| set | 16 callback steps, single Set relation | <=110% baseline +20us |
+| dense | One rule publishes to 40 native UF outputs | <=110% baseline +20us |
+| custom | 16 keyed lattice steps with derived index provider | <=110% baseline +20us |
+
+Each scenario has 20 alternating process CPU (user+system) pairs with natural
+GC, 20 separate native ASP consumer admissions and five alternating VM
+allocation pairs. Only allocation legs collect before measurement; negative
+counters reject. Allocation must be <=110% baseline +8192 bytes. ASP p95 must
+be <=999ms. All eight scenarios share one fixed 90-second run bound.
+The native ASP fixture API generates =benchmark.ss=. No Python test harness,
+subprocess scheduler or runtime environment selector is introduced.
+
+* Reproduction
+
+#+begin_src sh
+GERBIL_PATH="$PWD/.gerbil" gxi t/performance/view-lattice-round/build.ss "$PWD/.gerbil/lib"
+GERBIL_PATH="$PWD/.gerbil" timeout 90s just build
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  timeout 90s gxi -:max-heap=3G,debug=q :gerbil/tools/gxtest -v 5 \
+  t/qualification/ascent-view-lattice-round-test.ss t/qualification/ascent-timeout-test.ss \
+  t/qualification/ascent-eqrel-program-test.ss t/qualification/ascent-lattice-program-test.ss \
+  t/qualification/ascent-storage-batch-test.ss t/qualification/ascent-round-workspace-test.ss \
+  t/qualification/ascent-index-program-test.ss
+GERBIL_PATH="$PWD/.gerbil" GERBIL_LOADPATH="$PWD/.gerbil/lib" \
+  timeout 90s gxi -:max-heap=3G,debug=q \
+  :gerbil-ascent/t/performance/view-lattice-round/runner all .cache/ascent/view-lattice-round/
+#+end_src
+
+Root native build precedes final admission. Source/SSI identities must remain
+stable throughout A/B. Raw build/test logs, rejected fixture diagnostics,
+performance receipts and identity manifests belong only in ignored
+=.cache/ascent/view-lattice-round/=. Local semantics, matched process CPU and
+remote CI are separate evidence.
+
+* Semantic admission before timing
+
+Nine native Suites pass 132 Cases, ending with =HARNESS-OK=, =OK= and exit
+zero without failed Cases. They include the exhaustive 512-graph positive
+plan owner, immutable publication, all eight independent complete-engine
+projections, committed timeout cuts, no-op EqRel/UF owner admission, view field
+rejection/source replay, lattice key revisit/join order, indexed lattice
+replacement and custom storage/index failures. ASP Policy passes both
+production owners with zero findings. Root =just build= completes natively.
+
+Initial fixture validation rejected an expected UF closure missing reflexive
+tuples, a mixed projection cycle forbidden by the language and a recovery
+comparison with different source input. The fixtures were corrected before
+any timing samples; the rejected native log and diagnosis remain in cache.
+Both frozen engine owners match their baseline exactly apart from evaluator
+import relocation. The fixed eight-scenario contract precedes the first A/B.
+
+The preceding exact-head CI =d8d872c= completed with a Scheme failure at
+Session creation's POO contract validation; its oracle and formal jobs passed.
+Local native receipts do not clear that remote gate or establish its root cause.
+
+* Final local admission
+
+After final root native build, all eight fixed scenarios pass in one 90-second
+invocation with 20 CPU pairs, 20 separate ASP admissions and five allocation
+pairs each. All 48 source/SSI fingerprints remain unchanged. Nine native Suites
+again pass 132 Cases; ASP Policy again reports zero findings for both production
+owners. No native build, Suite, benchmark or Policy failure is admitted as a pass.
+
+| Scenario | Baseline CPU us | Candidate CPU us | CPU reduction | Wins | Baseline bytes | Candidate bytes |
+|----------+-----------------+------------------+---------------+------+----------------+-----------------|
+| view | 11947 | 7190 | 39.8% | 18/20 | 14703224 | 8362712 |
+| lattice | 2043 | 545 | 73.3% | 20/20 | 1558344 | 1626584 |
+| mixed | 8876 | 6679 | 24.8% | 20/20 | 9201824 | 6824480 |
+| cold | 2621 | 2600 | control | 12/20 | 7866160 | 7875328 |
+| small | 15 | 18 | control | 1/20 | 41504 | 50672 |
+| set | 25 | 25 | control | 6/20 | 76832 | 76896 |
+| dense | 6893 | 6884 | control | 8/20 | 11728752 | 11717856 |
+| custom | 31 | 31 | control | 6/20 | 56272 | 56336 |
+
+View and mixed allocation fall 43.1% and 25.8%. Lattice allocation increases
+4.4%; the small control adds 3us and 9168 bytes (22.1%). Those costs remain
+within the original explicit absolute/relative gates and are retained evidence,
+not allocation improvement claims. Sparse padded relation schemas are the
+qualified target; no general multicore scaling claim follows from these tests.
+
+Rejected complete-series attempts remain in =before-lattice-admission/=
+(the initial factory did not admit provider-less native lattices),
+=before-sparse-capacity/= (small control allocated 55536 bytes) and
+=before-compact-workspace/= (reset selection removed hash-copy, but the small
+control still allocated 54848 bytes). A compiled native allocation probe
+identified the invocation's hash receiver cost. Slot marks plus touched slots
+replace that receiver; explicit zero capacity is equivalent to the native
+default and was discarded. Baseline owners, scenarios and gates never changed
+between timed code candidates. A failed scenario rejects its entire attempt;
+its passing target measurements are not mixed into the final receipt series.
+
+Other Gerbil lifecycle tests, Rust benchmarks and native clean builds were
+allowed to finish naturally before timing. Ambient desktop and persistent
+=devenv= activity remained: this is matched process CPU with natural GC, not an
+exclusive-host wall-clock guarantee. Final data is =complete-ab.log= and eight
+=-final.ss= native receipts under ignored =.cache/ascent/view-lattice-round/=.
+The final semantic, Policy and root build logs are =tests-compact-final.log=,
+=policy-compact-final.log= and =native-package-build-compact-final.log=.

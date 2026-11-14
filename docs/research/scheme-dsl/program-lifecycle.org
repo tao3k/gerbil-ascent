@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+#+TITLE: program lifecycle reading: Flix as a language-integrated Datalog system
+#+STATUS: research note; no feature equivalence claim
+#+DATE: 2026-09-30
+#+FILETAGS: :research:flix:language-design:scheme-dsl:
+
+* Bibliography
+:PROPERTIES:
+:CUSTOM_ID: program-lifecycle
+:SOURCE_PDF: https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf
+:DOI: 10.1145/3763126
+:ACCESSED: 2026-09-30
+:END:
+
+Magnus Madsen and Ondřej Lhoták, [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix: A Design for Language-Integrated
+Datalog]], OOPSLA 2025.  PDF page numbers below count from one.  The
+paper is a systems overview that builds on the [[file:fragment-composition.org][2020
+first-class constraints paper]].
+
+* Evidence ledger
+
+#+NAME: program-lifecycle-evidence
+| Locator | Paper design | Scheme research implication | Limit |
+|---------+--------------+-----------------------------+-------|
+| §3.3, PDF pp. 6–7 | Explicit inject and query bridge collections and solved relations | Separate data loading, program composition, solve, and result projection | No need to copy Flix syntax |
+| §3.7, PDF p. 9 | Rho abstraction gives private predicates fresh identities per invocation | Fragment-local relation names need hygienic generativity | Current name-based includes do not offer this |
+| §3.8–3.9, PDF pp. 10–11 | Pure head/guard expressions and functional predicates | Separate checked computation from opaque host effects | Flix effect checks still do not prove termination |
+| §4.1, PDF pp. 16–17 | Structural row types balance composition and usability | Keep schema and private identities inspectable | Full Flix inference is a separate project |
+| §4.2, PDF p. 17 | Explicit solve avoids order-sensitive early evaluation under negation | Compose first; solve at an explicit boundary | A retained session is a later execution object |
+| §4.3, PDF pp. 17–18 | Implicit rule variables can capture lexical names accidentally | Specify hygiene and explicit host capture | Existing =expr= input lists solve only part of scope |
+
+* Architecture implications
+:PROPERTIES:
+:CUSTOM_ID: program-lifecycle-architecture
+:END:
+
+Flix makes a Datalog program a value that can be built, passed,
+returned, and composed.  Its =inject= takes ordinary collections to
+facts, while =query= computes a minimal model and extracts a relation.
+The proposed Scheme API should likewise keep construction separate
+from execution and expose a stable immutable result snapshot.  This
+is a lifecycle contract; it does not require identical keywords.
+
+Rho abstraction is particularly relevant for higher-order Scheme
+fragment constructors.  If the same function is invoked twice, its
+private =path= relation must receive a fresh identity for each result.
+Otherwise two fragments can accidentally share a predicate and cause
+arity conflicts, type conflicts, or recursive coupling.  Renaming only
+once at macro definition is insufficient when the function can produce
+fragments with different types on later invocations (§3.7, PDF p. 9).
+The public interface should reveal only declared inputs/outputs, while
+the planner retains the private dependency graph internally.
+
+The paper also makes an important limit explicit: Flix's effect system
+can require pure head and guard expressions, but does not prove that
+they terminate (§3.8.3, PDF p. 10).  A Scheme closure accepted merely
+as =procedure?= offers still less assurance.  A first implementation
+can document a trusted pure/total procedure contract and qualify it
+with tests; a stronger language needs a restricted analyzable
+expression/operator representation.
+
+Finally, Flix separates =solve= from =query= because solving during
+every composition changes meaning when later constraints affect
+negation and wastes work across multiple queries (§4.2, PDF p. 17).
+In Gerbil, fragment assembly should therefore remain inert; program
+admission, evaluation, and reading a snapshot are separate operations.
+
+* Discriminating fixtures
+
+1. Call one fragment constructor twice with different captured types;
+   private relation identities must not collide.  Assemble both and
+   query their public outputs independently.
+2. Assemble two fragments in both orders where one supplies facts read
+   by a negated rule.  Do not solve the first fragment early; check the
+   complete assembled semantics and negative-cycle admission.
+3. Pass a pure terminating function through a functional predicate,
+   then test a mutable capture and a diverging function separately.
+   Only the first has an evident safe operational story; an effect
+   check alone cannot discharge termination.
+4. Inject a finite source collection once and query two outputs from
+   one solved snapshot.  Verify that neither query restarts evaluation.
+
+* Related notes
+
+[[file:index.org][Research index]]; [[file:../../scheme-relational-dsl-design.org][Scheme DSL proposal]].
+
+* Current implementation reconciliation (2026-10-04)
+
+Fresh private identities and explicit construct/admit/solve/query boundaries are implemented in the checked subset. The earlier statement that name-based includes lack generativity is historical; the general static typing/effect and compiler-refinement obligations remain open.
+
+See the [[file:../../scheme-research-proof-audit.org][research/proof audit]] for the current transfer obligations and ordered exit gates. Earlier experiments retain their original source and cost boundaries.

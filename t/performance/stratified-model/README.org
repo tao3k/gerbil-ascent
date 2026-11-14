@@ -1,0 +1,89 @@
+#+title: Invocation-owned finite model lookup for stratified proofs
+
+* Production ownership and Gerbil study
+
+Gerbil revision =2591dcd= uses fresh symbol identity tables in
+=compiler/compile.ss:1113-1127= for one import traversal and in
+=compiler/optimize-spec.ss:121-130= for one specialization target. Its
+=optimizer-info= record (=optimize-base.ss:24-29=) names table responsibilities.
+Lookup indexes belong to the analysis invocation; stable source order remains
+separate from hash iteration. The applicable pattern is state lifetime and
+lookup representation, not manually forcing every expression to inline.
+
+=candidate/closure-index.ss= privately owns relation metadata over the
+independently replayed verified closure. Symbol identity selects relations;
+structural row equality implements the former =member= membership semantics.
+Original ordered rows remain responsible for enumeration and every charged
+proof-search/check step. Only the checker supplies source occurrences; their
+vector preserves exact positions, including duplicates. All indexes are fresh
+per call. No metadata survives certificate/generation changes.
+
+The producer still calls the separate checker, and each still independently
+replays the finite model. Neither indexes nor caller certificates bypass
+verification. Source labels, node/root order, backward dependencies, explicit
+budget boundaries and invalid/bounded/unsupported verdicts remain unchanged.
+=build.ss= adds only the library module; test and benchmark work stays in =t/=.
+
+* Frozen baseline and public ASP entry
+
+Run =just performance-stratified-model=. Project modules compile against the
+installed SDK without rebuilding Gerbil. Explicit arguments select scenarios,
+library and receipt paths. Logs, native artifacts and raw receipts live only
+under ignored =.cache/ascent/stratified-model/=.
+
+Both reference modules freeze =5e549ce8d17c3fd942cdb50eb36cee825c06f795=.
+The checker is byte-identical. Only the producer's checker import is redirected
+to the frozen checker; restoring that path reproduces its original file.
+The timed baseline therefore includes the old producer and old checker.
+
+=benchmark.ss= was created with public =make-benchmark-fixture=.
+=benchmark-run/result= owns 50 alternating checked pairs and its standard
+wall/heap receipt. Additional process CPU and cumulative allocated byte deltas
+measure each inner call. Inputs, finite certificate and expected rows are
+prepared before timing; each timed producer call includes independent replay,
+proof search and its complete internal checker/replay. Both ordered proof
+data and root rows must match outside the timed span. Both external old/new
+checkers must accept the proof. A collection precedes each leg.
+
+* Fixed gates and retained negative results
+
+Large source/derived proofs require at least 20% CPU improvement and 35/50
+paired wins. All large/control scenarios permit at most 25% extra allocation
+plus 8 KiB. Controls allow 5% CPU plus 30 microseconds; small permits at most
+8 KiB extra bytes. All gates were fixed before sampling. Standard pair wall
+p95 is diagnostic; this does not establish whole-query latency improvement.
+
+The initial separate source-position map passed large CPU gates but allocated
+10,400 extra bytes for four source rows, failing the small allocation gate.
+Capacity hints alone still failed (10,624 extra bytes). The final relation
+record owns ordered rows, structural membership and optional source positions
+together, removing the additional relation map. No size cutoff or admission
+gate relaxation was introduced. Both failed raw logs remain in local cache.
+
+* Local native result
+
+Final public entry exits 0; all five scenarios pass their original gates:
+
+| Scenario   | Baseline CPU us | Current CPU us | Baseline bytes | Current bytes | CPU wins |
+|------------+-----------------+----------------+----------------+---------------+----------|
+| source     |           21069 |           7997 |        2501112 |       2581784 |    50/50 |
+| derived    |           10817 |           5001 |        3207168 |       3290560 |    50/50 |
+| relations  |            1548 |           1558 |        1604592 |       1797200 |    21/50 |
+| duplicates |             968 |            916 |         728696 |        747976 |    40/50 |
+| small      |              37 |             41 |          97216 |        105200 |     6/50 |
+
+Source uses 1024 unique rows, derived uses 512 unique rows and one rule,
+relations uses 48 relations of eight rows, duplicates uses 512 occurrences of
+64 rows, and small uses four rows. Benefits are size-dependent. Small is slower
+and allocates more; the shared representation stays within the explicit cap.
+
+Two native Suites pass 20 Cases: the proof producer/checker Suite's 13 Cases
+and complete stratified graph Suite's seven Cases. Explicit native/module/
+harness/final markers and exit 0 are required. The new paired Case checks
+exact proof data and verdicts at each budget 1..80, separately for finite
+replay, producer search and checker work. Boolean/symbol values and duplicate
+sources preserve equality; choosing the later equal source occurrence remains
+valid, while changing the label to an unequal occurrence rejects in both
+checkers. Existing tests cover negation, all reducers, recursive graphs,
+source correction, stale certificates and missing/forward group support.
+The selected source policy exits 0 with =findings=0= and =errors=0=.

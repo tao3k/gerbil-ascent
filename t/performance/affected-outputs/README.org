@@ -1,0 +1,63 @@
+#+title: Affected output selection and activation qualification
+
+* Frozen source and construction contract
+
+Baseline =4aeabc1322216bf37339ba6fb7b981a6bce808ee=.
+Original =program/update-selection.ss= blob:
+=e8a8fa6be90c443976a3c488d46a00312faa8f76=.
+Frozen reference blob: =fc8ba25d132848444a441f720cdfedbcd2974c27=.
+Only three relative imports are normalized to absolute package imports.
+
+Installed Gerbil =1cfb032= =std/list/list-builder.ss:6-26= supplies the
+fresh-spine construction contract. The private =select-affected= syntax binds
+its inputs once, returns the original list when all items survive, and constructs
+a fully detached ordered spine after the first rejection. Both head selection
+and compiled-output projection use that contract. Full rule/frame identity and
+partial fresh-frame activation remain unchanged.
+
+* Native selection and activation phase
+
+ASP Scheme benchmark API runs 50 alternating old/new pairs. Immutable heads,
+body, compiled plans, initial activations and affected bitmap are prepared before
+measurement. Each call selects all rule strata, activates partial rules and
+consumes every selected head into a relation-ID checksum. Baseline parity and
+an independent affected-ID sum are required for every pair. This consumption
+checks selected heads; separate semantic qualification checks compiled outputs,
+plan sharing and frame ownership. It does not execute a public session or solve.
+
+GC precedes each sample. CPU is process user/system time and allocation is
+Gambit allocated bytes. Timing lanes do not overlap local builds or qualification.
+The full-survivor target was declared before execution: CPU <=90% of baseline
+and at least 40 faster pairs. Controls allow 110% CPU +20 microseconds;
+allocation allows 110% +4096 bytes. No gate was relaxed.
+
+| Scenario | Heads | Rules | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+-------+-------+------------+------------+-----------+-----------+--------------|
+| full | 64 | 128 | 125 | 80 | 18688 | 18688 | 46 |
+| partial, even IDs | 32 | 64 | 40 | 30 | 134400 | 144640 | 48 |
+| none | 32 | 64 | 14 | 14 | 3328 | 3328 | 17 |
+| small full | 1 | 1 | 1 | 1 | 400 | 400 | 20 |
+| empty | 0 | 0 | 1 | 1 | 256 | 256 | 21 |
+
+Full-survivor CPU falls about 36% with unchanged allocation. Partial selection
+uses 10240 extra bytes (about 7.6%), within the predeclared control; its CPU
+median falls 25%. Tiny measurements are controls, not stable speedup claims.
+All logs, receipts and binaries stay under ignored =.cache/ascent/affected-outputs=.
+
+* Semantic qualification
+
+The added suite compares every four-relation affected mask against the frozen
+reference and a direct ordered-head oracle, including repeated and reordered
+head IDs. It checks compiled output order, full rule/plan/frame identity,
+first/middle/last rejection, mutation of every projected spine pair without
+altering the caller, private partial frames, shared actions, missing-plan
+lowering and empty/excluded strata. Existing selected-activation and positive
+component suites cover update/append/resume flows. Root =build.ss= is unchanged.
+
+Final local qualification: three Suites, 32 Cases, final =OK= and exit zero.
+The source-loaded selection/activation pipeline also passed. Native policy
+completed with 30 advisories and zero errors; the repository is not claimed
+warning-free. The first qualifier build was rejected because other Scheme
+sources changed during compilation; its log was retained and the subsequent
+build passed source-snapshot admission. Local receipts do not establish
+completed remote CI.

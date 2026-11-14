@@ -16,7 +16,8 @@
         (only-in :gerbil-ascent/table/expression
                  gerbil-ascent-table-expression-prototype)
         (only-in :gerbil-ascent/t/scenarios/performance/ascent-table-expression/baseline
-                 ascent-table-expression-baseline))
+                 ascent-table-expression-baseline
+                 ascent-table-expression-global-point-reference))
 
 (def fixture
   (call-with-input-file
@@ -41,18 +42,38 @@
 (unless (benchmark-fixture-contract-pass? fixture)
   (error "invalid ASCENT benchmark fixture" fixture))
 
+(def phase-start (time->seconds (current-time)))
+(displayln "[ascent-table-expression] START baseline samples=1000")
+(force-output)
 (let-values (((baseline-receipt baseline-value)
               (benchmark-run/result
                fixture (lambda () (ascent-table-expression-baseline pairs radix)))))
+  (displayln "[ascent-table-expression] END baseline wall-seconds="
+             (- (time->seconds (current-time)) phase-start)
+             " p95=" (benchmark-fixture-ref baseline-receipt 'elapsed))
+  (force-output)
+  (set! phase-start (time->seconds (current-time)))
+  (displayln "[ascent-table-expression] START candidate samples=1000")
+  (force-output)
   (let-values (((candidate-receipt candidate-value)
                 (benchmark-run/result
                  fixture (lambda () (candidate-projection pairs radix)))))
+    (displayln "[ascent-table-expression] END candidate wall-seconds="
+               (- (time->seconds (current-time)) phase-start))
+    (force-output)
     (unless (equal? baseline-value candidate-value)
       (error "ASCENT relation projection changed its pair set"
              baseline-value candidate-value))
     (unless (= (length candidate-value) 1024)
       (error "ASCENT relation projection produced the wrong pair count"
              (length candidate-value)))
+    ;; Retain the complete unpartitioned point witness on all 512 edges. Its
+    ;; checks execute once after both original 1000-sample measurements and
+    ;; inside the same unchanged performance deadline; never omit/truncate it.
+    (unless (equal? baseline-value
+                    (ascent-table-expression-global-point-reference pairs radix))
+      (error "global point witness differs on the complete 512-edge fixture"))
+    (displayln "[ascent-table-expression] GLOBAL-POINT-WITNESS-OK input-pairs=512 output-pairs=1024")
     (unless (benchmark-receipt-pass? candidate-receipt)
       (error "ASCENT relation projection exceeded the benchmark budget"
              candidate-receipt))

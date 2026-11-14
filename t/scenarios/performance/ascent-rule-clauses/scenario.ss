@@ -11,7 +11,7 @@
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-rule-program-fixture
                  ascent-rule-fixture-program)
-        (only-in :gerbil-ascent/program/interface
+        (only-in :gerbil-ascent/program/api
                  gerbil-ascent-evaluate-program))
 
 (def fixture

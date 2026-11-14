@@ -1,0 +1,86 @@
+#+title: Temporal value contracts and projection ownership
+
+* Source and responsibility study
+
+Frozen baseline =15b53a69802b23777607019b1020ae0e6e516425=, complete
+=temporal/lens.ss= blob =8c14ed3291273ecac46d04d0ea38dc777e217445=.
+The unchanged =reference.ss= retains the previous public constructors and solver.
+Gerbil =1cfb032= =core/match.ss:672-689= owns simultaneous/sequential structural
+bindings; =compiler/optimize.ss:28-35= scopes mutation and type facts to one
+invocation. Apply these mechanisms to a complete temporal protocol.
+
+=temporal/value.ss= owns constructor admission, uniqueness, canonical sort,
+inert capture and detached projection. Public values remain POO objects and
+custom interval projections retain their original two-pass evaluation schedule.
+Uniqueness uses one invocation-owned value hash instead of repeated suffix
+membership scans. Empty and singleton inputs allocate no uniqueness table.
+Expected traversal complexity is linear in admitted values; collision behavior
+still belongs to the native hash implementation. Caps remain 256 events/members
+and 512 parent rows.
+
+=temporal/projection.ss= owns node lookup, cut eligibility, parent-order checks,
+whole-cut cycle preflight and horizon traversal. Native named =defstruct= records
+replace manually specified vector field macros. Lens/source coordinates bind
+by shape together using Gerbil =with= rather than repeated positional reads.
+The result contains only admitted edges, ordered frontier and first rejection;
+no graph index or node escapes into an answer or receipt. Existing indexed
+horizon traversal and source-first incoming-edge ordering remain unchanged.
+
+=temporal/lens.ss= owns snapshot binding, proof production/replay and public
+solve/fork/verify/compare operations. It shrinks from 489 to 189 lines. This
+size reduction is architectural, not a performance measurement. Root =build.ss=
+only lists the two new production modules before the existing public facade.
+It acquires no test dispatch or benchmark switches.
+
+* Matched complete construction
+
+ASP Scheme benchmark API executes 50 alternating old/new pairs. Each invocation
+constructs both a lens and a source twice, including admission, uniqueness,
+canonical sorting, inert capture and detached projection. Every timed and
+allocation invocation must match the frozen constructor and independently
+prepared canonical coordinates. Fixtures use ids n1000..n1255 and distinct
+source-first parent pairs. Input preparation is outside timing.
+
+Predeclared targets require <=90% median CPU and at least 40 faster pairs.
+Small/empty controls allow 110% +20 us. Allocation allows 110% +4096 bytes.
+CPU is process user/system time; a separate semantically equal invocation
+between forced GCs measures VM allocation via statistics slot 16. Each
+allocation difference must be nonnegative; forced GCs are outside CPU timing.
+
+| Scenario | Events/members | Parent edges | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+----------------+--------------+------------+------------+-----------+-----------+--------------|
+| wide | 256 | 512 | 9001 | 806 | 981920 | 1009376 | 50 |
+| medium | 64 | 128 | 609 | 191 | 312224 | 343824 | 50 |
+| small | 1 | 1 | 28 | 23 | 75120 | 75120 | 29 |
+| empty | 0 | 0 | 22 | 23 | 72560 | 72560 | 28 |
+
+Wide/medium CPU declines about 91.0%/68.6%, with allocation increases of
+2.8%/10.1%. These are complete construction gains, not complete solve or
+proof-verification gains. Small/empty timings are nonregression controls.
+The temporary hash indexes have a real allocation cost; all gates stay fixed.
+
+* Qualification and reproduction
+
+Build =build.ss <absolute .gerbil/lib> <absolute binary>= for the constructor
+runner; third argument =qualify= builds the native std/test runner. Run pairs
+sequentially for =wide medium small empty=, with a separate receipt path.
+Logs, failed invocations and receipts remain under ignored
+=.cache/ascent/temporal-contract/=; no benchmark logs are committed.
+
+The semantic suites cover all three-node directed graphs, roots and horizons
+against an independent shortest-distance model and the frozen original solver;
+canonical interval windows, supplied callbacks, frontier order, source
+ownership, native evidence replay, hypothetical forks and comparisons remain
+part of qualification. New constructor cases check independent canonical
+coordinates, duplicate symbols/structural parent pairs, interval callback
+schedules and detached input/output spines.
+
+Final qualification covers 3 suites and 19 cases. Targeted temporal source policy
+reports one advisory about repeated match bodies in uniqueness admission and
+zero errors; this is not a warning-free claim. Final paired receipts use
+=*-final-receipt.ss=. The first paired run is retained alongside them.
+
+The final rebuilt native harness exits zero with every =CASE-OK= and final =OK=.
+Direct source loading also completes solve and =temporal-verify= on the public
+facade and emits =SOURCE-TEMPORAL-OK=. The constructor gains and solver semantic
+checks are separate receipts; no whole-solve timing improvement is claimed.

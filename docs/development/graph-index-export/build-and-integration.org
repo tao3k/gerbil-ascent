@@ -1,0 +1,623 @@
+#+title: Build and integration
+#+language: en
+
+[[file:../graph-index-export-algorithms-20261112.org][Audit index]]
+
+* Yuanxu release alignment
+
+ASCENT selects [[https://github.com/tao3k/gebril-yuanxu/releases/tag/v0.1.0][Yuanxu v0.1.0]].
+The release resolves to =bbebe280fc2130ee23d97dcc5106ead0722feb10=.
+Its package manifest selects POO
+=75636427d29e6fee4780d44cac3bb713a072cd59=. Scheme imports use the
+release's =:tao3k/yuanxu/= module identity.
+
+The production build reads =std-make-spec= from =init.ss=. Yuanxu
+prepares the selected compiler contexts, and the Gerbil standard build
+script dispatches build and clean. ASCENT declares its C ABI targets and
+compiler options in the same Make specification. The compile invocation
+uses Yuanxu's existing borrowed-static-input extent for the ABI links.
+On the frozen SDK, a two-package control with a read-only dependency
+reproduced Gambit's =Permission denied= while it generated C beside the
+dependency's static Scheme.
+
+On the release prefix, the standard build script reported =spec=, =compile=
+and =clean=. Its emitted Make specification contained 180 distinct targets,
+including =init=, =interface/c-api=, =interface/runtime=, =interface/entry=
+and =interface/develop=.
+
+The release projection supplies the selected roles. ASCENT explicitly keeps
+=init= in its published library targets and asks the native expander for its
+compiler context. The first build that omitted the target failed the existing
+Library projection Case. Adding the target exposed a second issue: Make could
+reuse the source-only init context already imported by the build script.
+The generated static unit now contains Yuanxu's =module-program-namespace=
+constructor. The original focused build, source-guard and compiler
+qualification Suites reported 18 successful Cases after restoring the
+public target. The linked development executable evaluated a Scheme form,
+and an independent C ABI consumer initialized the runtime, read the ABI
+description, released the result and shut down successfully.
+A separate installed-only import from outside the ASCENT
+checkout reached the compiled Library scope and exited zero. It took
+over three minutes. A two-second native sample during that import had
+836 of 886 main-thread samples in =__fcntl= beneath dyld segment mapping.
+The sample localizes that interval but does not attribute the full startup
+duration. The clean dependency install and verification logs are in
+=.cache/ascent/yuanxu-v0.1.0/=.
+
+The semantic preparation failure exposed the same source-context boundary
+in the test consumer. It now uses the release's compiler-input extent. Its
+first successful run prepared 429 modules in 111.451 seconds and ran
+all 185 source test modules in 98 batches across 12 single-processor VMs
+with the 2 GiB heap profile. The test stage completed in 300 seconds.
+The follow-up computes the module names once from the invocation's
+=std-make-spec= instead of demanding the specification at each use.
+That run prepared the same 429 modules in 86.541 seconds, with zero
+production rebuilds. Make ran in 8.868 seconds on the warm prefix.
+Source-context load took 73.445 seconds, versus 33.123 seconds in
+the first run. The two runs have different cache states and do not
+establish an end-to-end preparation speedup.
+The final semantic run passed all 185 modules and 1,531 Cases in
+306 seconds. Lean completed all 183 jobs under the locked LeanPoo
+Guard, and the rendered lookup build declaration matched the Scheme
+source. The WeightedExport Quint gate passed its positive model and
+53 fault counterexamples.
+
+** Standard build dispatch on the release
+
+An isolated cold package build passed with the released dependency artifacts
+and an empty ASCENT output directory. Passing the projected targets directly
+to the stock build script without Yuanxu's compiler input extent failed while
+expanding =core/interface.ss= because =.def= was unbound. The production
+script keeps that extent and the borrowed static link inputs around the
+standard compile action. Yuanxu checks the source projection on entry and
+return. Gerbil owns the build commands and option parsing.
+
+The successful =just build= took 102.83 seconds and produced =libascent=
+and =ascent-develop=. The C ABI describe request and the development
+executable both passed. This timing describes one cold ASCENT build with
+already compiled dependencies. Logs are retained in
+=.cache/ascent/yuanxu-v0.1.0/build-alignment.c4l2VT/=.
+
+The source Library and borrowed static-input Suites passed all four Cases.
+The production registry check found no ASP modules. An installed-only
+demand of =Library.program= failed with =compiled Module role is absent
+from program= for =gerbil-ascent/program/objects=. The same demand against
+the prior release-aligned artifacts failed with the same missing role.
+The compiled file is present in both prefixes. In an installed-only
+diagnostic, the dynamic Interface had already registered its Gambit
+descriptor. The Objects descriptor was absent until Gerbil explicitly
+loaded it, after which =Library.program= resolved. The release's compiled
+role loader uses the Interface descriptor to identify a linked program.
+That predicate also holds in this dynamic load and rejects the lazy role.
+The normal installed-only demand remains open.
+
+The complete source Suite run passed 185 modules and 1,532 Cases in
+98 batches on 12 single-processor VMs, with the 2 GiB profile.
+Test preparation rebuilt zero production modules. The first isolation
+attempt omitted non-Scheme fixtures and is retained separately. The
+passing run used the complete fixture inventory and took 398.21 seconds
+end to end, including warm test preparation.
+
+** Native clean and rebuild on v0.1.0
+
+The standard =gerbil clean= completed in 22.07 seconds. Before rebuilding,
+the isolated prefix had no ASCENT init interface, C ABI library or
+development executable. The next =just build= recreated all three in
+97.81 seconds with the same released dependency prefix. The installed-only
+=Library.program= check still refused the missing role.
+
+The weighted reference and candidate fixture modules were also cleaned
+and rebuilt through Gerbil. The three ordered detachment Cases passed.
+The default-collector 384-vertex gate completed 100 CPU pairs, 100
+admissions and five allocation pairs. Admission P95 was 273.164 ms and
+maximum was 342.638 ms. The 512-vertex run completed 100 CPU pairs and
+66 admissions before the original 90-second deadline. It issued no
+final receipt. Both used the original 2 GiB heap cap. These local runs
+overlapped package qualification activity and cannot establish the size
+of a performance change. Both gate outcomes remain failures. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/build-alignment.c4l2VT/release-weighted/=.
+
+* First complete production-cut measurement
+
+All local dependency builds and the ASCENT native build completed before this
+measurement; no additional build was started by this thread until both
+scenarios had exited. This is the current linked POO/Yuanxu prefix, not the
+old shared checkout. Each independent scenario runs the source Suite through
+native =gerbil test= under the locked process Guard, 2 GiB heap, 90 seconds.
+Each makes 100 alternating pairs, compares every complete ordered ordinary
+answer and every typed cell, and retains all observations. No collection is
+forced inside or before these samples. The cold phase includes frozen-view
+construction, private capture and the first ordinary full output. Inference
+is a separate phase. No signed VM counter is presented as cumulative bytes.
+
+| Vertices | Replay wall P95 ms | Retained ordinary wall P95 ms | Typed wall P95 ms | Retained ordinary maximum ms | Process peak RSS bytes |
+|----------+--------------------+-------------------------------+-------------------+------------------------------+------------------------|
+| 384 | 139.469 | 71.136 | 45.907 | 124.755 | 582320128 |
+| 512 | 172.221 | 65.501 | 82.408 | 141.395 | 721616896 |
+
+| Vertices | Replay CPU P95 ms | Retained ordinary CPU P95 ms | Retained ordinary GC CPU P95 ms | Typed CPU P95 ms | Typed maximum wall ms |
+|----------+-------------------+-----------------------------+--------------------------------+------------------+-----------------------|
+| 384 | 43.335 | 45.769 | 43.762 | 14.389 | 64.735 |
+| 512 | 93.778 | 51.264 | 47.915 | 27.477 | 136.593 |
+
+Ordinary mean wall cost changes from 61.114 to 15.965 ms at 384 vertices
+(3.828x) and from 101.151 to 13.538 ms at 512 (7.472x). Individual
+maximum wall costs remain above 100 ms. The ordinary median is 2.886/3.784
+ms; GC therefore remains a material tail source, not a reason to subtract it.
+CPU and wall differences are observed separately; no unique scheduling or
+external-load cause is assigned to those differences without a trace.
+
+Cold capture plus first ordinary output is 86.921/44.242 ms wall and
+62.925/44.247 ms CPU. The separate inference observation is 16.542/112.655 ms
+wall (15.363/67.504 ms CPU), with 0/48.617 ms GC CPU. These single cold
+observations are not cold P95 estimates. Native process totals are
+27.924/24.417 seconds; both exit naturally with all Suite/Case/Module/Harness
+and final OK markers. Raw streams, command/resource receipts and unrounded
+quantiles remain under =/private/tmp/ascent-captured-journal-native-20261112/=.
+
+These paired ordinary output paths measure repeated replay versus the actual
+production cut's retained graph. The separate typed leg has a different
+outbound representation and is not called an ordinary-row speedup. No Rust
+Data conversion, queue wait, Python consumer or provenance construction is
+included here. The original weighted fixture directly freezes/materializes
+UF rectangles; it does not traverse journal replay. Its unchanged 32-export
+batch gate, all 38 groups / 235 scenarios, the full semantic inventory and
+Rust/PyO3/CI acceptance remain separate outstanding obligations.
+
+The expanded WeightedExport Quint gate also completed naturally: 54
+obligations, including original controls and the three new retained-graph
+mutations (drop mask, reverse columns, repeat preparation). This is model
+checking plus the general Lean representation laws, not complete source
+refinement of the new mutable-to-immutable capture boundary.
+
+* Latest-Core integration failures and corrections
+
+The first full preparation compiled all carriers and reported production
+rebuilt =0=, then failed the Core compiler-input-context guard. ASCENT's
+preparation body prepended its root and output library without ending that
+extent before the guard. An initial scoped restoration passed preparation;
+the final change instead reuses Core's public =call-with-build-input-path=
+with Make's declared =srcdir= transition, and removes both handwritten path
+prepends. Core now owns temporary fallback, refusal and restoration; ASCENT
+does not suppress arbitrary input-path mutation. This final variant is
+being revalidated. The first sandbox attempt failed before work because its
+CPU supervisor could not invoke =ps=; cleanup was verified before the same
+command ran with the required permission.
+
+The complete source semantic run with 12 single-processor VMs finished with
+failures, not timeout. Two Cases in =yuanxu-library-test.ss= still demanded
+the retired =Library -> owner -> scope= shell. Current Core publishes the
+owner's API directly. The test now accesses that API, preserving every owner,
+Contract validation, program constructor, sibling/revision isolation and held
+snapshot assertion. All three original Cases pass in its focused native
+Suite (18 s, natural exit zero). No compatibility shell was added. This
+focused result does not substitute for the next complete semantic run.
+
+* Full Scheme acceptance after latest-Core alignment
+
+Final preparation uses Core's guarded input extent around discovery/Make and
+one nested extent around ASP's known single source-root prepend. The nested
+scope accepts only that declared transition and restores it before Make;
+unexpected changes still refuse. No new path resolver or guard bypass exists.
+This exact preparation completed naturally: 38.561 s, production rebuilt =0=.
+
+The subsequent unchanged full source selection passed: 183 modules, 1510
+Case-OK markers, 98 completed batches, default 12 workers, explicit one
+processor per VM, 2 GiB per child, original live-ratio policy and the macOS
+600-second limit. Native command wall was 210 seconds; natural exit zero,
+all Module/Harness/final markers, zero ERROR markers. Raw evidence:
+=/private/tmp/ascent-current-pr-linked-full-semantics-aligned-20261112.log=.
+This includes the two aligned Yuanxu tests and all cancellation, resource,
+provider, session, provenance and snapshot controls in the selected inventory.
+It is local default-capacity acceptance, not three-core remote CI acceptance.
+
+The authoritative current study declaration was read through native Gerbil:
+exactly 38 groups and 235 scenarios. No extra study or reduced workload is
+substituted. The current Rust workspace still pins its bridge to =838af1ab=;
+the Scheme-only measurements above do not depend on or qualify that bridge.
+Rust binding validation against that actual selected revision is now running.
+The older shared checkout's =ff50ec4= experiments are not current Rust
+acceptance and have not been silently promoted.
+
+* Rust validation: confirmed local invocation failures
+
+The first Cargo invocation never started because Cargo was absent from the
+session PATH. The standard existing rustup bin directory resolves that without
+changing a dependency or repository policy.
+
+The next attempt compiled dependencies but failed a build-script host link:
+=Nix cc -> ld: library not found for -liconv=. The session's =cc= and =clang=
+resolve to =/run/current-system/sw/bin/=; selecting the existing macOS system
+linker and C compilers fixes that invocation boundary. This is not an ASCENT
+algorithm or upstream compiler patch.
+
+The corrected link attempt reached ASCENT and GSR's native package builds,
+compiled the hybrid entry and wrote the programme stub. Its fresh metadata
+process then could not resolve =:gerbil/core=. The exact raw SDK =bin/gxi=
+reproduces the same startup error independently, before metadata work. The
+ordinary Homebrew =gxi= entry is a wrapper that exports =GERBIL_HOME= and
+Gambit relocation options; the Cargo host lacked that setup. With the same
+SDK and =GERBIL_HOME= set, the raw executable resolves its core and reports
+its expected SDK and package library paths. The full metadata observation and
+same Cargo test are being checked with that standard environment. SDK bytes,
+GSR revision, test selection and 12-thread setting are unchanged. Failed logs
+are retained; no unchanged rerun is called a passing implementation fix.
+
+* Latest native development links (2026-11-12 refresh)
+
+The refreshed Yuanxu PR #19 head is
+=948226497866a62cb819a6b5d1eb03ce772d405b=; ASCENT now declares that
+revision. POO PR #17 is =385c2a0f890e33ee86bca78372ab23b7c576203a=.
+Native =gerbil pkg link= selects isolated exact-commit source snapshots under
+=/private/tmp/ascent-index-graph-dependencies-20261112/= in a separate
+=/private/tmp/ascent-index-graph-dependencies-20261112/poo-385c2a0f/.cache/ascent/graph-pr-latest-prefix=.
+The previous qualified local prefix
+is preserved; its measurements do not qualify this refreshed cohort.
+
+Yuanxu still declares POO =7f6e68a1abce13758793651b723fb0e1d196b057=.
+The POO link is an explicit development override; it does not align the
+published transitive dependency declaration. No additional loader, package
+manager, SDK change or Scheme service-runtime dependency is introduced.
+Native package builds and downstream tests remain the acceptance boundary.
+
+The prior-cohort Rust library check did not pass. It completed native archive
+building, but the combined test process entered a terminal error loop. A native
+stack sample identified Gambit terminal output under
+=original_scheme_dsl_values_calls_and_failure_recovery=; the owned process was
+terminated after SIGTERM did not stop it. A separate diagnostic invocation with
+=GAMBOPT=debug=q= failed immediately at runtime initialization with native
+status 4. That diagnostic is not a passing rerun or an identified root cause.
+The independent proof-authority case also reported failure before termination.
+Evidence: =/private/tmp/ascent-rust-native-progress-20261112.sample.txt= and
+=/private/tmp/ascent-rust-init-diagnostic-20261112.log=. Rust/PyO3 and the
+Actor-to-Rust performance matrix remain unqualified.
+
+The LLDB diagnostic subsequently captured the native error before returning:
+=clan__poo__slot-layout=: operator is not a procedure, invoking =#!unbound=
+on a table. The previous POO static source uses Gambit table macros but does
+not carry their definitions in a =begin-foreign= include. The refreshed POO
+head adds =~~lib/_gambit#.scm= to that static source explicitly, documenting
+the independently compiled linked-program closure. This provides a specific
+source correspondence for the failure; it does not prove the refreshed
+embedded runtime passes. Rebuild and execution on the new linked cohort
+remain required. LLDB evidence is retained in
+=/private/tmp/ascent-rust-native-setup-lldb-20261112.log=.
+
+The refreshed POO native source build and native package-registration build
+both exited zero. Its package manifest records =v0.1.3-110-g385c2a0=, Gerbil
+=1cfb032= and Gambit =ea114fc=. The first premature Yuanxu build failed on
+the absent POO manifest; native =gerbil pkg build= establishes that manifest
+without adding handwritten package metadata or changing a build script.
+
+The refreshed Yuanxu native package build also exited zero after the POO
+manifest was established. The ASCENT declaration now names that same Yuanxu
+commit, while local package links select the explicitly recorded POO override.
+These dependency builds qualify neither the earlier measurements for the new
+cohort nor the full downstream runtime and performance acceptance.
+
+The refreshed downstream =just build= exited zero. The native
+=just test-file t/qualification/yuanxu-library-test.ss 2G= then exited zero
+with all three Cases, the Module and Harness verdicts. This is focused
+Library-consumer acceptance; the refreshed cohort still requires full Scheme,
+embedded Rust/PyO3, original performance and exact-head CI acceptance. Logs:
+=/private/tmp/ascent-latest-cohort-production-build-20261112.log= and
+=/private/tmp/ascent-latest-cohort-library-semantics-20261112.log=.
+
+* Final local semantic and original weighted acceptance
+
+After lexical key admission, all 18 query Cases passed again. Full native
+Scheme acceptance then completed normally: 184 modules, 1513 Cases and
+98 batches, using 12 workers and 98 explicit one-processor VM receipts.
+Elapsed test time was 385 seconds under the unchanged 600-second bound.
+The full Lean inventory completed all 182 jobs through the locked Guard.
+The WeightedExport Quint gate completed all 54 obligations (one combined
+positive check and 53 matched negative controls). These model checks do not
+close the remaining source-to-compiler or native GC-cost refinement.
+
+The final seven original weighted scenarios all passed. Explicit fences over
+111 related source and compiler-output files matched before and after the
+complete native run. CPU batch medians in milliseconds were:
+
+| Scenario    | Reference | Current | Wins |
+|-------------+-----------+---------+------|
+| heavy       |   189.348 | 148.693 |   20 |
+| grouped     |    90.978 |  72.742 |   19 |
+| left-query  |    32.540 |  28.007 |   20 |
+| right-query |    35.785 |  31.621 |   20 |
+| dense       |    37.629 |  31.799 |   20 |
+| sparse      |    34.608 |  27.228 |   20 |
+| small       |    24.724 |  20.110 |   20 |
+
+Query and small CPU arms retain the original common calibrated repetition
+count. These medians are not single-export P95s, nor proof of strict-scale
+success. Baseline changes between experiments prevent attributing every
+absolute timing difference to one patch. The within-run frozen comparisons
+and preserved failure records remain authoritative.
+
+The first aggregate Rust workspace command was invalid for the retained
+image domains: selecting the build helper as a runtime target unified
+=gerbil-scheme/external-program= and removed native package-build APIs.
+The existing CI already separates those domains; no upstream or Cargo
+feature workaround was applied. Its native/PyO3 domain then passed
+96 tests with zero failed or ignored tests. Scheme binding qualification
+uses the existing pinned nextest runner, 12 process-isolated tests and zero
+retries. This is separate from installed-wheel Python acceptance.
+
+Receipts: =/private/tmp/ascent-final-weighted-summary-20261112.json=,
+=/private/tmp/ascent-final-weighted-source-fence-20261112.json=,
+=/private/tmp/ascent-weighted-full-semantics-current-20261112.log=,
+=/private/tmp/ascent-current-native-rust-python-matrix-20261112.log=.
+The strict 384/512 failure records still stand. No publication or exact-head
+CI claim is made while the complete requested acceptance remains open.
+
+* Embedded root-owner initialization correction
+
+The first complete nextest run executed all 76 tests: 31 passed and 45 failed,
+with zero skips and zero retries. VM initialization now completed, but the
+first null value failed to acquire a strong root. An LLDB probe of the
+retained bridge's root-count export reported =(table-length #!unbound)=.
+The bridge was linked into the image without executing its Scheme initializer.
+The uninitialized global, not 45 independent RPC problems, explains the
+first conversion failure and subsequent worker EOFs. The diagnostic LLDB
+expression itself was interrupted after raising the error; it is not
+classified as a new application segfault.
+
+This gap came from the selectively ported custom root wrapper. The Cargo-only
+=interface/hybrid.ss= now directly imports and uses the retained bridge's
+public =gerbil-rs-rooted-call=. Custom borrow/retain C roundtrips and the
+manual extra graph-module inclusion were removed. The production logical
+Library still selects no optional hybrid entry; no GSR dependency was added
+to =gerbil.pkg=. =Runtime::initialize= checks and drops one void root before
+publishing the runtime or registering its callback. This is startup work,
+not a check cached for caller declarations.
+
+OwnerAdmission now requires both metadata and root readiness. The latter was
+missing from its previous metadata-only publication predicate. This remains
+a conditional source-directed obligation, not a proof of Gambit initialization
+or native GC. The complete Lean inventory passed all 182 jobs after the change.
+
+The focused original value/call/failure-recovery test passed after rebuilding.
+The subsequent complete nextest run passed 76/76 with zero skips, zero retries,
+12 concurrent test processes and a 62.987-second test duration. The existing
+forced-stop, shutdown-error, checkpoint-transport and LEAK markers were absent.
+This closes the observed root-initialization regression in the tested native
+configuration. Installed Python wheels, optional instance features, the full
+38-group performance inventory, strict scale tails and final CI remain open.
+
+Evidence: =/private/tmp/ascent-current-root-registry-lldb-20261112.log=,
+=/private/tmp/ascent-bridge-init-full-nextest-20261112.log= and
+=/private/tmp/ascent-current-bridge-lean-full-20261112.log=.
+
+* Private source expansion tables
+
+A native ownership counterexample identified a concrete ASCENT lifetime
+boundary: two independent trusted module sources used the exact same mutable
+expansion context. Opening and calling the second module increased the first
+context's binding table from 2,273 to 2,275 entries. The shared fixed-import
+context therefore also accumulated caller module declarations and lazy reader
+aliases. This contradicts the source comment describing an import-only cache.
+The failed native control is preserved in
+=/private/tmp/ascent-source-context-owner-baseline-20261112.log=.
+
+Before changing Scheme, the guarded Lean =SourceContext= model checked inherited
+lookup, local shadowing, preservation of the parent table, unaffected sibling
+lookup and the logical entry cost of retaining closed declaration history.
+Quint's existing =DslOwnership= model now also checks that successful and
+failed expansions do not write private declarations into the fixed parent.
+All seven obligations passed: the positive model and six matched negative
+controls, including shared-parent and failed-parent mutations. Existing
+cumulative charging, failed-load charging, reference isolation and no-refund
+controls remain present. These models concern lookup and logical owned table
+entries. They do not prove the Gerbil expander constructor, complete GC reachability,
+actual byte reclamation or compiler correctness.
+
+=make-source-context= now returns =make-top-context= with the fixed import
+context as parent. The pinned Gerbil =expander/root.ss= constructor explicitly
+allocates a fresh binding table and retains the supplied parent. Standalone
+modules receive separate children. Component bundles continue passing one
+explicit child through their dependency expansion, so sibling imports and
+macro definition scopes keep the existing lookup path. The original global
+scope ceiling is still cumulative, including failed expansion; closing or
+collecting a child does not refund it. No successful Contract result is cached.
+The complete =owner-source-scheme= rendering remains byte-identical to
+=rules/source.ss= after a full 182-job guarded Lean build.
+
+The corrected native ownership control observes distinct contexts and stable
+2-to-2 private tables. Four focused native modules completed 21 Cases. The
+added qualification Suite then passed four Cases, including 1,000 independent
+admissions with a stable fixed-parent table, independent mutable exports,
+unchanged readiness scope counts and failed-expansion/capacity checks. ASP
+policy reports zero findings and errors. These are ownership and semantic
+results, not a strict weighted export speedup: the fixed library/import graph
+still exists, and this change does not prove elimination of its approximately
+28 ms collection cost.
+
+Evidence: =/private/tmp/ascent-source-context-model-fixed-20261112.log=,
+=/private/tmp/ascent-source-context-quint-20261112.log=,
+=/private/tmp/ascent-private-source-context-lean-full-20261112.log=,
+=/private/tmp/ascent-private-source-context-render-20261112.ss=,
+=/private/tmp/ascent-private-source-context-semantics-20261112.log=,
+=/private/tmp/ascent-private-source-context-thousand-20261112.log= and
+=/private/tmp/ascent-private-source-context-policy-20261112.log=.
+The initial Lean diagnostic used a reserved field name, failed parsing, and
+was corrected before the Scheme implementation changed. That failed log is
+retained; no =sorry=, axiom or budget increase was added.
+
+The separate full native Scheme preparation for the previous numeric-writer
+cut completed naturally in 147.351 seconds with production-rebuilt=0.
+The new context cut requires fresh full Scheme and native Rust integration
+acceptance; its preparation is in progress. No performance success or remote
+CI qualification is inferred from these local controls.
+
+* Full qualification and remaining build failure
+
+The private-context implementation passed the complete native Scheme
+qualification gate: 185 modules, 1,517 Cases in the 98 original batch logs,
+12 workers, 98 receipts confirming one processor per VM, 2 GiB per VM and
+natural completion in 345 seconds within the unchanged 600-second bound.
+The parent log duplicates streamed worker output, so its 3,034 Case markers
+are not counted as distinct Cases. The separate preparation completed in
+42.837 seconds with production-rebuilt=0. This is a warm reuse observation,
+not an isolated preparation speedup claim.
+
+Full formal acceptance initially detected stale source emission for the
+previously extracted unindexed materializer. The actual scanner/collector and
+constructor helper were added as a separate generated lookup region, and its
+call sites and validation macro were audited. No check was removed. The full
+gate then passed 81 positive checks, 525 matched negative controls and 98
+source-render correspondence checks, ending in =ALL-FORMAL-CHECK-OK=.
+The helper-region extraction adds source drift coverage. It does not prove
+the compiler, allocator, complete GC root graph or Gerbil execution semantics.
+
+The current Rust/Scheme integration attempt failed before test execution:
+Apple linker 1267 received SIGBUS while linking the worker target. It is not
+qualified by the prior cut's 76/76 result. A preserved linker snapshot contains
+a byte-identical 124,393,472-byte application archive. Ordinary single-link
+replay passed. One fixed 12-link control, with immutable inputs and unique
+outputs, produced two SIGBUS failures and ten successes. Therefore the failure
+does not require concurrent mutation of a shared generated file. Twelve
+instrumented LLDB replays did not reproduce it. Historical system linker
+reports show recursive =markLive=/=deadStrip= stack exhaustion, but they are
+not a backtrace from this specific failed build. The exact fault remains
+unconfirmed. No classic-linker mode, dead-strip removal, SDK update or test
+limit change has been committed as a speculative fix.
+
+macOS refused debugging the protected system linker. A temporary ad-hoc debug
+copy was used after verifying that its instruction section was byte-identical;
+its relative toolchain library layout was preserved. The copied tool and
+snapshots remain diagnostic artifacts outside the repository. The classic
+linker also linked the snapshot after removing an unsupported snapshot-only
+flag; this does not establish a production workaround or close the failure.
+
+The current native hybrid benchmark target subsequently built successfully
+with unchanged compiler/linker options in 3m24s. It is used only for phase
+attribution. Its build is not substituted for the failing complete integration
+gate. The ordinary weighted strict-scale gates, full 38/235 native matrix,
+current-cut integration, final CI and publication remain open.
+
+Evidence: =/private/tmp/ascent-private-source-context-full-semantics-20261112.log=,
+=/private/tmp/ascent-private-source-context-formal-all-20261112.log=,
+=/private/tmp/ascent-private-source-context-formal-all-fixed-20261112.log=,
+=/private/tmp/ascent-private-source-context-full-nextest-20261112.log=,
+=/private/tmp/ascent-linker-load12-control-20261112.json=,
+=/private/tmp/ascent-linker-debug12-control-20261112.json= and
+=/private/tmp/ascent-private-source-context-native-benchmark-build-20261112.log=.
+
+* Current native image after private-context qualification
+
+The rebuilt hybrid benchmark completed both five-observation diagnostics with
+natural completion markers. For 384 vertices, median full 32-export CPU was
+107.269 ms, including 88.198 ms GC, with 107.943 ms median wall. For 512 it was
+200.067 ms CPU, including 160.402 ms GC, and 210.153 ms median wall. Frozen-only
+CPU remained 0.050/0.053 ms. Independent per-field medians are not an additive
+partition or a percentile estimate. These sequential observations are not a
+paired causal speedup comparison against the previous image.
+
+After closing the trusted module, forced-collection CPU was still 29.118 ms
+at 384 and 28.916 ms at 512. The private-table fix demonstrably bounds caller
+bindings in the fixed import context but does not remove the fixed import
+root cost. It does not close the weighted performance objective.
+
+Evidence: =/private/tmp/ascent-private-source-context-native-cost-384-20261112.log=,
+=/private/tmp/ascent-private-source-context-native-cost-512-20261112.log= and
+=/private/tmp/ascent-private-source-context-native-cost-summary-20261112.json=.
+Both retain 32 actual complete materializations per batch and the observed
+2 GiB cap / 50 percent live ratio. No result is divided by 32 to report a P95.
+The native benchmark build is successful; the separate worker integration
+link failure and exact failing backtrace remain open.
+
+* Package alignment and strict-scale cost accounting
+
+An earlier ASCENT package declaration selected Yuanxu PR #19
+=bbcb8fe9d2ca9121292dea911c71cfd86185929b=. Its exact package manifest
+selects POO =6cf940be5f0b15c423f805044799f3c93e086dbf=, which already
+contains =support/index.ss=. POO PR #17 head
+=424e5250b8d70a9d636d1c9f0b8483065243a15a= is four commits ahead
+and is a separate local candidate. The local package link does not change
+the transitive pin used by a clean install. The POO index accepts symbol
+identity keys and uses a persistent sparse edit tree over an admitted base.
+ASCENT relation keys also contain arbitrary row values and use different
+equality rules; the POO index is not a drop-in replacement for those tables.
+An unchanged ASCENT query does not start using that index when its dependency
+pin changes.
+
+The isolated local prefix is
+=/private/tmp/ascent-index-graph-dependencies-20261112/prefix-bbcb8fe9-424e5250=.
+Native =gerbil pkg link= selects the POO checkout there, and
+=GERBIL_LOADPATH= selects that prefix's compiled library. A native import
+and fork/read smoke check printed =POO-INDEX-LINK-OK=: writing the fork
+preserved the base value. This verifies the candidate's load path, not
+full package or downstream acceptance.
+
+The POO package build completed on the frozen SDK. The native
+=feedback-graph-test= suite then reported 14 passing cases and one error:
+the custom adapter fixture installs a three-argument =ref= procedure,
+while the accepted-member path reaches it through two-argument
+=__hash-ref__%=. The suite's zero process status does not qualify the
+override. The source and SDK were left untouched, and the declared
+=6cf940be= cohort uses a separate prefix.
+Evidence: =/private/tmp/ascent-poo-424e5250-feedback-20261112.log=.
+
+The exact Yuanxu comparison removes =call-with-init-build-spec= and
+publishes =std-make-spec= as a value. ASCENT's production build, test
+preparation, and existing study build now use that value and retain the
+source-current check around successful compilation. Gerbil still dispatches
+build and clean through its standard build script; the existing ABI static
+input scope is retained. The three edited Scheme files pass a reader check.
+Native build and semantic acceptance of this cut are separate checks.
+
+With the previous linked cohort, narrowing the measurement helper import
+loaded the same three ASP gate procedures (three identity cases passed).
+The measurement body was byte-identical. The 384-vertex strict scenario
+completed 100 CPU pairs, 100 admission samples and five allocation
+observations, but failed: wall P50/P95/max was 151.796/279.103/386.616 ms.
+The separate candidate CPU arm had a median of six collections and
+116.581 ms collector CPU. Collector CPU alone exceeded 100 ms in 98 of
+the 100 candidate CPU batches. The preceding broader import run had five and
+109.454 ms, respectively. Independent runs do not identify a causal
+regression from the import; fewer live roots can coexist with more frequent
+collections. A separate native runtime fixture observed one processor.
+
+=WeightedExportCapacity.lean= now states the collection budget per batch:
+if each collection takes at least a specified wall duration, the collection
+count times that bound, plus the other accounted nonoverlapping work, must
+fit below the threshold. At 100 observations the nearest rank is 95. CPU
+arm GC medians cannot establish the wall bound for those admission samples.
+The focused LeanPoo Guard check passed.
+
+Evidence: =/private/tmp/ascent-paired-gate-identity-fixed-20261112.log=,
+=/private/tmp/ascent-paired-gate-heavy-scale-20261112.sexp= and
+=/private/tmp/ascent-weighted-runtime-audit-fixed-20261112.log=.
+
+* Native coverage for additional original UF groups
+
+The owner-plans, initialization, compact-query and selector-initialization
+studies now have native Suites. Each process runs a single selected
+scenario through the original paired fixture, including the original
+allocation callback and batch size where required. Both new modules
+loaded through =gerbil test= against the preceding compiled cohort. The
+load control intentionally ran no cases. The full measured matrix and
+switching CI away from the existing study dispatch remain open.
+
+* Benchmark sources load through Gerbil Test
+
+The benchmark-specific build declaration and its generated manifest have
+been removed. The native Suites use source imports for fixtures, references
+and paired measurement code. Gerbil's =gxtest.ss= calls
+=import-module= directly; the test entry does not invoke package Make.
+Library dependencies can still be provided through the ordinary prefix.
+
+With no ASCENT compiled library present in the linked dependency prefix,
+native Test loaded both current and reference code from source. The original
+=small= gate passed for weighted, owner plans, initialization, compact query
+and selector initialization. Each used a separate process with the 2 GiB cap
+and the 90-second limit. The source-only strict 512-vertex gate hit 90.01
+seconds after 11 of 100 CPU pairs, with no admission samples and no final
+receipt. Median current CPU among those 11 incomplete-run observations was
+2,879.299 ms per batch, versus 3,860.963 ms for the reference. This is neither
+a P95 nor a compiled-library result. Test loading and production kernel
+compilation are separate; the full matrix and strict target remain open.
+
+Evidence: =/private/tmp/ascent-source-only-weighted-small-20261112.log=,
+=/private/tmp/ascent-source-only-weighted-large-20261112.log= and the
+corresponding =ascent-source-only-*-small-20261112.log= records.

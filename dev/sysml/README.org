@@ -1,0 +1,127 @@
+#+TITLE: Native matching architecture contracts
+#+STATUS: architectural contracts with bounded native counterparts; general refinement and performance open
+
+* Purpose and authority
+
+The [[file:acceptance.org][checked declaration implementation receipt]] records concrete behavior, exact
+local checks, retained failures and remaining source/performance obligations.
+
+The [[file:workflow.org][design-to-proof-to-Scheme workflow]] extends this existing study with an
+engineering lifecycle, the complete DSL design inventory, and three initial
+workstreams: relation roles, finite domains and source diagnostics.
+=development.sysml= allocates their owners and remaining obligations;
+=dsl-contracts.sysml= makes proposed contracts executable. =just check-design=
+checks both new models and every concrete matching fixture below. These are
+development checks; proposed DSL changes and whole-source refinement remain open.
+
+=matching-state.sysml= allocates the native matcher/compiler/index/Session/support
+responsibilities and makes selected reuse/publication preconditions executable.
+=Current= names inspected Scheme owners from =6d99b909= through the documented
+factorized DAG refactor. =Target= remains a general architectural specification:
+its schema-validation/native-refinement/cross-rule/retained/performance flags
+remain false. It adds no production import, dependency, runner or public DSL.
+The complete rationale and semantic equations are in
+[[file:../../docs/scheme-relational-dsl-design.org::#multi-atom-matching-architecture][the multi-atom matching design study]].
+
+The model uses a two-atom dependency slice, not a proof for arbitrary prefix
+length. Revision numbers and Boolean claims are fixture inputs, not observed
+native events, hashes or proof certificates. SysML checks ownership and contract
+consistency; Lean must prove join/binding laws, Quint must model transition
+safety, and native independent-oracle/PBT runs must establish correspondence.
+A structural validation alone does not execute assertions on concrete objects.
+
+* Reproduce the model checks
+
+The local checks use =sysml v0.10.1=, commit
+=1c45b6e1749fc8adc9b82d4af22fbe180b56a0e2=. The tool is optional development
+infrastructure and is not added to production or Gerbil package dependencies.
+Run from the repository root with a 30-second per-process deadline; do not raise
+that bound to turn a failed fixture into a pass:
+
+#+begin_src sh
+timeout --kill-after=3s 30s sysml -strict -no-record-cache -validate dev/sysml/matching-state.sysml
+for fixture in sameCut matchingOnly newSuffix; do
+  timeout --kill-after=3s 30s sysml -strict -no-record-cache -json \
+    -instantiate "AscentMatching::$fixture" \
+    "-validate=AscentMatching::$fixture" dev/sysml/matching-state.sysml || exit $?
+done
+# Each negative must fail its stated assertion with exit 1; unresolved exit 2
+# or timeout is not an expected counterexample.
+for fixture in staleSecondSource staleSecondDelta wrongOwner incompletePrefix lostSupport skippedSuffix sharedMutation canceledPublication; do
+  status=0
+  timeout --kill-after=3s 30s sysml -strict -no-record-cache -json \
+    -instantiate "AscentMatching::$fixture" \
+    "-validate=AscentMatching::$fixture" dev/sysml/matching-state.sysml || status=$?
+  test "$status" -eq 1 || exit 1
+done
+#+end_src
+
+| Fixture | Expected failed assertion |
+|---------+---------------------------|
+| staleSecondSource / staleSecondDelta | everyPrefixDependency |
+| wrongOwner | semanticIdentity |
+| incompletePrefix | completedRead |
+| lostSupport / skippedSuffix / canceledPublication | completePublication |
+| sharedMutation | mutableIsolation |
+
+=sameCut= permits a completed matching cut. =matchingOnly= permits matching reuse
+without query completion or publication. =newSuffix= permits publication only
+after the continuation completes and full supports remain retained. No arbitrary
+runtime order, scheduling fairness or all-model completeness claim is made.
+
+* Current receipt and failures
+
+Raw local model outputs are retained in =.data/ascent-prefix-architecture-20261101/=.
+The initial structural check rejected overriding fixed bindings. The fixture
+bases now use redefinable defaults in part definitions, without relaxing any
+constraint. An initial object check was unresolved because no objects had been
+instantiated. A subsequent subsetting-based fixture was also unresolved: subsetting
+a usage did not supply inherited default values. The corrected fixture definitions
+use type specialization and explicit instantiation. All failed/unresolved attempts
+remain retained and are not counted as expected negative controls.
+
+Final strict structure, concrete positive fixtures and eight explicit negative
+fixtures are separate receipts. They do not establish an implemented prefix DAG,
+source refinement, a cold build, package acceptance or performance benefit.
+
+* Bounded native correspondence after the architecture study
+
+The initial study above remains historical; the current working implementation
+replaces the first-atom special case with a factorized prefix DAG in the existing
+native matcher. Its design decisions and source/model correspondence are in
+[[file:../../docs/scheme-relational-dsl-design.org::#scientific-dsl-prefix-dag][the scientific DSL and DAG audit]]. No plan is presented as a native result.
+
+=ReuseDecision= describes a conceptually materialized whole prefix and checks all
+its dependencies. =TransitionRead= describes the selected native factorization:
+canonical schema, pure operators, all incoming bound values and the local owned
+source/delta cut. A transition never caches its caller's support path. These are
+different read sets; the local contract must not be mistaken for an incomplete
+key on a whole-prefix table.
+
+=RetentionPolicy= describes the independent logical retention capacity and exact
+streaming fallback. It does not bound allocator bytes or redefine public fact
+budgets. Native capacity defaults to zero. =BranchPublication= still requires
+complete query execution for result publication; local matching completion alone
+is insufficient. The model's general refinement/performance flags remain false:
+fixture agreement is not full source extraction or performance admission.
+
+The final model has five positive objects and fourteen negative controls. Add
+=transitionReplay= and =streamingAtCapacity= to the positive command above; add
+=effectfulReuse=, =changedBinding=, =staleLocalCut=, =cachedCallerSupport=,
+=overCapacity= and =droppedFallback= to its eight negatives. Expected failures:
+
+| Negative | Expected assertion |
+|----------+--------------------|
+| effectfulReuse / changedBinding / staleLocalCut / cachedCallerSupport | exactTransitionRead |
+| overCapacity | boundedRetention |
+| droppedFallback | exactFallback |
+
+Final logs are under =.data/ascent-prefix-dag-20261101/=. Lean's ordered
+factorization/renaming laws, Quint's Session/memo lifecycle and native exact
+support/oracle/PBT checks have separate receipts; none is synthesized from these
+SysML Boolean fixture values. Earlier failed and unresolved model attempts remain
+in =.data/ascent-prefix-architecture-20261101/=.
+
+References: Martens, Simmons and Arntzenius, /Finite-Choice Logic Programming/,
+local =.data/finite-choice-study/2405.19040v3.html=, §§6.1–6.3 and 7.1,
+DOI =10.1145/3704849=. No upstream evaluator source is copied or translated.

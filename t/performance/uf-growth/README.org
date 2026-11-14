@@ -1,0 +1,137 @@
+#+title: Unique UF closure growth and replay qualification
+
+* Source learning and algorithm ownership
+
+Gerbil =1cfb032= =runtime/hash.ss:621-625= collects hash keys into a new
+list; =std/hash/misc.ss:287-292= sorts an extracted collection when key order
+is required. =compiler/optimize-top.ss:704-711= owns its accumulator and reverses
+it at the consumer boundary. The implementation applies this distinction to
+UF: root order already exists, whereas sparse hash adjacency needs ordering.
+It does not treat hash traversal order as writer order.
+
+Each UF group retains its component population, updated after successful
+preflight and recomputed after SCC retirement. Indexed adjacency with degree
+zero returns a singleton. Sparse adjacency sorts only its own keys. When
+=degree * integer-length(degree) >= population=, dense adjacency filters the
+already ordered roots. This is a cost estimate, not a correctness premise:
+both selections return the same root sequence. Fresh endpoints have no
+external incoming/outgoing arcs and select singleton axes directly. Budget
+rejection leaves the population, parents, node tables and adjacency untouched.
+
+Count-only admission preflights the complete product without retaining a pair
+record for each missing arc. After admission it traverses the two axes in the
+original commit order and installs each missing arc once. Each pair is unique;
+installing its own arc changes no other pair's membership test. Parent merging
+follows the completed commit. Scalar frontier descriptors and their row order
+retain the original protocol. Axis reversals create fresh spines; no roots,
+member lists or frozen cut data are reversed destructively.
+
+Packed replay likewise selects a singleton axis for a fresh endpoint instead
+of scanning all roots. Its planner still admits only 512 distinct vertices per
+group; the 513th rejects packed planning before allocation. Source checks,
+journal occurrences, count consumers, invocation-local witnesses and resource
+caps remain part of the existing flow. No environment setting is introduced.
+
+* Baseline and fixed gates
+
+Five source owners freeze =f58d964732862226d6a3285f486ee06ffacfb8ec= with import
+relocation only: native UF plus evaluator, initialization, view-state and
+view-replay. Native =chain/cycle= targets compare frozen/current count-only
+kernel insertion and physical closure observation with fresh private states.
+Their independent expected counts are 33153 rows for a 256-edge chain and
+16641 for a 128-edge chain closed into a 129-member SCC. These are native kernel
+measurements, not complete-engine speed claims. Qualification separately checks
+full mathematical membership, ordered scalar frontiers, budget rejection and
+partial/complete SCC retirement.
+
+Complete engines share current canonical storage/provider/type identity and
+native live UF helpers. Historical program/replay owners qualify the packed
+replay change with these shared helpers; they do not measure an entirely frozen
+dependency build. =unique= uses 256 unique star edges, fresh engine/run and three
+full exports. =partitioned= uses 16 groups of 64 unique edges with the same
+lifecycle. These are the two complete-engine targets. Retained control also
+appends eight chain edges and runs/exports every intermediate publication.
+
+The native ASP fixture fixes fourteen scenarios before timing: four targets
+=chain/cycle/unique/partitioned= and ten controls =sparse/grouped/retained/capture/
+cold/small/packed/adjacent/large/eqrel=. Controls retain the preceding interleaved
+and adjacent populations, a prepared 1025-member SCC (64 captures, population
+excluded), one-edge cold/warm engines, 64 unique edges, 600 unique edges selecting
+sparse fallback, and the 16-edge EqRel chain. There is no dropped control.
+
+One 90-second invocation contains all fourteen scenarios. Each has twenty
+alternating process CPU pairs with natural GC, twenty separate native ASP
+admissions and five alternating allocation pairs. Allocation GC occurs before
+counter reads; negative deltas reject. Targets require <=90% baseline CPU and
+>=16/20 wins. Controls require <=110% +20us. Every allocation median requires
+<=110% +8192 bytes. ASP p95 <=999ms retains 500ms target +499ms budget. Full
+engine row order, result metadata, mathematical closure and uniqueness must
+agree. Never widen bounds, drop a scenario or combine failed attempts.
+
+* Native reproduction
+
+Use this unit's =build.ss= with native =std/make= and canonical =.gerbil/lib=,
+then the native repository build. Run =gxi :gerbil/tools/gxtest -v 5= for the
+qualification module and linked admission/storage/commit/export modules.
+Source Policy checks the production owner closure. After other compilation
+and benchmark tasks naturally finish, run
+=timeout 90s gxi :gerbil-ascent/t/performance/uf-growth/runner all .cache/ascent/uf-growth/=
+with a 3G heap bound. Fingerprint selected source/SSI/SCM/object/contract files
+before and after. Logs and receipts belong only in ignored =.cache/ascent/uf-growth/=.
+
+* Rejected first attempt and completed retirement
+
+The first attempt passed chain (14477 ->11889us, 19/20 wins) but failed the
+cycle CPU target (5020 ->4576us, -8.8%, 20/20 wins). The whole attempt is
+rejected. Its sources, contract, fingerprints, log and available receipts remain
+under =.cache/ascent/uf-growth/before-whole-scc-retirement/=. No samples from that
+attempt enter the accepted results.
+
+The completed candidate additionally handles whole-group SCC retirement.
+When the cycle covers the complete admitted population, every reverse key is
+owned by a retiring root. The surviving winner releases its entire predecessor
+table; absorbed roots release theirs through the existing retirement path.
+This avoids visiting each old closure arc to remove keys from tables about to
+be discarded. Partial SCC merges retain canonical predecessor retirement for
+their surviving external roots. Whole-injection budget admission precedes
+either path; frozen cuts hold no mutable adjacency table.
+
+* Accepted complete result
+
+All fourteen scenarios passed in one fixed invocation with final =OK= and exit
+zero. All 172 selected source/SSI/SCM/object/contract fingerprints matched before
+and after. Native package and unit builds passed. Native GxTest passed 9 Suites
+/68 Cases, including all 512 three-node histories and dense-axis/late-SCC
+ordered scalar frontier comparisons, with =HARNESS-OK=, final =OK= and no
+ERROR/FAIL. Source Policy passed with zero findings. The five historical
+owners matched their frozen source bodies after import relocation.
+
+| Scenario | CPU old ->new us | Wins /20 | Allocation old ->new bytes |
+|----------+-----------------+----------+---------------------------|
+| chain | 14574 ->11530 | 19 | 14004560 ->9450784 |
+| cycle | 4985 ->3979 | 20 | 6231248 ->3488208 |
+| unique | 8468 ->5026 | 20 | 2880512 ->2831168 |
+| partitioned | 14469 ->10852 | 17 | 12047056 ->11847376 |
+| sparse | 1384 ->1162 | 20 | 1010080 ->997600 |
+| grouped | 9966 ->9742 | 14 | 5580864 ->5528656 |
+| retained | 4734 ->3778 | 20 | 2365424 ->2315824 |
+| capture | 37 ->37 | 6 | 256000 ->256000 |
+| cold | 529 ->516 | 15 | 1603328 ->1602688 |
+| small | 96 ->96 | 10 | 262928 ->262800 |
+| packed | 988 ->761 | 20 | 945568 ->933088 |
+| adjacent | 1029 ->808 | 20 | 988768 ->976288 |
+| large | 5427 ->5488 | 7 | 17821888 ->17821888 |
+| eqrel | 141 ->141 | 9 | 464272 ->464272 |
+
+Native chain/cycle CPU falls 20.9% /20.2%, allocation 32.5% /44.0%. Complete
+unique/partitioned engine CPU falls 40.6% /25.0%, with allocation 1.7% /1.7%
+lower. Large sparse fallback costs 61us (+1.1%) and passes its declared bound;
+its allocation is unchanged. The control cost remains in the result.
+
+The native count-only tests qualify closure maintenance independently of full
+engine replay. Complete engines use shared current native UF helpers, so their
+speed changes qualify the fresh-endpoint replay flow. This batch reduces
+planning/transient allocation; the native component reach tables still retain
+the explicit inter-component closure. Its asymptotic dense-graph size remains
+quadratic. Future work should study that representation and actor pending-list
+selection. These measurements do not establish peak RSS or SMP speedups.

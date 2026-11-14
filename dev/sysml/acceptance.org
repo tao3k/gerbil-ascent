@@ -1,0 +1,353 @@
+#+TITLE: Checked DSL declarations: implementation and acceptance
+#+DATE: 2026-11-03
+#+STATUS: current acceptance incomplete; historical and current evidence separated below
+
+* Implemented behavior
+
+The existing =relational-program= and =relational-fragment= macros now lower
+optional =role= and =domain= annotations through their existing constructors.
+There is no new parser, evaluator, runtime compilation command or JSON transport.
+
+| Contract | Actual owner | Behavior |
+|----------+--------------+----------|
+| Relation contribution roles | [[file:../../program/scheme-checked.ss][checked constructors]], [[file:../../program/scheme-language.ss][macros]] | Input accepts external facts; derived accepts heads; mixed accepts both. Updates additionally require an admitted source handle. |
+| Source authority | [[file:../../program/scheme-snapshot.ss][snapshot]], [[file:../../program/scheme-session.ss][existing Session]] | Checked admission/opening rejects derived source handles and input-only heads; updates retain existing handle checks and rollback. |
+| Finite domains | [[file:../../program/scheme-checked.ss][existing finite constructors]] | Macro annotations rebuild the same membership checks, including derived rows and replacements. Explicit false domains reject. |
+| Diagnostic origin | [[file:../../program/scheme-admit.ss][existing admission report]] | Head/body reader locations accompany existing rule paths; role/origin violations have typed codes. |
+| Metadata ownership | [[file:../../program/types.ss][existing declaration factory]] | Known factory shapes survive metadata-only views; arbitrary caller objects do not obtain a shape stamp. Every ordinary data/root validation remains current. |
+
+Unannotated direct relations retain their existing mixed meaning, regardless
+of whether initial rows are empty. Fragment sources remain mixed by default;
+private relations default to derived. Explicit input-only declarations reject
+rule heads after whole-program assembly, including imported fragment handles.
+An explicit derived role in a source group conflicts with that group's handle
+grant and rejects at admission. Trusted lower-level host evaluation does not
+acquire checked-language guarantees from these annotations.
+
+Locations are detached native reader data, not authenticated source claims.
+The frozen SDK emits file/start/end vectors; two-field file/start reader values
+are also preserved. Callback and cyclic-list origin payloads reject before
+retention/traversal. Origin never supplies relation identity, a support key,
+mutation authority or a reuse decision. Normalized diagnostic presentation,
+macro ancestry and actual dependency-cycle paths remain separate work.
+
+* Model-to-implementation allocation
+
+[[file:development.sysml][Development allocation]] and [[file:dsl-contracts.sysml][DSL constraints]] retain explicit open source-refinement
+claims. The existing [[file:matching-state.sysml][matching contracts]] remain unchanged.
+
+[[file:../../packages/proofs/lean/DslDeclarations.lean][DslDeclarations]] originally supplied eight kernel-checked laws: derived update rejection,
+missing-handle rejection, input-head rejection, mixed permissions, exact source
+filtering, composition, domain membership and origin erasure. These prove their
+declared definitions, not extraction of the Scheme macro/decoder. The new module
+is part of the default library inventory rather than an optional ad hoc proof.
+
+LeanPoo uses the authorized release =v0.1.2=, fixed by Lake to
+=b29ea0d9d2ffeed0c13b66794fc6d418fd5b0393=. The locked Guard and original
+memory/heartbeat/deadline controls are retained. The complete Lean library passed
+180 jobs. Existing Quint models own update/publication interleavings; no duplicate
+state model was introduced for pure role filtering or diagnostic metadata.
+
+The snapshot source rendering was updated alongside its Scheme producer; exact
+render comparison remains enabled. A separate existing cache-source mismatch
+was corrected by including =init.ss= in the CI compiler input list, matching
+=CompilerCost.preparationCompatibilityInputs=. The deleted =build-modules.ss=
+remains removed. No threshold, obligation or CI scheduling rule was weakened.
+
+* Current integration cohort (2026-11-03)
+
+The isolated review checkout starts at PR #1 commit
+=433a8f0d9e819a354fc2cd83971cb82dcf6d4546=. The user authorized integrating
+its necessary retained Module entrypoints and Weaver build ownership refactor
+with the DSL and warning repairs. Unrelated prefix-materialization studies,
+their additional Case, and performance experiments remain in the original
+workspace. The necessary refactor retires the old artifact-publication API and
+its 24-Case Scheme Suite along with the deleted implementation. The current
+179-module inventory is therefore not claimed to be an unchanged PR inventory.
+
+The immutable compiler, declaration contracts, view values, rectangle geometry,
+UF reachability and wire-value traversal have separate existing-domain owners.
+Public facades retain their exports. No new Scheme evaluator, runtime DSL
+compiler, runtime JSON transport, or policy suppression is introduced.
+
+The local SDK remains Gerbil =1cfb032= / Gambit =ea114fc=. The isolated prefix
+uses Yuanxu =85a969c77431b971408610d908bcf694a21830bf= and POO
+=30733c3de7dbca4f0572b25a25b9099396da48a5=. ASP remains development-only in
+=dev/gerbil.pkg=, now fixed to the accepted existing PR #13 revision
+=c755f39b903c04c43e65c3a4d6f3c4fec9b3a963=. Its Linux/macOS library and provider
+CI checks all passed. No SDK or upstream compiler change was made. GSR runtime/build consumption
+now pins accepted PR #18 revision =838af1ab4e6c0c8177fed176efba448c694012b5=;
+its Linux/macOS compiler, C ABI, owner, concurrency and Quint jobs passed.
+The retired IR generator remains build-only on its explicitly separate revision.
+
+* Acceptance receipts
+
+Detailed receipts, including failed attempts, are retained under
+=.cache/ascent/warning-repair-20261103/=. The final commit and exact-head remote
+acceptance must be recorded before declaring delivery. A local elapsed time
+is not a throughput or preparation-cost improvement.
+
+| Check | Recorded result | Evidence boundary |
+|-------+-----------------+-------------------|
+| Native production build | Passed | =review-build.log=; original SDK and entrypoint |
+| Whole-library ASP policy | Zero findings and zero errors | =review-policy-design-final.log=; final c755 parser, native COMPLETE marker |
+| Full Scheme semantics | 179 modules, 1,487 Cases, 95 batches, 199 seconds, natural exit 0 | =review-semantics-final.log=; 12 workers; all 95 raw worker logs confirm processors=1 |
+| Rust/PyO3 Rust mode | 96 tests passed, natural exit 0 | =review-rust-sdk-accepted-gsr.log=; current integration commit and accepted GSR |
+| Strict Clippy, SDK feature domain | Passed, -D warnings | =review-clippy-sdk-domain.log=; all targets except external-program crate |
+| Strict Clippy, Scheme feature domain | Passed, -D warnings | =review-clippy-scheme-domain.log=; includes external-program crate and PyO3; domain union covers every workspace crate |
+| Rust formatting | Passed | =review-rust-fmt-corrected.log=; generated import and Lean emitter synchronized |
+| Full formal | 81 positive, 500 negative controls, 95 exact source comparisons, natural exit 0 | =review-formal-network-final.log=; includes synchronized generated import |
+| OpenSysML | 40 architectural objects; seven adapter tests | =review-design-network-final.log= and =review-design-unit-network-final.log=; architecture evidence only |
+| Release process and InstancePool bindings | Failed: 37 passed, 92 failed, none skipped | =review-bindings-both-paths-final.log=; sandbox transport refusals, two stale oracle prefixes, stale binding input, and real InstancePool startup timeouts remain separate causes |
+| InstancePool native startup diagnostic | Failed outside sandbox at the original 60-second context-bind deadline | =instance-startup-unsandboxed-diagnostic.log=; package capture 4.80 seconds, VM setup 4.02 seconds, context bind 60.00 seconds; not acceptance or a throughput measurement |
+| Mandatory default process binding domain | 76/76 passed, natural exit 0 | =review-bindings-required-accepted-gsr.log=; complete CI command, 12 threads, zero retries |
+| Original performance gates and production matrix | Not accepted yet | No wall-time, allocation or parallel benefit admitted |
+| Exact-head ASCENT CI | Published integration =e75797ef=; formal, formal-conformance, repository and design checks passed; dependency consumers failed before tests | Frozen Core dependency names an unavailable POO commit; no semantic/performance pass inferred |
+
+The prerequisites remove ASCENT's duplicate archive/cache implementation and
+its white-box tests of those deleted internals. The deleted =scheme-artifact-test.ss= also contained 24 white-box publication,
+source-admission and generation-replay Cases. New source/build consumer checks
+exercise the current ownership boundary, but no one-to-one equivalence of all
+retired artifact Cases is asserted. Build/cache behavior now belongs to the
+pinned integration library; compiling a thin consumer does not establish that
+library's runtime or cache acceptance. The independent current consumer and
+process/InstancePool checks remain required. The earlier ownership audit's
+failed InstancePool startup receipt remains a failure until that route passes.
+The current independent native sample again locates context binding in
+=___dynamic_load -> dlopen -> dyld -> fcntl= during signature registration.
+The owner had already initialized its VM. This identifies the observed slow
+phase; it is not by itself proof of an upstream compiler defect or deadlock.
+
+The two Clippy feature domains preserve all remaining target checks. GSR's SDK build helpers
+are unavailable when its external-program feature is unified into that same
+invocation. The original dedicated Scheme-domain check continues to check that
+crate; excluding it only from the SDK-domain invocation matches the existing
+semantic feature split. No missing API was stubbed and no warning was allowed.
+The Rust oracle children now inherit the configured =GERBIL_PATH= instead of
+silently replacing it with an unprepared repository-local prefix.
+
+* Concrete model/source correspondence
+
+=DslDeclarations= now contains ten laws. In addition to the original eight
+permission, filtering, composition, domain and erasure laws, =decode_spelling=
+and =compile_cases_exact= connect the finite role table to its executable
+lookup. The actual checked constructors import =program/declaration-role.ss=,
+which is emitted from that table. The same table emits Quint role predicates.
+The exact-source checker includes this production file. RoleSource/RoleHead
+mutation controls must produce state counterexamples, not initial-state errors.
+
+The strict source comparison also follows extracted owners rather than old
+facade file paths. Descriptor term/key binding and Rust import renderings are
+changed in their Lean emitters and checked against the actual source. Mismatch
+collection still rejects every differing source region; it merely reports all
+mismatches in one invocation.
+
+The datum visitor's specialized arithmetic lane retains the generic fallback
+for negative, fractional, bignum and unbounded budgets. An independent frozen
+reference tests cycles, sharing and budget boundaries. The capped exponent
+implementation has an independent exact arithmetic grid and a huge-exponent
+control. The certificate iterator compares callback/guard order with a native
+reference. These are executable discriminators, not universal source proofs.
+
+* Retained failures and repairs
+
+- An unprepared prefix and native tagged-package path handling interrupted
+  dependency setup. Exact checkout identity was verified before ordinary
+  =gerbil deps --install= completed. No package was uninstalled.
+- The host PATH selected a Nix linker that could not link even a small =puts=
+  control. The same GCC/source succeeded with Apple tools first on PATH.
+  This was repaired in the invocation environment, without build.ss glue.
+- The initial review semantic run rejected an accidentally copied new prefix
+  experiment Case after that experiment had correctly been excluded. The Case
+  file was restored byte-for-byte to PR HEAD, preserving that file's preexisting
+  Cases. Separately retired artifact-API tests are listed above.
+- Formal runs rejected a role mutation that failed at initialization, a stale
+  extracted-owner path, and unsynchronized generated comments. The model now
+  reaches the actual reader transition; source producers/owners were corrected.
+  The failed receipts remain separate from complete accepted runs.
+- The final formal refresh first failed to resolve github.com in the sandbox.
+  The unchanged native guarded entrypoint was then run with network access.
+- The preparation admission test used the live development manifest as a
+  fixture for a historical transformation with a deliberately fixed ASP
+  implementation. After the authorized parser update, that correctly rejected.
+  The fixture now carries the historical revision explicitly; the production
+  strict transformation and all its rejection controls remain unchanged.
+  All 23 preparation and seven semantic-CI tests then passed.
+- A release binding build ended without a final receipt at the session boundary.
+  It is not treated as success or a measured timeout; the complete invocation
+  is recorded separately.
+
+* Remaining obligations
+
+The finite decision-table correspondence is established at its stated boundary.
+Native symbol representation, macro expansion, host callbacks/getter order,
+mutable snapshots, VM/GC/FFI behavior and wrapper admission are still external
+premises. Exact emitted strings do not prove those premises.
+
+Universal source refinement of the complete mutable index cache, full SCC,
+Actor/Rayon message transformations, datum traversal arithmetic and capped
+exponent implementation remains open. General typed operator inference,
+fragment contracts, macro ancestry and detailed dependency-cycle diagnostics
+also remain beyond this tranche. Model proofs and finite tests must not be
+reported as closing them.
+
+Cancellation, budget exhaustion, source replacement rollback and provenance
+remain part of full semantic and runtime acceptance. Their limits and original
+performance thresholds are unchanged. CI success alone does not establish a
+speedup, a cold-build improvement or complete Scheme source refinement.
+
+* Human-readable Scheme and native drivers
+
+The user requested readable Scheme indentation. =init.ss= now lists one module
+per line; the eight domains' =interface=, =objects=, =types=, =func= and =config=
+entries separate fields, nested objects, contracts and long import/export lists.
+The 41-file reflow was applied independently to the preserved working tree and
+the isolated publication checkout. Native Scheme reading compared all 82
+before/after files and found identical expression data. Fourteen generated
+source regions retain their exact bytes. Typed comment/declaration adjacency
+is preserved; the final whole-library ASP check has zero findings and errors.
+The complete post-format formal gate again passed 81 positive checks,
+500 negative controls and 95 exact source comparisons.
+
+This is formatting evidence. Reader locations naturally follow the new source;
+reader equality is not a universal macro, callback or VM equivalence proof.
+The original semantic, cancellation, resource and provenance gates still apply.
+
+Local commands use existing Justfile entrypoints and defaults. Core's Justfile
+already supplies =num_cpus()= and macOS =env -u SDKROOT COMPILER_PATH=/usr/bin=.
+Explicit per-call CPU/thread overrides and duplicate PATH/compiler cleanup are
+not required. The existing default evaluates to 12 on this host. Earlier
+receipts retain their actual settings and are not relabeled as default-machine
+performance. An isolated =GERBIL_PATH= selects only the dependency prefix.
+
+* Reproducible dependency gap
+
+The first published integration's Linux jobs all stopped during dependency
+installation: Yuanxu =85a969c= names POO =30733c3=, which a fresh public clone
+cannot check out. A locally imported Git object had hidden this missing
+transitive dependency. This is an acceptance gap, not a semantic timeout.
+The SDK was unchanged and those failed runs were retained.
+
+An isolated existing Core PR #19 checkout is testing a dependency-only repair
+against public POO =9c7cb947=, whose existing PR CI passed. Its source identity
+bindings are synchronized without changing theorem or runtime bodies.
+Core's unavailable LeanPoo revision also requires the user-authorized public
+=v0.1.2= release. The fresh dependency build, native Core build, complete
+210-job Lean inventory and complete 486-case Quint inventory passed. The full
+196-file Core native run failed its original gates for
+=gitea-postgresql-publication=, =module-declaration-1000= and
+=module-declaration-10000=. Its subsequent selected-module phase did not run.
+The proposal is not accepted, published or integrated into ASCENT; =gerbil.pkg= still records
+the existing pinned Core revision until that boundary is accepted.
+
+* Smaller dependency-availability repair, awaiting authorization
+
+POO =30733c3= is still an existing public GitHub object. The failure concerns
+ordinary clone reachability, not missing Scheme source on the local disk.
+The frozen =gxpkg= implementation uses ordinary =git clone -q= and then checks
+out the requested revision. A native Git file-transport control (without local
+hardlink object copying) returned 128 without an advertised reference. Adding
+only =refs/tags/source-30733c3= allowed a fresh clone and checkout of that same
+revision, retaining tree =ce1b8fbdf3feaf26c7b053c988f5d87afdefb14a=.
+
+Creating this tag would preserve the currently tested Core/POO implementation
+instead of integrating the unaccepted POO upgrade. The proposed tag does not
+exist remotely; it has not been created. User authorization is pending because
+previous publication approval covered existing PRs, not a new public tag.
+The source-tag operation would not create a Release or modify a branch.
+
+* Default Justfile build environment
+
+An ordinary =just build= with only the isolated =GERBIL_PATH= first failed at
+=std/make pkg-config-libs openssl=. The earlier Justfile supplied a link path
+but omitted the matching pkg-config path. The existing common environment now
+resolves its already-selected Homebrew OpenSSL provider once, supplies both
+=LIBRARY_PATH= and =PKG_CONFIG_PATH=, and reuses Core's standard
+=env -u SDKROOT COMPILER_PATH=/usr/bin=. The long list of unrelated environment
+clears is removed. No build/test runner, CPU setting or thread setting was added.
+
+The same ordinary =just build= then completed naturally, including both linked
+outputs, with the original SDK and machine-default parallelism. This establishes
+entrypoint correctness; concurrent activity prevents a performance claim.
+
+* Index projection regression repair and allocation-counter evidence
+
+The warning-repair refactor introduced a temporary ordinal hash table in
+=table/index-sharing.ss:compile-key-projection=. Replace that private lookup
+with the SDK's native =member= comparator and tail position. First-occurrence
+and numeric equality semantics remain unchanged; no row-time state or callback
+is added. This removes the temporary table and its entries rather than changing
+any admission threshold. The ordinary =just test-file
+ t/qualification/ascent-index-program-test.ss= completed naturally.
+
+The complete original =just performance-index-sharing= study passed all five
+scenarios (wide, sparse, small, scalar, empty), each with the original 50 paired
+samples and controls. Receipt: =review-index-sharing-member.log= and study
+=c4d34fbe-1f96-4f07-a602-a2265ff323e0=. The changed candidate's sparse allocation
+was 2,033,744 bytes, compared with the retained failed candidate's 2,049,600;
+small was 84,640 rather than 85,728. These are observations across the two
+source revisions, not a controlled percentage speedup claim. Original reference
+comparison: sparse CPU 5,904 to 1,285 microseconds; small CPU 38.375 to 39.25
+microseconds. Small is admitted by its original bounded-overhead contract, not
+claimed as a speedup. This study is not a production throughput measurement.
+
+The separate lifecycle performance contract remains failed. A diagnostic on
+the frozen SDK allocated a 10,000,000-byte u8vector, collected while retaining
+it, sampled =##get-bytes-allocated!=, released it, collected, then sampled again.
+The raw snapshots were 70,475,944 and 60,532,024: delta -9,943,920 bytes.
+=frozen-kernel.scm= at the fixed Gambit revision ea114fc forwards this primitive
+to =___bytes_allocated=. That C function includes current
+=occupied_words_still= in its return value; freeing still objects can lower it.
+=##process-statistics= slot 7 uses the same function. Slot 16 is a latest-GC
+snapshot, so substituting it would omit allocation after the last collection.
+Neither is silently promoted to a universally cumulative allocation metric.
+The independent diagnostic and exact-source copies are retained in the local
+acceptance artifacts. The SDK and original rejection of negative deltas remain
+unchanged. A valid cumulative measurement and allocator-level source refinement
+are still open; the existing Lean rejection laws do not prove this SDK counter
+monotonic. No abstract proof or successful index study closes that obligation.
+
+* Remaining original performance-gate failures
+
+The unchanged Justfile gates =performance-uf-plan=,
+=performance-uf-initialization=, =performance-uf-compact-query=,
+=performance-uf-selector-init= and =performance-uf-owner-plans= all completed
+naturally with =STUDY-OK= after the projection repair. Earlier membership and
+query studies remain separate receipts; they were not substituted for these
+five full studies.
+
+The original =just performance= 1000-sample Suite was also executed, not skipped
+because the lifecycle contract had failed. It failed: table-expression's
+candidate P95 was 10.455 ms and exceeded its original fixture budget. Its full
+1024-pair semantic comparison and 512-input global point witness succeeded.
+The reference's 1000 samples consumed 102.874431 wall seconds; the candidate's
+consumed 12.061390 seconds. The complete Suite then reached its unchanged
+180-second parent deadline while ten-thousand-appends was executing (exit 124).
+Thirteen scenario Cases completed successfully before that exit; remaining
+Cases/modules were not counted as passes. These wall times do not constitute
+production service throughput or closure of the tail-latency obligation.
+Receipt: =review-performance-full-final.log=. No timeout, workload or threshold
+was changed, and no unchanged rerun was used to claim acceptance.
+
+* Current-source semantic recheck
+
+After the index projection repair, the existing =just test= completed naturally
+with 179 modules, 1,487 Cases, 95 batches and 12 workers. Its test execution
+stage took 200 seconds; this excludes preparation and is not a cold-build or
+speedup claim. All 95 raw batch logs recorded =VM-RUNTIME processors=1=, with
+no other processor count. Original limits and Case inventory were retained.
+Receipt: =review-semantics-refactor-final.log=; batch directory
+=d61c4dfb-012e-42e0-875f-44647e031dcc=. No additional external core/thread or PATH
+setting was supplied: only the existing isolated =GERBIL_PATH= selected the
+validated dependencies. The complete performance failure is independent of
+this semantic acceptance and remains reported above.
+
+* Current-source policy and formal recheck
+
+The ordinary =just check-policy= completed naturally with zero findings and zero
+errors. The unchanged =just check-formal= also completed naturally with
+=ALL-FORMAL-CHECK-OK=, retaining its locked Lean Guard, positive checks,
+500 negative controls and source comparisons. Receipts:
+=review-policy-refactor-final.log= and =review-formal-refactor-final.log=.
+These results establish the existing obligations only; the remaining
+allocator/cache/SCC/runtime extraction obligations listed above remain open.

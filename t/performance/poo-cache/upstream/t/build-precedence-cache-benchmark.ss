@@ -1,0 +1,6 @@
+(import (only-in :std/make make))
+(make '("t/precedence-cache-reference-fixture")
+      srcdir: (current-directory)
+      libdir: (path-expand "lib" (getenv "GERBIL_PATH"))
+      build-deps: ".gerbil/precedence-benchmark-deps")
+(exit 0)

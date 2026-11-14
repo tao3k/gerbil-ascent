@@ -1,0 +1,86 @@
+#+title: Source-order Set batch admission
+
+The reference is the exact =gerbil-ascent-set-batch-admit!= function
+from committed =a76305a=, with only its export name changed. Both functions
+are compiled with identical settings by =just set-batch-benchmark=.
+
+The candidate uses one insertion and the resulting private table cardinality
+to detect duplicate rows. On the first duplicate, it clears that private
+table and admits in source order, preserving oldest accepted row identities.
+It also replaces the fallback's mutable accumulator and per-row closure
+with a direct recursive loop. The unique whole-log path still shares its
+original row spine, and nonempty caller membership tables retain identity.
+
+Each shape has 20 warmups and 1000 alternating old/new pairs. Both controls
+require median nonregression. Both duplicate workloads require median
+nonregression and >=900 strictly faster pairs. Independent ordered goldens
+and membership counts are checked outside timing; admission and fresh empty
+caller-table creation are inside timing. All rows are prepared outside timing.
+
+Both final runs pass all gates with =OK= and exit 0. Values are nanoseconds:
+
+| shape | old p50 run 1/2 | new p50 run 1/2 | strict wins run 1/2 |
+|-------+-----------------+-----------------+---------------------|
+| 10000 unique rows | 631000 / 625000 | 455000 / 453000 | 903 / 893 |
+| existing membership, 16 values | 662000 / 609000 | 600000 / 573000 | 742 / 884 |
+| empty membership, 16 values | 1064000 / 1056000 | 636000 / 634000 | 970 / 972 |
+| empty membership, 1 value | 1022000 / 1011000 | 607000 / 607000 | 975 / 976 |
+
+Qualified duplicate gains are 1.66--1.68x; the unique control gains about
+1.38x. These are admission-kernel results, not a public 10000-append session
+speedup claim. Public append dispatch and complete session runs are separate.
+
+Earlier candidates gained on duplicate workloads but failed one or both
+control medians by about 0.2--0.5 percent. They are retained as
+=rejected-1*= through =rejected-3*=. Controls and >=900 gates were not relaxed.
+
+The semantic fixture independently enumerates 3282 configurations of finite
+logs, staged prefixes, sharing modes and initial membership sets. Both old
+and new functions must match ordered goldens, row object identities,
+membership-key identities and table ownership. Additional checks cover
+nullary/heterogeneous rows, large duplicate logs and unique spine sharing.
+
+Final-source build and policy pass (37 selected modules, findings=0,
+errors=0). The complete qualification suite passes 41 modules and
+319 Cases at configured GERBIL_BUILD_CORES=12 (seven admitted modules
+in separate processes, the remaining modules exclusive). Full native logs
+include =MODULE-OK=, =HARNESS-OK=, final =OK= and process exit 0.
+They are retained in =receipts/qualification/=, alongside the suite log
+and a full fixture source manifest. Remote CI remains unrun.
+
+The first full SS run stopped at rule-clauses: semantics passed, but
+p50=376000 ns, p95=1208000 ns, max=33771000 ns exceeded the original
+1000000 ns p95 gate. Its raw error receipt is retained in
+=performance-failed-rule.log=. A focused repeat passes at p95=484 us.
+Standalone =gerbil-ascent-evaluate-program= uses a non-session engine;
+=flush-staged-set-rows!= is guarded by =session?=, so this rule-clause
+workload does not execute the changed batch function. This establishes
+that the failing branch is outside this patch, not a matched performance
+causation claim. The failure remains evidence of whole-suite tail variability.
+No timing or memory gate was relaxed.
+
+A second full SS attempt stopped at BYODS trrel: p50=470000 ns,
+p95=1223000 ns, max=23273000 ns versus the unchanged 1000000 ns gate.
+The original =a76305a= storage module was then compiled into a private
+control library. Corrected module-path resolution confirms that the engine
+uses that library's =storage.ssi= rather than current checkout source.
+Under this old implementation BYODS trrel also fails (p50=455000 ns,
+p95=1362000 ns, max=4556000 ns); old rule-clauses passes at p95=793 us.
+These are separate diagnostic runs, not a matched timing comparison.
+
+The first control routing attempt selected current source because the normal
+recipe prepends the checkout. That attempt is excluded from baseline
+conclusions. Corrected controls use the native harness directly with the
+private library first. Native Gerbil returned exit 0 even after ERROR CASE;
+=baseline-gates.json= therefore classifies error markers and final OK,
+not raw process exit alone. The original trrel failure is a failed gate.
+Full SS qualification remains open; native fixtures and budgets are unchanged.
+
+The remaining 12 original SS entries were executed individually with the
+normal recipes (continuing collection after a failed entry, retaining each
+entry's failure status). Nine pass; three fail only their unchanged time
+gates: Fibonacci p95=1.101 ms versus 1 ms, BYODS eqrel p95=1.047 ms versus
+1 ms, and table-expression candidate p95=2.901 ms versus 2 ms. Raw logs and
+=remaining-ss-gates.json= are retained. Neither failed complete performance
+attempt is a full-suite pass. The batch-kernel gains and 41-module semantic
+qualification are established; full SS tail stability remains open.

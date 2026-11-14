@@ -1,0 +1,602 @@
+#+title: Graph ownership and packed reachability
+#+language: en
+
+[[file:../graph-index-export-algorithms-20261112.org][Audit index]]
+
+* POO Index Graph: explicit changed roots in ASCENT
+
+POO [[https://github.com/tao3k/gerbil-poo/pull/17][PR 17]] at
+=261a9614b24abb4f1aaaa79b60b32304d3c8d126= keeps the captured index
+separate from a walk started with explicit changed owners
+(=generalized-graph.ss:advance-affected-work!=). Its symbolic reverse
+index and its single-source captured reachability operation do not replace
+ASCENT's existing dense numeric multi-source closure. Translating every
+relation ID to a symbol on each update would add another index and would
+lose the advantage of retaining the compiler's adjacency vector.
+
+=program/update-selection.ss= now records each changed ID at the point
+where it marks the affected bitmap. It passes those roots to the existing
+closure walker, eliminating the second scan of all bitmap slots and the
+intermediate full list of relation ordinals. Source eligibility and
+ordered log comparison are unchanged; the same captured read edges
+drive the same mark-before-enqueue traversal. The old two-argument call
+continues to discover roots from its bitmap. No POO pin changed.
+
+The guarded =SourceUpdateFrame.lean= check passed. Its collection lemma
+establishes equality of the exact initial LIFO list with the ascending
+scan followed by prepend, including empty and multiple-root cuts. The
+cost statement covers the eliminated seed pass; it does not claim that
+the required row comparisons, bitmap construction or affected traversal
+are constant time.
+
+The production build completed. A native source Suite used that build
+for 100 alternating pairs at each size, with identical bitmaps, three
+reachable IDs, a cycle and a duplicate edge. At 1,000,000 vertices,
+closure CPU median was 1,131 microseconds with bitmap root discovery
+and approximately 1 microsecond with the admitted root list already
+known. At 4,096 vertices it was 5 microseconds versus below the CPU
+clock's useful resolution. This times the closure only. It neither
+measures whole-session source update cost nor replaces an original
+performance group.
+
+The native =scheme-session-deletion-test.ss= Suite passed all 26 Cases
+against the rebuilt production prefix. Its independent read-frame
+comparison recorded all 64 graphs with eight seed cuts each. This
+exercises the actual source-update path in addition to the closure-only
+diagnostic.
+
+Separately, clearing the expander's 294 registry entries in a disposable
+native Test process reduced live accounting by 348,720 bytes, from
+92,206,592 to 91,857,872. The untouched control changed by only 32 bytes
+between forced collections. Both 12-observation 512-vertex controls
+still performed a median of seven collections per batch. This rejects
+the registry alone as the dominant retained-root explanation; clearing
+it is not an implementation candidate. The first diagnostic had
+incorrect process-statistics field labels and is retained separately.
+
+Evidence: =/private/tmp/ascent-poo-seed-scan-lean-permitted-20261112.log=,
+=/private/tmp/ascent-poo-seed-scan-build-fixed-20261112.log=,
+=/private/tmp/ascent-poo-rooted-invalidation-20261112/rooted-closure.log= and
+=/private/tmp/ascent-poo-rooted-invalidation-20261112/session-deletion.log=.
+Registry attribution: =/private/tmp/ascent-weighted-registry-attribution-20261112/=.
+
+* Direct POO SCC consumer control
+
+The native source Suite compared ASCENT's compiled dense SCC entry with
+the public POO =partition= path at =385c2a0f=. Both used the same dense
+input graph; the POO arm also encoded symbol identities, created the
+supported =declaration= and =Computation= inputs, and decoded groups.
+Seven alternating CPU pairs per shape checked identical membership.
+The POO result was not reordered into ASCENT's provider-first schedule,
+so the timed arm does not yet pay the full substitution cost. The
+Scheme adapter was source-loaded; these are consumer-path diagnostics,
+not timings of the packed SCC kernel by itself.
+
+| Vertices | Shape | ASCENT CPU median (ms) | POO public path CPU median (ms) |
+|----------+-------+------------------------+--------------------------------|
+|    10000 | chain |                  0.154 |                        179.296 |
+|    10000 | pairs |                  0.162 |                        165.488 |
+|    10000 | ring  |                  0.148 |                        159.845 |
+|   100000 | chain |                  1.639 |                       1998.298 |
+|   100000 | pairs |                  1.806 |                       2482.400 |
+|   100000 | ring  |                  1.800 |                       2183.475 |
+
+The final test exited normally within the 2 GiB and 90-second envelope.
+The signed raw allocation deltas are inadmissible as byte costs and
+are retained only in the log. The first adapter failed by naming a
+lexical variable =keys= inside an =.o= slot of the same name; the measured
+adapter uses the public =declaration= constructor.
+Evidence: =/private/tmp/ascent-poo-scc-consumer.B5cE4P/declaration.log=.
+
+Use packed adjacency and bounded traversal storage as a design candidate
+for large, stable, numeric dependency graphs. Do not round-trip those
+graphs through the symbolic declaration interface. Test existing POO
+table indices separately through =table/provider.ss= for compatible
+grouped bindings: compare cold build, delta application and probe costs,
+and preserve key equality, result order and cut identity. Neither
+candidate changes the amount of list output the complete weighted UF
+export promises to allocate.
+
+* Index Graph reuse boundary
+
+The earlier ASCENT integration experiment used Yuanxu =bbcb8fe9= and POO
+=6cf940be=. See [[file:build-and-integration.org][Build and integration]]
+for the current Release cohort. The source audit
+below uses the local POO commit =261a9614=; it does not claim that the
+consumer executes code from that commit.
+
+| POO mechanism | ASCENT consumer decision |
+|----------------+--------------------------|
+| Explicit roots over a captured inverse index | Adopted for dense dependency closure; the caller already has relation ordinals. |
+| Indexed projection from touched owners to work | Candidate for rule activation after closure; =gerbil-ascent-select-rule-plans= still scans all strata and rules. |
+| Persistent base with a sparse fork | Candidate for immutable publication roots with a symbol-keyed directory; =support/index.ss= is not the row-key index. |
+| SCC repair and quotient support deltas | Applicable to topology edits; replacing or appending facts in an unchanged declaration does not alter its SCCs. |
+
+The first production experiment should target sparse activation on an
+unchanged admitted program. Capture output relation ordinal to ordered
+rule occurrences while constructing immutable analysis. During a source
+update, use reached relation ordinals to select those occurrences, then
+project heads in declaration order. Distinct rules with equal bodies
+remain distinct occurrences. Multi-head rules must retain the exact
+ordered subsequence of affected heads, including repeated occurrences.
+Reuse the existing scan for dense cuts until the measured crossover
+justifies another choice. The current admission and fallback for opaque
+callbacks and providers stay in force. Neither the index nor a sparse
+selection can publish partial results on cancellation or exhaustion.
+
+Lean =SourceUpdateFrame.RuleActivation.gathered_schedule_preserves_projection=
+establishes ordered occurrence and head equality for a schedule with exactly
+the gathered members in strictly increasing declaration order. Repeated heads
+survive the ordered projection. =gather_reads_touched_buckets= counts the
+ordinal entries read from the reached buckets. The model assumes that those
+buckets are already captured correctly and does not charge index construction,
+deduplication, ordering, or frame activation. The Scheme selector still scans
+the roster. Source correspondence must cover bucket construction, the
+deduplicating scheduler, and the existing plan and frame reuse decisions.
+The cost comparison must include index construction and residency,
+closure, selection, frame activation and execution. In the same native
+Session interface, compare sparse and dense cuts, include a deletion
+with negation or aggregation downstream and check provenance. Record
+visited rules and heads, cumulative allocation and wall P95 separately
+for cold admission and warm updates. This is a proposed consumer
+experiment; the earlier closure-only measurements do not qualify it.
+
+The complete weighted UF export has a different cost floor: even if an
+index makes discovery cheaper, the API still constructs every requested
+row and independent mutable list spine. Keep that case in the original
+suite and attribute its materialization and GC costs separately from
+lookup or activation. No Index Graph producer timing can substitute for
+that gate.
+
+* Retain graph publications across source appends
+
+POO's reusable unit is the admitted graph and its publication identity.
+=support/index.ss= forks a shared base with sparse edits, while
+=generalized-graph.ss= and =component-revision.ss= limit the revision to
+affected owners and reject a stale publication. The ASCENT source consumer
+is =program/view-state.ss=. It already retains a lazy ordered product graph
+per cut for bounded integer histories, but =program/view-replay.ss= declines
+many histories with old/old insertions before the terminal event. Those cuts
+rebuild the journal's graph when enumerated, even after the storage owner has
+already committed the same UF frontiers.
+
+Use the existing UF transition as the source of ordered frontier descriptors.
+In =table/trrel-uf.ss= both =gerbil-ascent-trrel-uf-insert!= and
+=gerbil-ascent-trrel-uf-replay-insert!= consume the same admitted blocks.
+The SCC merge assigns new member spines with =append= and reassigns node
+fields. Older blocks can retain the old spines. The next implementation must
+carry the admitted descriptor through the existing staged frontier and
+commit boundary, including the count-only initial and append routes. Count
+the descriptors and retained axes before publication. Keep a generation's
+earlier descriptors shared across its appends and refuse reuse after source
+replacement or failed admission. Preserve derived batch reversal separately
+from the source lane and the delta suffix. Only new facts enter a new block.
+Do not materialize full rows or build a second UF index during commit.
+
+This is the publication mechanism suggested by POO and the disjoint products
+of factorized query results. Ascent's delta scheduling supplies the accepted
+frontiers. MiniDusa's indexed prefix work illustrates why downstream checked
+consumers should enter through the affected key rather than walking unrelated
+frontiers. It does not provide the provenance or UF membership semantics.
+References: [[https://www.cs.ox.ac.uk/dan.olteanu/papers/oz-icdt12.pdf][Factorised Representations of Query Results]],
+[[https://arxiv.org/html/2405.19040v3#S7.SS1][Finite-Choice Logic Programming, section 7.1]].
+
+An isolated native test retained the existing unindexed frontier views
+through later old-edge SCC merges. Two Cases passed. The test made 1,000
+ordered comparisons across cyclic relabelings of a 17-vertex history and
+checked grouped structural keys separately. It compared the old held cut
+and the new total against synchronous replay, then mutated an exported row
+and spine and exported again. This establishes a concrete reuse point on
+the current compiled provider. It does not validate commit integration,
+replacement identity or the physical retained-byte quota. LeanPoo Guard
+passed =OrderedExportGraph.Publication=, including derived order, frontier
+membership, repeated-event exclusion and suffix-only transition counts.
+Evidence: =/private/tmp/ascent-persistent-frontier.xbcTSs/=. Production
+qualification must count old/new events, touched components, descriptors,
+retained bytes, enumerated rows and GC under the original workloads.
+
+The existing lazy cut capture now supports bounded integer histories that
+include intermediate SCC merges. The nonterminal path retains missing
+component pairs in writer order and borrows the pre-merge member spines.
+It keeps no mutable intermediate bitmap. The existing terminal singleton
+path still borrows its final bitmap. Both charge descriptor and axis units
+before publication and refuse the existing 262,144-unit cap. The model
+proves ordered expansion given the pre-merge reachability decision and
+bounds a nonempty block's descriptor and axis units by three times its
+row count. It does not establish physical retained bytes or the correctness
+of arbitrary graph membership decisions.
+
+The isolated native module build and four native Suites passed 20 Cases.
+The tests preserve ordered and typed output across old-edge SCC merges,
+held-result mutation isolation, and the existing domain and count refusals.
+A new 432-vertex chain of preexisting nodes exercises the descriptor-cap
+refusal below the 512-vertex population cap. Source and object hashes match
+after the checks. Evidence: =/private/tmp/ascent-retained-scc-capture.KRE2xU/=.
+This change reuses a graph across reads of one published cut. The cut still
+does its first capture from the journal. Carrying the already staged
+frontier from one publication to the next remains separate integration work.
+
+The native cost probe uses actual =gerbil-ascent-view-export-cut= and checks
+the first export against the synchronous replay path. The graph has paired
+SCCs followed by derived edges that join them. It then alternates 12 pairs
+of 32 complete ordinary exports at each width under the existing 2 GiB cap
+and 90-second watchdog. The numbers below are medians, not admission P95.
+
+| Vertices | Replay wall (ms) | Retained wall (ms) | Replay / retained GC wall (ms) | First retained export (ms) |
+|----------+------------------+--------------------+--------------------------------+----------------------------|
+|       96 |           58.422 |              4.794 |                      0 / 0     |                      1.914 |
+|      256 |          426.288 |             82.984 |             54.374 / 54.323     |                     12.360 |
+
+At width 256, median wall outside GC dropped from 370.873 to 28.565 ms.
+The unchanged GC time isolates where this optimization helps. The largest
+retained wall sample was 111.217 ms. These samples include every complete
+result, but they use a journal with intermediate SCC merges rather than the
+original direct weighted-export workload.
+
+The first scale probe finished all 12 pairs at 384 vertices and refused
+capture at 512. A source trace located the refusal in the terminal injection:
+the next per-pair descriptor charged 262,147 units after 131,584 previously
+admitted rows. The revised terminal descriptor retains two ordered component
+axes and one final bitmap. It probes original component identities, then
+enumerates the chosen members in writer order. It charges the axis entries,
+member spines and bitmap against the same cap. The nonterminal graph remains
+unchanged. Lean =terminal_component_reverse= checks derived batch reversal
+at both levels. The original 512-vertex refusal is kept in
+=/private/tmp/ascent-capture-cap-trace.5evBVW/cap.log=.
+
+The revised native module passed all 21 Cases, including the new
+512-vertex ordered-list and packed-word comparison. Both native cost
+lanes completed 12 pairs of 32 complete exports under the same cap and
+watchdog. Source and object hashes matched after the run.
+
+| Vertices | Replay wall (ms) | Retained wall (ms) | Retained GC wall (ms) | Retained max wall (ms) |
+|----------+------------------+--------------------+-----------------------+------------------------|
+|      384 |         1225.117 |            227.488 |               147.744 |                264.503 |
+|      512 |         2200.701 |            443.601 |               293.094 |                511.882 |
+
+The first full export took 33.569 ms and 94.090 ms, including capture.
+The large retained batches still spend most of their time collecting.
+This measurement covers the complex-history journal workload, not the
+original weighted direct-export admission contract. Evidence:
+=/private/tmp/ascent-terminal-components.Xu2bFc/retained-scale.log=.
+
+The weighted direct fixture does not replay a journal. It already retains
+one factorized rectangle for the large SCC. Full list export still requires
+fresh pair cells for every row. Measure direct full export, ordered journal
+publication, and indexed consumer work as separate lanes. A gain from
+eliminating journal replay does not qualify the 384/512 full-export gate.
+
+* Retire SCC index entries by affected owner
+
+The POO Graph comparison is an owned update. The public report separates
+cold index construction, changed buckets, and ordered output. The current
+locally inspected POO source was =a682d15=, including the prior
+=733e40a= affected-region work. The relevant transferable idea is to
+find changed owners through retained adjacency before touching buckets.
+Pearce and Kelly give a related locality criterion for DAG order repair.
+ASCENT's operation here is SCC quotient and transitive-index maintenance.
+
+In =table/trrel-uf.ss= the old merge filtered the complete root roster,
+searched the entire surviving roster for forward retirement, and examined
+both tables of every survivor for representation retirement. The dense
+reverse branch also visited the surviving roster. The new merge begins
+after missing rectangles are committed. In the resulting closure, if a
+surviving root reaches a loser then it reaches the winner, and if a loser
+reaches a surviving root then the winner reaches it. The converses hold
+for a nonempty loser set. The winner's existing reverse and forward rows
+therefore locate the exact affected owners. Drop internal keys from those
+two rows before iterating them. Iterate the winner's reverse row while
+changing only external forward rows, then iterate its forward row while
+changing only external reverse rows. Each bucket keeps its sparse or
+packed representation and is normalized only after local retirement.
+
+The group roster remains newest first. Retire losers from the prefix
+through the oldest losing birth ID and share the unaffected suffix.
+The population changes by the number of losers. A whole-group collapse
+releases the winner's adjacency and registry without traversing retired
+arcs. Groups with no reverse index still use the existing bounded
+small-group fallback. Frozen descriptors retain member spines, and the
+merge only replaces a member field. Budget preflight and the exact
+frontier production precede adjacency retirement.
+
+For an indexed partial merge the owner-opening count is
+=2 + external predecessors + external successors=. Key deletes, packed
+word work, and the root roster prefix have separate charges. An old
+loser's rank can still make that prefix long. A pure count and sparse
+index checks do not predict physical allocation, GC or total latency.
+
+=UfMergeFootprint.lean= proves the two adjacency criteria, logical
+retirement equivalence, and equality of the tail-accumulating roster
+prune with a complete stable filter under ordered birth IDs. The focused
+LeanPoo Guard completed without warnings. The complete guarded Lean build
+completed all 183 jobs. =TransitiveComponents.qnt=
+checks both retirement directions against complete quotient restriction
+at acceptance. The configured three-node model and all 15 fault controls
+passed, including distinct counterexamples for dropping each external
+direction. The concrete bucket and registry premises are checked by the
+native UF validation suites. These are mathematical and finite-state
+obligations, with native evidence for the implementation.
+
+The same native Test Suite executed 1,000 edits at each scale with the
+pre-change and candidate compiled UF modules. Every edit closed one
+two-node cycle in a four-node chain with external neighbors. It adds one
+fact. Other vertices are isolated or in disjoint chains. Each case checks
+every new frontier and the complete final closure against independent
+chain reachability. The edit samples measure process CPU, with setup,
+result validation and complete enumeration outside that clock. The
+total command wall includes those phases. The 2 GiB cap and 90-second
+watchdog applied to both processes.
+
+| Isolated roots in the group | Baseline P95 (ms) | Candidate P95 (ms) | Baseline maximum (ms) | Candidate maximum (ms) |
+|-----------------------------+-------------------+--------------------+-----------------------+------------------------|
+|                       1,000 |             0.558 |              0.061 |                 0.835 |                  0.080 |
+|                      10,000 |             3.332 |              0.054 |                35.353 |                 34.122 |
+|                     100,000 |            41.281 |              0.063 |               171.112 |                  0.085 |
+
+The native commands completed in 38.02 and 2.84 seconds. The 10,000-root
+maximum remains an observed outlier without separate collector attribution.
+An initial diagnostic in reverse lane order also reached the native
+success markers. The macOS extended =time -l= wrapper could not query a
+sandboxed kernel statistic, so the table uses the subsequently verified
+portable =time -p= commands and natural exit statuses. The compiled
+source difference is restricted to the merge implementation; both staged
+copies resolve =uf-reach= through the same absolute module identity.
+
+The six original UF commit scenarios completed 50 matched pairs each,
+passed the original CPU and allocation gates and preserved exact ordered
+frontiers, closure truth and duplicate retry. This experiment measures
+owned SCC edits. Complete list export has its own weighted benchmark and
+allocation obligations.
+
+Evidence: =/private/tmp/ascent-uf-footprint.4wkKDP/=.
+
+The native UF validation covered 11 explicitly selected Suites and 48
+successful Cases. The strict weighted cuts were then measured with the
+candidate compiled module and the verified compiled reference artifacts.
+Both reached 100 CPU pairs, 100 admissions and five allocation pairs.
+Each admission returned 32 independent complete ordinary list exports.
+The exclusive 100 ms P95 gate failed in both Cases, even though native
+Gerbil returned exit zero. The failed receipts and Case logs are kept.
+
+| Vertices | Admission P95 (ms) | Candidate CPU median (ms) | Candidate collector CPU median (ms) | Candidate VM allocation counter median (bytes) |
+|----------+--------------------+---------------------------+-------------------------------------+------------------------------------------------|
+|      384 |            140.204 |                   115.479 |                              97.630 |                                    679,519,232 |
+|      512 |            265.005 |                   192.793 |                             160.267 |                                  1,208,001,536 |
+
+In the 512-vertex case, every candidate CPU pair exceeded 100 ms in its
+collector segment alone. The local edit algorithm eliminates index
+maintenance for unrelated roots. Full dense export still allocates each
+required public list cell. Collector CPU and admission wall observations
+are separate. The Scheme allocator counter measures VM accounting, not
+resident memory. No global performance acceptance follows from these runs.
+
+* Release forward adjacency on retired roots
+
+=merge-cycle!= now clears the retired root's forward table, just as it
+already clears its reverse table. The endpoint directory retains that
+root's parent link. Both insertion endpoints resolve to a live root before
+any adjacency read. Frozen cuts retain member spines only, so they retain
+their original contents and order after retirement. The native validator
+requires retired roots to own neither table.
+
+Lean Guard checked =retired_adjacency_unobserved=, conditional on
+queries resolving the same live owner. Native =gerbil build= and the
+seven original UF semantic Suites passed 27 Cases. They cover rejection
+before commit, exact ordered deltas, retained snapshots, partial merges,
+both insertion paths and a separate finite closure oracle. All six
+original =uf-commit= scenarios completed 50 pairs and passed.
+
+The matched control built both versions with the same UF sources except
+for retirement. Four serial =gerbil test= processes ran in baseline,
+candidate, candidate, baseline order. Each took 20 measurements per width
+of the strict fixture's =ui-prepare=, checked the complete cycle oracle,
+then checked closure and representation after a separate collection.
+Default Gambit collection, 2 GiB maximum heap and a 90-second watchdog
+applied.
+
+| Width | Baseline build bytes | Candidate build bytes | Live accounting reduction after GC bytes | Baseline/candidate CPU medians ms |
+|-------+----------------------+-----------------------+-----------------------------------------+-----------------------------------|
+| 384 | 6107576 | 5045512 | about 351100 | 9.675--9.768 / 9.607--9.698 |
+| 512 | 8618808 | 7204168 | about 468300 | 15.936--16.249 / 16.056--16.074 |
+
+Keep the retired-root change for the measured build allocation savings:
+17.4 and 16.4 percent at 384 and 512 vertices, respectively. The CPU
+medians overlap. This removes one empty hash table per retired root while
+preserving every detached row allocation in the materializer. Live
+accounting is Gambit's field 17 rather than RSS. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/uf-retired-adjacency.hOqhJd/=.
+
+Both strict default-collector Cases completed 100 CPU pairs, 100 admission
+samples of 32 full exports, and five allocation pairs. The 384 and 512
+admission P95 values were 152.471 and 255.403 ms. Both original gates
+rejected their receipts. The candidate won 100/100 CPU pairs in each case,
+with medians of 124.850 and 188.191 ms. This comparison is against the
+frozen export reference. It does not attribute the export timing difference
+to retired adjacency. The allocation lane measures only freeze and
+materialization after closure preparation, so it excludes the removed tables.
+
+* Count the final singleton collapse from existing row degrees
+
+When the count-only insertion closes an SCC over every root and each root
+owns one vertex, the new relation is the complete square. Every old
+forward degree excludes its implicit diagonal. The exact frontier size
+is the sum of =width - 1 - old-degree= for the cycle roster. This replaces
+the successor-axis construction, target-mask copy and per-source bitmap
+differences. The same budget check still precedes mutation. The ordered
+materialized frontier, weighted component and partial cycle paths keep
+their original counting logic.
+
+Lean Guard checked =singleton_collapse_counts= and
+=singleton_collapse_mass=. The proof uses bounded old degrees and a
+roster of exactly the square width. All 27 existing native UF Cases
+passed with the new code. A matched native comparison additionally
+checked the exact complementary triangle size, resource equality after
+rejection one row below budget, the prior cut count and the valid final
+square. Each of four serial processes completed 20 measurements per width
+with the default Gambit collector, 2 GiB maximum heap and 90-second limit.
+
+| Vertices | Baseline CPU medians ms | Current CPU medians ms | Baseline/current allocation counter bytes |
+|----------+-------------------------+------------------------+-------------------------------------------|
+| 384 | 0.252, 0.232 | 0.122, 0.111 | 97232 / 61776 |
+| 512 | 0.321, 0.287 | 0.149, 0.123 | 125904 / 80208 |
+
+Keep the count-only shortcut for the measured CPU savings and the 36
+percent reduction in allocated bytes for the closing insertion. This
+insertion runs in preparation before the strict complete-export clock.
+The complete list still has the
+same order, cardinality and three fresh pairs per row. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/uf-collapse-count.xwtLLV/=.
+
+* Freeze sparse groups directly from their owned adjacency
+
+=table/trrel-uf.ss:gerbil-ascent-trrel-uf-freeze= used a temporary table
+of member records even when every edge already names its live target
+root. An empty group registry implies that no adjacency in the group
+is packed. The sparse path visits each existing hash adjacency and
+borrows its immutable member spine. The diagonal precedes target
+visits, which keep the original hash traversal order. The freeze
+publishes the same counts, units and rectangle order. Its result
+captures no mutable node, reach map or registry. Insertion and
+resource admission use their existing transitions.
+
+Lean Guard checked =frozen_axis_from_live_roster= and
+=sparse_roster_directory_work=. The first requires stable owner reads
+and agreement on every selected live root. The second separates the
+removed per-root records, hash inserts and lookups from shared
+rectangle construction. The native branch uses the existing owner
+registry as the packed guard. Packed groups keep the capture directory,
+and a closed single owner still publishes its self product directly.
+
+The initial candidate also traversed the packed registry directly.
+Two native runs increased dense capture CPU from 57.052--64.564 ms
+to 116.499--117.230 ms per batch of 16 captures. The direct packed
+route uses =ExtensibleVector-ref= on each selected owner. The separate
+backing-vector prototype failed because the pinned standard module
+does not expose that accessor to the caller. Both candidates remain
+isolated. The landed version bypasses only the sparse table.
+
+At 128 disjoint edges, each native process measured 64 batches of 16
+captures. Baseline CPU medians were 0.788 and 0.772 ms. Sparse-only
+medians were 0.527 and 0.527 ms, a reduction of about 32 percent.
+The allocation-counter median fell from 1,928,304 to 1,328,112 bytes
+per batch, a 31.1 percent reduction. All four capture Cases passed in
+both runs, including dense, weighted and grouped controls. The 27
+original UF Cases passed, including retained snapshots, late births,
+partial SCC retirement and exact budget refusal. The checked-in Scheme
+source matches the compiled candidate input. The strict complete-cycle
+fixture takes the closed single-owner branch and still allocates the
+same detached list payload. This capture result qualifies the sparse
+operation independently of dense export latency.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/uf-freeze-roster.HRNeOB/=.
+
+All seven original weighted performance Cases passed on the sparse-only
+image with the default collector and their unchanged gates. Their P95
+values were 196.546, 89.879, 0.171, 0.216, 47.919, 1.262 and 0.041 ms
+for heavy, grouped, left query, right query, dense, sparse and small.
+The three original dense-cycle order and detachment Cases also passed.
+The historical weighted threshold and the strict scale threshold are
+separate contracts.
+
+The default-policy strict Cases each completed 100 CPU pairs, 100
+admissions of 32 complete exports and five allocation pairs. P95 was
+136.220 ms at 384 vertices and 242.562 ms at 512, with maxima of
+140.825 and 273.917 ms. Both receipts rejected the strict threshold,
+despite 100 CPU wins at each width and a zero CLI exit. These cases use
+the unchanged closed-owner branch, so the timings cannot be attributed
+to the sparse capture optimization.
+
+* Enumerate the existing packed reach index in birth order
+
+=table/uf-reach.ss= previously made =ordered-neighbors= choose between
+scanning the live root roster and sorting the selected keys. The packed
+index already knows the order. Its words name group-owned birth slots,
+and =compact-reach-for-each-id= enumerates them in ascending order. Use
+the existing =axis-for-each= to insert the implicit diagonal exactly once
+and build the requested private spine. The packed route applies when
+backing word count is at most degree. In particular, a broad historical
+span after retirements can still take the established fallback.
+
+This applies the POO Graph practice of traversing the owned bucket and
+using its existing order. It shares no mutable registry between graphs
+and leaves each insertion's preflight, budget and publication sequence
+intact. The exact position of the diagonal matters: the traversal order
+also feeds the cycle roster, union winner selection and ordered frontiers.
+=gerbil-ascent-trrel-uf-validate= checks live birth IDs, diagonal exclusion,
+word cardinalities, and the forward/reverse ownership invariant.
+
+Guarded Lean =ordered_axis_both_directions= proves sequence equality
+from strict birth order and identical support. The packed visit bound
+counts at most =2 * degree + 1= word, selected-root and diagonal visits
+under the same guard as the Scheme source. The bound excludes output
+spine writes and the optional in-place reversal. The model does not
+assign clock costs to these operations. Bit/registry integrity and native
+publication order have their own tests.
+
+The same source Suite ran through =gerbil test= against both compiled
+images. Each shape produced 1000 observations per image. Half requested
+ascending order and half descending. A separate fixture enumerated the
+expected roots, and every result was compared by identity outside timing.
+Both processes used the frozen SDK and 2 GiB cap. The timings below are
+wall-clock microseconds for one axis traversal, including its list.
+
+| Roots | Words | Degree | Median before/after (us) | P95 before/after (us) | Max before/after (us) |
+|-------+-------+--------+--------------------------+-----------------------+-----------------------|
+|  1024 |    64 |    256 | 17.17/5.96   | 19.07/7.87   | 61.99/14.07 |
+|  8192 |   512 |   2048 | 124.93/48.88 | 137.09/52.93 | 354.05/125.17 |
+|  1024 |   512 |     64 | 10.01/9.78   | 11.21/10.01  | 18.12/15.02 |
+
+For the 8192-root case the previous route scanned the roster. The
+candidate opened 512 words and 2048 selected registry slots plus the
+diagonal. The measured P95 fell 61.4 percent. For the oversized-span
+control the packed route is disabled. The clock measures the complete
+axis, including list construction, but excludes building the graph,
+closure insertion and complete relation export.
+
+The candidate passed 27 native Cases in the original UF admission, axis,
+boundary, commit, dense, dense-bulk and frontier Suites. The six original
+=uf-commit= performance Cases also passed their original 50-pair gates.
+Reference/candidate CPU medians were 2614/108, 5655/1171, 705/628,
+19/15, 23/15 and 910/740 us for partial, cycle, lifecycle, DAG, duplicate
+and islands respectively. Their reference is the original benchmark
+implementation. Those differentials cover all admitted ASCENT changes
+since that reference, so they cannot be attributed to this route alone.
+The first isolated run lacked six historical fixture imports. The
+authoritative run resolved those dependencies from the frozen source
+overlay and retained every Case. The source hash equals the production
+source, and the three compiled modules matched their before/after hashes.
+The full guarded Lean build succeeded with 183 jobs.
+The existing =TransitiveComponents= Quint group completed all 16
+obligations, including the two expected missed-neighbor retirement
+counterexamples. The pinned OpenSysML check completed all 45 objects.
+The new route contract passed two concrete shapes and refused a foreign
+registry, oversized span and missing diagonal charge at the expected
+assertions. A separate native run passed all 75 Actor, cancellation,
+Session withdrawal and provenance Cases on the same image. These are
+distinct from the Lean sequence proof and the graph benchmark receipt.
+
+The same packed-index image passed all seven original weighted export
+scenarios and the three order/detachment Cases at explicit =live-ratio=8=.
+The two strict scale gates completed 100 pairs and 100 admission
+measurements each, with 32 complete list exports per measured batch.
+P95/maximum was 41.241/47.329 ms at 384 vertices and 56.124/62.044 ms at
+512 vertices. SDK and 2 GiB cap remained fixed. These are full export
+receipts under that collector policy. The axis benchmark measures graph
+enumeration and has its own receipts and work units.
+
+The same image also ran the strict gates with Gambit's default collector
+policy. At 384 vertices, all pairs and admissions completed, and P95/max
+was 177.601/227.702 ms. At 512 vertices, all 100 CPU pairs completed, and
+the original 90-second watchdog terminated the run after 72 of 100
+admissions. There is no complete P95 for the 512 default-policy run.
+This preserves the failed controls and leaves the default-policy export
+target open.
+
+Native reproduction for the focused cost and order study:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^uf-commit-packed-axis-test$' benchmarks/uf-commit-test.ss
+#+end_src
+
+Evidence: =/private/tmp/ascent-packed-neighbors.hJDQuC/=.

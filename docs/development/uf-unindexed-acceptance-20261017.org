@@ -1,0 +1,104 @@
+#+title: UF unindexed scan performance acceptance
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+* Retained failure and scope
+
+The first CI run of =8850ed0= rejected the UF query =unindexed= scenario:
+reference median CPU 33.648 ms, candidate 37.844 ms (+12.47%), zero candidate
+wins in twenty pairs, and equal 1,640,064-byte allocation. This was an execution
+gate failure, not a timeout. The preceding =1a2dac9= run had already measured
++9.10% for the same workload, close to its unchanged 10% budget.
+
+The view implementation, fixture, calibration and gate were identical between
+those two commits. Neither a machine-noise explanation nor an upstream SDK
+fault follows from those observations. Both runs remain evidence:
+[[https://github.com/tao3k/gerbil-ascent/actions/runs/39028691876][failed current-head run]] and
+[[https://github.com/tao3k/gerbil-ascent/actions/runs/39026383543][preceding run]].
+
+* Mechanism and controlled ablations
+
+Compiled binding support introduced route-aware checks into the shared
+rectangle visitor and both member selectors. A cut with no routes still paid
+those checks, plus indexed-axis, compact-query, owner-plan and candidate-source
+probes. This work cannot select an indexed path when routes is false.
+The scan then used the same list membership, duplicate-constraint checks and
+product expansion as before. Equal allocation did not imply equal CPU work.
+
+Isolated source instrumentation counts attempted probes, not machine
+instructions. For one complete unindexed key, the original rows path enters
+five dispatcher helpers six times in total and performs three route-type
+checks. Checked parts have the same counts; admitted parts make five helper
+probes and three type checks. The final materializer removes all these probes;
+checked parts retain their one entry classification, and admitted parts retain
+none. Instrumentation is excluded from every measured executable.
+The generated Gambit C retains query structure checks and captured-owner calls
+in the original member selector, while the specialized selector contains
+neither. The C path audit is not an instruction-count or compiler-equivalence
+proof.
+
+All candidates use the original eight UF query scenarios, twenty alternating
+CPU pairs, existing calibration, five allocation samples, independent ordered
+result checks and unchanged thresholds. The released macOS SDK is unchanged.
+The untouched local baseline passed; it did not reproduce the Linux threshold
+failure. Sequential local ablations show why removing only an outer branch is
+not sufficient evidence:
+
+| Candidate | Reference CPU ms | Candidate CPU ms | Ratio | Allocation bytes |
+|-----------+------------------+------------------+-------+------------------|
+| Unchanged source | 27.932 | 28.716 | 1.0281 | 1,640,064 / 1,640,064 |
+| Bypass dispatcher probes | 29.118 | 29.280 | 1.0056 | 1,640,064 / 1,640,064 |
+| Direct materialization only | 31.798 | 32.585 | 1.0247 | 1,640,064 / 1,640,064 |
+| Complete scan specialization | 29.092 | 28.626 | 0.9840 | 1,640,064 / 1,640,064 |
+
+Every local ablation passed all eight scenarios. The final diagnostic uses the
+existing study entrypoint and its normal five-module make/link closure; full
+qualification also runs the original recipes. Absolute times across processes
+are not a speedup estimate. The within-run ratios and retained intermediate
+results constrain the conclusion; Linux exact-head acceptance is required.
+Raw logs, source probe modules and =local-ablations.json= are retained under
+=/private/tmp/ascent-uf-unindexed-*= and
+=.cache/ascent/uf-unindexed-fix/=. A sandbox-denied build preparation and a
+mistargeted preparation that stopped before measurement are excluded.
+
+* Implementation and semantic boundaries
+
+The constructor's no-route branch bypasses indexed dispatch. Unindexed
+materialization calls the checked scanner and shared product collector directly.
+Private macro templates share the complete checked/admitted traversal syntax
+and column-selection loop across routed and scan instances. Only the false-route
+instance statically omits route types and owner lookup.
+
+The checked scan retains the complete selector range check at each original block,
+prefix comparison order, both directions of stored/query comparison where
+previously used, duplicate constraints, singleton detachment, physical stored
+representatives, occurrence order and the original expansion callback.
+No new cache, normalization, index or persistent traversal state is introduced.
+
+Two additional real-interface controls verify original callback exception
+identity, stored value identity, global malformed-key rejection before callbacks,
+and mixed-width per-block range errors after the same preceding publications.
+All existing query controls remain. Cancellation callbacks, resource accounting,
+provenance publication and Scheme VM ownership are unchanged. Rayon defaults
+and Rust Ascent development-only dependency classification are unchanged.
+
+* Acceptance
+
+Local full qualification passed 171 Scheme modules / 1378 Cases, including
+the two new controls. The complete original ten-target performance command
+passed all eight studies plus the original contract and base performance gates,
+including its no-production-rebuild check. In that canonical run, UF query
+=unindexed= measured 28.092 ms -> 28.419 ms (+1.16%); this is retained alongside
+the diagnostic ablations rather than selecting the fastest observation.
+
+The complete current-source Scheme semantics, original performance matrix,
+Lean/Quint inventory and Rust/PyO3 jobs are required. The exact pushed commit and
+completed CI verdict are recorded in [[https://github.com/tao3k/gerbil-ascent/pull/1][PR #1]].
+No previous commit's pass or repeated unchanged failure is substituted for that
+verdict. Thresholds, workloads, expected counterexamples and resource budgets
+are unchanged.
+
+The existing formal checks constrain routing, ordering, cancellation and
+publication; they do not establish a new whole-source refinement theorem for
+these macro expansions. The broader source-equivalence obligations remain as
+listed in [[file:descriptor-runtime-acceptance-20261017.org][the descriptor/runtime correspondence report]].

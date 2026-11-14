@@ -1,0 +1,23 @@
+;;; -*- Gerbil -*-
+(import :gerbil-ascent/table/funs
+ (prefix-in :gerbil-ascent/t/performance/repeated-columns/reference old-))
+(export columns-input columns-workflow columns-expected)
+(def (columns-input width count shape)
+ (let* ((rows (map (lambda (n) (map (lambda (column) (+ n column)) (iota width))) (iota count)))
+        (columns (case shape
+         ((repeated) (list 0 0 (quotient width 2) (quotient width 2) (- width 1) (- width 1)))
+         ((ordered) (list 0 (quotient width 2) (- width 1)))
+         ((reverse) (list (- width 1) 0 (quotient width 2)))
+         (else []))))
+  (vector rows columns (foldl + 0 (iota count)))))
+(def (columns-workflow old? input)
+ (let* ((rows (vector-ref input 0)) (columns (vector-ref input 1))
+        (cut-at (quotient (length rows) 2))
+        (index ((if old? old-gerbil-ascent-index-build gerbil-ascent-index-build) (take rows cut-at) columns))
+        (sum 0))
+  ((if old? old-gerbil-ascent-index-extend! gerbil-ascent-index-extend!) index (drop rows cut-at) columns)
+  (for-each (lambda (row)
+   (let (key ((if old? old-gerbil-ascent-index-key gerbil-ascent-index-key) row columns))
+    (set! sum (+ sum (foldl (lambda (found prior) (+ prior (car found))) 0 (hash-get index key)))))) rows) sum))
+(def (columns-expected input)
+ (if (null? (vector-ref input 1)) (* (length (vector-ref input 0)) (vector-ref input 2)) (vector-ref input 2)))

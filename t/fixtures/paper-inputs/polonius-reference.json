@@ -1,0 +1,258 @@
+{
+  "scope": "Complete official DatafrogOpt reference observations for the pinned input. Scheme Polonius, BYODS application replication, completion of the original 180-second observations and matched benefits are not admitted.",
+  "base_commit": "9d182d5157bae09debea9264b68c4b598b55d008",
+  "engine": {
+    "crate": "polonius-engine",
+    "version": "0.13.0",
+    "crate_sha256": "c4e8e505342045d397d0b6674dcb82d6faf5cf40484d30eeb88fc82ef14e903f",
+    "upstream_git_commit": "741e6095fe50f468982d4d253e842eb7d12ed9d3",
+    "datafrog": "2.0.1",
+    "schema_and_preprocessing_match": [
+      {
+        "path": "polonius-engine/src/facts.rs",
+        "git_blob": "442ba186cc61f94d497b5df99210aea5375c847f",
+        "sha256": "9fad471b6ba5f63b8a1367002fee2b27fc3b3b893680eca390bc2616718f8915",
+        "identical_to_input_fork": true
+      },
+      {
+        "path": "polonius-engine/src/output/initialization.rs",
+        "git_blob": "30409d965a9004f3b626089ca1ffc7fcd470a8ae",
+        "sha256": "b9665c1397ff5e1cc1a93e9645bec0bed672ea9822c4dd32fc545ecbd3f80258",
+        "identical_to_input_fork": true
+      },
+      {
+        "path": "polonius-engine/src/output/liveness.rs",
+        "git_blob": "1b4b4ce53f7e921dd2e2d4abef954aafd1608f75",
+        "sha256": "b68c9edd17feebff7d0b006caaf8197b5c30320b1a8cdcbe653bd7218954dd4f",
+        "identical_to_input_fork": true
+      }
+    ],
+    "scope": "Official published engine with distinct Naive and DatafrogOpt runs; full Scheme application correspondence remains unimplemented."
+  },
+  "input_manifest": "docs/evidence/scheme-application-admission-20261007/polonius-clap-source.json",
+  "input_manifest_sha256": "8370f3a870bf14e3036b7e1050e5c4f6fa812dc646d75b1f52d861c8136d36d0",
+  "runner": "rust/ascent-oracle/examples/polonius_data_truth.rs",
+  "runner_sha256": "54937448faeba542d6629a0dc2f87e2f04e27b49961fd89362ecaaec509d741a",
+  "lock_sha256": "a28f533536f53ada3e98723a3a482f87595ace812ed8baff4b2df641a2da25c6",
+  "executable_sha256": "4f06190f66fe9b5615dd0aad24e0004dcf07e8b923ff42cce2440c006ed79289",
+  "full_reference": {
+    "algorithm": "DatafrogOpt",
+    "dump_enabled": true,
+    "exit_code": 0,
+    "complete_marker": true,
+    "observation_bound_seconds": 900,
+    "solve_wall_ms": 157784,
+    "export_wall_ms": 85738,
+    "process_wall_seconds": 245.29,
+    "process_user_seconds": 184.14,
+    "process_system_seconds": 12.28,
+    "maximum_resident_set_bytes": 12124520448,
+    "peak_footprint_bytes": 13104310016,
+    "platform": "Darwin aarch64",
+    "cost_scope": "Single reference solve, full dump, canonical export, teardown; not paired Scheme benefit evidence",
+    "outputs": [
+      {
+        "relation": "errors",
+        "arity": 2,
+        "rows_reported_by_rust": 0,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "move_errors",
+        "arity": 2,
+        "rows_reported_by_rust": 0,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "loan_live_at",
+        "arity": 2,
+        "rows_reported_by_rust": 92252,
+        "bytes": 2302738,
+        "sha256": "0c1452e756777fe517d5523bc3bd3bd82b4673254f7bed8803de228fdcd1229e",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "origin_live_on_entry",
+        "arity": 2,
+        "rows_reported_by_rust": 1033354,
+        "bytes": 30401204,
+        "sha256": "7480182f99a9df98a215053c5e0c5fbe902fdd25379c2a97a2ba71221dd7d76f",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "loan_invalidated_at",
+        "arity": 2,
+        "rows_reported_by_rust": 0,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "role": "unpopulated upstream inspection field; not an empty logical predicate"
+      },
+      {
+        "relation": "var_live_on_entry",
+        "arity": 2,
+        "rows_reported_by_rust": 329734,
+        "bytes": 8120164,
+        "sha256": "11192feeb746e7d38e217b22a19d9d4ac5d296e00fe45b99a0b175e7e6ab3447",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "var_drop_live_on_entry",
+        "arity": 2,
+        "rows_reported_by_rust": 3780,
+        "bytes": 95732,
+        "sha256": "b96d463807e68bfbe7bfd0eb5eda85b844ad03fba0650381eb88e7f63d95f680",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "path_maybe_initialized_on_exit",
+        "arity": 2,
+        "rows_reported_by_rust": 1049035,
+        "bytes": 27285891,
+        "sha256": "fb25b44ff3c9e5c9c3ce8934882f6603ad090c748a9ce8f41aa43c96e67be93a",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "path_maybe_uninitialized_on_exit",
+        "arity": 2,
+        "rows_reported_by_rust": 291826811,
+        "bytes": 7784524289,
+        "sha256": "e8e13763f938785d56034fd62500fcae096f06da0fd2be495499f7024d943650",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "var_maybe_partly_initialized_on_exit",
+        "arity": 2,
+        "rows_reported_by_rust": 1048585,
+        "bytes": 26225351,
+        "sha256": "1a7822b3f4e8381672660b7f275e0ddf05d1606749848f62e42aad581cb18617",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "subset_errors",
+        "arity": 3,
+        "rows_reported_by_rust": 0,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "subset",
+        "arity": 3,
+        "rows_reported_by_rust": 2512445,
+        "bytes": 106026106,
+        "sha256": "a11ddbfe2beb381d5b5ca3d646c6d4c0aa55758b42c302b702f920d4b12b11ea",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "origin_contains_loan_at",
+        "arity": 3,
+        "rows_reported_by_rust": 93568,
+        "bytes": 3523840,
+        "sha256": "0960a39fef40f47ca48daa795e497a28925702f551db10d986fe018fcd47e9dd",
+        "role": "computed reference observation"
+      },
+      {
+        "relation": "known_contains",
+        "arity": 2,
+        "rows_reported_by_rust": 19,
+        "bytes": 342,
+        "sha256": "79d9ffa046df83d96f8e02e767b7209b1147c2c5b4d408c869b7dd65c7a7175c",
+        "role": "computed reference observation"
+      }
+    ],
+    "completed_within_180_seconds": false
+  },
+  "bounded_failures": [
+    {
+      "algorithm": "Naive",
+      "phase": "concurrent native preparation; no full dump",
+      "bound_seconds": 180,
+      "exit_code": 124,
+      "completed": false,
+      "available_transcript_sha256": "68ba37d4f2d1924db8eba5af616559473a3410dc7c482bc4383c3e0ad953016c",
+      "historical_runner_artifact_binding": "not recorded; unqualified diagnostic only"
+    },
+    {
+      "algorithm": "DatafrogOpt",
+      "phase": "concurrent native preparation; no full dump",
+      "bound_seconds": 180,
+      "exit_code": 124,
+      "completed": false,
+      "available_transcript_sha256": "851bc0372f8903414b85f6cad7a1eec0f0f77f80df52d4fed4a4c6b8beb9dd7c",
+      "historical_runner_artifact_binding": "not recorded; unqualified diagnostic only"
+    },
+    {
+      "algorithm": "DatafrogOpt",
+      "phase": "no native preparation; old string-copy exporter; 8 relations completed",
+      "bound_seconds": 180,
+      "exit_code": 124,
+      "completed": false,
+      "available_transcript_sha256": "00e90f3bf479ddb79f0c25bafaed1e48a55ee622f767a8fa047693fd03b33aef",
+      "historical_runner_artifact_binding": "not recorded; unqualified diagnostic only"
+    },
+    {
+      "algorithm": "DatafrogOpt",
+      "phase": "no native preparation; ID exporter; 8 relations completed",
+      "bound_seconds": 180,
+      "exit_code": 124,
+      "completed": false,
+      "available_transcript_sha256": "00e90f3bf479ddb79f0c25bafaed1e48a55ee622f767a8fa047693fd03b33aef",
+      "historical_runner_artifact_binding": "not recorded; unqualified diagnostic only"
+    }
+  ],
+  "old_exporter_completed_prefix": [
+    {
+      "relation": "errors",
+      "byte_identical": true
+    },
+    {
+      "relation": "move_errors",
+      "byte_identical": true
+    },
+    {
+      "relation": "loan_live_at",
+      "byte_identical": true
+    },
+    {
+      "relation": "origin_live_on_entry",
+      "byte_identical": true
+    },
+    {
+      "relation": "loan_invalidated_at",
+      "byte_identical": true
+    },
+    {
+      "relation": "var_live_on_entry",
+      "byte_identical": true
+    },
+    {
+      "relation": "var_drop_live_on_entry",
+      "byte_identical": true
+    },
+    {
+      "relation": "path_maybe_initialized_on_exit",
+      "byte_identical": true
+    }
+  ],
+  "verification": {
+    "native_modules": 86,
+    "native_cases": 829,
+    "native_command_exit": 0,
+    "python_framework_cases": 21,
+    "python_command_exit": 0,
+    "reference_rust_cases": 4,
+    "reference_unit_exit": 0,
+    "rust_all_targets_clippy_exit": 0,
+    "base_commit_github_checks": "all six qualification jobs succeeded; recheck every later head",
+    "native_source_sha256": {
+      "program/evaluate.ss": "d3d3f42109b51f53ce0a7d2e676406be7e5ef9bed99742ff908bd65bc50d2a84",
+      "program/result.ss": "30cd53f137ae3ff786acca9e36751fade79c16a8dbe4d4969d56a188c87424fe"
+    }
+  },
+  "next_gate": "Implement complete native Polonius preprocessing and borrow rules with representation admission for the dense path relation; compare full observations and error sets. Do not use the unpopulated upstream loan_invalidated_at Output field as logical truth.",
+  "upstream_inspection_gap": "Output.loan_invalidated_at is not populated by this published compute path. Its zero-row export is an API inspection observation, not proof that the nonempty input predicate is empty."
+}

@@ -1,0 +1,107 @@
+#+title: Custom provider packet protocol qualification
+
+* Source study and ownership
+
+Baseline =469500668c75bb6da11c18467a4855f1f941f0aa=; =reference.ss= is the
+unchanged complete =program/index.ss= from that commit. Both owners use the
+same current provider API and native compilation options.
+
+Gerbil =1cfb032= =core/match.ss:626-672= expands structural shape dispatch.
+=runtime/hash.ss:460-483= selects representations by equality semantics;
+=runtime/table.ss:263-273= distinguishes number hashing from object identity. These
+mechanisms apply to a complete protocol rather than a generic method per field.
+
+=table/funs.ss= owns width-bounded packet shape admission and row-spine copying
+in one traversal. It borrows field values, including mutable values. A malformed
+row can allocate earlier temporary detached rows; rejection publishes none.
+Every row passes shape admission before any membership or coverage check.
+Individual cyclic/improper rows fail at the declared width. Outer packets remain
+proper lists admitted by =table/access.ss=.
+
+=program/index.ss= owns a single value-keyed member table per physical version.
+Each private =provider-row-member= retains a dense version-local ordinal,
+projected key and admitted occurrence count. Source extension updates that record; equal rows share it.
+Packet enumeration counts use ordinals rather than provider row identities.
+Each returned row requires one value-keyed member lookup, rather than separate
+key, occurrence and packet-count hashing of the full row. Provider method
+dispatch, version publication, failure revocation, order and coverage stay in
+the existing physical owner.
+
+* Measurement boundary and fixed gates
+
+ASP Scheme benchmark API executes 50 alternating old/new pairs. Inputs, physical
+builds and version witnesses are prepared and warmed outside timing. Each call
+performs 16 complete current-version custom-provider lookups, including provider
+key detachment, packet list admission, bounded shape admission and row detachment,
+membership, duplicate/coverage validation, and consumption of every field.
+Rows contain key 0, a distinct integer id and remaining fields equal to 3.
+The provider deliberately overselects the entire packet. Each CPU and allocation
+invocation must match the frozen owner and an independent arithmetic checksum.
+This is warm packet lookup evidence, not cold build or whole evaluator speedup.
+
+CPU uses process user/system statistics. Allocation is measured by a separate
+semantically equal call between forced GCs, using VM statistics slot 16. Every
+allocation difference must be nonnegative. CPU excludes those forced GCs.
+Targets require <=90% baseline median CPU and >=40 faster pairs. Controls allow
+110% +20 microseconds; all allocation gates allow 110% +4096 bytes. Gates were
+set before the first measurement and remain unchanged.
+
+* Retained negative experiments
+
+A fused shape/copy traversal alone failed the wide target: 4107 ->3942 us,
+6407408 bytes unchanged, 45 faster pairs. It is insufficient as a standalone
+performance improvement.
+
+The first shared-member implementation used default =make-hash-table-eq=.
+Wide and medium CPU targets passed, but narrow allocation failed: 165104 ->
+190448 bytes. Gerbil selects a GC-managed table for this default eq contract.
+The eqv record-key experiment also failed narrow CPU/allocation (183 ->322 us,
+165104 ->214768 bytes). Immediate ordinal-key hashing improved CPU but failed
+narrow allocation (165104 ->220912 bytes). These representations were rejected.
+No gate was relaxed. All intermediate receipts remain in the ignored cache.
+
+First fixture compilation rejected a union of old/current owner classes;
+explicit opaque fixture containers retain distinct accessor ownership. Two
+later builds were rejected because unrelated sources changed during compilation.
+All failed logs/receipts remain under ignored =.cache/ascent/provider-packet/=.
+
+* Reproduction
+
+Build =build.ss <absolute .gerbil/lib> <absolute native binary>= for =runner=;
+pass a third =qualify= argument for the semantic runner. Run the binary with
+=scenario receipt-path=, sequentially for =wide medium narrow small empty=.
+Use the existing workspace Gerbil installation and artifact directories.
+The qualification runner requires native test success and final =OK=.
+Root =build.ss= receives no test or benchmark orchestration.
+
+* Qualified final measurements
+
+The retained counter uses the existing generic table with compact integer
+ordinals. It has the same measured allocation as the frozen implementation in
+every scenario. Table specialization is not intrinsically a performance win.
+
+| Scenario | Width | Rows | Old CPU us | New CPU us | Old bytes | New bytes | Faster pairs |
+|----------+-------+------+------------+------------+-----------+-----------+--------------|
+| wide | 256 | 32 | 4327 | 3011 | 6407408 | 6407408 | 42 |
+| medium | 64 | 32 | 1750 | 1029 | 1688816 | 1688816 | 47 |
+| narrow | 2 | 32 | 187 | 131 | 165104 | 165104 | 49 |
+| small | 2 | 1 | 2 | 3 | 3376 | 3376 | 18 |
+| empty | 2 | 0 | 2 | 2 | 3376 | 3376 | 23 |
+
+Wide/medium lower measured median CPU about 30.4%/41.2%; narrow lowers 29.9%.
+Small/empty are regression controls, not reliable speedup measurements.
+Receipts are =*-generic-receipt.ss= in the ignored cache. Earlier =*-eqv=,
+=*-ordinal= and first =wide-receipt.ss= are explicitly unqualified experiments.
+
+* Semantic receipts
+
+Frozen blob =dfae8cc2fee8a718c21eeeb70b39cd34d0fa5412= equals the baseline
+=program/index.ss= byte-for-byte. Native qualification passes three suites and
+19 cases, including complete provider lifecycle and exact callback traces.
+Shape/spine tests cover every width 0..256; 36 width/cardinality contexts compare
+complete warm lookup against both the frozen owner and the independent checksum.
+Both compiled and general pattern consumers reject malformed packets before
+callbacks, including foreign-first/malformed-later shape-error precedence.
+Existing tests retain duplicate source occurrences, missing/foreign candidates,
+provider mutation, append/replacement and failure recovery qualification.
+The native policy runner completes with 30 advisories and zero errors.

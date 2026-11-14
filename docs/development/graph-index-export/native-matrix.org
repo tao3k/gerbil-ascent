@@ -1,0 +1,1567 @@
+#+title: Native acceptance matrix
+#+language: en
+
+[[file:../graph-index-export-algorithms-20261112.org][Audit index]]
+
+* Complete Yuanxu v0.1.0 matrix
+
+The frozen release image completed all 235 scenarios in 38 groups through
+native Gerbil Test. There were 197 passes and 38 failed gates. All 235
+processes returned zero. Passing Case markers and the original receipt
+checks distinguish the 197 passes from the other exits. The SHA-256
+inventory of 3,537 inputs matched before and after. Isolated candidate
+diagnostics shared the host during part of this matrix, so the timings do
+not establish an isolated cross-build comparison.
+
+The seven original weighted cases passed with their recorded 8 percent
+startup profile. The two strict default-policy measurements are separate.
+Selected activation =update= and =lifecycle= and empty bucket =empty-reuse=
+still reported negative allocation deltas. Other failures include relative
+CPU and allocation thresholds, as recorded in each scenario receipt.
+
+The inventory, ledger and both digest snapshots are in
+=.cache/ascent/yuanxu-v0.1.0/=. The prior matrix observations below use
+their own artifact identities and receipts.
+
+** Finite mapping row construction
+
+The checked finite mapping constructor now validates a bounded row extent
+before scalar reads. It appends checked values to one private STD list
+builder and constructs singleton pairs directly. Input validation still
+precedes output validation. The result owns both halves independently of
+the caller, including repeated entries with the same source pair. Lean
+checks bounded extent for proper lists and the ordered concatenation and
+pair-count equations. The native semantic Cases exercise the improper and
+cyclic boundaries and mutations of caller and returned pairs.
+
+The isolated compiled candidate passed nine semantic Cases and four of
+the five original finite mapping gates. Each performance Case ran all
+100 pairs. Reference and candidate CPU medians were 10.2/1.2 microseconds
+for =narrow-rows= and 27.5/16.5 microseconds for =wide-rows=. The wide
+reference in =wide-view= still reported a negative median allocation delta
+of -10,767,144 bytes; its performance gate failed. The source-control and
+canonical-provider Cases passed. The initial forward-only candidate and
+all final logs are retained under =.cache/ascent/yuanxu-v0.1.0/=. This
+candidate has not run through the full matrix.
+
+The finite mapping source and its mutation test were also copied into
+an isolated snapshot of the frozen release source. Standard =just build=
+completed with both ABI products. Standard =just test 2G= then passed
+185 modules and 1,532 Cases in 98 batches using the existing worker
+configuration. The test stage took 228 seconds. The first semantic
+invocation stopped in the process supervisor because the sandbox denied
+=ps=. The accepted invocation used the same command with local process
+inspection permitted. Build, denied invocation and acceptance logs are
+under =.cache/ascent/yuanxu-v0.1.0/finite-mapping-integrated/=.
+
+A separate native observer used Gambit's processor and VM
+occupancy fields around the same alternating 100 pairs of ten wide-view
+constructions. It checked every pair's rows. The reference reported
+83 negative totals and the current implementation 23. Of these,
+44 reference intervals and 21 current intervals had no collection.
+All 65 no-collection negatives had a falling prior-section term and
+an unchanged rebased counter. In reference sample 68 the prior-section
+term fell by 37,189,311 words and the stack span by 21,868 words. The
+other terms were unchanged. Lean reconstructs the resulting
+-595,378,864 byte delta with the frozen semispace accounting formula.
+This localizes the signed result to native section and stack accounting.
+The separate Actor trace identifies a cross-section cursor write. The
+wide-view observer does not trace the exact write instruction in this
+workload. The original performance receipt remains failing. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/finite-mapping-counter/=.
+
+** Finite replay singleton membership control
+
+An isolated finite replay build used direct structural membership for a
+singleton and created the ordinary private index when a second distinct
+row was admitted. The test Suite passed all four Cases, including
+ordered duplicate seeds, exact probe and row budgets, and detached
+verification results. Lean checked membership before and after index
+promotion. The four original benchmark scenarios ran under their existing
+native Test commands. The wide and duplicate cases passed. The small
+case remained at 42,452.8 candidate counter bytes per generation and
+the constant case improved from the earlier 78,356.8 to 76,468.8.
+Both exceeded their existing allowances. The Scheme candidate was
+withdrawn. Evidence: =.cache/ascent/yuanxu-v0.1.0/finite-replay-singleton/=.
+
+A separate build skipped the second uniqueness table for the private
+generator result. Insertion still deduplicated every row and the external
+verifier kept the full uniqueness check. All four semantic Cases passed.
+The original small and constant gates still failed at 40,484.8 and
+76,388.8 candidate bytes. The wide and duplicate gates passed. This
+candidate was also withdrawn. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/finite-replay-publication/=.
+
+** Positive proof reservation and publication control
+
+The producer used one relation membership index for staged and published
+witnesses, while grounding still read only the published queue. A second
+stage kept at most two reservations in a list and promoted on the third
+distinct key. A third stage avoided a verifier hash for two metadata
+entries, preserving the first match. The final stage reversed only the
+privately owned pending and result spines in place. Lean checked the
+membership union, promotion and first-match lookup. The final native
+candidate passed 32 semantic Cases and the original =copy=, =duplicate=
+and =source= gates. The =small= allocation median was 38,512 bytes,
+down from 45,264 in the release matrix. The reference remained at
+28,592, so the 8,192-byte allowance was still exceeded by 1,728 bytes.
+The production source changes were withdrawn. The four isolated builds
+and their original 50-pair receipts are under
+=.cache/ascent/yuanxu-v0.1.0/proof-{shared-membership,small-membership,pair-metadata,owned-spines}/=.
+
+** Positive proof slot preparation
+
+The independent verifier previously allocated a slot table, a bound-name
+table and a guard table for every rule. It now stores the slot number and
+the preparation-time bound bit in one entry. The guard table is allocated
+on the first guard. Each verification still owns a fresh frame for each
+derivation and rechecks source, rules, predecessors and query roots. The
+Lean Guard checked the slot and binding projections and empty guard
+lookup. The earlier reservation and publication candidate supplies the
+published-only grounding queue and ordered first witness.
+
+The combined source passed 32 Cases in four original native semantic
+Suites. They include duplicate source positions, repeated labels, invalid
+proofs, computed bindings, proof mutation and every tested work boundary.
+Both variants were built with native =gerbil build=. The native benchmark
+used the original 50 pairs per scenario, independently replayed each proof
+and compared the full ordered DAG with the frozen reference. The first
+benchmark launches rejected the directory symlink because the module
+resolver reported a different reference path. The accepted prefix uses
+actual directories and the same reference artifacts. Both logs remain.
+
+| Scenario | Frozen CPU median us | Current CPU median us | Frozen allocation counter bytes | Current allocation counter bytes | Gate |
+|----------+----------------------+-----------------------+---------------------------------+----------------------------------+------|
+| copy | 15984 | 1781 | 14111360 | 1340672 | pass |
+| duplicate | 36684 | 1943 | 14946944 | 1947760 | pass |
+| source | 5070 | 1021 | 7212440 | 867912 | pass |
+| small | 119 | 127 | 28592 | 34832 | pass |
+
+The separate baseline reproduced the small failure at 45,264 allocation
+counter bytes. The combined change removes 10,432 bytes, leaving the
+original 8,192-byte allowance and CPU threshold intact. The source now
+retains the accepted producer and verifier changes. This closes one
+recorded matrix failure in focused native acceptance. The complete matrix
+and direct weighted provider gate still require qualification.
+Evidence: =.cache/ascent/yuanxu-v0.1.0/proof-slot-entry.OWAG7D/=.
+
+** Stratified proof node capacity
+
+The stratified producer formerly allocated a 4,096-entry node vector even
+when independent finite replay established four rows. It now reserves the
+smaller of the verified closure row count and the existing 4,096-node cap.
+Every node is admitted only after its relation/row key is found in that
+closure and ruled out as a duplicate. Neither node numbering, source
+occurrence labels, proof-search work nor independent checker replay changes.
+
+Lean Guard checked =stratified_node_reservation_fits= and
+=stratified_next_node_has_slot=. They model unique reserved keys as a
+subset of verified closure keys, and prove that any accepted next key
+fits under both capacity bounds. The 13 native semantic Cases include
+80 work budgets compared against the frozen producer and checker, 64
+finite graphs, duplicate source occurrences, exact reduction groups and
+stale proof rejection. The original five native performance gates each
+completed 50 ordered pairs and passed with the full independent replay.
+
+| Scenario | Frozen CPU median us | Current CPU median us | Frozen allocation counter bytes | Current allocation counter bytes |
+|----------+----------------------+-----------------------+---------------------------------+----------------------------------|
+| small | 137 | 144 | 104704 | 80320 |
+| source | 18919 | 5156 | 3539552 | 3659296 |
+| derived | 10397 | 4055 | 3886936 | 3985896 |
+| relations | 1708 | 1735 | 1638448 | 1801712 |
+| duplicates | 1255 | 1213 | 736184 | 721944 |
+
+The small case used 113,056 counter bytes on the previous matrix image.
+The current receipt reports 80,320. The original allowance and CPU
+threshold apply. This is focused stratified-model acceptance.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/stratified-node-capacity.wWx65b/=.
+
+* Selected-activation allocation counter validity
+
+The selected-activation counter diagnostic replayed the original
+ten-transaction batches with the independent ordered result oracle.
+Both arms of =update= and =lifecycle= produced negative deltas in all
+twelve natural observations. Most intervals did not collect. Forcing
+collection at both ends produced negative differences in field 16 and
+in the field-16-plus-field-19 correction in every observation of those
+two scenarios. The =small= aligned control gave nonnegative differences.
+Endpoint alignment is insufficient for the larger cases.
+
+The read-only Gambit VM probe from the declaration-allocation study decomposed
+48 natural observations. All 37 no-collection intervals had negative
+totals. The median preceding-section ledger deltas were -65,042,192
+bytes for =update= and -90,059,104 for =lifecycle=. Eleven intervals met
+the existing cross-region address-gap classifier. The other 26
+no-collection intervals were within its deliberately loose region bound.
+The remaining eleven observations crossed a collection. This connects
+the observed negative deltas to the preceding-section ledger. It does
+not recover cumulative allocated bytes for those intervals.
+
+The selected-activation receipt now preserves all raw observations and
+marks the allocation lane invalid if either arm reports a negative delta.
+For valid observations the original threshold expressions still decide
+the gate. LeanPoo Guard accepted both properties. Evidence:
+=/private/tmp/ascent-activation-counter-diagnostic.2yprDD/= and
+=/private/tmp/ascent-activation-counter-lean.log=.
+
+The first build of the guard rejected an unmatched parenthesis. The
+simplified binding structure compiled. With that exact source, the
+native =sparse= and =update= scenarios both completed all 50 pairs.
+=sparse= recorded a valid byte lane and passed. =update= retained its
+negative samples, recorded an invalid byte lane and failed the gate.
+
+* Native matrix for the remaining seven UF studies
+
+The seven native Suites now import fixtures and the paired helper by
+module identity. Source loading remains available, and a library-first
+path selects existing compiled fixtures. The original allocation
+callbacks and workload contract paths are shared with the former
+entry points.
+
+The scenario inventory contains 81 distinct study/scenario pairs from
+=t/performance/studies.ss=. For every group, the frozen view source
+is byte-identical to =core/relation-view.ss= at the contract's baseline
+revision. The isolated native build compiled the exact copies of the
+fixtures and references against the current production library. The
+process sequence uses one native Test process per scenario with the
+2 GiB cap and 90-second watchdog. Results require a passing receipt,
+the native Case and Harness markers, and process exit zero.
+
+Inventory, source identities, build and running results:
+=/private/tmp/ascent-uf-native-81.KmtOug/=.
+
+All 81 scenarios completed with passing native receipts, matching Case
+and Harness markers and exit zero. All 34 source digests in the run
+inventory matched after completion. Each row reports the highest
+admission P95 in that group under its own original contract.
+
+| Group | Scenarios | Highest P95 (ms) | Scenario |
+|-------+-----------+------------------+----------|
+| Owner plans | 12 | 116.723 | dense |
+| Selector initialization | 16 | 41.654 | capture |
+| Compact query | 16 | 34.512 | capture |
+| Initialization | 12 | 28.538 | capture |
+| Plan | 10 | 33.401 | capture |
+| Query | 8 | 37.498 | wide |
+| Membership | 7 | 189.558 | grouped |
+
+Index projection, slot projection and index sharing now have direct
+native Test entries. They call the original scenario functions and
+keep their existing compiled module checks. The next inventory lists
+all 18 original scenarios in those groups. Its staged sources are in
+=/private/tmp/ascent-native-projection-18.dYIa9W/=.
+
+* Native entry inventory
+
+The original declaration lists 38 groups and 235 scenarios. The first
+36 direct native Test entries covered 228 scenarios. Of those entries,
+20 cover 93 scenarios and invoke the original functions
+with the exact declared argument order. Six of those groups use only
+scenario and library arguments, as in the original declaration. This
+inventory records the entry points. The new entries still require
+native compilation and runtime qualification.
+
+The two remaining groups, actor admission and component workspace,
+now have native Test entries for the remaining seven scenarios. Their
+CPU lanes run in Gerbil Test. The allocation lanes still launch a fresh
+one-GiB process per arm in each of the 50 original pairs. The separate
+child executables are standard Gerbil build targets under =t/performance=.
+The native Suite and child share the same benchmark body and original
+reference. The 90-second watchdog and acceptance thresholds still apply.
+
+The isolated source-overlay runs completed all seven scenarios. All
+three actor admission scenarios passed. Component workspace =scan= and
+=recursive= passed. =indexed= reported 138,352 versus 172,688 allocation
+counter bytes, and =small= reported 37,840 versus 52,528, exceeding the
+original allowance of 2,048 bytes. The first workspace build had emitted
+only executable-side compiler output for the module that Gerbil Test
+imports. A distinct allocation entry lets the native build produce both
+the importable benchmark and the executable. The failed harness logs
+and corrected evidence are in =/private/tmp/ascent-native-cold-children.AA0ofC/=
+and =/private/tmp/ascent-native-workspace-child.QpI5ii/=.
+
+The checkout's exact =just build-cold-benchmarks= and native Suite paths
+then produced four passes. Actor =backlog= and =small= passed, as did
+workspace =scan= and =recursive=. Workspace =indexed= and =small=
+completed both 50-pair lanes and missed the same allocation thresholds.
+Actor =wide= completed its CPU lane, then a fresh candidate child exited
+70 after allocation pair 15 and before pair 20. The original failure
+remains authoritative. A diagnostic of 64 separate launches of that
+child and arm, with error printing enabled, did not reproduce it. No
+failure cause is assigned. The source and artifact digests all matched
+after the native run. Evidence: =/private/tmp/ascent-native-cold-exact.R9FXnW/=.
+
+The isolated native build inputs for the new 93-scenario batch include
+65 distinct test modules from the original study declaration. Its exact
+source copies and digest list are staged at
+=/private/tmp/ascent-native-remainder-93.GG6MkA/=.
+
+* Cold native image and complete matrix inventory
+
+The native study declaration expands to exactly 38 groups and 235
+distinct scenarios. The isolated source snapshot records 2,218 input
+paths. The native package build ran with the frozen SDK and the
+declared Yuanxu and POO revisions after removing all inherited ASCENT
+modules, static objects and executables from its private prefix.
+It produced the arm64 shared library and development executable.
+Native build then compiled the study support modules and linked the
+two original fresh-process allocation executables. A 332-artifact
+digest fence covers the compiled interfaces, objects and executables
+used by the observed native matrix.
+
+The same clean image completed both strict Cases with the 8 percent
+startup live ratio. Each used the existing 2 GiB cap, 90-second
+watchdog, 100 paired CPU observations, 100 admission samples and five
+allocation pairs. Every admission materialized 32 full lists.
+
+| Vertices | Admission P50/P95/max (ms) | Reference/current CPU median (ms) | Candidate CPU pairs with GC |
+|----------+---------------------------+-----------------------------------+-----------------------------|
+|      384 | 34.780/50.751/62.427       | 66.252/21.174                     | 0/100                       |
+|      512 | 60.038/65.496/73.903       | 110.126/36.131                    | 38/100                      |
+
+The 512 receipt observed 1,816,732,840 bytes of last-collection heap
+capacity before and after admission. The 8 percent profile applies to
+the seven weighted scenarios and two strict cases. The other original
+scenarios use the Gambit default. The two allocation-child scenarios
+retain their separate one-GiB process configuration. The results
+ledger records each native process's command, exit, matched Case,
+Harness marker and required receipt. Evidence:
+=/private/tmp/ascent-exact-matrix.BIrkjF/=.
+
+** Exact assertions for two existing studies
+
+The operator-scope control reproduced the former failure at depth
+one against the clean native image. The frozen compiler emits two
+identical copy rules at each diamond. The current compiler's existing
+public qualification requires one copy per resolved input. The native
+audit compared both graphs at depths zero through three. The
+benchmark now validates that each rule is a unary variable copy
+before normalizing the reference. It requires the exact old and new
+rule counts, every ordered distinct edge, the relation declarations,
+the output slot and the independent solved rows. The measurement
+windows and original performance thresholds still apply.
+
+The provenance withdrawal diagnostic removed every duplicate source
+occurrence and reproduced exact empty answers. At 256 occurrences
+the old traversal charged 1,032 steps and the current traversal
+charged 785. The new fixture checks the exact ledgers for both arms.
+Its separate exhaustion control requires refusal at 784, preservation
+of the held result, and successful publication at 785 on the same
+state. The existing CPU and allocation gates remain in the measured
+pair loop. Guarded Lean =SourceOccurrences.DuplicateWithdrawal=
+proves the ledger's crossover at nine duplicate occurrences and the
+fixed native fixture budget.
+
+The corrected duplicate withdrawal passed all 50 pairs. The reference
+and current CPU medians were 1.670 and 0.175 ms, and the allocation
+counter medians were 79,512 and 138,712 bytes. Every CPU pair favored
+the current traversal, and the receipt reported 785 steps. The
+adjacent budget control passed in the same native Case.
+
+Both operator Cases advanced beyond the former graph mismatch.
+The scaled diamond reached at least five pairs before the native
+allocation delta became -710,169,040 bytes. The small case completed
+50 pairs and recorded 3,077,936 versus 3,897,456 bytes, exceeding
+its existing 2 KiB allowance. Its CPU medians were 2.902 and
+2.903 ms. The two Cases remain failed. The full 235-scenario run
+continues with the native results ledger, independently of those
+failures. The working tree has not been published.
+
+** Invalid allocation observations in the cold native matrix
+
+The cold image passed all 88 completed UF scenarios in the initial
+weighted, owner-plan, selector, compact-query, initialization, plan,
+query and membership groups. The separately listed UF commit group
+is later in the same matrix. The wide Actor admission case exposed
+the child's actual error: the fresh one-GiB candidate process returned
+a signed allocation delta of -10,254,456 bytes. A fresh process alone
+does not eliminate invalid observations. The parent retained the
+child's exception and failed the Case. The lower-pure-wide expression
+case measured 31/54 microseconds and 71,192/67,184 counter bytes, then
+failed its CPU gate.
+
+The operator scope telemetry candidate keeps every signed observation,
+validates the full ordered graph and solved rows for each pair, and
+requires all declared pairs. The receipt carries the sample count and
+counter validity. Any negative sample rejects the allocation lane
+before the original threshold checks. The earlier scaled-diamond
+failure remains recorded on the cold matrix image. The new source
+passed the Scheme reader check. Native qualification is queued after
+the same matrix process writes all 237 verdicts and verifies its
+332-artifact digest fence. The diagnostic uses the existing read-only
+Gambit counter probe to inspect processor and VM terms and to separate
+receiver validation, method lookup and actual compilation for the
+small fixture. Evidence: =/private/tmp/ascent-exact-matrix.BIrkjF/=.
+* Frozen native matrix completion
+
+The frozen image completed every one of the 235 original scenarios across
+38 groups. The native harness and receipt policy recorded 191 passes and 44
+failures, spanning 18 groups. All CLI invocations exited zero, which does
+not override a failed Case or missing valid performance receipt. Both strict
+weighted exports passed separately at 50.751 and 65.496 ms P95 with the
+explicit 8 percent live-ratio profile. All 332 compiled artifact hashes
+matched at the closing fence. The matrix predates the checked Set source
+membership change and cannot qualify it.
+
+The ledger and the individual native logs are under
+=/private/tmp/ascent-exact-matrix.BIrkjF/native-results/=. They retain
+performance failures and invalid allocator observations. In particular the
+wide Actor fresh-process scenario produced a -10,254,456 byte delta. Its
+native child refused the sample. A process boundary alone is insufficient
+to qualify that counter under this runtime policy.
+
+* Refreshed native matrix completion
+
+The frozen refresh finished all 235 original scenarios across 38 groups
+and both strict scale Cases. The original ledger recorded 199 passes
+and 36 failures. Eight formerly failed original scenarios passed:
+negation, aggregate and lattice preflight, index-entry delta, and all four
+update-dependency cases. Every former pass passed again. The closing
+fence matched all 2,275 recorded paths. The two independent strict scale
+receipts at the explicit 8 percent profile retained P95 values of
+60.993 and 55.958 ms. The default-GC gap is separate.
+
+Evidence: =/private/tmp/ascent-current-native-matrix.ibMO0Y/=.
+The failed original gates remain unqualified. The branch has not been
+published.
+
+* Current source snapshot and native acceptance
+
+The current worktree was copied to a private source snapshot. Its
+2,228 recorded source hashes matched after the cold =just build=.
+The prefix reuses the frozen Gerbil 1cfb032 / Gambit ea114fc
+toolchain, Yuanxu v0.1.0 at =bbebe280=, POO =75636427= and ASP
+=c755f39b=. It inherited no compiled ASCENT modules or executables.
+The build produced the arm64 shared library and development executable.
+=just build-cold-benchmarks= produced both allocation-child binaries.
+
+The initial private support preparation lacked executable permission
+on its native Build script. The executable script then exposed
+additional transitive benchmark imports, starting with
+=proof-replay/reference=. The corrected support build compiles those
+modules from the same snapshot. Its logs preserve both failed attempts.
+The staged test entry paths match all 235 original observations. The
+study declaration, both weighted contracts, weighted fixture, paired
+measurement code and frozen weighted reference sources are byte-identical
+to the previous matrix inputs. Four independent strict cases precede
+the original matrix: both widths with the default policy and both with
+the existing weighted startup profile. Each native Test invocation
+retains the original per-scenario watchdog and heap ceiling.
+
+| Vertices | Collector startup | Admission P95 / max (ms) | Reference / candidate CPU median (ms) | CPU wins | Gate |
+|----------+-------------------+--------------------------+----------------------------------------+----------+------|
+|      384 | Default           |          146.111/154.592 |                        153.121/116.081 |  100/100 | Fail |
+|      512 | Default           |          271.703/317.073 |                        269.580/203.255 |  100/100 | Fail |
+|      384 | Live ratio 8      |            43.812/80.772 |                          57.220/19.293 |  100/100 | Pass |
+|      512 | Live ratio 8      |            66.993/88.913 |                         102.871/35.958 |  100/100 | Pass |
+
+All four observations contain 100 CPU pairs, 100 full admission
+batches, and five allocation samples. Both default-policy processes
+returned zero with a failed Case and receipt. The existing weighted
+profile again passes the strict gate on the freshly built snapshot.
+The default-policy export still needs a runtime solution.
+
+The separate collected-start CPU lane records the minimum 512-vertex
+GC CPU as 128.965 ms and the minimum outside-GC CPU as 31.594 ms
+across the 100 candidate batches. Medians are 167.074 and 33.778 ms,
+with eight collections at the median. The 384-vertex medians are
+98.102 and 17.947 ms, with five collections in all 100 batches.
+=cold_large_collector_cpu_reduction= derives a required reduction of
+more than 60.557 ms of collector CPU from the conservative 512 floors
+when outside-GC work retains its measured lower bound. These are
+within-lane CPU costs. The wall observations are independent.
+
+The matrix exposed an omitted support target for the entire
+=expression-plan= group. All 11 native commands reached module loading
+and recorded the same missing =expression-plan-benchmark= import. The
+omission came from the private build inventory. The existing expression
+support fixture matches nine source paths in the current snapshot and is
+staged separately for a subsequent run. The active product prefix stays
+read-only for the matrix. The ledger also initially rejected the six
+=uf-commit= Cases because their independent checks emit additional
+=CASE-OK= lines. The receipt audit now checks the exact original Case
+name and native Module and Harness markers, preserving the raw output and
+original observer verdict. The six passing receipts match their Cases.
+
+The snapshot ledger is complete with 239 observations. The 235 original
+scenarios span 38 groups: 200 passed, 24 failed their native Case or
+receipt, and 11 stopped at the missing expression import. The last
+group has no performance verdict. The 5,886 pre/post product fingerprints
+match. The original scenarios consumed 1,910.275 seconds in aggregate
+command elapsed time, excluding the four strict cases and cold builds.
+
+| Failed native group | Cases |
+|---------------------+-------|
+| Slot projection     |     4 |
+| Operator scope      |     2 |
+| Provenance maintenance |  1 |
+| Strata preflight    |     2 |
+| Index build         |     1 |
+| Selected activation |     3 |
+| Storage batch       |     2 |
+| Index entry         |     2 |
+| Empty bucket reuse  |     1 |
+| Rule bindings       |     3 |
+| Finite replay       |     2 |
+| Finite mapping      |     1 |
+
+The audited verdicts are in =checked-results.jsonl=, with each native
+command, exact Case and raw log. The snapshot predates the first-read
+source-cycle specialization. Its timings apply to the frozen provider
+and listed scenarios, independently of the specialization's evidence.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/current-source-cut.JDMcrz/=.
+
+** Expression support completion
+
+The native support build compiled the missing expression modules in a
+private copy of the product prefix. The nine fixture and support sources
+matched the frozen snapshot byte for byte. All 5,886 original product
+fingerprints matched before support compilation, after compilation, and
+after measurement. Each of the 11 commands used its original native Test
+entry, contract, heap ceiling and watchdog.
+
+Five expression Cases passed. =lower-deep= returned 124 at the original
+watchdog and produced no receipt. =deep=, =chain=, =wide=, =pure= and
+=small= completed with failed gates. The combined matrix covers all 235
+scenarios in 38 groups: 205 passed and 30 failed, with 2,173.922 seconds
+of aggregate scenario elapsed time. The first 11 import failures remain
+in the original ledger. The support run records their native verdicts
+separately in =expression-repair/checked-results.jsonl=.
+
+Thirteen of the 24 initial failed scenarios have negative observations
+in their recorded reference or candidate allocation arrays. These
+include both arms of =empty-bucket-reuse/empty-reuse= (50 of 50 each).
+Their signed counter deltas are retained. The remaining failures need
+individual gate diagnosis; the count of negative deltas supplies no
+correction or passing allocation result.
+
+** Native matrix with the direct source-cycle commit
+
+A new serial matrix uses a private copy of the expression-support prefix
+and the original 38-group, 235-scenario inventory. The copy replaces only
+the four compiled Scheme modules for the direct source-cycle commit:
+=table/trrel-uf=, =table/storage=, =program/initialization= and
+=program/view-replay=. The corresponding four Scheme sources accompany
+the original test sources. No rejected materializer enters this prefix.
+The linked executable products still belong to the earlier support image,
+so this matrix alone cannot qualify a complete fresh production build.
+
+The driver invokes native =gerbil test= once per scenario with its original
+watchdog, runtime options, filter and receipt requirement. It fingerprints
+the native products around measurement and checks the exact original Case,
+Module, Harness and receipt. The two default-policy strict runs recorded
+separately for the same four-module overlay remain the strict evidence.
+The active matrix and raw logs are in
+=.cache/ascent/yuanxu-v0.1.0/current-owner-matrix.4q0pTL/=. No result is
+inferred for uncompleted scenarios.
+
+The intermediate audit matched the original Case, Module, Harness and
+receipt for the first 83 completed scenarios across eight groups. All
+83 passed. The original seven weighted scenarios are included. Their
+recorded runtime uses the 8 percent startup profile; the heavy result
+was 84.803 ms P95 and the grouped result was 106.500 ms P95 under their
+own original contracts. The separate default-policy strict scale
+gate still requires both widths and 100 pairs per width.
+
+*** Reject mixed module generations before measuring
+
+The first private prefix was stopped after 102 native commands. The
+audit retained 98 passing observations and four expression import
+failures. The failed commands returned zero but never entered their
+Case. They reported an unbound =view-replay[:0:]#captured-cycle= during
+expansion. The staged manifest had copied the new interface and =~0.o1=
+but left three old =~1.o1= products in place. SHA-256 checks distinguish
+all three from the corresponding objects in the compiled overlay.
+The old =view-replay~1.scm= lacks the =captured-cycle= bindings present
+in the new macro module. These are assembly failures, with no performance
+receipt for the four scenarios.
+
+A new prefix stages all 34 generated products for those four modules,
+including the macro objects and static sources, and checks their hashes
+against the source-cycle build. It preserves the interrupted matrix and
+reuses the original scenario inventory. Its native =lower-deep= control
+was killed by the original watchdog before any output. That run
+supplies no loading or performance verdict. A targeted native Test
+then imported the compiled =view-replay= and =evaluate= contexts
+through the standard expander. Both Cases and the Harness completed
+naturally, establishing that the new interfaces and macro objects load
+together. The serial 235-command matrix was started on that prefix;
+the timeout and both loading observations are preserved. Evidence is in
+=.cache/ascent/yuanxu-v0.1.0/current-owner-modules.Dn1Q93/=. The
+application executables in the prefix still predate the four-module
+overlay. A fresh production build and the strict scale gates remain
+independent.
+
+A follow-up invocation for the censored =lower-deep= case used the
+same compiled support and provider products, the same native Test
+entry, 2 GiB ceiling and 90-second watchdog. It completed 50 pairs in
+49.458 seconds of command elapsed time, with 50 CPU wins, reference
+and candidate medians of 133 and 57 us, and allocation medians of
+930,224 and 115,152 counter bytes. The Case, Suite, Module, Harness and
+receipt all passed. The process-list probe was denied before it could
+sample the child. The previous timeout remains in the full matrix, and
+its cause remains unassigned. See =lower-deep-native-attribution/=
+under the current source snapshot directory for the command result,
+receipt and input digests.
+
+In the serial matrix, the same =lower-deep= Case completed all 50 pairs
+in 38.712 seconds of command elapsed time. Reference and candidate CPU
+medians were 113 and 45 us with 50 wins, and the allocation medians were
+930,224 and 115,152 counter bytes. The original gate and final markers
+passed. The initial censored invocation remains a separate observation.
+The =deep=, =chain=, =wide=, =pure= and =small= expression Cases entered
+their benchmark and failed the paired gates. Their logs and receipts
+are in the same matrix ledger. These failures are distinct from the
+missing macro product in the earlier interrupted prefix.
+
+The application-direction Lean and Gerbil semantic checks later shared
+the host with this matrix. The recorded overlap spans matrix ordinals
+151 through at least 161, using one-based ordinals and including the
+command in flight at the end of each window. See the =*-window.log=
+files in =.cache/ascent/yuanxu-v0.1.0/application-direction.HN1zrN/=.
+Retain the observed gate failures and timeout receipts. Those ordinals
+cannot support a no-concurrent-build timing claim.
+The focused capacity proof replay also shared the host with
+one-based ordinal 183, =selected-activation/update=. Its 12-second
+window is in =collector-pause-budget.Ap5jRP/capacity-frontier-focused-window.log=.
+The nominal section conversion check overlapped ordinal 186,
+=storage-batch/batch=, and is recorded in =nominal-sections-window.log=
+in the same evidence directory.
+The per-pair will charge check overlapped ordinal 215. Its interval
+is retained in =pair-will-window.log=.
+
+The initial ledger also marked all six =uf-commit= commands as
+failures because it required exactly one =CASE-OK= marker in the
+entire native invocation. The benchmark module now includes three
+additional semantic Cases. The exact-name audit checks the original
+benchmark Case, the receipt, natural exit, Module, Harness and final
+markers and rejects any error marker. All six original commit
+scenarios pass that audit. The original ledger and the audited
+=checked-results.jsonl= preserve both classifications. For example,
+the =cycle= scenario completed 50/50 pairs with 50 CPU wins,
+7,655 to 1,392 us median CPU and 11,046,912 to 3,942,608 counter
+bytes. This qualifies the scoped commit comparison in this prefix.
+The complete detached export still has its separate strict gate.
+
+The exact-name audit completed all 235 scenarios in 38 groups.
+It found 199 passes and 36 failures, with no missing-module
+classification. The 5,924 compiled product identities matched
+before and after the run. The native commands took 5,518.717 seconds
+in total. Of the 36 failures, 28 had process exit zero with a failed
+gate or missing verdict, three returned 124, and five were killed
+at the original watchdog's grace boundary. The recorded overlapping
+checks prevent treating this cohort as a fully isolated performance
+comparison. All results, including the failures, remain in
+=current-owner-modules.Dn1Q93/checked-results.jsonl=.
+
+The seven original weighted cases passed under the cohort's
+recorded profile, including 68.766 ms P95 for =heavy=. The strict
+default-policy scale cases are separate from these 235 entries.
+The preceding strict 384 run has a 388.176 ms P95. The 512 run
+reached 91 of 100 CPU pairs before exit 124 and emitted no admission
+percentile. These outcomes withhold publication.
+
+** Retain the admitted withdrawal dependency index
+
+The original provenance-maintenance =small= receipt completed all 50
+pairs and failed allocation. Its frozen reference allocated 4,032
+counter bytes. The candidate allocated 14,768 against the limit of
+12,224. The withdrawal rebuilt a reverse dependency table from the
+same verified, copied grounded edges before every tentative edit.
+
+An isolated candidate built the same reverse index when admitting
+the copied graph and when creating a compacted graph. Previews share
+the read-only buckets. Tentative affected, alive and removed
+memberships stay private. A single exact charge at the original index
+phase accounts for all edge and repeated premise visits before
+overdeletion. =SourceOccurrences.lean:WithdrawalIndex.index_exact=
+proves exact bucket order and multiplicity.
+=index_charge_exact= proves that the private pass and its aggregate
+reservation have the same budget boundary. Native source refinement
+still depends on the admitted graph's immutable ownership.
+
+| Scenario | Completed pairs | Reference / candidate CPU (us) | Reference / candidate allocation bytes | Work | Gate |
+|----------+-----------------+--------------------------------+----------------------------------------+------+------|
+| wide | 0/50 observed | -- | -- | -- | Exit 124 before Case output |
+| duplicates | 45/50 confirmed | -- | -- | -- | Exit 137 before receipt |
+| read | 50/50 | 693 / 40 | 24944 / 24944 | 0 | Pass |
+| small | 50/50 | 33 / 50 | 4032 / 10544 | 20 | Pass |
+
+Both passing scenarios reached the Case, Module and Harness markers
+and exited naturally. The duplicate exact-budget control ran before
+the first printed pair and reached the timed sequence. Nineteen Cases
+each in the existing provenance graph and withdrawal-session suites
+passed with exit zero. These exercise founded cycles, source
+multiplicity, ordered evidence, independent previews, compaction,
+budget refusal, and concurrent publication. The support-cut Suite
+initially could not resolve its fixture. After the existing fixture
+and reference were prepared with native =gerbil build=, its three
+Cases passed through =gerbil test= with exit zero.
+
+The small withdrawal meter dropped by 4,224 bytes, or 28.6 percent,
+relative to the original candidate. The existing paired gate excludes
+verification and graph admission, where the retained table now gets
+built. An end-to-end claim requires pricing admission, retained
+storage, compaction, and subsequent edits together. The incomplete
+performance runs and missing lifecycle evidence keep this candidate
+in its isolated prefix. The weighted complete-list path is unaffected
+by this optimization. Sources, compiled products, failed and passing
+logs, and receipts are in
+=.cache/ascent/yuanxu-v0.1.0/withdrawal-index.bVZBOS/=.
+
+*** Use the withdrawal epoch in the tentative removal table
+
+A second isolated candidate leaves index construction at the original
+withdrawal boundary. It removes the separate selected-occurrence hash
+table and uses a fresh private epoch as the value in the tentative
+removal table. Exact equality with the current epoch identifies seeds
+in original edge order. Any stored epoch identifies a removed source
+for restoration, compaction and reads. A successful preview keeps its
+own epoch and table. =SourceOccurrences.lean:WithdrawalSelection=
+checks both membership predicates and repeated selector idempotence.
+
+With the original 50 pairs, 2 GiB and 90-second watchdog, =wide=
+passed with 244,592 candidate counter bytes, down from the prior
+matrix's 255,408. Its reference/candidate CPU medians were 6,475/443 us
+with 50 wins and work 4,096. The =read= gate also passed, with unchanged
+24,944-byte medians and work 0. The =small= command exited 137 before
+any Case marker. The =duplicates= command exited 137 after logging
+30/50 pairs. Both incomplete outcomes are preserved. The model and
+these two passing cases do not qualify the candidate for integration.
+The provenance graph and withdrawal-session Suites completed all 38
+Cases and their Harnesses with exit zero.
+Native build products and receipts are in
+=.cache/ascent/yuanxu-v0.1.0/small-withdrawal-tables.7kZHWk/=.
+
+*** Use source keys already owned by the verified cut
+
+The next isolated candidate resolves selectors against the source
+directory in caller order. The directory returns its existing copied
+key. The tentative removal table uses these keys with the epoch
+encoding above. This eliminates recursive pair copying of the caller's
+selector tree and retains the same ordered seed scan and dependency
+construction. An unknown selector still fails before withdrawal work
+or publication. Earlier writes affect only the tentative table.
+=WithdrawalSelection.canonical_selection= proves selected membership
+under the directory's key-equivalence premise. The implementation
+uses the same structural hash lookup as the preceding validation.
+
+In the original duplicate-source Case all 50 pairs passed with 50 CPU
+wins and exactly 785 work units. Candidate allocation was 82,792
+counter bytes, down from 138,712 in the recorded matrix. Reference
+allocation was 79,512 bytes in both runs. The current same-run
+reference/candidate CPU medians were 1,852/179 us. The existing
+exact-budget and budget-minus-one controls ran before sampling.
+The wide Case passed all 50 pairs with 50 CPU wins and work 4,096.
+Candidate allocation was 226,160 bytes, down from 255,408 in the
+matrix. Current reference/candidate CPU medians were 5,097/362 us.
+The read Case passed all 50 pairs with 24,944 bytes in each arm.
+Both provenance graph and withdrawal-session Suites completed with
+all 38 Cases and exit zero. All 21 fenced inputs matched after the
+tests. The =small= command exited 137 before a Case marker. Its
+performance gate remains open and this candidate remains isolated.
+
+Sources and results:
+=.cache/ascent/yuanxu-v0.1.0/canonical-withdrawal.j7B1O2/=.
+
+*** Validate ordinary selectors with the original node budget
+
+The next isolated candidate recognizes the ordinary list of
+symbol/integer source keys before invoking the generic datum walker.
+The native checker charges each outer pair, each key's two pairs,
+both scalar leaves, each key's terminating null, and the final outer
+null. =WithdrawalSelection.source_selector_nodes= gives 6n+1.
+=canonical_selector_cutoff= checks the exact 21,845-key boundary
+under the original 131,072-node limit. The recognized shape also fits
+the existing depth bound. A long, cyclic or differently shaped input
+falls back to the generic validator. Directory resolution and
+publication keep their original error distinction and ownership.
+
+The duplicates Case passed 50 pairs, with 50 CPU wins and work 785.
+The allocation median fell from the matrix's 138,712 to 28,896 bytes.
+The current reference/candidate medians were 1,719/111 us. The wide
+Case passed 50 pairs with 50 wins and work 4,096. Its candidate
+allocation fell from 255,408 to 193,424 bytes. The current paired
+CPU medians were 4,761/330 us. The read Case passed all 50 pairs
+with identical 24,944-byte medians. Both provenance graph and
+withdrawal-session Suites passed all 38 Cases with exit zero. The
+two focused native Cases also passed. They compare the 21,845 and
+21,846 selector boundaries against the generic checker, distinguish
+cyclic and improper selectors from unknown keys, and verify that
+rejected requests leave the same cut available for a valid withdrawal.
+The small command exited 137 before a Case marker. This candidate stays
+in the isolated prefix while the small gate remains open.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/bounded-withdrawal.gMaxz7/=.
+
+*** Compiled Suite loading does not explain the small timeout
+
+Native =gerbil build= compiled the same Suite and its existing
+shared Test macro in an isolated prefix. Invoking that compiled
+Suite directly through =gerbil test= reached the =small= Case and
+logged 15/50 completed pairs before exit 137. Thus the earlier
+missing output cannot be attributed to source expansion alone.
+This invocation made measurable progress in the original body
+and did not produce a gate receipt. The other three Cases
+completed naturally under the same 2 GiB and 90-second controls.
+
+| Scenario | CPU reference / candidate (us) | Candidate bytes | Work |
+|----------+--------------------------------+-----------------+------|
+| duplicates | 1709 / 114 | 28896 | 785 |
+| wide | 4597 / 320 | 193424 | 4096 |
+| read | 577 / 32 | 24944 | 0 |
+
+The run establishes progress through the Case boundary, not the
+time spent in its individual stages. The original performance
+invocation selects the source Suite. The compiled control does
+not substitute for that gate. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/withdrawal-native-suite.Ao3Flq/=.
+
+*** Combine cut-owned keys and cut-owned dependency buckets
+
+This isolated build combines the bounded selector walk with the
+verified graph's dependency buckets. Opening and compacting the
+graph construct the buckets once. A preview shares them with the
+same copied edge list and keeps the removal and liveness tables
+private. Each withdrawal still charges the exact original edge
+and premise indexing work before overdeletion. The existing
+=WithdrawalIndex.index_exact= and =index_charge_exact= laws
+apply to repeated premise occurrences and budget refusal. The
+construction and retained buckets also belong in the lifecycle
+cost ledger, outside the existing withdrawal meter.
+
+Native =gerbil build= compiled the three related modules in a
+separate prefix. The original source Suite used the same
+reference, assertions, 50 pairs, 2 GiB and 90-second watchdog.
+
+| Scenario | Pairs completed | CPU reference / candidate (us) | Allocation reference / candidate (bytes) | Work | Verdict |
+|----------+-----------------+--------------------------------+------------------------------------------+------+---------|
+| small | 5/50 confirmed | -- | -- | -- | Exit 137, no receipt |
+| duplicates | 50/50 | 1698 / 105 | 79512 / 24672 | 785 | Pass |
+| wide | 50/50 | 4616 / 273 | 131840 / 97536 | 4096 | Pass |
+| read | 50/50 | 578 / 31 | 24944 / 24944 | 0 | Pass |
+
+The three completed Cases had natural exits and passing
+receipts. The two existing provenance graph and withdrawal
+Session Suites also completed naturally, with all 38 Cases
+passing, including the two 64-graph corpora. The input fence
+matched after the benchmark, the phase control, and the semantic
+Suites. The wide allocation is 61.8 percent below the
+255,408-byte matrix candidate. That comparison is of counter
+bytes in the measured withdrawal only. It leaves the small
+timeout and the end-to-end cost of admitting and retaining
+the index open. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/owned-withdrawal-dependencies.eDg7k9/=.
+
+**** Phase timing on the unchanged small workload
+
+A separate source diagnostic added clocks to verification/opening,
+the explicit pre-arm collections, and the measured operation.
+It retained the original small data, independent truth check,
+50 pairs, 2 GiB and 90-second watchdog. It completed naturally
+through =gerbil test=.
+
+| Phase | Observations | Total wall (ms) | Median wall (ms) | Maximum wall (ms) |
+|-------+--------------+-----------------+------------------+-------------------|
+| Reference verification/opening | 53 | 3.854 | 0.075 | 0.100 |
+| Candidate verification/opening | 53 | 2.198 | 0.039 | 0.186 |
+| Explicit collection | 100 | 3977.988 | 29.510 | 332.612 |
+| Withdrawal and result packaging | 100 | 2.393 | 0.022 | 0.059 |
+
+Explicit collections account for 99.8 percent of the elapsed
+time assigned to these four phases. This diagnostic changes how
+the benchmark procedure loads and prints a phase record before
+the end allocation counter, so its passing assertion and counter
+values cannot qualify the original benchmark. The original source
+Suite still timed out after the fifth logged pair. The observed
+four seconds of explicit collection cannot explain the entire
+earlier timeout. Its startup, scheduling and between-pair costs
+need independent evidence. Logs and digests are retained in
+the candidate directory above.
+
+** Empty-bucket counter attribution
+
+An isolated native Test uses the existing =empty-workflow= and
+=empty-parity= functions, the three original source cuts, four workflow
+repetitions per arm and 50 alternating pairs. It checks every result
+against the finite-domain oracle. The earlier wide-mapping diagnostic's
+read-only native observer supplies the rebased counter, retired section
+term, heap and stack cursors, both still charges and collection count.
+The observer and the direct Gambit counter use adjacent endpoints. The
+2 GiB maximum and 90-second watchdog apply. This is a diagnostic, with
+its own data, separate from the original performance verdict.
+
+All 50 samples in each arm show a negative direct delta with zero
+collections during the interval. The rebased processor counter is
+unchanged in every sample. The median change in the retired section
+ledger is -28,159,741 words with reuse off and -28,159,783 words with
+reuse on. At ordinal zero without reuse, the component reconstruction
+gives -458,229,888 bytes and the direct observation gives -457,833,664
+bytes. Their adjacent endpoint residual is 396,224 bytes. The retired
+section term is the only negative term in that reconstruction. This
+localizes the sign to section accounting even with no intervening
+collection. The trace does not identify the writer of that field.
+
+=WeightedExportCapacity.lean:empty_bucket_counter_replay= checks the
+component reconstruction and the residual as separate quantities. The
+original empty-bucket receipt also records 24 of 50 CPU wins and
+medians of 7.141/7.142 ms, against a required 15 percent reduction and
+35 wins. Fixing the allocation measurement would still leave this CPU
+gate open. The native observer passed its Case and Harness checks, and
+source and product fingerprints matched. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/empty-reuse-counter.UkKKZ2/=.
+
+The original receipt also supplies the native logical work trace from
+=program/index.ss:single-rows=. Across the three source cuts, reuse
+reduces canonical probes from 92 to 73. It adds 92 certificate tests,
+71 key comparisons, 81 version comparisons, 92 field stores and six
+extended entries. =OrderedExportGraph.lean:empty_bucket_trace_break_even=
+states the necessary direct-cost tradeoff for those counts. The weights
+are supplied independently and use one cost unit. This model excludes
+common solve work and does not infer time from the number of probes.
+The companion =empty_bucket_trace_cpu_budget= adds the original 0.85
+CPU ratio and the common solve work. Under the model, 15 times that
+common cost plus 100 times certificate work may spend at most 520
+times the cost of one canonical probe.
+The observed net-benefit failure and high check-to-hit ratio keep this
+reuse route unqualified for general dispatch.
+The locked LeanPoo Guard also completed the full 183-job Lean proof
+build with exit zero. Its final receipt is =lean-full-final.log= in the counter
+diagnostic directory.
+
+The frozen Gambit source at
+=ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f:lib/mem.c= has a concrete
+cross-section candidate in =___stack_limit=. It saves the old stack
+start, moves the active pointer into a newly assigned section, and walks
+the old frames. The branch at the old break frame assigns =fp= from the
+new =alloc_stack_ptr=. The shared tail then calls
+=stack_msection_stop_using= with the old start and that =fp=. The
+accounting helper adds their difference to =words_prev_msections_=.
+The same-section bounds in Lean explain why such a difference can
+exceed one section. The empty-bucket trace observes the resulting kind
+of ledger decrease in the workload itself.
+
+LLDB on the frozen arm64 =gerbil= executable confirmed the write during
+runtime startup. The breakpoint resolved relative to the loaded module
+after launch. At =___stack_limit+244= the operands gave a difference of
+-350,257,088 bytes, against a valid same-section span of 0 to 524,288
+bytes. The ledger before the store was 14,541,502 words. The immediately
+following breakpoint at =+256= read -29,240,634 words from the same
+ledger location. =frozen_gerbil_stack_limit_write= reconstructs that
+value. The backtrace enters through =___H___kernel= and =___setup=.
+This confirms the defect in the installed runtime. The stopped process
+was still in startup, so the trace does not assign this specific write
+to an empty-bucket sample. The unchanged standalone run supplies those
+per-sample counter observations. The SDK and receipt criteria remain in
+place. Disassembly, initial debugger failures and the two-breakpoint
+trace are in =.cache/ascent/yuanxu-v0.1.0/full-key-certificate.TA4eDP/=.
+
+*** Native stores inside the measured sample
+
+A follow-up LLDB diagnostic marks the first =empty-workflow= sample
+with reuse disabled. The native markers bracket its four original
+workflow repetitions, between the two read-only component probes. All
+100 outputs still match the original finite-domain oracle and the native
+Case and Harness exit normally. Debugger timings have no gate meaning.
+
+Two distinct out-of-range stores have both a register snapshot before
+the subtraction at =___stack_limit+244= and a memory read immediately
+after the write at =+256=. The stack is =___stack_limit=, =___H___kernel=,
+=___call=, =___run=, =___setup=, =___main=, =___main_char=, and =start=.
+The repeated pre-store callbacks for the second store and the duplicate
+begin marker do not supply additional confirmed writes.
+
+| Store | Old ledger (words) | Pointer difference (bytes) | Read after store (words) |
+|-------+--------------------+----------------------------+--------------------------|
+|     1 |          9,776,388 |               -222,248,896 |              -18,004,724 |
+|     2 |        -17,144,524 |                -23,101,376 |              -20,032,196 |
+
+The retired-section ledger drops 28,432,261 words over the sample.
+The two stores account for -30,668,784 words and the remaining ledger
+activity contributes +2,236,523 words. The collector epoch stays at 17,
+the adjusted counter is unchanged, and the current heap does not move.
+The stack cursor and VM still term increase by 36,856 and 15,940 words.
+The component reconstruction is -454,198,960 bytes, with a 396,400-byte
+residual to the adjacent direct observation of -453,802,560 bytes.
+=WeightedExportCapacity.lean:empty_bucket_observed_stack_writes=
+checks these identities. The observed cross-section stores explain the
+sign in this actual sample, independent of collection. They supply no
+corrected allocation measurement and leave the separate CPU gate failed.
+
+Evidence directory: =.cache/ascent/yuanxu-v0.1.0/empty-stack-sample.b1V0SE/=.
+
+| Artifact | SHA-256 |
+|----------+---------|
+| Frozen arm64 =gerbil= | =9326ad2d248692b94a83cea1e9c7f3240c31fd7c258006ef918ac6af37db68f0= |
+| =empty-stack-sample-test.ss= | =2db4a75f81fb6431ea1f78f9eb24742794c71e009cb7d91dd616d0aff3cdc509= |
+| =src/observer.ss= | =b4377b8d6793854c2fa47619f3fbfa4eac028b3269151ea118611f5b3d25dd2b= |
+| =observer.o1= | =1c042efc79488db9541e58972d9e0438b30470be797b224f12b029a6dfad2403= |
+| =observer~0.o1= | =57dcdab5031750658f70b62c80d990f1d33b4c1e97aa990c8cf8318bb1acfdec= |
+| =trace_sample.py= | =c89be7f6b2de549a0373c912479859773038d592da68f592786f1cdfc7724560= |
+| =native-trace.log= | =624fb40c841751493c7e21d63677b4560042b073524b4a1109e3bd3842a313d9= |
+
+*** Saved old stack cursor control
+
+The old-break branch of =___stack_limit= leaves every old frame in
+place. Its new break link stores =prev_alloc_stack_ptr=, which names
+the top of those retained frames. The retirement call must account
+from =prev_alloc_stack_start= to that saved top. The cursor at the
+old break omits the frames above it. The frame-transfer branch instead
+copies frames and charges from the old start to the new end of the
+remaining old frames. That branch already supplies its old cursor.
+
+An isolated LLDB control recognized the old-break branch at
+=___stack_limit+216=. Immediately before the subtraction at =+244=
+it supplied the saved old top as the cursor operand. The branch,
+break link, stores to stack state, and all generated code were left
+as in the installed executable. The two writes in ordinal zero were
+read back after the store. The control is scoped to this process.
+
+| Store | Raw pointer difference (bytes) | To old break (bytes) | To saved old top (bytes) | Retired ledger after (words) |
+|-------+--------------------------------+----------------------+--------------------------+------------------------------|
+|     1 |                   -226,394,048 |              458,560 |                  458,848 |                    9,833,745 |
+|     2 |                    -22,036,416 |              458,240 |                  458,880 |                   10,751,311 |
+
+All 50 samples per arm remained at their starting collection epoch.
+The original instruction trace had 50 negative deltas per arm. The
+old-top control had zero in each arm and medians of 38,648,724 and
+38,649,492 counter bytes, respectively. Ordinal zero without reuse
+reported 38,734,144 bytes, including an adjacent-probe residual of
+397,376 bytes. Every result passed the same finite-domain check, and
+the native Case and Harness exited normally. The control verifies the
+sign mechanism and distinguishes the two old cursors. It does not
+identify total payload allocation or validate all runtime paths.
+
+=retirement_preserves_unmoved_stack= preserves the charge of the old
+words across their retirement. =empty_bucket_old_cursor_control=
+checks the two observed stores, the 36 and 80 words omitted by the
+old-break cursor, and the adjacent-probe residual. A source repair
+would leave =fp= on the appropriate old section by setting it to
+=prev_alloc_stack_ptr= on this branch before the shared accounting
+call. The frozen SDK is still in use. The original CPU verdict and
+complete-export admission timings are independent.
+
+In =lib/mem.c=, the pre-copy collection accounting adds the old
+occupied charge into the allocation counter. The copy setup resets
+=words_prev_msections_=. The collector marks reachable objects and
+=resize_heap= obtains its occupied charge from the post-copy state.
+=retired_charge_changes_rebase_not_postcopy_occupancy= shows why the
+old correction survives in the rebased allocation reading without
+changing the post-copy occupancy when the reachable state and section
+allocation are held fixed. This gives no reason to expect the cursor
+fix alone to reduce the weighted-list collector tail.
+
+The focused old-cursor model check and the subsequent complete 183-job
+Lean build passed under the locked LeanPoo Guard. The diagnostic files
+are in the same evidence directory above.
+
+| Artifact | SHA-256 |
+|----------+---------|
+| =trace_old_cursor.py= | =eceb971a7fde00291242e2db06451ee84029bb8fdaee4de5a1656fcf3e266e70= |
+| =native-old-cursor-control.log= | =b3accf57d30bf457729856567b327c26bfdd24b1ba67b01d205fbd666e3b6b94= |
+
+*** Compile the saved-cursor repair and retain the original gates
+
+The isolated candidate builds the source change in =___stack_limit=.
+At the old break frame the runtime keeps the original frames in the
+previous section. It places the old stack top in the new break link
+and passes that same old top to =stack_msection_stop_using=. The
+frame-copy branch continues to charge the old stack at its advanced
+cursor. Lean =stack_transfer_conserves_charge= checks that the old
+retirement charge and the copy in the new section count each prior
+frame word once, with the break-frame words charged separately.
+The installed SDK, ASCENT modules and measurements are unchanged.
+
+Both diagnostic executables were relinked from the same static Gerbil
+objects and release archive. They differ only in this branch of
+=mem.o=. The no-GC empty-bucket observer ran both arms, each with
+50 samples for every reuse setting. Every observed interval retained
+its collection epoch and the native Test Cases exited zero.
+
+| Arm | Reuse disabled allocation median (bytes) | Reuse enabled allocation median (bytes) |
+|-----+------------------------------------------+-----------------------------------------|
+| Relinked control | 538097844 | 538099604 |
+| Saved old cursor | 38649876 | 38649524 |
+
+This run's control displacement is positive. The previous installed
+binary trace observed a negative displacement. Both signs can result
+from subtracting unrelated section addresses. The corrected medians
+agree closely with the previously observed saved-cursor control.
+Gambit's counter includes stack and still occupancy, so these numbers
+do not identify the exact bytes of Scheme object payload.
+
+The three original native Test entries retained their workloads,
+thresholds, sample counts, 2 GiB cap and 90-second watchdog.
+
+| Original scenario | Relinked control | Saved old cursor | Remaining gate evidence |
+|-------------------+------------------+------------------+-------------------------|
+| finite-mapping/wide-view | Pass, 100/100 CPU wins | Pass, 100/100 CPU wins | The initially observed negative baseline median did not reproduce in this control. Both processes checked all 100 pairs. |
+| storage-batch/engine-small | Fail | Fail | The repaired run reports 947972.8 reference bytes and 983444.8 candidate bytes against a permitted 512-byte increase. Neither run has negative allocation samples. |
+| empty-bucket-reuse/empty-reuse | Fail | Fail | The repaired run reports 22/50 CPU wins and 20/50 wall wins. Its allocation increase is 4450 bytes against a permitted 256. Neither run has negative allocation samples. |
+
+The repair removes the cross-section cursor subtraction at its source.
+Its isolated evidence does not qualify the original matrix or establish
+a weighted-export speedup. The unchanged storage and empty-bucket gates
+expose independent work in ASCENT. The source patch, relink command,
+native logs, proof and fingerprints are in
+=.cache/ascent/yuanxu-v0.1.0/stack-ledger-runtime.tOKyvJ/=.
+
+The 384-vertex strict weighted Case on the repaired runtime completed
+100 CPU pairs, 100 wall admissions and the five allocation pairs.
+Admission wall P50/P95/max was 133.289/194.797/212.742 ms. All 100
+CPU pairs favored the candidate provider against its frozen reference
+and all 100 wall admissions exceeded the strict target. The CLI exit
+was zero, with a failed Case and =passed? #f= in the receipt.
+The cursor repair alone therefore leaves the weighted gate open at
+384. The 185-job guarded Lean inventory passed.
+
+At 512 vertices, the original 90-second watchdog returned 124
+after 100 CPU pairs and 97 of 100 wall admissions. There was no
+complete wall distribution, allocation lane or final receipt.
+The two width logs preserve those outcomes separately.
+
+*** Storage engine allocation by phase
+
+Fifty alternating old/current pairs used the original singleton
+storage-batch declaration. Adjacent counter reads bracketed engine
+construction, initial evaluation, append and the second evaluation.
+Each trial verified the resulting row. The median counters were:
+
+| Phase | Reference bytes | Current bytes | Bulk Result construction bytes |
+|-------+-----------------+---------------+--------------------------------|
+| Engine construction | 937456 | 942896 | 942896 |
+| First run | 5936 | 19792 | 14352 |
+| Append | 1840 | 3120 | 3120 |
+| Second run | 6096 | 19952 | 14512 |
+
+The isolated control changes =gerbil-ascent-make-published-result=
+from incremental construction of the eleven-slot POO prototype to
+the existing =object<-fun= bulk constructor, using the same slot
+keys and bodies. It saves 5,440 accounting bytes per run in this
+control. The unchanged =engine-small= gate observed 972571.2 bytes
+for that variant against 947972.8 reference bytes, still above the
+allowed 512-byte increase. The original =engine= gate also failed.
+Both benchmark invocations exited zero and emitted failure markers.
+The candidate stays isolated. Its phase and native benchmark receipts
+are in =.cache/ascent/yuanxu-v0.1.0/storage-engine-phases.PQDWwt/=.
+
+*** Reuse the guarded Session contract at engine publication
+
+The previous phase comparison hid a large common cost: both engines
+ran the full Yuanxu Session contract when projecting their public
+receiver. The contract builds classification and validation evidence
+for the root and all three mandatory method slots. The existing
+Session value factory already has a narrower POO ObjectContract for
+fresh owned method objects.
+
+=engine-state-public= and =gerbil-ascent-make-session-value= now share
+that check. The receiver is built against the live prototype before
+validation. A POO observer or precheck, a changed original prototype,
+changed descriptor metadata or method dispatch, or failed method
+membership takes the ordinary validator and returns its actual result.
+Each call checks the new object. =guarded_session_methods= in Lean
+states the refinement under the stock contract and observation
+premises. The Scheme tests exercise live validator replacement,
+observable validation demand, root/child callbacks and refusal order.
+
+In the initial phase diagnostic, the revised construction median was
+75,024 counter bytes, down from 942,896. Both run medians and append
+were unchanged in that ledger. This identifies the constructor cost
+separately from the Result wrapper overhead above. The initial
+=engine-small= process emitted a passing receipt and all success
+markers before its watchdog returned 124. Its receipt is retained as
+incomplete process qualification.
+
+The rebuilt candidate with the explicit prototype guard completed
+both original benchmarks under native =gerbil test= and the same
+private 1.5 GiB pressure-growth runtime with the 2 GiB hard cap.
+
+| Case | Reference / candidate allocation (bytes) | Reference / candidate CPU median (us) | CPU wins | Original gate |
+|------+-------------------------------------------+-----------------------------------------+----------+---------------|
+| engine-small | 947979.2 / 116244.8 | 800.8 / 74.7 | 50/50 | Pass |
+| engine | 1058580.8 / 214612.8 | 1020.0 / 150.3 | 50/50 | Pass |
+
+The engine contract, nested value membership and storage semantics
+Suites completed naturally with 4, 38 and 23 Cases. The complete 185-job
+Lean build passed the locked Guard. The proof assumes stock Session
+contract correspondence. The live Scheme tests cover the fallback.
+
+Build, phase, native receipts, source and object fingerprints are in
+=.cache/ascent/yuanxu-v0.1.0/engine-session-contract.vQeGwN/=.
+The matrix still needs a complete run after the remaining independent
+failures are resolved.
+
+*** Empty-bucket declaration and solve cost
+
+The existing =empty-workflow= exposes three observation points per
+source cut. A native observer measured owner-thread CPU before
+declaration, after declaration and after solving. It used the original
+three cuts in 50 alternating pairs and checked each against the same
+independent finite-domain oracle. The diagnostic runs one workflow per
+arm with preallocated counters. The original gate runs four workflows
+per arm and applies its collected-start condition. The diagnostic does
+not supply a gate verdict or a universal per-probe price.
+
+| Reuse option | Declaration median (ms) | Solve median (ms) | Whole workflow median (ms) | Median declaration share |
+|--------------+-------------------------+-------------------+----------------------------+--------------------------|
+| Off | 7.513 | 0.376 | 7.894 | 95.3 percent |
+| On | 7.354 | 0.381 | 7.743 | 95.1 percent |
+
+Under the measured cost split, eliminating the entire solve would
+save less than the 15 percent requested by the net-benefit gate if
+declaration costs stay fixed. The declaration and work model explain
+why an empty lookup optimization alone cannot pay for this gate at the
+measured proportions. The independent original gate and both source
+histories remain recorded. The natural diagnostic log and source are
+=final/empty-ledger.log= and =empty-work-ledger-test.ss= in the Session
+contract evidence directory.
+
+*** Integrated strict export control
+
+The staged Session-contract prefix was paired with the same private
+pressure-growth runtime used by the prior passing control. The fixture
+and runtime binary hashes and all compiled-prefix hashes are in
+=.cache/ascent/yuanxu-v0.1.0/engine-session-contract.vQeGwN/final/scale-inputs.sha256=.
+Each width completed 100 paired CPU samples, 100 admission wall samples
+of 32 complete exports, and five allocation pairs. The receipt's gate
+flag is false and the test log records the execution gate error at both
+widths, despite the reported process status zero.
+
+| Width | Candidate wall P50 / P95 / max (ms) | Reference / candidate CPU median (ms) | Admissions below 100 ms | Strict wall gate |
+|-------+-------------------------------------+---------------------------------------+-------------------------+------------------|
+| 384 | 42.157 / 169.592 / 267.271 | 64.622 / 26.543 | 85/100 | Fail |
+| 512 | 74.826 / 213.540 / 476.974 | 109.620 / 43.381 | 69/100 | Fail |
+
+Lean replayed both 100-entry wall sequences and checked the exact rank
+and strict rejection. The replay sources record each receipt SHA-256.
+Both replays completed under the locked Guard. Sources and logs are
+under =.cache/ascent/yuanxu-v0.1.0/application-decision-20261114/=.
+
+The CPU pairs start each arm after collection. The strict wall lane
+runs consecutive admissions on the prepared candidate state. The two
+lanes measure different conditions. This integration result leaves the
+prior passing control intact and does not identify the cause of the
+changed wall tail. The current exact-runtime observations require a
+source-bound, ordinal-aligned partition of wall and collector time
+before they can support a collector or materializer decision.
+
+** Complete matrix on the private immediate-cdr collector
+
+The private pressure-growth image with the saved stack cursor and
+immediate-cdr fast path completed all 235 original Cases across 38
+groups. The unchanged native markers, receipt gates and artifact hashes
+closed with 212 passes and 23 failures over 2,054.6 cumulative process
+seconds. All 235 child statuses were zero. The original seven weighted
+Cases and all five finite-mapping Cases passed. The strict default-policy
+weighted scale receipts for the same image are in
+[[file:collector-and-allocation.org::** Skip tail marking of an immediate cdr after a fixed-size copy][the collector study]].
+Focused builds and Lean or semantic checks overlapped part of the
+matrix. The totals record this exact run and do not price the effect
+of the collector against the initial release matrix.
+
+| Failing group | Cases |
+|---------------+-------|
+| expression-plan | 5 |
+| slot-projection | 4 |
+| strata-preflight, selected-activation, index-entry, rule-bindings, finite-replay | 2 each |
+| operator-scope, provenance-maintenance, index-build, empty-bucket-reuse | 1 each |
+
+The selected-activation byte lane still has one negative delta per arm
+in =update= and two candidate deltas in =lifecycle=. The latter also
+has an independent CPU miss, 5.105 to 5.782 ms median. The saved-cursor
+repair therefore cannot account for every counter failure on this
+workload. =empty-reuse= had no negative deltas, still added 4,498
+counter bytes against the 256-byte allowance, and won only 29/50 CPU
+and 31/50 wall pairs. These remain separate diagnoses.
+
+The input manifest, complete =qualification/matrix.jsonl=, individual
+receipts and closing fence are in
+=.cache/ascent/yuanxu-v0.1.0/pair-scalar-car.HJ1cx3TF/=.
+
+** Empty-bucket cost with four workflows per observation
+
+The native observer ran the three original cuts in four workflows
+per arm, in 50 alternating pairs starting after collection. The
+independent result oracle checked all four workflows after each pair.
+It reports the sum of declaration, solve and between-workflow owner
+CPU intervals, without timing the initial collection or the oracle.
+
+| Reuse | Declaration median (ms) | Solve median (ms) | Complete observed median (ms) | Median declaration share |
+|-------+-------------------------+-------------------+-------------------------------+--------------------------|
+| Off | 28.156 | 1.701 | 29.893 | 94.33 percent |
+| On | 27.404 | 1.707 | 29.157 | 94.11 percent |
+
+The reuse arm won 32 of 50 observed CPU pairs. With each baseline
+declaration held fixed, even granting zero cost for the rest of
+the work fails the 15 percent reduction at all 50 ordinals. The
+median alone could not establish that result. The replay checks the
+premise of =empty_bucket_solve_only_cannot_pay= for the measured
+declaration, solve and gap at each ordinal. The observer is separate
+from the unmodified performance gate. It identifies declaration
+construction as the next source cost to reduce for this workload.
+
+The native receipts, per-ordinal phase records, input digests and
+Lean replay are in
+=.cache/ascent/yuanxu-v0.1.0/empty-work-four-calls.wE4CDt6N/=.
+
+** Account for the heap span when reusing a released stack section
+
+The frozen =___heap_limit= has two paths that reset the active heap
+cursor. The unassigned-section path calls
+=next_heap_msection_without_locking=, which transfers the old span to
+=words_prev_msections=. The free-list path calls =set_heap_msection=
+directly, which resets the cursor without that transfer. An isolated
+one-line repair inserts the same retirement charge on the free-list
+path. The guarded =recycled_heap_section_preserves_charge= and
+=uncharged_recycled_heap_section_loses_retired_span= prove the affected
+counter equations with the remaining terms fixed.
+
+Both relinked binaries ran the original selected-activation =update=
+and =lifecycle= commands in alternating order. All four processes
+finished 50 pairs and checked the same oracle. Negative allocation
+deltas persisted with exactly the same counts. =update= reported one
+negative delta per arm for either runtime. =lifecycle= reported two
+current-arm negatives for either runtime. The original allocation
+validity gate rejected all four receipts. This experiment isolates
+the cursor charge and shows that applying it does not clear these
+scenario failures. No allocation threshold or negative-sample check
+changed. The candidate stays private while the remaining counter
+terms are investigated.
+
+The native binaries, input fence, commands, patch and receipts are in
+=.cache/ascent/yuanxu-v0.1.0/recycled-heap-charge.j_ymgp9n/=.
+
+*** Separate processor allocation from VM still occupancy
+
+A second native diagnostic kept the original ten-transaction batches,
+50 pairs, and ordered row oracle. A read-only C probe captured the
+processor counter terms, VM still occupancy and collection epoch
+in preallocated vectors at the endpoints. All four runs completed
+with intact input hashes. The initial build invocations failed at
+the executable bit and installed compiler relocation. Two initial
+Suite invocations failed before sampling, first at dynamic Suite name
+expansion and then at the observer's multiple-value return. The logs,
+corrected probe and all 400 observed intervals are retained.
+
+All eight negative samples in this diagnostic crossed one GC.
+The VM still occupancy term fell by 37,625,920 to 44,238,856 bytes.
+Removing just that term leaves positive endpoint deltas of 26,031,936
+to 36,524,688 bytes in those eight intervals. The endpoint sum agrees
+with the original statistic to 304 bytes in every negative interval.
+The probe and statistic calls have distinct boundaries.
+The still term alone accounts for the observed sign in these runs.
+The private free-list repair preserved the old heap span but could
+not eliminate the VM still drop. Older no-collection negatives in
+the frozen runtime remain separate evidence of the stack cursor defect.
+
+=collector_rebase_preserves_processor_counter= gives the source
+equation. =___garbage_collect= adds processor occupancy before
+copying and subtracts it afterward. =determine_occupied_words=
+recomputes VM still occupancy from the surviving objects.
+=___bytes_allocated= adds that current VM still occupancy outside
+the processor rebase. This mixed metric cannot establish cumulative
+allocation across these intervals. Subtracting the term for diagnosis
+does not establish correct prospective accounting: deferred still
+promotions and failed still allocations must also be traced.
+The existing threshold and allocation-validity check still apply
+to the original receipts.
+
+The source-hash-bound arithmetic replay and native traces are in
+=.cache/ascent/yuanxu-v0.1.0/recycled-heap-charge.j_ymgp9n/allocation-diagnostic/=.
+
+*** Charge a still object at successful allocation
+
+The private runtime now records the still object's header and payload
+charge once after backing storage and the object header are initialized.
+Reservation and failure paths keep their original occupancy accounting.
+The GC rebase and =___bytes_allocated= read only the movable part of
+occupancy. The capacity and collection policies still consult the
+original heap and still fields. The guarded
+=successful_still_charge_survives_collection= theorem checks exact
+preservation across a collection with that rebase.
+
+The original =update= and =lifecycle= paired Cases each checked all 50
+pairs on the repaired runtime. Both allocation lanes had zero negative
+samples. =lifecycle= passed its complete existing gate. =update= kept
+its CPU failure: 4.882 ms reference and 5.508 ms candidate per
+transaction, with an allowed maximum of 5.1461 ms. Its byte medians
+were 3,700,424 and 2,810,628.8. The counter repair does not remove the
+CPU excess.
+
+The same private image subsequently completed the two original scale
+Cases. Before timing, it passed seven focused Cases covering ordered
+detachment, moving-GC aliases and explicit weak-key collection.
+Both scale widths naturally completed 100 CPU pairs, 100 consecutive
+admissions of 32 complete lists and five allocation pairs. The 2 GiB
+heap cap, 90-second watchdog and strict 100 ms cutoff were unchanged.
+
+| Vertices | Wall P50 / P95 / max (ms) | Below 100 ms | Gate |
+|----------+---------------------------+--------------+------|
+| 384 | 34.626 / 71.373 / 88.020 | 100/100 | Pass |
+| 512 | 49.316 / 81.337 / 157.096 | 97/100 | Pass |
+
+The two passing receipts qualify these local scale invocations.
+The experiment changed counter bookkeeping, so it supplies no
+source-level reason to credit the latency difference to that change.
+Earlier 512 failures stand. This exact image still has the observed
+=update= failure and has yet to complete the original matrix.
+The locked LeanPoo Guard accepted the replay of all 200 scale
+admissions and all 185 build jobs.
+
+The native source patch and receipts are in
+=.cache/ascent/yuanxu-v0.1.0/successful-still-charge.5b9qkbyn/=.
+
+** Source boundaries for the remaining CPU gates
+
+The =empty-reuse= probe in =t/performance/index-entry-benchmark.ss=
+starts its declaration interval before =recursive-declaration=. The
+=relational-program= expansion in =program/scheme-language.ss= builds
+the relation values and gathers source handles, then invokes
+=gerbil-ascent-construct-inert-program= in =program/func.ss=. That
+constructor creates the rule and Program values, checks source handles
+in =program/types.ss=, and validates the public root. The same observer
+starts the solve interval only after that function returns. The solve
+interval includes admission, indexing, fixpoint evaluation and result
+publication. The independent closure check is outside both intervals.
+=OrderedExportGraph.lean= names the declaration, solve and between-call
+intervals in =EmptyBucketCost=. Its bound applies to the existing
+collected-start trace. The trace has no separate measurement for rule
+construction versus root validation.
+
+The =update= gate in =t/performance/selected-activation-benchmark.ss=
+times ten transactions per observation, alternating arms over 50 pairs.
+=activation-run= in =t/performance/selected-activation/fixture.ss=
+constructs the updated engine, runs it and reads every output. The
+current engine calls =gerbil-ascent-prepare-session-reuse= in
+=program/reuse.ss= before construction. This calls the eligibility
+checks and ordered source comparison in =program/update-selection.ss=
+and closes the affected dependency mask. The engine then initializes
+the new sources and seeds unaffected rows in =program/evaluate.ss=.
+The run and public observation are subsequent costs.
+=SourceUpdateFrame.lean= records these four intervals in =UpdateCpu=
+and derives the available selection budget from the original CPU
+ratio and allowance. The original receipt gives complete-transaction
+medians. It cannot attribute the 0.362 ms gap over the ceiling to any
+one interval.
+
+The declaration control completed 50 native pairs over the three
+original cuts and checked every result against independent grounding.
+Fresh rule construction plus the rest of declaration took a median
+7.039 ms per three cuts. Prebuilt rules with a new Program and the usual
+root validation took 5.584 ms and won 44/50 pairs. The paired median
+saving was 1.421 ms. The control establishes the removable portion for
+this diagnostic. Both arms still pay for relation construction, handle
+checks and root validation. It supplies no authority to reuse public
+rule objects or successful contract checks.
+
+The update observer completed 50 alternating ten-transaction pairs on
+the released SDK. The following owner-thread CPU medians are per
+transaction. Each transaction checked the complete ordered results
+against the same independent expectation.
+
+| Phase | Reference (ms) | Candidate (ms) | Median paired increase (ms) |
+|-------+----------------+----------------+-----------------------------|
+| Eligibility, source comparison and dependency closure | 3.204 | 3.498 | 0.278 |
+| Engine construction, including source admission and reuse seeding | 1.410 | 1.683 | 0.217 |
+| Run | 0.065 | 0.069 | 0.002 |
+| Observe all output rows | 0.122 | 0.128 | 0.007 |
+| Total of timed intervals | 4.874 | 5.464 | |
+
+Phase medians do not sum to the median total. This diagnostic places
+the largest overhead before rule execution. The isolated source
+traversal candidate passed five activation semantic Cases, including
+timeout resumption, but its original performance Case reached the
+90-second watchdog without delivering a receipt. Its source is not
+included in this change. The frozen SDK's baseline performance Case
+printed a pass with negative allocation medians in both arms, which
+cannot qualify cumulative allocation.
+
+The ordered UF export was also tested on the released SDK with the
+2 GiB heap cap and original 90-second watchdog. At 384 vertices all
+100 CPU pairs, 100 admissions and five allocation pairs completed.
+Candidate wall P50, P95 and max were 159.176, 259.922 and 295.716 ms.
+The 100 ms gate failed. At 512 vertices all 100 CPU pairs completed;
+the watchdog ended the run after 23 of 100 admissions. It produced
+no P95 receipt. The earlier private runtime's results are separate.
+
+A separate native probe bracketed 100 consecutive batches of the
+same 32 complete exports at each width. Gambit reported at least
+100 ms in collection intervals in 98 of the 384-vertex batches and
+all 100 of the 512-vertex batches. Subtracting collection time within
+each sample leaves median outside-collection intervals of 27.119 ms
+and 47.752 ms. The sample-aligned Lean replay checked those exceedance
+counts under the locked Guard. Each full list still comes from
+=capture-rows= and =gerbil-ascent-view-rows=. A different collector
+cost could also change the outside-collection interval, so this
+diagnostic does not predict the effect of a new allocation strategy.
+
+** Public allocation floor on the fixed release
+
+For the closed-cycle fixture, =gerbil-ascent-trrel-uf-freeze= borrows
+both axes from the same frozen component. =capture-rows= dispatches to
+the view export, and =materialize-rectangles= constructs one list-spine
+cell and two tuple cells for each ordered row. The detachment tests
+mutate all three cells and check earlier and subsequent results.
+=strict_workload_pair_payload= in =WeightedExportCapacity.lean= binds
+that layout to 339,738,624 and 603,979,776 bytes of pair objects per
+32-export batch at 384 and 512 vertices. These are object bytes before
+copying and exclude auxiliary allocations and collector bookkeeping.
+The two-semispace charge in the separate counter model is twice these
+values, subject to the source accounting premises documented there.
+
+=detached_batch_requires_collector_budget= keeps the public payload
+floor and the residual collector deadline separate. Capture and
+materialization changes may change collection behavior. Counting
+removed lookups or constructor instructions alone gives no latency
+bound. The fixed-release experiment must retain the ordinary detached
+lists, their order and the existing heap and wall limits.
+
+The fixed Gambit source's =garbage_collect_mark_strong_phase= enumerates
+VM and processor roots, RC roots, global cells, symbols and keywords,
+continuations, registers and saved values. =mark_array= forwards the
+reachable movable objects and =scan_movable_objs_to_scan= visits the copied
+objects' pointer fields. A binary result links the outer cdr chain and has
+a pair-valued car on every outer cell. The builder's partial result remains
+reachable from its live cursor while a heap check invokes collection.
+The next collection reconstructs reachability from roots again. Forwarding
+deduplicates aliases within one collection. The live-prefix observations in
+[[file:collector-and-allocation.org][Collector and allocation]] put the loaded
+movable baseline near 85 MB of accounting charge, with median excess charges
+of 3.44 MB and 15.82 MB at 384 and 512. These are native accounting units,
+including semispace and chunk charges. They do not assign elapsed time to
+individual module objects.
+
+=repeated_export_marking= expresses the per-pause background plus in-flight
+terms. =collector_background_floor= keeps the repeated background term when
+the in-flight term is removed at a fixed schedule. Together with the
+section-renewal replay, this explains why another tuple-constructor loop or
+removing the live prefix alone has insufficient support as a solution.
+The inputs are the installed release and Gambit =ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f=,
+=lib/mem.c= SHA-256 =317b5262efd7f3a9418328250c163a9cf3fb9a44fbd573b08fde6f4a3cce2882=.
+
+* Standard-library audit of the changed paths
+
+The ordered rectangle writer uses =std/list/list-builder:with-list-builder=.
+The fixed release expands it to a forward tail splice. Generated C already
+allocates the two tuple cells next to the outer cell, with one heap check
+and poll. The prior =map= and =append!= control used standard list operations
+and preserved order and detachment. Its compiled batch CPU increased at
+both widths. Keep the existing builder for the complete public list.
+=filter=, =delete-duplicates/hash= and standard sorting serve the independent
+small-graph oracle and ordered accumulation. The scalar bitmap still owns
+domain checks and canonical encoded-pair order. Generic sequence folds alone
+cannot supply those invariants. Source update now reads its existing vector
+directly alongside the relation list. The cursor replaces two allocated
+spines and preserves ordered callbacks and dependency closure.
+=indexed_log_comparisons= and =cursor_spine_saving= describe that local
+change. =absent_publication_disables_source_shortcut= records why a source
+ranking pass can be omitted without a publication.
+
+The inert checked DSL constructs one located rule and copies the same
+reader locations before the root validates the program. The ordinary path
+continues to validate the original Rule before creating the metadata view.
+=located_rule_value_count= accounts for one avoided object per inert rule.
+The reduction applies to both empty-bucket arms. The paired net-benefit gate
+still needs its original fifteen percent margin.

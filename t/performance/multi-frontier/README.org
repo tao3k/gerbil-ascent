@@ -1,0 +1,58 @@
+#+title: Multiple empty-frontier pivots
+
+The baseline evaluator is frozen from committed =98a96ca=, retaining its
+narrow second-atom optimization and checked binding. Only evaluator export
+names and relative imports are changed. The candidate builds engine-local
+prefix metadata without changing shared immutable analysis vectors. A pivot
+can be bypassed only across contiguous variable-only atoms without index
+columns; the pivot's own empty raw rows do not dispatch callbacks. An
+indexed atom or any other clause ends the bypassable prefix.
+
+=just multi-frontier-benchmark= compiles both evaluators with the same
+settings and uses 20 warmups and 1000 alternating pairs per shape. Two-atom
+chains with 16 and 256 edges are median-nonregression controls. Three-atom
+chains insert four unbound gate rows between reach and edge; both require
+median nonregression, and the 256-edge shape requires >=900 strict wins.
+Exact ordered reachability goldens and finished flags are checked outside
+measurement spans. Program construction is outside timing; engine planning,
+state initialization and complete solve are included.
+
+The first per-round recursive prefix-check candidate was rejected: the
+256-edge two-atom control regressed from 326000 to 331000 ns. Its samples
+remain in =receipts/rejected-per-round*=. The candidate's prefix metadata
+was then moved to engine initialization. No admission gate was relaxed.
+
+Both final runs pass all gates with final =OK= and exit 0. Their source
+manifests match the retained evaluator and benchmark. Values are nanoseconds:
+
+| shape | old p50 run 1/2 | new p50 run 1/2 | strict wins run 1/2 |
+|-------+-----------------+-----------------+---------------------|
+| control 16 | 18000 / 18000 | 18000 / 18000 | 353 / 371 |
+| control 256 | 328000 / 325000 | 325000 / 322000 | 741 / 756 |
+| multi 16 | 48000 / 48000 | 36000 / 36000 | 988 / 997 |
+| multi 256 | 3462000 / 3313000 | 666000 / 655000 | 973 / 989 |
+
+The qualified multi-256 gains are 5.20x and 5.06x against =98a96ca=;
+they are not multiplied with the preceding different-workload results.
+The nine-Case semantic module passes exact fixed points, gate cardinalities
+including zero, Provider callbacks across an indexed prefix, plus the
+previous frontier semantics controls. Each native module reports
+=MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0.
+
+The committed =98a96ca= rule-program module also passes its original
+duration profile in =committed-rule-duration.log=. This is a focused
+local pass, not whole-suite or remote CI closure.
+
+Final-source integration passes =just build= and =just check-policy=
+(37 selected modules, findings=0, errors=0). Existing index, BYODS,
+lattice, source-admission and rule-program modules pass all 44 Cases,
+including the unchanged rule-program duration profiles. The unchanged
+indexed-joins SS scenario passes 1000 samples with p95=460 us against
+the original 2000 us limit and semanticEquivalent=#t. Every module has
+=MODULE-OK=, =HARNESS-OK=, final =OK= and exit 0. Logs are in =receipts/=.
+The complete qualification and SS suites and remote CI were not run.
+
+The frozen reference was verified byte-for-byte against
+=git show 98a96ca:program/evaluate.ss= after only import relocation and
+export alpha-renaming. Both final sample manifests and the semantic
+manifest pass =shasum -a 256 -c= against the final retained source.

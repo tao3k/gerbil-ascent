@@ -1,0 +1,83 @@
+#+TITLE: Ordered selection of frozen explicit rows
+
+* Production flow and Gerbil source idiom
+
+=core/relation-view.ss= previously used one absolute =list-ref= per selected
+column per row. Wide ordered queries repeatedly traversed the same row prefix.
+Gerbil =src/std/list/list.ss:drop-while= and =group-consecutive= retain the
+remaining list tail during traversal rather than repeatedly indexing the root.
+The explicit-view visitor adopts that cursor ownership pattern.
+
+Each visit compiles nondecreasing exact natural columns into relative offsets.
+A named pure predicate consumes offsets and keys together, advancing its local
+row tail. Duplicated columns have zero offset. Condition order and
+short-circuiting stay unchanged. Unordered/malformed selectors retain the old
+absolute-index predicate. Plans belong to one visit; frozen views retain no
+cursor, memo table or new option. Matching rows are still detached before
+consumer callbacks, and rows/count promises remain separate.
+
+* Native matched qualification
+
+Frozen baseline =027d87525c1f6740b8f2911aec7e52d13e32a7c0:core/relation-view.ss=,
+Git blob =e317b02c2eb173759539a871fa6db03bb397c61d=. Reference is byte-for-byte
+identical, without import normalization. Both sides use the same AOT flags and
+their own nominal view/stream types in one executable.
+
+The timed workflow includes explicit snapshot publication, stream selection,
+query preparation, row matching, output detachment and ordered collection.
+Input generation and independent vector-based filtering occur outside timing.
+Native ASP API drives 50 alternating A/B pairs; synchronous allocated bytes and
+process user+system CPU are recorded. Exact baseline order and independent
+expected outputs must both agree.
+
+Targets =wide duplicate miss= require 20% CPU reduction and 35/50 wins.
+Controls =unordered tiny empty= allow 10% + 20us CPU. Every scenario permits
+10% + 4096 bytes allocation. These gates are declared before measurements.
+Raw samples, logs and binaries stay under ignored =.cache/ascent/explicit-selection=.
+
+This measures frozen explicit selection, not whole-program solve or session
+latency. Unit tests belong to =t/qualification= and native benchmark entrypoints
+to this directory; the root build entry is unchanged.
+
+* Native CPU/allocation receipts
+
+| Scenario | Old CPU us | New CPU us | Old bytes | New bytes | CPU wins |
+|----------+------------+------------+-----------+-----------+----------|
+| wide     |       3696 |        496 |   3170752 |   3177552 |       50 |
+| duplicate |      1940 |        409 |   1597888 |   1604640 |       50 |
+| miss     |       3646 |        443 |   1585600 |   1592400 |       50 |
+| unordered |        73 |         73 |    104992 |    105696 |       18 |
+| tiny     |          2 |          2 |       832 |      1536 |       17 |
+| empty    |          1 |          1 |       368 |      1072 |       10 |
+
+Every declared gate passed. Ordered offset preparation adds about 6800 bytes
+in the wide target, 0.21% of the complete publication/traversal allocation.
+Small controls add 704 bytes and establish only bounded regression. No global
+machine-isolation claim is made.
+
+* Semantic controls
+
+The new unit Suite enumerates all 40 column sequences of length zero through
+three over a three-column domain, checking matching and mismatching keys
+(79 comparisons) against the frozen implementation and independent vector
+filtering. It covers sorted, unsorted and repeated columns in the same domain.
+Additional Cases check nested field equality, contradictory duplicate keys,
+reentrant inner selections and emitted-row mutation, lazy count/row forcing,
+fresh query preparation after between-visit key edits, delayed out-of-range
+errors, malformed selector lengths and early mismatch short-circuiting.
+
+Existing relation-view, provider-view, UF and UF-commit Suites accompany it in
+the native std/test qualifier. The production module is also directly loaded
+and executed with ordered selection assertions. Policy scan: 30 findings,
+zero errors.
+
+The first qualifier build was rejected by source snapshot admission when a
+concurrent change outside this core module arrived during compilation. Its
+log remains =build-concurrent-change-rejected.log= in the cache; that artifact
+was not admitted as a completed qualification build.
+
+Final qualification: 5 Suites, 44 Cases, final =OK= and exit 0; the Case assertion
+checker passed. The fresh-query test initially tried to mutate a quoted key,
+which AOT compiles as read-only. It now constructs its mutable key with =list=;
+the rejected fixture log remains in the cache. This is a test-fixture repair,
+with no production admission or performance gate change.

@@ -1,0 +1,82 @@
+#+title: Typed finite-domain admission
+
+* Scope and source lesson
+
+Frozen =reference.ss= is =program/higher-order.ss= at =4410e52=, with unchanged
+production imports. Gerbil =1cfb032= =compiler/optimize.ss:28-35= owns analysis
+hash tables within the invocation; =core/match.ss= provides structural =with=
+patterns. Apply those ownership and expression boundaries to typed compilation:
+scoped traversal charges every occurrence before reconstruction or copy reuse;
+constructor dispatch owns checked representation rebuilding; lowering consumes
+one structural typed record. One =charge!= owns the original expansion counter.
+
+Source and mapping domain admission previously used one linear =member= search
+for every cell. =check-domain!= now selects one membership predicate per row
+segment. Domains and segments larger than 16 entries use a local equality hash;
+small/empty checks retain list membership. Indexes never survive the call or
+cache public mutable domain spines. Mapping input admission still finishes
+before any output admission; row ownership, scalar checks and first failure
+order remain with their existing constructors. No scope visit is memoized away.
+
+* Matched qualification
+
+Native ASP =benchmark-run/result= admits 20 optimized complete consumers.
+20 alternating CPU pairs include natural GC; five separate forced-GC allocation
+pairs use cumulative VM statistic 16. Each observation compares complete ordered
+published arities, source rows and finite domains against the frozen consumer.
+Wide source and mapping use 4096 domain atoms and 512 rows near the end of the
+domain. Small/empty use two atoms. Constructors, compilation and publication
+projection are all inside the clocks; solve qualification is separate.
+
+Fixed target gates require <=90% baseline CPU and >=16/20 wins. Small/empty
+allow <=110% plus 20 microseconds. All allocation gates allow <=110% plus 4096
+bytes. Raw receipts and failed experiments belong in ignored
+=.cache/ascent/typed-admission/=, never Git. These are local construction and
+compilation measurements, not whole-solver or remote-CI performance claims.
+
+* Reproduction
+
+Use the repository Gerbil package/load paths and Darwin OpenSSL library path.
+Run =gxi t/performance/typed-admission/build.ss <absolute .gerbil/lib> <binary>=;
+append =qualify= to link the independent higher-order and typed-domain Suites.
+Run the benchmark binary =<scenario> <receipt-path>= sequentially. Run the
+qualification binary without arguments to use native independent processes with
+capacity =min(cpu-count,suite-count)=; Cases inside a Suite preserve order.
+Child failures propagate after every child is joined. The production build
+entry needs no testing additions.
+
+* Local accepted receipts
+
+| Consumer | Baseline CPU us | New CPU us | Wins | Baseline bytes | New bytes | Real s |
+| source  | 56132 | 23703 | 20/20 | 7184096  | 7193392  | 18.34 |
+| mapping | 150968 | 56123 | 20/20 | 10516512 | 10544240 | 35.15 |
+| small   | 3451 | 3327 | 9/20 | 4767040 | 4767440 | 0.94 |
+| empty   | 3263 | 3209 | 9/20 | 4766096 | 4766224 | 1.05 |
+
+All four fixed gates pass. Wide CPU reduces 57.8% and 62.8%; indexes slightly
+increase allocation, within the fixed regression gate. The four isolated
+studies take 55.48 seconds including allocation probes; real time is not
+presented as an A/B improvement. Production policy reports zero findings.
+The first build rejected a frozen-reference import conflict; the reference
+fixture now imports only the four measured constructors/compiler entries.
+That failed build log is retained alongside accepted receipts.
+
+Two native independent Suite processes pass all 40 Cases in 10.05 seconds,
+with final =OK= and zero exit status. Coverage includes lexical capture and
+escaped parameters, mutable types/mappings, cycles, exact expansion budgets,
+finite fixed points and enormous capped heights. New Cases exercise the
+list/index threshold with false/character atoms and changing public supports,
+and inspect the first failing mapping input atom even when earlier output
+atoms would also fail. The reference blob is
+=98e69d07efe125649cfe23283329d5d856579a48=, identical to its baseline source.
+
+* Allocation counter qualification boundary (2026-10-10)
+
+The historical allocation pairs above sampled process-statistics slot 16 at
+forced-GC boundaries. The lattice-frontier study observed negative differences
+in a fully static executable, both with that recipe and with Gambit's dedicated
+=##get-bytes-allocated!= counter. Historical byte counts and allocation gates
+are therefore withdrawn pending a corrected gxi receipt. Historical CPU and
+semantic receipts remain separate evidence. The runner now samples the dedicated
+cumulative counter directly around the complete consumer and rejects a negative
+difference. This change does not inherit the preceding allocation PASS.

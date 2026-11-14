@@ -1,0 +1,88 @@
+#+title: Physical index batch insertion and projection
+
+* Ownership and source study
+
+The production change belongs to =table/funs.ss=. Gerbil's
+=compiler/optimize-call.ss:89-131= distinguishes immutable references and
+quoted arguments from expressions requiring temporaries. Its
+=runtime/table.ss:440-464= implements synchronous =hash-update!= with one
+hash/probe path. These are concrete expression and ownership patterns, not
+an assumption that the compiler automatically moves a captured branch.
+
+The batch selects its entire ordered/arbitrary projection loop once. Ordered
+columns become forward cursor distances once per call. A batch-owned row slot
+and one updater replace each row's =hash-get= followed by =hash-put!= without
+allocating a captured updater for every row. Bucket insertion creates a fresh
+spine, preserving previously returned bucket lists. Arbitrary/repeated columns
+retain direct projection. Caller columns are neither mutated nor cached.
+
+* Frozen baseline and entry point
+
+=reference-funs.ss= is byte-identical to =table/funs.ss= at
+=0aae58cd770590c0b22b0b6fa29103f97bf9bf9d=. =reference-access.ss= freezes
+that commit's physical access layer with only its two import paths redirected:
+the frozen funs module and the unchanged production provider module. Restoring
+those import paths reproduces the original file byte for byte.
+
+Run =just performance-index-projection=. The native builder compiles project
+modules against the installed SDK; it does not rebuild Gerbil. Artifacts,
+standard ASP receipts and raw paired domain counters stay under ignored
+=.cache/ascent/index-projection/=. =benchmark.ss= was created through public
+=make-benchmark-fixture=; =benchmark-run/result= owns the 50 samples and standard
+wall/heap receipt. Cumulative allocated bytes and process CPU are additional
+domain counters, not reinterpretations of ASP heap occupancy.
+
+* Measurement and admission
+
+Fixture construction precedes timing. Each leg includes physical index build,
+extension and eight key lookups (four for the small control). Alternating leg
+order and a collection before each leg limit ordering/GC bias. Both results
+must equal an independent direct projection/filter oracle outside the inner
+timed spans. Wide/compact/fallback use four repetitions per leg; small uses 64.
+
+The wide gate requires CPU <= 80% of baseline, at least 35/50 paired CPU wins,
+and <= 4096 extra allocated bytes per lifecycle. Controls allow at most 5%
+CPU plus 20 microseconds and 4096 extra bytes (1024 for small). These gates
+were fixed before the final optimization. Standard paired wall p95 remains
+diagnostic. This benchmark does not measure whole solver speed.
+
+* Local results
+
+The first projection-only version failed the original 20% CPU gate:
+2338 -> 2293 microseconds, approximately 2%, with 768 extra allocated bytes.
+Its raw receipt is retained locally as =shape-only.sexp=; the gate was not
+relaxed. Fusing native hash lookup subsequently passed all four scenarios:
+
+| Scenario | Baseline CPU us | Current CPU us | Baseline bytes | Current bytes | CPU wins |
+|----------+-----------------+----------------+----------------+---------------+----------|
+| wide     |         2335.25 |        1403.50 |        1804224 |       1805152 |    50/50 |
+| compact  |          941.75 |         574.50 |         606144 |        606496 |    48/50 |
+| fallback |         2671.75 |        2024.25 |        1526032 |       1526192 |    49/50 |
+| small    |        1.765625 |         1.4375 |           2576 |          2928 |    48/50 |
+
+These are local native lifecycle medians from 50 checked pairs per scenario.
+The change adds bounded per-batch allocation; it is not an allocation reduction.
+The learning source is installed Gerbil =0.19.2591dcd.patchf5cedd8168cb=.
+
+The public =just performance-index-projection= entry subsequently exits 0:
+wide =3050 -> 1877.75= microseconds (49/50 CPU wins), compact
+=995.50 -> 577.75=, fallback =3224.25 -> 2433.50=, small
+=1.796875 -> 1.484375=. All original gates and allocation deltas remain valid.
+Separate executions have different absolute CPU times; the repeat supports
+the relative lifecycle improvement, not a stable whole-application latency.
+
+Four native Suites (index build, lifecycle, component index and BYODS index)
+pass 19 Cases with explicit module/harness/final =OK= markers and exit 0.
+Coverage includes wide boundary/sparse/contiguous/repeated columns, fresh
+metadata after caller column mutation, retained bucket snapshots, exact custom
+provider arguments, compiled self joins and recursive actor truth. The source
+policy audit exits 0 with no errors and one advisory for the distance-building
+named-let: its prior-column state is required to produce successive distances.
+
+After integrating the concurrent provider-recovery change, native lifecycle
+and entry qualification exits 0. Inspection of individual Case markers caught
+the newly added mutate-then-raise Case nested inside its predecessor: creating
+that Case during execution did not run its assertions. Correcting the two
+registration parentheses makes it an independent Case. The entry Suite then
+executes all eight Cases, including the explicit mutate-then-raise =CASE-OK=,
+and exits 0. This registration repair does not change the measured algorithm.

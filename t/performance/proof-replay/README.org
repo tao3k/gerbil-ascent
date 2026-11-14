@@ -1,0 +1,82 @@
+#+TITLE: Ordered positive proof production and independent replay
+
+* Gerbil source lesson
+
+The studied checkout is Gerbil =0.19.2591dcd.patchf5cedd8168cb=.
+=src/gerbil/compiler/optimize.ss= collects analysis facts before transformation;
+=src/gerbil/compiler/optimize-call.ss:89-131= guards lambda substitution with
+arity and mutation information and retains ordered bindings for operands.
+=src/std/list/list-builder.ss:8-21= owns a head/tail queue, allocating one cell
+per insertion instead of repeatedly copying the accumulated list. Its comments
+explicitly describe the shared mutable spine. These examples motivate separate
+lookup metadata and ordered execution, with explicit ownership of mutation.
+
+* Production change
+
+=candidate/provenance.ss= now owns one private ordered queue and structural row
+membership index per relation. Grounding reads only committed queues. A separate
+round-local pending index suppresses duplicate conclusions; pending counters
+preserve ID assignment and derived limits. Queues are extended after grounding
+finishes, preserving discovery order, first witnesses and round boundaries.
+Published proof lists have their own spine; queue/index state never escapes.
+
+The independent verifier prepares source occurrence vectors, candidate fact
+membership and first-rule label lookup from its own snapshot/specification.
+It does not reuse producer indexes. Duplicate source rows retain their original
+1-based positions; repeated rule labels retain first-match behavior. Empty or
+singleton metadata uses direct lookup and pending tables are allocated lazily.
+The query binder, snapshot/digest checks and work charging remain authoritative.
+
+* Matched native benchmark
+
+Run =just performance-proof-replay= through the existing native harness.
+=reference.ss= is byte-identical production source at
+=dce80eb08ea438ebbd3e58b88a0e9df023cdb804=, including its independent verifier.
+The fixture was generated through public ASP =make-benchmark-fixture= and is
+read by =benchmark-run/result=. No benchmark switches enter production code.
+
+Each scenario has 50 alternating paired samples. Each timed leg generates a
+complete proof and independently verifies it against the supplied native rows.
+Outside timing, the harness compares every ordered node field, status and roots,
+and checks expected node counts/root IDs. GC precedes each leg. CPU and allocated
+bytes come from native process statistics; outer API wall/heap observations are
+diagnostic. Inputs and imported module identities are qualified before timing.
+
+Fixed gates require copy/duplicate CPU <= 80% of baseline, allocation <= baseline
++8192 bytes and at least 35 CPU wins. Source/small controls permit CPU <= 105%
++20 microseconds and allocation overhead of 4096/8192 bytes respectively.
+
+| Scenario | Rows | Rules | Median CPU us old/new | Median bytes old/new | CPU wins |
+|----------+------+-------+-----------------------+----------------------+----------|
+| copy | 512 | 1 | 16251 / 1551 | 14006736 / 1503184 | 50/50 |
+| duplicate | 512 | 4 | 38704 / 2597 | 14842320 / 2094384 | 50/50 |
+| source | 512 | 0 | 6139 / 1064 | 7107816 / 914344 | 50/50 |
+| small | 2 | 1 | 20 / 22 | 28592 / 34128 | 20/50 |
+
+All four fixed gates passed. The small control has no speed improvement and
+adds 5536 bytes. These measurements qualify proof generation plus replay for
+these inputs, not native solving, actor scheduling or overall application time.
+
+The first eager-table experiment failed the unchanged small allocation gate:
+28592 -> 41200 bytes (+12608). Empty/singleton specialization, lazy pending
+metadata and skipping empty fact tables resolved that failure. Raw paired logs,
+that negative receipt and subsequent qualification logs remain only in ignored
+=.cache/ascent/proof-replay/=.
+
+* Semantic qualification
+
+=t/qualification/ascent-proof-replay-test.ss= compares the complete proof DAG
+and verifier result with the frozen implementation. It enumerates all 64
+three-node directed graphs without self edges, independently computes Boolean
+transitive closure, and checks ten work budgets per graph. A three-cycle checks
+100 consecutive work boundaries and twelve derived limits. Further cases cover
+false-valued and duplicate source rows, repeated fact/rule labels, first source
+positions, published-row mutation rejection and subsequent invocation isolation.
+Existing positive provenance, nonmembership and provenance graph suites qualify
+production consumers. All checks use native Scheme unit tests.
+
+The four native modules passed all 27 Cases, each with explicit =MODULE-OK=,
+=HARNESS-OK=, final =OK= and process exit 0. Selected production source policy
+completed with zero findings/errors. Benchmark formatting was subsequently
+checked by the native reader against the measured source: all read forms are
+identical. The executable benchmark and raw receipts are ignored cache files.

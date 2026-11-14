@@ -4,7 +4,7 @@
 //! Recursive lattice joins and composite indexes.
 
 use super::common::scheme_output;
-use ascent::{Dual, ascent};
+use ascent::{Dual, ascent, lattice::set::Set};
 
 fn ascent_lattice_rows(edges: &[(u32, u32, u32)]) -> Vec<String> {
     ascent! {
@@ -53,6 +53,55 @@ fn recursive_lattice_join_matches_ascent() {
     }
 }
 
+fn ascent_set_lattice_rows(seeds: &[(u32, u32)], edges: &[(u32, u32)]) -> Vec<String> {
+    ascent! {
+        relation seed(u32, u32);
+        relation edge(u32, u32);
+        lattice reach_tag(u32, Set<u32>);
+        reach_tag(node, Set::singleton(*tag)) <-- seed(node, tag);
+        reach_tag(to, tags.clone()) <-- reach_tag(from, ?tags), edge(from, to);
+    }
+    let mut program = AscentProgram {
+        seed: seeds.to_vec(),
+        edge: edges.to_vec(),
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rows: Vec<_> = program
+        .reach_tag
+        .iter()
+        .flat_map(|(node, tags)| tags.iter().map(move |tag| format!("{node}\t{tag}")))
+        .collect();
+    rows.sort_unstable();
+    rows
+}
+
+#[test]
+fn set_lattice_union_and_recursive_propagation_match_ascent() {
+    type Pairs = [(u32, u32)];
+    let snapshots: &[(&Pairs, &Pairs)] = &[
+        (&[], &[]),
+        (&[(1, 7), (1, 9), (1, 7)], &[]),
+        (&[(1, 7), (2, 9)], &[(1, 3), (2, 3), (3, 4)]),
+        (&[(1, 7), (2, 9)], &[(1, 2), (2, 1), (2, 3)]),
+    ];
+    for (seeds, edges) in snapshots {
+        let rows = |pairs: &[(u32, u32)]| {
+            pairs
+                .iter()
+                .map(|(left, right)| format!("({left} {right})"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        let request = format!("({})\n({})\n", rows(seeds), rows(edges));
+        let output = scheme_output("lattice-set-rows", &request);
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, ascent_set_lattice_rows(seeds, edges));
+    }
+}
+
 #[test]
 fn indexed_two_hop_join_matches_ascent() {
     ascent! {
@@ -78,6 +127,80 @@ fn indexed_two_hop_join_matches_ascent() {
         assert_eq!(actual.pop().as_deref(), Some("END"));
         actual.sort_unstable();
         assert_eq!(actual, expected, "provider recipe: {recipe}");
+    }
+}
+
+#[test]
+fn indexed_two_hop_join_matches_ascent_at_input_scale() {
+    ascent! {
+        relation edge(u32, u32);
+        relation two_hop(u32, u32);
+        two_hop(from, to) <-- edge(from, via), edge(via, to);
+    }
+    for edge_count in [1_000_u32, 10_000] {
+        let mut program = AscentProgram {
+            edge: (0..edge_count).map(|from| (from, from + 1)).collect(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut expected: Vec<_> = program
+            .two_hop
+            .iter()
+            .map(|(from, to)| format!("{from}\t{to}"))
+            .collect();
+        expected.sort_unstable();
+        assert_eq!(expected.len(), (edge_count - 1) as usize);
+
+        let output = scheme_output("index-rows", &format!("{edge_count}\n"));
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "source rows: {edge_count}");
+    }
+}
+
+#[test]
+fn wide_lattice_batch_matches_ascent_at_input_scale() {
+    ascent! {
+        relation seed(u32, u32);
+        lattice best(u32, Dual<u32>);
+        best(key, Dual(*value)) <-- seed(key, value);
+    }
+    for size in [1_000_u32, 10_000] {
+        let mut program = AscentProgram {
+            seed: (0..size)
+                .map(|key| (key, key + size))
+                .chain((0..size).map(|key| (key, key + 1)))
+                .collect(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut expected: Vec<_> = program
+            .best
+            .iter()
+            .map(|(key, Dual(value))| format!("{key}\t{value}"))
+            .collect();
+        expected.sort_unstable();
+        assert_eq!(expected.len(), size as usize);
+
+        let output = scheme_output("lattice-rows", &format!("(wide {size})\n"));
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        assert_eq!(actual, expected, "lattice keys: {size}");
+    }
+}
+
+#[test]
+fn wide_direct_lattice_sources_follow_fixed_point_join_at_input_scale() {
+    for size in [1_000_u32, 10_000] {
+        let output = scheme_output("lattice-rows", &format!("(wide-source {size})\n"));
+        let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+        assert_eq!(actual.pop().as_deref(), Some("END"));
+        actual.sort_unstable();
+        let mut expected: Vec<_> = (0..size).map(|key| format!("{key}\t{}", key + 1)).collect();
+        expected.sort_unstable();
+        assert_eq!(actual, expected, "direct lattice keys: {size}");
     }
 }
 
@@ -112,4 +235,103 @@ fn indexed_composite_group_and_node_join_matches_ascent() {
         actual.sort_unstable();
         assert_eq!(actual, expected, "provider recipe: {recipe}");
     }
+}
+
+#[test]
+fn indexed_lattice_composite_key_matches_ascent_after_join() {
+    ascent! {
+        relation request(u32, u32);
+        relation candidate(u32, u32, u32);
+        lattice best(u32, u32, Dual<u32>);
+        relation found(u32, u32, u32);
+        best(group, node, Dual(*value)) <-- candidate(group, node, value);
+        found(group, node, *value) <--
+            request(group, node), best(group, node, ?Dual(value));
+    }
+    for size in [50_u32, 1_000] {
+        let mut program = AscentProgram {
+            request: (0..size).map(|node| (node % 2, node)).collect(),
+            candidate: (0..size)
+                .map(|node| (node % 2, node, node + size))
+                .chain((0..size).map(|node| (node % 2, node, node + 1)))
+                .collect(),
+            ..AscentProgram::default()
+        };
+        program.run();
+        let mut expected: Vec<_> = program
+            .found
+            .iter()
+            .map(|(group, node, value)| format!("{group}\t{node}\t{value}"))
+            .collect();
+        expected.sort_unstable();
+        assert_eq!(expected.len(), size as usize);
+        for recipe in ["index-lattice-rows", "index-lattice-rows-alist"] {
+            let output = scheme_output(recipe, &format!("{size}\n"));
+            let mut actual: Vec<_> = output.lines().map(str::to_owned).collect();
+            assert_eq!(actual.pop().as_deref(), Some("END"));
+            actual.sort_unstable();
+            assert_eq!(actual, expected, "lattice index: {recipe}, size: {size}");
+        }
+        if size == 50 {
+            program.candidate.push((0, 0, 0));
+            program.run();
+            let mut retained: Vec<_> = program
+                .found
+                .iter()
+                .map(|(group, node, value)| format!("{group}\t{node}\t{value}"))
+                .collect();
+            retained.sort_unstable();
+            let mut fresh = AscentProgram {
+                request: program.request.clone(),
+                candidate: program.candidate.clone(),
+                ..AscentProgram::default()
+            };
+            fresh.run();
+            let mut fresh_rows: Vec<_> = fresh
+                .found
+                .iter()
+                .map(|(group, node, value)| format!("{group}\t{node}\t{value}"))
+                .collect();
+            fresh_rows.sort_unstable();
+            // Rust 0.8.0 retains the previous ordinary relation row after a
+            // lattice refinement. The fresh fixed point contains only the
+            // refined value; Scheme follows that fixed point.
+            assert_eq!(retained.len(), 51);
+            assert_eq!(fresh_rows.len(), 50);
+            assert!(retained.contains(&"0\t0\t1".to_owned()));
+            assert!(!fresh_rows.contains(&"0\t0\t1".to_owned()));
+            assert!(fresh_rows.contains(&"0\t0\t0".to_owned()));
+        }
+    }
+}
+
+#[test]
+fn recursive_lattice_projection_matches_ascent_fixed_point() {
+    ascent! {
+        relation seed(u32, u32);
+        lattice best(u32, Dual<u32>);
+        relation found(u32, u32);
+        best(key, Dual(*value)) <-- seed(key, value);
+        best(key, Dual(*value / 2)) <--
+            best(key, ?Dual(value)), if *value > 1;
+        found(key, *value) <-- best(key, ?Dual(value));
+    }
+    let mut program = AscentProgram {
+        seed: vec![(0, 8)],
+        ..AscentProgram::default()
+    };
+    program.run();
+    let mut rust_found: Vec<_> = program
+        .found
+        .iter()
+        .map(|(key, value)| format!("{key}\t{value}"))
+        .collect();
+    rust_found.sort_unstable();
+    assert_eq!(rust_found, ["0\t1"]);
+    let mut scheme_found: Vec<_> = scheme_output("lattice-rows", "(recursive-projection)\n")
+        .lines()
+        .map(str::to_owned)
+        .collect();
+    assert_eq!(scheme_found.pop().as_deref(), Some("END"));
+    assert_eq!(scheme_found, rust_found);
 }

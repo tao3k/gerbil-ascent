@@ -4,12 +4,16 @@
 
 (import (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/qualification/ascent-aggregate-program-fixture
-                 ascent-aggregate-fixture-evaluate))
+                 ascent-aggregate-fixture-evaluate
+                 ascent-aggregate-pattern-evaluate))
 
 (export main)
 
 (def (main . _)
-  (let (rows-of (.ref (ascent-aggregate-fixture-evaluate (read)) 'rows-of))
+  (let* ((values (read))
+         (rows-of (.ref (ascent-aggregate-fixture-evaluate values) 'rows-of))
+         (pattern-rows-of
+          (.ref (ascent-aggregate-pattern-evaluate values) 'rows-of)))
     (for-each
      (lambda (name)
        (for-each
@@ -24,4 +28,10 @@
           (newline))
         (rows-of name)))
      '(by-group minimum maximum total cardinality average custom))
+    (for-each
+     (lambda (row)
+       (display "extrema-pair")
+       (for-each (lambda (column) (display #\tab) (display column)) row)
+       (newline))
+     (pattern-rows-of 'extrema-pair))
     (display "END\n")))

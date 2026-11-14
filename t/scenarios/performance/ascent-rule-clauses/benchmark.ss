@@ -7,7 +7,7 @@
  (target_total . 700us)
  (regression_budget . 300us)
  (expected_over_input_budget . 0us)
- (sampleCount . 20)
+ (sampleCount . 1000)
  (targetRationale . "Measure evaluation of a declared Scheme program with guards, bindings, generators, stratified negation and recursive reachability.")
  (unit . "us")
  (sourcePath . "t/scenarios/performance/ascent-rule-clauses/benchmark.ss")

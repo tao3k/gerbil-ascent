@@ -1,0 +1,22 @@
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+((benchmarkKind . scenario-e2e)
+ (max_total . 1000us)
+ (target_total . 700us)
+ (regression_budget . 300us)
+ (expected_over_input_budget . 0us)
+ (sampleCount . 1000)
+ (targetRationale . "Append then withdraw one blocker in a recursive negation session, publishing both fixed points.")
+ (unit . "us")
+ (sourcePath . "t/scenarios/performance/ascent-nonpositive-session-update/benchmark.ss")
+ (rule . GERBIL-SCHEME-AGENT-R031)
+ (feature . ascent-nonpositive-session-update)
+ (optimizationFocus . "recompute changed nonpositive fixed points from accepted source rows")
+ (inputShape . "two-edge chain plus one blocker")
+ (expectedOutcome . "three path facts; one safe fact with node 2 blocked and three after withdrawal")
+ (expectedRepair . "preserve the source snapshot and publish only a completed result")
+ (baseline . "reconstruct the whole declaration and external test process")
+ (candidate . "append a blocker, then replace its source with an empty list in one session")
+ (measurementPhases candidate-update assert-semantic-gate assert-time-gate)
+ (tags poo ascent negation incremental performance))

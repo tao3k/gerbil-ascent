@@ -1,0 +1,101 @@
+#+title: UF frozen publication and rectangle routing
+
+* Source-backed construction contract
+
+Gerbil =1cfb032= =compiler/optimize-call.ss:259= uses =using= after resolving
+class provenance. =compiler/optimize-base.ss:63= keeps named class metadata
+rather than re-deriving fields while emitting expressions. Here the owned UF
+freeze phase captures a final private =frozen-members= record: detached rows
+and committed SCC cardinality. Each source is selected once; each rectangle
+uses captured counts rather than traversing member lists per arc. The returned
+view retains detached member spines, never UF nodes or mutable reach tables.
+
+Routing owns buckets and processes each bucket's entire member list before the
+next bucket. Therefore a repeated equal member already registered for the
+current bucket must be at the head of that value's hit list. A head identity
+check preserves the first stored value and the original descriptor order while
+avoiding scans of hits belonging to previous owners. Private final bucket
+metadata is accessed through =using=. This relies on synchronous construction;
+readers see the completed tables only.
+
+* Matched workflow and gates
+
+Baseline =645354b16f5b7ce109126c9642785aa69412e881=. Both complete production
+owners are frozen in =reference-view.ss= and =reference-uf.ss=; the latter's
+only baseline modification redirects its view import to the frozen owner.
+Public ASP =make-benchmark-fixture= creates the fixture before measurement.
+Each shape runs 50 alternating pairs on the same immutable source states.
+Source insertion and independent complete-truth checking are outside timing.
+
+The measured interval includes state freezing, full indexed/scan publication,
+an overlapping endpoint query, a complete point key, count/units observation and
+an absent membership query. Each lane preserves its own full-scan query order;
+cross-lane selected fact sets agree despite independent table seeds.
+Full exported facts are checked independently for uniqueness and closure before
+sampling; owner structure observations remain unchanged after every pair.
+The new unit Case checks 96 overlapping keys, duplicate equal members, original
+stored identity, repeated constraints and all four visitor paths.
+
+Fixed gates: grouped endpoint overlap requires <=80% baseline CPU and >=35 wins;
+SCC DAG, cycle, scan, small and empty controls allow <=105% plus 20us. Allocation
+counter budgets are <=110% plus 8192 bytes. ASP pair p95 is <=999ms. Allocation
+uses =##get-bytes-allocated!= with a fixed buffer, not retained heap. Timing
+processes run alone. No insertion, whole solve or multicore claim follows.
+
+* Native entry points
+
+Use the installed Gerbil library and existing OpenSSL link environment:
+
+#+begin_src scheme
+;; just prepare-test-library
+;; gxi t/performance/frozen-routing/build.ss LIBRARY BINARY runner
+;; gxi t/performance/frozen-routing/build.ss LIBRARY QUALIFIER qualify
+;; BINARY groups RECEIPT
+;; BINARY dag RECEIPT
+;; BINARY cycle RECEIPT
+;; BINARY scan RECEIPT
+;; BINARY small RECEIPT
+;; BINARY empty RECEIPT
+;; QUALIFIER
+#+end_src
+
+The qualifier runs relation-view, provider-view, UF matched and UF atomic-commit
+Suites. Final =OK=, successful Cases and real exit zero are required. Logs,
+binaries and raw measurements remain in ignored =.cache/ascent/frozen-routing/=.
+
+* Isolated native results
+
+Gerbil =1cfb032= / Gambit =ea114fc=; each shape completes 50 pairs. Median CPU
+is in microseconds; counter bytes describe allocation in the measured interval.
+
+| Workflow | Old CPU | New CPU | Old bytes | New bytes | CPU wins |
+|----------+---------+---------+-----------+-----------+----------|
+| 2048 repeated-value groups | 43599 | 9865 | 11789816 | 11628536 | 50 |
+| 24 SCC DAG, 32 members each | 399 | 332 | 956048 | 883808 | 49 |
+| One 128-member SCC | 48 | 43 | 124816 | 112544 | 36 |
+| 64 unindexed groups, 8 members each | 61 | 60 | 376928 | 381024 | 31 |
+| Single row | 7 | 7 | 19728 | 19648 | 20 |
+| Empty | 1 | 1 | 1488 | 1488 | 18 |
+
+All fixed gates pass. Repeated-value group CPU falls approximately 77%; the SCC
+DAG falls approximately 17%. The scan control adds 4096 allocation-counter
+bytes for private cardinality records, while CPU is essentially unchanged.
+The tiny controls do not establish a speed difference. Results are complete
+freeze/publication/query observations, not insertion or end-to-end solve gains.
+
+The first benchmark incorrectly compared traversal order across independently
+seeded tables and was rejected. Gerbil =runtime/hash.ss:396-400= chooses a
+random default seed. Final order controls compare each indexed lane against its
+own unindexed full-scan result, and independently compare cross-lane fact sets.
+All complete facts are checked against the generated closure truth. No
+performance gate changed. Initial ordering diagnostics are retained in cache.
+The first build was rejected for concurrent unrelated candidate source edits;
+a subsequent source-stable build succeeded before any admitted measurement.
+
+Native qualification passed 4 Suites / 38 Cases with per-Case success, final
+=OK= and exit zero. Coverage includes all 512 three-node subsets, insertion
+prefixes, compressed equivalence, budget rejection/retry, held cuts, callback
+error priority, cancellation, serial/actor publication and detached row spines.
+Native production policy checked the 86-source roster: 0 errors, 28 warnings in
+the current shared checkout, which also contains unrelated candidate changes.
+This commit stages only the frozen-view flow and its qualification files.

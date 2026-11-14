@@ -1,0 +1,36 @@
+#+TITLE: ASCENT benchmarks
+
+* Single VM Actor components
+
+Run the source Suite through the native test entry; it does not create another
+runner or another VM. The installed production library supplies the Session.
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-mailbox-test.ss
+#+end_src
+
+The first Case sends one million ordered fixnums to one persistent mailbox and
+waits for the receiver to drain. The second measures 10000 public Session state
+requests on one VM processor. It reports Session opening, the first request,
+aggregate throughput, P50, P95, maximum latency and natural collections. The
+request Case requires P95 below 100 ms and checks caller-mailbox isolation.
+There is no logging inside the measured loop. No build is required for the Suite
+itself. These component measurements exclude Rust/Scheme value conversion,
+process IPC, rule evaluation and full relation export; their throughput units
+must not be substituted for those production operations.
+
+* Rejected reply-channel candidate
+
+The original implementation creates a private reply Actor for each synchronous
+Session request, preserving the caller's mailbox. A candidate replaced that
+Actor with a one-reply =std/sync/channel= channel, leaving owner-only state
+mutation and generation/publication logic intact.
+
+A declared 10000-pair alternating source-entry comparison checked identical
+responses and caller-mailbox isolation. Both arms had P50 3 us and P95 4 us.
+The accumulated individual request times were 120.487 ms for reply Actors and
+170.859 ms for reply channels. The maxima were 33.148 ms and 46.802 ms. No GC
+occurred in the paired loop. The study kept the existing reply Actor. These are historical measurements
+from the isolated experiment. The native Suite above measures the installed
+current Session on the same request shape.

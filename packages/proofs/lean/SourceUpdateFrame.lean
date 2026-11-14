@@ -143,6 +143,31 @@ theorem admitted_source_budget (before removed added limit count : Nat)
   dsimp only [prepareSourceCount] at accepted
   split at accepted <;> simp_all
 
+/-! The update benchmark times ten complete transactions per observation.
+Its native path checks eligibility, compares ordered source logs, and closes
+the dependency mask before creating the engine. Running and observing the
+engine are distinct from both selection and initialization. -/
+structure UpdateCpu where
+  selection : Nat
+  engine : Nat
+  run : Nat
+  observe : Nat
+
+def UpdateCpu.total (cost : UpdateCpu) : Nat :=
+  cost.selection + cost.engine + cost.run + cost.observe
+
+/-- For a pair of batches measured in nanoseconds, the original CPU ratio
+is 105 percent plus 20 microseconds per transaction. This is the condition
+on selection if the other candidate intervals retain their measured cost.
+The native gate applies this ratio to the medians, not to each ordinal. -/
+theorem UpdateCpu.selection_budget (reference candidate : UpdateCpu)
+    (gate : 100 * candidate.total ≤ 105 * reference.total + 100 * 200000) :
+    100 * candidate.selection ≤
+      (105 * reference.total + 100 * 200000) -
+        100 * (candidate.engine + candidate.run + candidate.observe) := by
+  unfold UpdateCpu.total at gate ⊢
+  omega
+
 /-! A source understanding survives context loss independently of read hints.
 Its reuse remains conditional on current byte correspondence and a complete,
 current declared scope at every dependency. `adj` is origin-to-consumer;

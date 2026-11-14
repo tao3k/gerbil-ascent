@@ -1412,3 +1412,36 @@ admissions and all 185 build jobs.
 
 The native source patch and receipts are in
 =.cache/ascent/yuanxu-v0.1.0/successful-still-charge.5b9qkbyn/=.
+
+** Source boundaries for the remaining CPU gates
+
+The =empty-reuse= probe in =t/performance/index-entry-benchmark.ss=
+starts its declaration interval before =recursive-declaration=. The
+=relational-program= expansion in =program/scheme-language.ss= builds
+the relation values and gathers source handles, then invokes
+=gerbil-ascent-construct-inert-program= in =program/func.ss=. That
+constructor creates the rule and Program values, checks source handles
+in =program/types.ss=, and validates the public root. The same observer
+starts the solve interval only after that function returns. The solve
+interval includes admission, indexing, fixpoint evaluation and result
+publication. The independent closure check is outside both intervals.
+=OrderedExportGraph.lean= names the declaration, solve and between-call
+intervals in =EmptyBucketCost=. Its bound applies to the existing
+collected-start trace. The trace has no separate measurement for rule
+construction versus root validation.
+
+The =update= gate in =t/performance/selected-activation-benchmark.ss=
+times ten transactions per observation, alternating arms over 50 pairs.
+=activation-run= in =t/performance/selected-activation/fixture.ss=
+constructs the updated engine, runs it and reads every output. The
+current engine calls =gerbil-ascent-prepare-session-reuse= in
+=program/reuse.ss= before construction. This calls the eligibility
+checks and ordered source comparison in =program/update-selection.ss=
+and closes the affected dependency mask. The engine then initializes
+the new sources and seeds unaffected rows in =program/evaluate.ss=.
+The run and public observation are subsequent costs.
+=SourceUpdateFrame.lean= records these four intervals in =UpdateCpu=
+and derives the available selection budget from the original CPU
+ratio and allowance. The original receipt gives complete-transaction
+medians. It cannot attribute the 0.362 ms gap over the ceiling to any
+one interval.

@@ -181,6 +181,27 @@ theorem empty_bucket_needs_declaration_saving
       85 * baselineSolve + 100 * (declaration - candidateDeclaration) := by
   omega
 
+/-- The native observer brackets these synchronous operations in order.
+Declaration construction creates the relation and rule values, detaches
+source handles, and validates the public Program before the solver runs.
+All inputs are elapsed values from the same owner-thread CPU clock. -/
+structure EmptyBucketCost where
+  declaration : Nat
+  solve : Nat
+  between : Nat
+
+def EmptyBucketCost.total (cost : EmptyBucketCost) : Nat :=
+  cost.declaration + cost.solve + cost.between
+
+/-- Keeping declaration fixed makes its measured cost a necessary condition
+for the existing 0.85 CPU ratio, even if the remaining work becomes free. -/
+theorem EmptyBucketCost.solve_only_cannot_pay (before after : EmptyBucketCost)
+    (same : after.declaration = before.declaration)
+    (share : 85 * before.total < 100 * before.declaration) :
+    ¬ (100 * after.total ≤ 85 * before.total) := by
+  unfold EmptyBucketCost.total at *
+  omega
+
 namespace Publication
 
 inductive EventKind where

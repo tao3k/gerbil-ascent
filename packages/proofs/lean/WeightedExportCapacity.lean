@@ -2075,6 +2075,30 @@ theorem dropping_root_reclaims_only_exclusive {Obj : Type}
     exact ⟨Or.inl reached, absent⟩
 
 open RuleGraphClosure (Reachable) in
+/-- The rectangle export closure borrows only its descriptor cut. Losing a
+query-planning reference cannot reclaim anything still reached from the
+cut or the ambient test runtime. These are reachability premises, with no
+assumed partition of the native heap. -/
+theorem rectangle_export_preserves_runtime_and_cut {Obj : Type}
+    (edge : Obj → Obj → Prop) (runtime cut planning : Obj → Prop) (object : Obj)
+    (oldReach : Reachable edge (fun root => runtime root ∨ cut root ∨ planning root) object)
+    (lost : ¬ Reachable edge (fun root => runtime root ∨ cut root) object) :
+    Reachable edge planning object := by
+  have split :
+      Reachable edge (fun root => runtime root ∨ cut root) object ∨
+      Reachable edge planning object := by
+    clear lost
+    induction oldReach with
+    | seed root =>
+        rcases root with r | c | p
+        · exact Or.inl (.seed (Or.inl r))
+        · exact Or.inl (.seed (Or.inr c))
+        · exact Or.inr (.seed p)
+    | follow _ step ih =>
+        exact ih.elim (fun h => Or.inl (.follow h step)) (fun h => Or.inr (.follow h step))
+  exact split.resolve_left lost
+
+open RuleGraphClosure (Reachable) in
 /-- The exact boundary of a young-only collection consists of young
 roots and young targets of edges from reachable older objects. Traversal
 stays in the young subgraph. Real remembered sets may conservatively

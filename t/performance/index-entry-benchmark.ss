@@ -174,15 +174,20 @@
                " old-cpu-us=" (* 1000000 (median ac)) " new-cpu-us=" (* 1000000 (median bc))
                " cpu-wins=" wins "/50" " old-wall-us=" (* 1000000 (median aw))
                " new-wall-us=" (* 1000000 (median bw)) " wall-wins=" wall-wins "/50") (force-output)
-    (let (pass? (if (eq? mode 'empty-net)
-                  (and (<= (median bb) (+ (median ab) 256))
-                       (<= (median bc) (* 0.85 (median ac))) (>= wins 35)
-                       (<= (median bw) (* 0.85 (median aw))) (>= wall-wins 35))
-                (if (eq? mode 'observe) #t (if (eq? mode 'large)
-                  (and (<= (median bb) (+ (median ab) 256))
-                       (<= (median bc) (* 0.85 (median ac))) (>= wins 35))
-                  (and (<= (median bb) (+ (median ab) 8192))
-                       (<= (median bc) (+ (* 1.05 (median ac)) 0.000020)))))))
+    (let* ((allocation-valid? (and (andmap (cut >= <> 0) ab) (andmap (cut >= <> 0) bb)))
+           (pass? (or (eq? mode 'observe)
+                      (and allocation-valid?
+                           (case mode
+                             ((empty-net)
+                              (and (<= (median bb) (+ (median ab) 256))
+                                   (<= (median bc) (* 0.85 (median ac))) (>= wins 35)
+                                   (<= (median bw) (* 0.85 (median aw))) (>= wall-wins 35)))
+                             ((large)
+                              (and (<= (median bb) (+ (median ab) 256))
+                                   (<= (median bc) (* 0.85 (median ac))) (>= wins 35)))
+                             (else
+                              (and (<= (median bb) (+ (median ab) 8192))
+                                   (<= (median bc) (+ (* 1.05 (median ac)) 0.000020)))))))))
       ;; Gates are fixed before sampling: wide index kernels require
       ;; 15% CPU with 35 wins and <=256 bytes; controls <=8 KiB and <=5%+20 us.
       (list (cons 'name name) (cons 'passed? pass?)
@@ -190,6 +195,7 @@
             (cons 'performance-admitted? (and (not (eq? mode 'observe)) pass?)) (cons 'cpu-wins wins)
             (cons 'old-bytes (median ab)) (cons 'new-bytes (median bb))
             (cons 'old-cpu-us (* 1000000 (median ac))) (cons 'new-cpu-us (* 1000000 (median bc)))
+            (cons 'allocation-valid? allocation-valid?)
             (cons 'old-allocation ab) (cons 'new-allocation bb)
             (cons 'old-wall aw) (cons 'new-wall bw) (cons 'wall-wins wall-wins)
             (cons 'old-wall-us (* 1000000 (median aw))) (cons 'new-wall-us (* 1000000 (median bw)))

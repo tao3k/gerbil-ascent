@@ -3819,3 +3819,72 @@ The guarded Lean replay checked all 400 admission values, including
 the counts strictly below 100 ms and the two sides of each rank-95
 boundary. The exact commands, input fence, logs and replay are in
 =.cache/ascent/yuanxu-v0.1.0/exact-pair-header.cmdmxd17/=.
+
+* Ownership of the native complete-export collector
+
+The bare native Test tool retained 86.21 MB before loading the UF
+fixture. The module-registry controls above identify substantially
+less exclusive storage than that figure. In particular, the observed
+expanded bodies can still be needed by native evaluation, macro
+expansion and reload. Keep these runtime roots under Gerbil's
+ownership.
+
+In ASCENT, =gerbil-ascent-trrel-uf-freeze= borrows immutable member
+spines. The complete rectangle export needs the frozen descriptor cut
+only. The generated Scheme for the existing export receiver already
+captures just that cut. =materialize-rectangles= keeps the STD
+=with-list-builder= within the export invocation and walks the
+descriptors directly, so the collector no longer escapes through a
+=for-each= callback. The list builder still allocates an independent
+outer cell for each freshly constructed tuple. At widths 384 and 512,
+a 32-export batch therefore still requires at least 324 and 576 MiB
+of tuple and outer cells, respectively.
+
+=rectangle_export_preserves_runtime_and_cut= in
+=WeightedExportCapacity.lean= models the ownership boundary. A cell
+lost after removing query-planning reachability must have been
+reachable through that planning state, and must be unreachable from
+both the descriptor cut and the runtime. The statement supplies no
+native byte estimate and the query visitors can retain their own
+plans while a view remains live.
+
+The fixed SDK control used native =gerbil test=, a 2 GiB hard
+heap cap and a 90-second watchdog per width. Each run finished 100
+CPU pairs, 100 admissions of 32 complete lists and five allocation
+pairs. The trial included an explicitly separated export closure,
+which was removed after generated Scheme confirmed that the original
+closure already captured only the cut.
+
+| Vertices | Wall P50 / P95 / max (ms) | Reference / current bytes per batch | Strict P95 gate |
+|----------+---------------------------+-------------------------------------+-----------------|
+| 384 | 117.230 / 157.451 / 177.975 | 679617536 / 679533056 | Failed |
+| 512 | 199.994 / 232.456 / 239.480 | 1208099840 / 1208015360 | Failed |
+
+All three ordered-detachment Cases passed. These samples leave the
+ambient repeated marking and visible tuple allocation as open costs.
+The observed allocation difference is between the frozen reference
+and current implementation, so it cannot be attributed to the local
+collector change.
+
+* Complete point witness and allocation validity
+
+The previous Linux run spent 121.455 seconds in the 1000 baseline
+samples and 14.823 seconds in the 1000 candidate samples. The
+180-second command also includes the preceding fixtures and had
+about nine seconds left when it reached the point witness. The
+new witness projects each admitted neighbor set once, then uses
+the same global output point insertions and final union. The
+native 512-input, 1024-output witness took 8.450 seconds locally.
+The 11 table-expression Cases, including the independent small
+graph, duplicate-path and budget controls, passed.
+
+The selected-activation and index-entry receipts now keep an
+explicit validity bit and all original allocation samples. A
+negative sample invalidates the allocation lane. The released
+Gambit counter still produced negative medians in both arms of
+each local =update= and =empty-reuse= Case. Both Cases finished all
+50 pairs and failed their gates. CPU medians were 4.681 and
+5.040 ms per update, and 7.000 and 7.045 ms per empty-reuse
+workflow. The two counter failure modes and charged SDK patch
+are documented in [[file:native-matrix.org][Native matrix]]. The
+frozen release remains the input to this run.

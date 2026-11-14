@@ -360,14 +360,17 @@
 
 (def (materialize-rectangles blocks)
   (with-list-builder (collect!)
-    (for-each (lambda (block)
-      (with (((rectangle prefix lefts rights) block))
-        (match prefix
-          ([] (collect-rectangle-product left right lefts rights collect! (list left right)))
-          ([group] (collect-rectangle-product left right lefts rights collect! (list group left right)))
-          (else (collect-rectangle-product left right lefts rights collect! (append prefix (list left right)))))))
-      blocks)))
- ;; An admitted uniform width chooses the public tuple constructor once.
+    ;; Keep the STD builder on the export stack, outside a for-each closure.
+    (let next ((pending blocks))
+      (unless (null? pending)
+        (with (((rectangle prefix lefts rights) (car pending)))
+          (match prefix
+            ([] (collect-rectangle-product left right lefts rights collect! (list left right)))
+            ([group] (collect-rectangle-product left right lefts rights collect! (list group left right)))
+            (else (collect-rectangle-product left right lefts rights collect!
+                    (append prefix (list left right))))))
+        (next (cdr pending))))))
+;; An admitted uniform width chooses the public tuple constructor once.
 (def (rectangle-row-writer width consume)
   (case width
     ((2) (lambda (_prefix left right) (consume (list left right))))

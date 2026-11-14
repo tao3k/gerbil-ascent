@@ -326,7 +326,7 @@ jobs:
       - name: Restore declared dependency build
         if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' }}
         id: dependencies-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             .gerbil
@@ -346,6 +346,17 @@ jobs:
           (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
       - name: Verify declared Gerbil interfaces
         run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+      - name: Save verified dependencies before compiling ASCENT
+        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' && steps.dependencies-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
+            !.gerbil/bin/libascent*
+            !.gerbil/bin/ascent-develop*
+          key: ${{ steps.dependencies-cache.outputs.cache-primary-key }}
       - name: Build current Scheme package
         run: gerbil build
       - name: Check development policy

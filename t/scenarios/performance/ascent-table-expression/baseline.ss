@@ -57,19 +57,21 @@
     (values (publish outgoing) (publish incoming) source-rows)))
 
 (def (baseline-compose/point pairs index radix)
-  (.call UIntTrieSet .foldl
-         (lambda (pair joined)
-           (let* ((source (quotient pair radix))
-                  (middle (modulo pair radix))
-                  (destinations
-                   (.call AdjacencyTable .ref index middle
-                          (lambda () (.ref UIntTrieSet '.empty)))))
-             (.call UIntTrieSet .foldl
-                    (lambda (target output)
-                      (.call UIntTrieSet .cons
-                             (+ (* source radix) target) output))
-                    joined destinations)))
-         (.ref UIntTrieSet '.empty) pairs))
+  ;; Admit the complete trie once and project each immutable neighbor set
+  ;; once. The global output still uses the original public point insertion.
+  (let (neighbors
+        (list->hash-table
+          (map (lambda (entry)
+                 (cons (car entry) (.call UIntTrieSet .list<- (cdr entry))))
+               (.call AdjacencyTable .list<- index))))
+    (.call UIntTrieSet .foldl
+      (lambda (pair joined)
+        (let ((source (quotient pair radix))
+              (middle (modulo pair radix)))
+          (foldl (lambda (target output)
+                   (.call UIntTrieSet .cons (+ (* source radix) target) output))
+                 joined (hash-ref neighbors middle []))))
+      (.ref UIntTrieSet '.empty) pairs)))
 
 (def (baseline-compose incoming outgoing radix)
   ;; Public lookup recognizes the complete table. Merge two complete public

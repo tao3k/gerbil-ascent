@@ -35,20 +35,22 @@
     (displayln "RESULT " name " old-bytes=" (median ab) " new-bytes=" (median bb)
                " old-cpu-us=" (* 1000000 (median ac)) " new-cpu-us=" (* 1000000 (median bc))
                " cpu-wins=" wins "/50") (force-output)
-    (let (pass?
-          (case mode
-            ((kernel) (and (<= (median bb) (* 0.30 (median ab)))
-                           (<= (median bc) (* 0.85 (median ac))) (>= wins 35)))
-            ((update) (and (<= (median bb) (* 0.85 (median ab)))
-                           (<= (median bc) (+ (* 1.05 (median ac)) 0.000020))))
-            (else (and (<= (median bb) (+ (median ab) 4096))
-                       (<= (median bc) (+ (* 1.05 (median ac)) 0.000020))))))
+    (let* ((allocation-valid? (and (andmap (cut >= <> 0) ab) (andmap (cut >= <> 0) bb)))
+           (pass? (and allocation-valid?
+                       (case mode
+                         ((kernel) (and (<= (median bb) (* 0.30 (median ab)))
+                                        (<= (median bc) (* 0.85 (median ac))) (>= wins 35)))
+                         ((update) (and (<= (median bb) (* 0.85 (median ab)))
+                                        (<= (median bc) (+ (* 1.05 (median ac)) 0.000020))))
+                         (else (and (<= (median bb) (+ (median ab) 4096))
+                                    (<= (median bc) (+ (* 1.05 (median ac)) 0.000020))))))))
       ;; Fixed before sampling: sparse/partial kernels require 70% fewer
       ;; allocated bytes and 15% CPU / 35 wins. Complete update saves 15%
       ;; allocation; controls allow 4 KiB. Update/control CPU <=5%+20 us.
       (list (cons 'name name) (cons 'passed? pass?) (cons 'cpu-wins wins)
             (cons 'old-bytes (median ab)) (cons 'new-bytes (median bb))
             (cons 'old-cpu-us (* 1000000 (median ac))) (cons 'new-cpu-us (* 1000000 (median bc)))
+            (cons 'allocation-valid? allocation-valid?)
             (cons 'old-allocation ab) (cons 'new-allocation bb)
             (cons 'old-cpu ac) (cons 'new-cpu bc)))))
 (def (main scenario library receipt)

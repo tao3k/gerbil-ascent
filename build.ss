@@ -50,14 +50,18 @@
 
 (def (main . args)
   (def projection (gerbil-ascent-build-projection))
-  (def spec (map gerbil-ascent-compiler-target (.get projection spec)))
-  (defbuild-script spec optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
+  (defbuild-script
+    (map gerbil-ascent-compiler-target (.get projection spec))
+    optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
   (if (or (null? args) (equal? (car args) "compile"))
     (begin
       (.call projection .prepare-compiler-contexts)
       (.call projection .with-compiler-inputs
         (lambda ()
-          (call-with-build-input-path (path-expand "lib" (gerbil-path))
-            (lambda () (.call projection .with-static-inputs (cut apply main args)))
-            make-source: (path-directory (this-source-file))))))
+          (.call projection .with-static-inputs
+            (lambda ()
+              ;; Check the compiler path before static staging restores it.
+              (call-with-build-input-path (path-expand "lib" (gerbil-path))
+                (cut apply main args)
+                make-source: (path-directory (this-source-file))))))))
     (apply main args)))

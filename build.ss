@@ -29,7 +29,7 @@
 (def (gerbil-ascent-build-projection)
   (.call gerbil-ascent.init.exports .project-build '("init")))
 
-(def (gerbil-ascent-library-modules projection)
+(def (gerbil-ascent-library-modules (projection (gerbil-ascent-build-projection)))
   ;; Scheme-only preparation uses the same targets as the package build,
   ;; excluding the executables and their C ABI inputs.
   (filter-map

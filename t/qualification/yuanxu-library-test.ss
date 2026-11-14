@@ -1,7 +1,7 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in "../../build.ss" gerbil-ascent-library-modules)
+(import (only-in "../../build.ss" gerbil-ascent-build-projection gerbil-ascent-library-modules)
         :std/test
         (only-in :clan/poo/object .get .ref .all-slots object?)
         (only-in :clan/poo/mop validate)
@@ -68,8 +68,9 @@
               (string-prefix? "inference/" entry)
               (string-prefix? "evidence/" entry))) modules) #f)))
     (test-case "Interface owns its ABI targets in the Yuanxu Make projection"
-      (let ((spec (.get gerbil-ascent.init.exports std-make-spec))
-            (library (gerbil-ascent-library-modules)))
+      (let* ((projection (gerbil-ascent-build-projection))
+             (spec (.get projection spec))
+             (library (gerbil-ascent-library-modules projection)))
         (for-each
           (lambda (expected)
             (let* ((name (cadr expected))

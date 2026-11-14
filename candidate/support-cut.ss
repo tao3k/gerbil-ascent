@@ -20,7 +20,7 @@
 ;;     ```
 ;;   %
 (def (grounded-support-withdraw! edges seeds affected alive removed probe!)
-  (let ((dependents (make-hash-table-eqv)) (pending seeds))
+  (let ((dependents (hash-new alive)) (pending seeds))
     (for-each (lambda (edge)
                 (probe!)
                 (with ([head kind _ inputs] edge)

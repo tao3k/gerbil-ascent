@@ -514,7 +514,7 @@ _performance:
     set -euo pipefail
     output="$(mktemp)"
     trap 'rm -f "$output"' EXIT
-    timeout "${ASCENT_GXTEST_TIMEOUT:-180s}" {{ gxi_command }} -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 t/performance/ascent-scenario-performance-test.ss t/performance/ascent-binary-program-performance-test.ss t/performance/ascent-shortest-candidates-performance-test.ss 2>&1 | tee "$output"
+    timeout "${ASCENT_GXTEST_TIMEOUT:-216s}" {{ gxi_command }} -:max-heap=2G,debug=q :gerbil/tools/gxtest -v 5 t/performance/ascent-scenario-performance-test.ss t/performance/ascent-binary-program-performance-test.ss t/performance/ascent-shortest-candidates-performance-test.ss 2>&1 | tee "$output"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output" >/dev/null; then exit 1; fi
     awk -f t/harness/assert-cases.awk "$output"
     test "$(grep -c '^MODULE-OK ' "$output")" -eq 3

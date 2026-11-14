@@ -38,6 +38,72 @@ unsupported cycles and interruption.
 
 Use =just check-lean-file FiniteChoice.lean= through the locked LeanPoo Guard
 and =gerbil test dev/finite-choice/oracle-test.ss=. The Lean model proves local
-saturation and assignment preservation. The next refinement obligation binds
-the Scheme search to reachability and proves exhaustive enumeration under a
-finite state budget. Dynamic grounding and an ASCENT DSL entry remain open.
+saturation and assignment preservation. The native DSL and the finite search
+model are described below.
+
+* Native checked DSL
+
+=relational-choice-program= uses the existing checked relation declarations,
+scalar terms, positive rules and final =limits= form. Its new clauses specify
+functional attributes and the two paper head forms.
+
+#+begin_src scheme
+(import :gerbil-ascent/program/api)
+
+(def program
+  (relational-choice-program
+    (relation edge (from to) '((0 1) (1 2)))
+    (relation path (from to))
+    (choice color (vertex value))
+    (rule (path ?x ?y) (edge ?x ?y))
+    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+    (rule (closed (color 0) (0 1)))
+    (rule (open (color ?y) ?value) (color 0 ?value) (path 0 ?y))
+    (limits 32 64 64)))
+
+(map (lambda (model) (relational-program-query model 'color))
+     (relational-choice-solve program state-budget: 16))
+#+end_src
+
+Use ordinary relations for positive Boolean facts. Use choice predicates
+for functional facts, with the value in the last column. An empty closed
+offer forbids its grounded body. Ordinary heads cannot write choice predicates.
+Only positive relational atoms are admitted in rule bodies. Consequently a
+range-restricted rule can only copy existing scalars or use its finite set of
+literals. This gives a finite universe for a fixed finite input.
+
+=lower-relational-choice-program= lowers offer keys and values into the head
+of a private ordinary relation. At each source cut the existing checked
+planner validates body bindings and the retained Session reaches deterministic
+closure. Traversal to a direct child appends a single source row, letting
+the existing semi-naive scheduler extend physical indexes and discover new
+offer rows. Other transitions use the atomic replacement of all choice
+sources. The Session owns recomputation and invalidation at that boundary.
+Fairness and completeness do not assume shareable indexes between siblings.
+
+| Lean obligation | Scheme operation |
+|-----------------+------------------|
+| =open_saturated_iff= and =closed_saturated_iff= | =process!= checks every grounded offer before saving a model |
+| =step_preserves_assignment= and =offers_extension_exact= | =insert-choice= writes only an unset, interned attribute |
+| =fresh_discovery_fits_budget= | =enqueue!= tests membership before charging one of the state slots, including the empty state |
+| =worklist_counts_preserved= and =worklist_budget_decreases= | =search= removes one seen entry per successful iteration |
+| =finite_databases_count= | Each finite attribute has one unset state plus its admitted values |
+| =register_successors_closes_cut= and =worklist_drain_covers_discovery= | =enqueue!= retains fresh successors and exhaustion leaves all seen states processed |
+| =exhausted_answers_exact= | All pending entries are drained before =ascent-accept-publication!= |
+
+The final acceptance boundary is outside the grounding Session. Intermediate
+commits leave the outer cancellation and work policy active. Budget exhaustion
+raises =RelationalChoiceLimit= and completed models become visible only when
+the whole search is exhausted. The state budget counts distinct assignments;
+existing per-cut fact budgets and execution checkpoints also apply.
+
+The Lean theorem assumes that the Scheme grounding step emits exactly the
+enabled ground heads for the current deterministic closure. The native Suite
+checks that premise on all 16 edge subsets of a small diamond and independent
+ground search. It also exercises native append and sibling replacement paths,
+mutation of returned query rows, exact/insufficient state budgets, native
+fact exhaustion, and cancellation in grounding and at final publication.
+The Lean model does not extract Scheme source or establish the general
+grounding refinement. The implementation uses fact-set search with on-demand
+grounding. The paper's constraint-propagation search and cross-branch prefix
+reuse remain separate obligations.

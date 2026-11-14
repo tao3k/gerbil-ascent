@@ -1,0 +1,165 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import "func.ss" "scheme-checked.ss" "scheme-session.ss"
+        (only-in "scheme-query.ss" relational-program-query)
+        :gerbil-ascent/core/execution-control
+        (only-in :clan/poo/object .ref)
+        (only-in :std/list/list split-at)
+        (only-in :std/error deferror-class))
+
+(export make-relational-choice-head lower-relational-choice-program
+        relational-choice-solve RelationalChoiceLimit?)
+
+(defstruct relational-choice-head (kind relation keys values body))
+(defstruct relational-choice-offer (relation kind attribute width))
+(defstruct relational-choice-program (grounding offers choice-names))
+(deferror-class RelationalChoiceLimit ())
+
+;; Compile each choice rule to a private positive relation containing the
+;; grounded attribute arguments followed by its offered values.
+(def (lower-relational-choice-program base choice-names heads)
+  (let* ((relations (.ref base 'relations))
+         (arities (map (lambda (relation)
+                         (cons (.ref relation 'name) (.ref relation 'arity)))
+                       relations))
+         (offers (map (lambda (head) (gensym 'choice-offer)) heads)))
+    (def (offer-width head)
+      (+ (length (relational-choice-head-keys head))
+         (length (relational-choice-head-values head))))
+    (def (lower-head head offer)
+      (let* ((name (relational-choice-head-relation head))
+             (keys (relational-choice-head-keys head))
+             (values (relational-choice-head-values head))
+             (arity (assq name arities)))
+        (unless (and (memq name choice-names) arity (= (cdr arity) (+ 1 (length keys))))
+          (error "invalid relational choice attribute" name))
+        (gerbil-ascent-rule
+         (list (gerbil-ascent-atom offer (append keys values)))
+         (relational-choice-head-body head))))
+    ;; Monotone positive bodies are the premise for factoring deterministic
+    ;; closure through Session. Choice predicates have a single writer.
+    (for-each
+     (lambda (rule)
+       (unless (and (andmap (lambda (clause) (eq? (.ref clause 'ascent-clause-kind) 'atom))
+                            (.ref rule 'body))
+                    (not (ormap (lambda (head) (memq (.ref head 'relation) choice-names))
+                                (.ref rule 'heads))))
+         (error "choice programs require positive rules and explicit choice writers")))
+     (.ref base 'rules))
+    (make-relational-choice-program
+     (gerbil-ascent-program
+      (append relations (map (lambda (head offer) (relational-source offer (offer-width head) []))
+                             heads offers))
+      (append (.ref base 'rules) (map lower-head heads offers))
+      (.ref base 'max-input-facts) (.ref base 'max-derived-facts) (.ref base 'max-output-facts)
+      (.ref base 'source-handles))
+     (map (lambda (head offer)
+            (make-relational-choice-offer offer (relational-choice-head-kind head)
+                    (relational-choice-head-relation head)
+                    (length (relational-choice-head-keys head))))
+          heads offers)
+     choice-names)))
+
+;; Canonical numeric attribute identities make state equality independent
+;; of the path used to derive it. Existing entries are immutable.
+(def (insert-choice state id value)
+  (if (or (null? state) (< id (caar state)))
+    (cons (cons id value) state)
+    (cons (car state) (insert-choice (cdr state) id value))))
+
+;; Each invocation owns its Session and worklist. A direct child appends one
+;; assignment; crossing to another branch installs an atomic source cut.
+(def (relational-choice-solve program state-budget: budget)
+  (unless (and (relational-choice-program? program)
+               (exact-integer? budget) (>= budget 0))
+    (error "invalid relational choice solve inputs"))
+  (def control (current-ascent-execution-control))
+  (def (checkpoint!) (ascent-execution-checkpoint! 1 0))
+  (def seen (make-hash-table))
+  (def attributes (make-hash-table))
+  (def keys (make-hash-table-eqv))
+  (def names (relational-choice-program-choice-names program))
+  (def pending [])
+  (def models [])
+  (def current [])
+  (def (enqueue! state parent addition)
+    (checkpoint!)
+    (unless (hash-get seen state)
+      (when (>= (hash-length seen) budget)
+        (raise (RelationalChoiceLimit "finite-choice state budget exhausted" irritants: (list budget))))
+      (hash-put! seen state #t)
+      (set! pending (cons (vector state parent addition) pending))))
+  (def (attribute-id name args)
+    (let (key (cons name args))
+      (or (hash-get attributes key)
+          (let (id (hash-length attributes))
+            (hash-put! attributes key id)
+            (hash-put! keys id key)
+            id))))
+  (def (source-row assignment)
+    (let (key (hash-ref keys (car assignment)))
+      (cons (car key) (append (cdr key) (list (cdr assignment))))))
+  (def (install-state! session state parent addition)
+    (cond
+      ((eq? state current) (relational-program-session-run session))
+      ((eq? parent current)
+       (let (row (source-row addition))
+         (relational-program-append-source! session (car row) (cdr row))
+         (relational-program-session-run session)))
+      (else
+       (let (rows (make-hash-table-eq))
+         (for-each (lambda (assignment)
+                     (checkpoint!)
+                     (let (row (source-row assignment))
+                       (hash-put! rows (car row)
+                         (cons (cdr row) (hash-ref rows (car row) [])))))
+                   state)
+         (relational-program-transaction! session
+           (map (lambda (name) (cons name (reverse! (hash-ref rows name [])))) names))))))
+  (def (process! state result)
+    (let (saturated? #t)
+      (for-each
+       (lambda (offer)
+         (checkpoint!)
+         (using (offer :- relational-choice-offer)
+           (for-each
+            (lambda (row)
+              (checkpoint!)
+              (let-values (((args values) (split-at row offer.width)))
+                (let* ((id (attribute-id offer.attribute args))
+                       (prior (assv id state)))
+                  (if prior
+                    (unless (or (eq? offer.kind 'open) (member (cdr prior) values))
+                      (set! saturated? #f))
+                    (begin
+                      (set! saturated? #f)
+                      (for-each
+                       (lambda (value)
+                         (enqueue! (insert-choice state id value)
+                                   state (cons id value)))
+                       values))))))
+            (relational-program-query result offer.relation))))
+       (relational-choice-program-offers program))
+      (when saturated? (set! models (cons result models)))))
+  ;; Intermediate Session commits are private. Keep cancellation and all
+  ;; work charges active, but linearize only the final public model list.
+  (enqueue! [] #f #f)
+  (parameterize
+    ((current-ascent-execution-control
+      (and control (lambda (work facts) (control (if (= work -1) 0 work) facts)))))
+    (let (session (relational-open-program-session (relational-choice-program-grounding program)))
+      (let search ()
+        (unless (null? pending)
+          (checkpoint!)
+          (let* ((entry (car pending))
+                 (state (vector-ref entry 0)))
+            (set! pending (cdr pending))
+            (let (result (install-state! session state (vector-ref entry 1) (vector-ref entry 2)))
+              (set! current state)
+              (process! state result))
+            (search))))))
+  (let (result (reverse! models))
+    (ascent-accept-publication!)
+    result))

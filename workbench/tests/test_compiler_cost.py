@@ -286,7 +286,7 @@ class CompilerCostTests(unittest.TestCase):
     def test_sdk_net_stack_counter_is_not_cumulative_allocation(self):
         import os
         sdk = Path(subprocess.check_output(['gxi', '-e', '(display (gerbil-home))'], text=True).strip())
-        fixture = Path('workbench/tests/fixtures/allocation-stack.scm').read_bytes()
+        fixture = Path('workbench/tests/fixtures/allocation-stack.ss').read_bytes()
         with tempfile.TemporaryDirectory() as folder:
             source = Path(folder) / 'allocation-stack.scm'
             source.write_bytes(fixture)

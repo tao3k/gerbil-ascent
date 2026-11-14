@@ -388,6 +388,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "ranked-row-rust", "rust/ascent/src/execution/ordering.rs"),
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
+                ("ExecutionPolicy.lean", "choice-branch", "program/scheme-choice.ss"),
                 ("ExecutionPolicy.lean", "declaration-role-scheme", "program/declaration-role.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
                 ("ExecutionPolicy.lean", "proof-authority-rust", "rust/ascent-scheme/src/api/session.rs"),
@@ -496,6 +497,12 @@ def main() -> int:
                     begin, end = ';; BEGIN GENERATED OWNED ROW VIEW\n', ';; END GENERATED OWNED ROW VIEW\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate owned row view source region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "choice-branch":
+                    begin, end = ('  ;; BEGIN GENERATED CHOICE BRANCH\n',
+                                  '  ;; END GENERATED CHOICE BRANCH\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate choice branch region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language.startswith("dsl-"):
                     region = language.removeprefix("dsl-").upper()

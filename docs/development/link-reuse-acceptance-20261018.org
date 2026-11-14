@@ -1074,7 +1074,7 @@ with 168 of 173 modules and 1383 of 1401 Cases completed. That failure remains
 negative evidence; the previous runner's pass does not replace it.
 
 The allocation failure is reproducible with the existing pinned Release:
-= gxi -:debug=q workbench/tests/fixtures/sdk-allocation-counter.scm =
+= gxi -:debug=q workbench/tests/fixtures/sdk-allocation-counter.ss =
 retains an 8,000,000-byte bytevector, collects, then drops it and collects inside
 =##exec-stats=. The observed corrected estimate is -7,999,776 bytes with one GC;
 the independent raw snapshots also decrease (68,851,608 to 60,854,072 in the

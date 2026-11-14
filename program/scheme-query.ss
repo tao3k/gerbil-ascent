@@ -8,10 +8,15 @@
         (only-in :clan/poo/mop validate)
         (only-in "types.ss" GerbilAscentFragmentContract))
 (export relational-export relational-prepare-query relational-prepare-queries relational-query relational-query-name relational-program-query
-        make-relational-solution make-relational-program-solution)
+        make-relational-solution make-relational-program-solution
+        relational-program-solution-with-provenance)
 
 (defstruct relational-solution (result))
 (defstruct relational-program-solution (result))
+(defstruct (choice-program-solution relational-program-solution) (provenance))
+
+(def (relational-program-solution-with-provenance solution provenance)
+  (make-choice-program-solution (relational-program-solution-result solution) provenance))
 
 (def (copy-query-rows rows)
   (map (lambda (row) (map identity row)) rows))
@@ -97,8 +102,12 @@
   (let (result (relational-solution-result solution))
     (relational-result-rows result name)))
 
-(def (relational-program-query solution name)
+(def (relational-program-query solution name provenance?: (provenance? #f))
   (unless (and (relational-program-solution? solution) (symbol? name))
     (error "relational program query requires a named solution" name))
-  (let (result (relational-program-solution-result solution))
-    (relational-result-rows result name)))
+  (if provenance?
+    (begin
+      (unless (choice-program-solution? solution)
+        (error "relational program solution has no derivation witness" name))
+      ((choice-program-solution-provenance solution) name))
+    (relational-result-rows (relational-program-solution-result solution) name)))

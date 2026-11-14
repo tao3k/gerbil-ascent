@@ -85,8 +85,10 @@ matching work, derived rows and the cost of materializing shared prefixes.
 - Chris Martens, Robert J. Simmons, and Michael Arntzenius.
   [Finite-Choice Logic Programming](https://doi.org/10.1145/3704849).
   POPL 2025; [arXiv:2405.19040v3](https://arxiv.org/abs/2405.19040v3).
-  Prefix-firing cost semantics motivates the native Scheme plan-cost study;
-  its finite-choice language is not the implemented DSL semantics.
+  Prefix-firing cost semantics motivates the Scheme plan-cost study.
+  The checked Scheme DSL also supports positive finite-choice programs with
+  dynamic grounding and bounded search. See the
+  [finite-choice design and proof scope](dev/finite-choice/README.org).
 - David McAllester. [On the Complexity Analysis of Static Analyses](https://doi.org/10.1145/581771.581774).
   Journal of the ACM 49(4), 2002. The prefix-firing cost model discussed by the
   finite-choice paper; its complexity assumptions require separate validation.

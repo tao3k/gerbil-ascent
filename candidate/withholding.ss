@@ -1,13 +1,13 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
-        (only-in :gerbil-ascent/candidate/program scalar?)
-        (only-in :gerbil-ascent/candidate/types reasoning-snapshot-valid?
+(import (only-in "datum.ss" reasoning-bounded-data?)
+        (only-in "program.ss" scalar?)
+        (only-in "types.ss" reasoning-snapshot-valid?
                  reasoning-snapshot-relations reasoning-snapshot-identity
                  reasoning-snapshot-generation make-candidate-rejection
                  make-reasoning-diagnostic)
-        (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot))
+        (only-in "checked-program.ss" reasoning-source-snapshot))
 (export reasoning-withhold-source-snapshot)
 
 ;;; BRINK section 3.2 finite transfer. A grounding is (head-atom body-atoms).

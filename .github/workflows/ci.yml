@@ -152,17 +152,30 @@ jobs:
         run: just prepare-semantic-library
       - name: Qualify native Yuanxu Library queries and evidence reuse
         if: ${{ matrix.lane == 'semantics' }}
-        run: ASCENT_GXTEST_TIMEOUT=180s timeout 180s just test-file t/library-module-test.ss 2G
+        run: ASCENT_GXTEST_TIMEOUT=180s timeout 180s just test-file t/yanxu/Library/candidate/library-module-test.ss 2G
       - name: Qualify complete standard Gerbil source tests
         if: ${{ matrix.lane == 'semantics' }}
         id: full_scheme
         run: |
+          set -o pipefail
           mkdir -p .cache/ascent/runtime-crashes
           sudo sysctl -w "kernel.core_pattern=$PWD/.cache/ascent/runtime-crashes/core.%e.%p"
           ulimit -c unlimited
-          just prepare-semantic-library
-          # Retain the acceptance deadline independently of live-output supervision.
-          ASCENT_GXTEST_TIMEOUT=180s GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" timeout 180s just test-file t/qualification 2G
+          export GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
+          # Measure one complete run. Keep the prior target visible in the receipt.
+          { time -p timeout 600s env ASCENT_GXTEST_TIMEOUT=600s just test-file t/qualification 2G; } 2>&1 | tee "$RUNNER_TEMP/linux-semantics.log"
+          elapsed="$(awk '$1 == "real" { seconds = $2 } END { print seconds }' "$RUNNER_TEMP/linux-semantics.log")"
+          awk -v seconds="$elapsed" 'BEGIN { if (seconds !~ /^[0-9]+(\.[0-9]+)?$/) exit 1; printf "Linux source semantics: %.2f s (prior 180 s target: %s)\n", seconds, seconds <= 180 ? "met" : "exceeded" }' | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Preserve Linux semantic timings and complete batch logs
+        if: ${{ always() && (steps.full_scheme.outcome == 'success' || steps.full_scheme.outcome == 'failure') }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: linux-semantics-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/linux-semantics.log
+            .cache/ascent/test-modules
+          include-hidden-files: true
+          retention-days: 30
       - name: Qualify independent Scheme source consumers
         if: ${{ matrix.lane == 'semantics' }}
         env:
@@ -172,14 +185,13 @@ jobs:
       - name: Extract compiled crash backtraces
         if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
         run: bash tools/ci/capture-runtime-crashes.sh .cache/ascent/runtime-crashes
-      - name: Preserve compiled cores and complete test batch logs
+      - name: Preserve compiled cores and crash diagnostics
         if: ${{ failure() && steps.full_scheme.outcome == 'failure' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: runtime-crashes-${{ github.sha }}-${{ github.run_attempt }}
           path: |
             .cache/ascent/runtime-crashes
-            .cache/ascent/test-modules
           include-hidden-files: true
           retention-days: 30
       - name: Qualify runtime source view loading

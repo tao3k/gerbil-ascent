@@ -9,6 +9,7 @@ import LookupCost
 import ClosedDslLowering
 import FiniteOperators
 import DslDeclarations
+import FiniteChoice
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -601,6 +602,7 @@ def renderedSource (name : String) : IO String := do
   | "ranked-row-rust" => pure Ascent.LookupCost.rankedRowRustSource
   | "archive-quint" => pure Ascent.ArchivePolicy.quintSource
   | "scheme" => pure Ascent.ExecutionPolicy.schemeSource
+  | "choice-branch" => pure Ascent.FiniteChoice.branchSource
   | "declaration-role-scheme" => pure Ascent.DslDeclarations.schemeSource
   | "rust" => pure Ascent.ExecutionPolicy.rustSource
   | "capacity-rust" => pure Ascent.ExecutionPolicy.capacityRustSource

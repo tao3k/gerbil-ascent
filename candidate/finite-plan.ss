@@ -2,8 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import "grounding-plan.ss"
-        (only-in :gerbil-ascent/candidate/reduction-plan prepare-reduction-row)
-        (only-in :gerbil-ascent/candidate/program candidate-variable?)
+        (only-in "reduction-plan.ss" prepare-reduction-row)
+        (only-in "program.ss" candidate-variable?)
         (only-in "funs.ss" candidate-required-entry))
 (export (struct-out finite-rule) (struct-out finite-clause) prepare-finite-rule)
 ;; : (-> ReplayRelation HeadRenderer FiniteClauses Nat FiniteRule)

@@ -4,11 +4,11 @@
 
 ;;; Bounded, inert rule proposals against a caller-owned snapshot.
 ;;; A receipt is an observation of one candidate, not source admission.
-(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
+(import (only-in "datum.ss" reasoning-bounded-data? candidate-copy-pairs)
         (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode)
         (only-in :std/error exception->string)
-        (only-in :gerbil-ascent/candidate/types
+        (only-in "types.ss"
                  make-reasoning-snapshot reasoning-snapshot?
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
@@ -20,21 +20,21 @@
                  reasoning-candidate-rules reasoning-candidate-query
                  candidate-rejection? candidate-rejection-diagnostic
                  +max-relations+ +max-input-facts+)
-        (only-in :gerbil-ascent/candidate/program
+        (only-in "program.ss"
                  scalar? candidate-variable? candidate-inspect candidate-program
                  candidate-planner-path)
-        (only-in :gerbil-ascent/candidate/provenance
+        (only-in "provenance.ss"
                  candidate-positive-proof)
-        (only-in :gerbil-ascent/candidate/nonmembership
+        (only-in "nonmembership.ss"
                  candidate-positive-nonmembership)
-        (only-in :gerbil-ascent/candidate/finite-evidence
+        (only-in "finite-evidence.ss"
                  candidate-finite-evidence candidate-verify-finite-evidence
                  finite-evidence-status)
-        (only-in :gerbil-ascent/candidate/stratified-producer
+        (only-in "stratified-producer.ss"
                  candidate-produce-stratified-proof)
-        (only-in :gerbil-ascent/candidate/stratified-proof
+        (only-in "stratified-proof.ss"
                  candidate-verify-stratified-proof)
-        (only-in :gerbil-ascent/program/scheme-language
+        (only-in "../program/scheme-language.ss"
                  relational-admit/report
                  relational-admission-report-admission
                  relational-admission-report-diagnostic

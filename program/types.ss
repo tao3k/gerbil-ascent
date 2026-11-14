@@ -11,12 +11,12 @@
         (only-in :clan/poo/mop define-type element? validate Type. Any)
         (only-in :clan/poo/type Record)
         (only-in :clan/poo/object-contract ObjectContract.)
-        (only-in :tao3k/yuanxu/object-types/contracts
+        (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
-        (only-in :gerbil-ascent/table/provider
+        (only-in "../table/provider.ss"
                  GerbilAscentIndexProviderContract gerbil-ascent-canonical-hash-index-provider?)
-        (only-in :gerbil-ascent/table/storage
+        (only-in "../table/storage.ss"
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
 (export

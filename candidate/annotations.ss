@@ -1,10 +1,10 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
-        (only-in :gerbil-ascent/candidate/provenance proof-node-id proof-node-row
+(import (only-in "datum.ss" candidate-copy-pairs)
+        (only-in "provenance.ss" proof-node-id proof-node-row
                  positive-proof-nodes positive-proof-roots)
-        (only-in :gerbil-ascent/candidate/provenance-graph
+        (only-in "provenance-graph.ss"
                  candidate-positive-provenance positive-provenance-status
                  positive-provenance-witness positive-provenance-alternatives))
 (export candidate-positive-counts positive-counts? positive-counts-status

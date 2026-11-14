@@ -2,10 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import "func.ss" "scheme-checked.ss" "scheme-admission.ss"
+(import "func.ss" "scheme-checked.ss" "scheme-admission.ss" "scheme-choice.ss"
         (only-in :clan/poo/object .ref))
 
 (export relational-program relational-fragment
+        relational-choice-program relational-choice-solve RelationalChoiceLimit?
         relational-lattice-fragment relational-finite-view
         relational-export relational-compose relational-admit
         relational-admit/report
@@ -424,6 +425,55 @@
        (syntax (relational-collect relational-owned-program () () clause ...))
        (syntax (relational-collect gerbil-ascent-program () () clause ...))))))
 ;; END GENERATED DSL-SELECT
+
+;; Choice declarations are source-owned within one search. Deterministic
+;; rules and offer rules use the same checked atom lowering and planner.
+(defsyntax (relational-choice-program stx)
+  (syntax-case stx ()
+    ((_ clause ...)
+     (syntax (relational-choice-collect () () () clause ...)))))
+
+(defsyntax (relational-choice-rule stx)
+  (syntax-case stx ()
+    ((_ kind name (key ...) (value ...) head body ...)
+     (with-syntax ((origin (datum->syntax #f
+                             (vector (stx-source (syntax head))
+                                     (map stx-source (syntax->list (syntax (body ...))))))))
+       (syntax (make-relational-choice-head 'kind 'name
+                (list (relational-term key) ...) (list (relational-term value) ...)
+                (list (relational-atom body) ...) 'origin))))))
+
+(defsyntax (relational-choice-collect stx)
+  (syntax-case stx (relation choice rule open closed limits)
+    ((_ (ordinary ...) (names ...) (heads ...)
+        (choice name (key ... value)) rest ...)
+     (and (identifier? (syntax name))
+          (andmap identifier? (syntax->list (syntax (key ... value)))))
+     (syntax (relational-choice-collect (ordinary ... (relation name (key ... value)))
+              (names ... name) (heads ...) rest ...)))
+    ((_ (ordinary ...) (names ...) (heads ...)
+        (rule (closed (name key ...) (value ...)) body ...) rest ...)
+     (syntax (relational-choice-collect (ordinary ...) (names ...)
+              (heads ... (relational-choice-rule closed name (key ...) (value ...)
+                           (closed (name key ...) (value ...)) body ...)) rest ...)))
+    ((_ (ordinary ...) (names ...) (heads ...)
+        (rule (open (name key ...) value) body ...) rest ...)
+     (syntax (relational-choice-collect (ordinary ...) (names ...)
+              (heads ... (relational-choice-rule open name (key ...) (value)
+                           (open (name key ...) value) body ...)) rest ...)))
+    ((_ (ordinary ...) names heads (rule head body ...) rest ...)
+     ;; The ordinary collector retains rule origins and declaration checks.
+     (syntax (relational-choice-collect (ordinary ... (rule head body ...)) names heads rest ...)))
+    ((_ (ordinary ...) names heads (relation name columns option ...) rest ...)
+     (syntax (relational-choice-collect (ordinary ... (relation name columns option ...)) names heads rest ...)))
+    ((_ (ordinary ...) (names ...) (heads ...) (limits input derived output))
+     (syntax (lower-relational-choice-program
+              (relational-program ordinary ... (limits input derived output))
+              '(names ...) (list heads ...))))
+    ((_ _ _ _ bad rest ...)
+     (raise-syntax-error #f "expected relation, choice, rule, or final limits" (syntax bad)))
+    ((_ _ _ _)
+     (raise-syntax-error #f "relational-choice-program requires final limits" stx))))
 
 ;; relational-fragment
 ;;   : (-> Syntax FirstClassFragmentExpression)

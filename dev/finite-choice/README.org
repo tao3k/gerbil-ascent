@@ -1,0 +1,158 @@
+#+TITLE: Ground finite-choice reference
+#+LANGUAGE: en
+
+* Authority
+
+[[https://arxiv.org/html/2405.19040v3#S2.SS1][Finite-Choice Logic Programming, Section 2.1]]
+defines a solution as a reachable, saturated consistent database.
+The Scheme oracle enumerates finite ground programs from the empty database.
+Each rule body is a list of attribute and value pairs. A closed head supplies
+a list of allowed values, including an empty list for a forbidden body.
+An open head supplies one value. Attribute and value identities are
+nonnegative integers.
+
+* Correspondence
+
+| Paper notion | Lean | Scheme oracle |
+|--------------+------+---------------|
+| Consistent database | =Database= | Ordered partial assignments |
+| Body satisfaction | =enabled= | =enabled?= |
+| One rule evolution | =evolve= | =rule-extensions=, with stuttering successors omitted |
+| Reachability and saturation | =Reachable= and =saturated= | Visited databases and the completed rule scan |
+
+If an enabled open head sees an unset attribute, its possible strict extension
+prevents saturation. A compatible prior assignment makes an open head
+saturated. A closed head is saturated exactly when the assigned value is among
+its alternatives. An enabled closed head that excludes a previously assigned
+value rules out all descendants of that database. The Scheme search discards
+that branch, retaining the alternatives already queued from other databases.
+An interruption raised by the caller escapes the search.
+
+The independent test enumerates all partial assignments over two keys and two
+values. It checks candidate saturation directly and works backwards to find
+an order in which supported assignments could have been introduced. Source
+tests cover 256 programs in both rule orders and selected conflicts,
+unsupported cycles and interruption.
+
+* Checks
+
+Use =just check-lean-file FiniteChoice.lean= through the locked LeanPoo Guard
+and =gerbil test dev/finite-choice/oracle-test.ss=. The Lean model proves local
+saturation and assignment preservation. The native DSL and the finite search
+model are described below.
+
+* Native checked DSL
+
+=relational-choice-program= uses the existing checked relation declarations,
+scalar terms, positive rules and final =limits= form. Its new clauses specify
+functional attributes and the two paper head forms.
+
+#+begin_src scheme
+(import :gerbil-ascent/program/api)
+
+(def program
+  (relational-choice-program
+    (relation edge (from to) '((0 1) (1 2)))
+    (relation path (from to))
+    (choice color (vertex value))
+    (rule (path ?x ?y) (edge ?x ?y))
+    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+    (rule (closed (color 0) (0 1)))
+    (rule (open (color ?y) ?value) (color 0 ?value) (path 0 ?y))
+    (limits 32 64 64)))
+
+(map (lambda (model) (relational-program-query model 'color))
+     (relational-choice-solve program state-budget: 16))
+#+end_src
+
+Use ordinary relations for positive Boolean facts. Use choice predicates
+for functional facts, with the value in the last column. An empty closed
+offer forbids its grounded body. Ordinary heads cannot write choice predicates.
+Only positive relational atoms are admitted in rule bodies. Consequently a
+range-restricted rule can only copy existing scalars or use its finite set of
+literals. This gives a finite universe for a fixed finite input.
+
+=lower-relational-choice-program= compiles each choice rule into a separate
+private derived relation with the rule's reader origin. Its rows hold the
+values of all distinct body variables, followed by the attribute arguments
+and offered values. Each anonymous occurrence receives a fresh binding.
+The grounding rows preserve distinct witnesses that propose the same value.
+Exact repeat firings of one row are coalesced by ordinary Set storage. At each source cut the existing checked
+planner validates body bindings and the retained Session reaches deterministic
+closure. Traversal to a direct child appends a single source row, letting
+the existing semi-naive scheduler extend physical indexes and discover new
+offer rows. Other transitions use the atomic replacement of all choice
+sources. The Session owns recomputation and invalidation at that boundary.
+Fairness and completeness do not assume shareable indexes between siblings.
+
+| Lean obligation | Scheme operation |
+|-----------------+------------------|
+| =open_saturated_iff= and =closed_saturated_iff= | =process!= checks every grounded offer before saving a model |
+| =step_preserves_assignment= and =offers_extension_exact= | =insert-choice= writes only an unset, interned attribute |
+| =fresh_discovery_fits_budget= | =enqueue!= tests membership before charging one of the state slots, including the empty state |
+| =worklist_counts_preserved= and =worklist_budget_decreases= | =search= removes one seen entry per successful iteration |
+| =finite_databases_count= | Each finite attribute has one unset state plus its admitted values |
+| =register_successors_closes_cut= and =worklist_drain_covers_discovery= | =enqueue!= retains fresh successors and exhaustion leaves all seen states processed |
+| =exhausted_deduction_answers_exact= | All pending entries are drained before =ascent-accept-publication!= |
+
+The final acceptance boundary is outside the grounding Session. Intermediate
+commits leave the outer cancellation and work policy active. Budget exhaustion
+raises =RelationalChoiceLimit= and completed models become visible only when
+the whole search is exhausted. The state budget counts distinct assignments;
+existing per-cut fact budgets and execution checkpoints also apply.
+
+** Grounding refinement
+
+| Scheme boundary | Kernel-checked obligation |
+|-----------------+---------------------------|
+| =relational-choice-rule= calls =relational-term= and =relational-atom= in premise order. =capture-term= retains a named identity and gives each anonymous occurrence its own identity. | =capture_terms_exact= equates the captured terms with their named and anonymous occurrence semantics. =wildcard_fresh= establishes disjointness and =captured_occurrences_determine_row= proves that the bindings identify the matched tuple. |
+| =compile-head= puts distinct binding ordinals before the attribute and offered values. The evidence reader reconstructs the original premises by those ordinals. | =grounding_distinguishes_instances= recovers distinct binding prefixes. =ground_captured_terms_exact= establishes that rendering a captured premise is exact for the binding environment. |
+| =program/index.ss= admits a current entry by lane version, revokes it before mutation and publishes only a completed rebuild or extension. =table/index-sharing.ss= numbers inserts and invalidates cached projections on extension. | =CachePublication.extend_program_exact= and =rebuild_program_exact= describe the emitted publication code. =visible_bucket_exact= composes versioned lookup with exact bucket membership. =bucket_cache_extension_exact= proves that warm empty and nonempty views remain coherent after insertion. =CurriedDictionary.numbered_prefix_restore= establishes ordered prefix lookup over the modeled curried store, including insert batches. |
+| =install-state!= reads the current result, appends one choice on a direct child, or replaces every choice source atomically. | =branch_message_installs_exact_cut= gives the source set seen by each message and =replace_removes_sibling= frames out the previous choice cut. Formal CI compares the executable dispatch macro with Lean's rendering of =branchAction=. |
+| A completed monotone append reuses the previous cut and runs first-fresh delta pivots. A sibling branch has its own completed cut. | =grounding_after_message_exact= composes these cases and =grounding_delta_exact=, proving membership equivalence with the full consequence on the installed cut. |
+
+The composed membership theorem still uses the admitted rule and row views
+from =IndexedIteration.Valid= and =RowsAdmitted=. The correspondence relies on
+Gerbil reader hygiene and scalar equality, hash get/put coherence, and valid
+mutable lane ownership. The complete expander output and scheduler state are
+not extracted into Lean. In particular, the theorem covers the chosen cut's
+semantics while the production replacement path can reuse unaffected positive
+relations. =SourceUpdateFrame.completed_reuse= proves the related dependency
+frame with its compiled-read correspondence premise. A full proof of that
+premise for native Session messages and mutable cache state remains open.
+
+For each unassigned key, the search intersects every currently enabled closed
+offer and records open offers separately. An empty intersection or an
+incompatible prior assignment rejects the state. A singleton intersection
+schedules only that assignment. With no forced deduction, the search visits
+allowed alternatives of all currently enabled keys so that a later rule can
+authorize a different value on an open key. =closed_intersection_forced=,
+=forced_step_reachable= and =forced_step_preserves_model= establish that
+prioritizing the singleton preserves every compatible saturated model and
+consumes a valid semantic edge. =missing_assignment_has_offer= establishes
+progress towards a compatible reachable model with a missing assignment.
+=compatible_model_has_scheduled_step= retains such a step under the deduction
+policy. =exhausted_deduction_answers_exact= proves the result equivalence when
+the worklist is exhausted and the target has finite support, by induction on
+the remaining keys. The native Suite compares with independent ground search
+on all 16 edge subsets of a small diamond. It also exercises native append and
+sibling replacement, exact and insufficient budgets, and cancellation at
+grounding and publication.
+
+** Derivation witness query
+
+#+begin_src scheme
+(relational-program-query completed-model 'color provenance?: #t)
+#+end_src
+
+For a choice relation this returns a detached derivation in assignment order.
+Each step contains its kind (=deduction= or =branch=), a relation-prefixed row,
+and a list of supports. A support contains the choice rule ordinal, head kind,
+reader origin, ordered grounded premises, and the original offered values.
+A closed step retains the enabled constraints used to select the value. An
+open branch retains one enabling rule instance. The retained path belongs to
+the published solution and cannot read the current mutable Session or mix
+sibling cuts. The query runs the existing execution checkpoints. It reports a
+witness for the selected path. Exhaustive alternate derivations, recursive
+expansion of ordinary premise rows, cross-interface RuleModule =explain=,
+watched constraints and cross-branch prefix reuse remain open.

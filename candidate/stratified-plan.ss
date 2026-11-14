@@ -1,10 +1,10 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in :gerbil-ascent/candidate/reduction-plan prepare-reduction-row)
-        (only-in :gerbil-ascent/candidate/grounding-plan
+(import (only-in "reduction-plan.ss" prepare-reduction-row)
+        (only-in "grounding-plan.ss"
                  prepare-grounding-atom prepare-grounding-fixed)
-        (only-in :gerbil-ascent/candidate/program candidate-variable?))
+        (only-in "program.ss" candidate-variable?))
 (export (struct-out stratified-rule) (struct-out stratified-clause)
         prepare-stratified-rule)
 

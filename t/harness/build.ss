@@ -240,6 +240,7 @@
         (artifact-main "freeze")
         (prepare-test-library!
          '("t/qualification/scheme-closure-contract-test.ss"
+           "t/qualification/scheme-artifact-test.ss"
            "t/qualification/scheme-provenance-graph-test.ss"
            "t/qualification/scheme-higher-order-test.ss"
            "t/qualification/ascent-index-lifecycle-test.ss"

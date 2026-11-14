@@ -6,7 +6,7 @@
                     (only-in :tao3k/yuanxu/module-system/building/source-package register-module-build-source!)))
 (begin-syntax
   (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent))
-(import (only-in "init.ss" gerbil-ascent.init.exports std-make-spec)
+(import (only-in "init.ss" gerbil-ascent.init.exports)
         (only-in :clan/poo/object .call .get .o)
         (only-in :gerbil/expander core-import-module)
         (only-in :tao3k/yuanxu/module-system/building/artifacts
@@ -18,7 +18,7 @@
         (only-in :tao3k/yuanxu/module-system/source/static-inputs
                  module-static-compiler-inputs)
         (only-in :std/build-script defbuild-script)
-        (only-in :std/list/list partition)
+        (only-in :std/list/list filter-map partition)
         (only-in :std/source this-source-file))
 
 ;; BEGIN GENERATED PREPARATION COMPILER
@@ -26,20 +26,20 @@
 (def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
 ;; END GENERATED PREPARATION COMPILER
 
-(def (gerbil-ascent-library-spec)
-  ;; Scheme-only preparation does not compile the ABI link inputs.
-  (append (filter (lambda (target)
-                    (match target
-                      ([exe: . _] #f)
-                      ([gxc: (or "interface/c-api" "interface/runtime") . _] #f)
-                      (else #t)))
-                  std-make-spec)
-          '("init")))
+(def (gerbil-ascent-build-projection)
+  (.call gerbil-ascent.init.exports .project-build '("init")))
 
-;; Native Make accepts both bare module paths and option-bearing targets.
-(def (gerbil-ascent-library-modules (spec (gerbil-ascent-library-spec)))
-  (map (lambda (target) (if (string? target) target (cadr target)))
-       spec))
+(def (gerbil-ascent-library-modules projection)
+  ;; Scheme-only preparation uses the same targets as the package build,
+  ;; excluding the executables and their C ABI inputs.
+  (filter-map
+    (lambda (target)
+      (match target
+        ([exe: . _] #f)
+        ([gxc: (or "interface/c-api" "interface/runtime") . _] #f)
+        ((? string?) target)
+        (else (cadr target))))
+    (.get projection spec)))
 
 ;; Yuanxu collects the Module targets. Native Make also accepts a property
 ;; list for the two C ABI inputs, which must invalidate runtime compilation.
@@ -75,7 +75,7 @@
   (def inputs (module-static-compiler-inputs (reverse contexts) owned-identities))
   (call-with-static-compiler-inputs (.o static-inputs: inputs) action))
 
-(export gerbil-ascent-library-spec gerbil-ascent-library-modules
+(export gerbil-ascent-build-projection gerbil-ascent-library-modules
         gerbil-ascent-build-spec gerbil-ascent-rust-spec
         gerbil-ascent-compiler-options call-with-static-link-inputs main)
 
@@ -102,7 +102,7 @@
         make-source: root))))
 
 (def (main . args)
-  (def projection (.call gerbil-ascent.init.exports .project-build '("init")))
+  (def projection (gerbil-ascent-build-projection))
   (def spec (gerbil-ascent-build-spec (.get projection spec)))
   (def optimize? (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
   (def (dispatch targets)

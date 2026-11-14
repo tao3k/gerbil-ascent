@@ -553,10 +553,10 @@ rule-rows:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-rule-program-output.ss
 
 aggregate-rows:
-    @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-aggregate-program-output.ss
+    @timeout 60s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle aggregate
 
 derived-aggregate-rows:
-    @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-derived-aggregate-program-output.ss
+    @timeout 60s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle derived-aggregate
 
 syntax-rows:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-syntax-program-output.ss

@@ -92,8 +92,7 @@
            (cadr arguments))
          (cddr arguments))))
       (else (cons (car arguments) (wrap (cdr arguments)))))))
-(def (source-test-batches profiled files mode
-                          (defer? (cond-expand (darwin #t) (else #f))))
+(def (source-test-batches profiled files mode (defer? #f))
   (let (batches
     (if (string=? mode "batched")
       (let-values (((isolated compatible)

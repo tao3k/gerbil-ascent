@@ -22,7 +22,7 @@ def inventoryPackageDeclarations : InventorySource → Nat
   | .buildEntry => 1
 
 def inventoryImportSchemeSource : String :=
-  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options\n                 gerbil-ascent-library-spec gerbil-ascent-library-modules)\n"
+  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options\n                 gerbil-ascent-build-projection gerbil-ascent-library-modules)\n"
 
 theorem module_data_avoids_package_declaration :
     inventoryPackageDeclarations .moduleData = 0 ∧
@@ -373,8 +373,7 @@ def groupsSchemeSource : String :=
   "           (cadr arguments))\n" ++
   "         (cddr arguments))))\n" ++
   "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n" ++
-  "(def (source-test-batches profiled files mode\n" ++
-  "                          (defer? (cond-expand (darwin #t) (else #f))))\n" ++
+  "(def (source-test-batches profiled files mode (defer? #f))\n" ++
   "  (let (batches\n" ++
   "    (if (string=? mode \"batched\")\n" ++
   "      (let-values (((isolated compatible)\n" ++

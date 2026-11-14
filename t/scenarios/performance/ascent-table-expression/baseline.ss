@@ -12,17 +12,12 @@
 
 (import (only-in :clan/poo/object .ref .call)
         (only-in :clan/poo/number UInt)
-        (only-in :clan/poo/type List)
         (only-in :clan/poo/trie SimpleTrie UIntTrieSet))
 
 (export ascent-table-expression-baseline ascent-table-expression-point-reference
         ascent-table-expression-global-point-reference)
 
 (def AdjacencyTable (SimpleTrie UInt UIntTrieSet))
-;; Input pairs are a set already; private neighbor lists need no second set
-;; wrapper. The public index type still checks every UInt child on publication.
-(def ListAdjacencyTable (SimpleTrie UInt (List UInt)))
-
 (def (baseline-index/point pairs radix)
   (.call UIntTrieSet .foldl
          (lambda (pair index)
@@ -35,12 +30,10 @@
                     index)))
          (.ref AdjacencyTable '.empty) pairs))
 
-;; Only private scalar rows are grouped. The public constructors still admit
-;; every complete neighbor list and the complete persistent index on publication.
+;; Capture scalar input through the public set fold. The join consumes each
+;; adjacency only as a sorted stream, so it needs no persistent index roots.
 (def (baseline-indexes pairs radix)
   (let ((outgoing (make-hash-table)) (incoming (make-hash-table)) (source-rows []))
-    ;; Capture immutable scalar input once under its public fold admission.
-    ;; Nothing is cached across calls; both complete indexes are still admitted.
     (.call UIntTrieSet .foldl
       (lambda (pair unused)
         (let ((source (quotient pair radix)) (target (modulo pair radix)))
@@ -48,13 +41,10 @@
           (hash-put! incoming target (cons source (hash-ref incoming target [])))
           (set! source-rows (cons pair source-rows))) #f)
       #f pairs)
-    (def (publish groups)
-      (let (rows [])
-        (hash-for-each
-          (lambda (key values)
-            (set! rows (cons (cons key values) rows))) groups)
-        (.call ListAdjacencyTable .<-list rows)))
-    (values (publish outgoing) (publish incoming) source-rows)))
+    (def (ordered groups)
+      (list-sort (lambda (left right) (< (car left) (car right)))
+                 (hash->list groups)))
+    (values (ordered outgoing) (ordered incoming) source-rows)))
 
 (def (baseline-compose/point pairs index radix)
   ;; Admit the complete trie once and project each immutable neighbor set
@@ -74,15 +64,9 @@
       (.ref UIntTrieSet '.empty) pairs)))
 
 (def (baseline-compose incoming outgoing radix)
-  ;; Public lookup recognizes the complete table. Merge two complete public
-  ;; enumerations instead of rereading that root for each of the 512 edges.
-  ;; Sorting explicitly avoids depending on a backend's traversal order.
-  (def (ordered table)
-    (list-sort (lambda (left right) (< (car left) (car right)))
-      (.call ListAdjacencyTable .list<- table)))
   ;; The join stream is private: admit the complete combined set once in the
   ;; caller instead of constructing, projecting and readmitting a temporary set.
-  (let loop ((left (ordered incoming)) (right (ordered outgoing)) (rows []))
+  (let loop ((left incoming) (right outgoing) (rows []))
       (cond
         ((or (null? left) (null? right)) rows)
         ((< (caar left) (caar right)) (loop (cdr left) right rows))

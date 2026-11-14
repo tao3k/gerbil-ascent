@@ -122,7 +122,7 @@
           (check-equal? (list-sort string<? (apply append batches)) files)
           (check-equal? (preparation-batches-bounded? batches 174 workers) #t)) (list early staged))
         (check-equal? (source-test-batches profiled files "batched")
-                      (cond-expand (darwin staged) (else early)))))
+                      early)))
     (test-case "exhaustive corpora are isolated within unchanged ordinary capacity bounds"
       (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 37)))
              (heavy '("t/qualification/ascent-candidate-flow-test.ss"

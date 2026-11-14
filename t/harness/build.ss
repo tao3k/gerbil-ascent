@@ -13,14 +13,14 @@
         "library-spec.ss"
         (only-in :std/string/path path-default-extension)
         (only-in :clan/poo/object .call .get)
-        (only-in "../../init.ss" gerbil-ascent.init.exports)
         (only-in :tao3k/yuanxu/module-system/building/source-package call-with-build-input-path)
         (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
-                 asp-gerbil-scheme-native-import-closure)
-        (only-in "artifact-admission.ss" artifact-support-cache artifact-support-interfaces artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
+                 asp-gerbil-scheme-prepared-native-import-closure
+                 call-with-asp-gerbil-scheme-prepared-source-graph)
+        (only-in "artifact-admission.ss" artifact-support-cache artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
 ;; BEGIN GENERATED PREPARATION IMPORT
         (only-in "../../build.ss" gerbil-ascent-compiler-options
-                 gerbil-ascent-library-spec gerbil-ascent-library-modules)
+                 gerbil-ascent-build-projection gerbil-ascent-library-modules)
 ;; END GENERATED PREPARATION IMPORT
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
 (def package-library (path-expand "lib" (gerbil-path)))
@@ -71,21 +71,20 @@
   ;; Module DSL fragments are native compiler inputs owned by init, not
   ;; standalone source modules. Keep their lowering and source-current guards
   ;; active during discovery and make, exactly as the production entry does.
-  (def production (gerbil-ascent-library-modules (gerbil-ascent-library-spec)))
-  (begin0
-    (.call (.get gerbil-ascent.init.exports build) .with-compiler-inputs
-      (lambda ()
-        (call-with-build-input-path package-library
-          (lambda () (prepare-test-library/native! production tests source-suites? source-consumers))
-          make-source: (current-directory))))
-    ((.get gerbil-ascent.init.exports admit-current))))
+  (def projection (gerbil-ascent-build-projection))
+  (def production (gerbil-ascent-library-modules projection))
+  (.call projection .prepare-compiler-contexts)
+  (.call projection .with-compiler-inputs
+    (lambda ()
+      (call-with-build-input-path package-library
+        (lambda () (prepare-test-library/native! production tests source-suites? source-consumers))
+        make-source: (current-directory)))))
 
 (def (prepare-test-library/native! production tests source-suites? source-consumers)
   (let* ((library package-library)
          (module-file (path-expand "modules.sexp" test-cache))
          (options-file (path-expand "gerbil-ascent/t/.compiler-options.sexp" library))
          (support-file (path-expand "support-graph.sexp" test-cache))
-         (admitted-support [])
          (admitted-projection #f)
          (admitted-cache #f)
          (selection (list source-suites? tests source-consumers))
@@ -94,7 +93,6 @@
          (started (current-jiffy))
          (sources (artifact-sources))
          (inventory-seconds (build-elapsed started))
-         (production-interfaces-admitted? #f)
          (production-before (map production-output-time production))
          (modules
           (delete-duplicates/hash
@@ -105,79 +103,43 @@
     ;; Every source Suite remains a projection root. Gerbil supplies its actual
     ;; imports; unrelated oracle/CLI drivers are not an implicit fixture catalog.
     ;; Retain cached fixtures so make refreshes their production ABI when stale.
-    ;; Reuse ASP's projection of Gerbil contexts, including phases and preludes.
-    ;; std/make still owns scheduling, dependency timestamps and invalidation.
-    ;; Source Suites remain source inputs to GxTest; only their dependencies
-    ;; are compiled here. Preparation time is reported separately in CI.
+    ;; Source Suites remain source inputs to GxTest. Gerbil loads each root
+    ;; and ASP projects the same resident contexts for std/make.
     (let* ((phase (current-jiffy))
-           ;; The ABI receipt cannot authorize native interface reuse.
-           ;; Project current source; Gerbil alone decides compiled reuse.
-           (production-current? #f)
            (roots (preparation-projection-roots production
-                    modules tests source-consumers production-current?)))
-      (set! production-interfaces-admitted? production-current?)
+                    modules tests source-consumers #f)))
       (let (cached (artifact-support-cache support-file sources library cache-options))
         (when cached
           (set! admitted-cache cached)
-          (set! admitted-projection (artifact-support-projection cached selection modules))
-          (when production-current?
-            (let (installed (cached-support-modules))
-              (set! admitted-support
-                (filter (lambda (module) (member module installed))
-                        (artifact-support-interfaces cached library))))))
-      (displayln "BUILD-TEST-LIBRARY admitted-support-interfaces=" (length admitted-support))
-      (displayln "BUILD-TEST-LIBRARY projection-production-current=" production-current?)
-      ;; Source-only consumers have no compiled interfaces. Do not traverse a
-      ;; whole interface graph only to reject it and expand the same roots.
-      ;; Production remains in make's carrier list. Project consumer dependencies
-      ;; without forcing the entire already declared production catalog from
-      ;; source again. Gerbil owns interface loading and dependency expansion.
-      ;; Prepare through Gerbil once, then use ASP's resident-context projection.
+          (set! admitted-projection (artifact-support-projection cached selection modules))))
       (displayln "BUILD-TEST-LIBRARY-PHASE projection-input-admission wall-seconds="
                  (build-elapsed phase))
-      (when admitted-projection
+      (if admitted-projection
         (let (reused (current-jiffy))
           (set! modules admitted-projection)
           (displayln "BUILD-TEST-LIBRARY projection-cache-hit=1")
           (displayln "BUILD-TEST-LIBRARY-PHASE source-context-reuse wall-seconds="
-                     (build-elapsed reused))))
-      (unless admitted-projection
+                     (build-elapsed reused)))
         (let (loading (current-jiffy))
-          ;; Only the content-admitted production catalog may use its installed
-          ;; interfaces. Source consumers/support roots and explicit reload keep
-          ;; Gerbil's source path. Actual compiler imports always bypass the hook.
-          (call-with-preparation-production-interfaces
-            production-current? library (append production admitted-support)
-            (lambda ()
-              (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)))
+          (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)
           (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
-                     (build-elapsed loading)))
-        (let* ((projection-started (current-jiffy))
-               (closure
-                ;; Init owns generated compiler contexts as well as physical
-                ;; source modules. A raw source-path registry lookup cannot
-                ;; identify a lowered DSL role. Project through native import
-                ;; under the active owner, which checks source currentness and
-                ;; compiler identity before and after each role acquisition.
-                (call-with-preparation-production-interfaces
-                  production-current? library (append production admitted-support)
-                  (lambda ()
-                    ;; ASP's native projection prepends its declared source
-                    ;; root once. End that verified transition before Make.
-                    (call-with-build-input-path #f
-                      (lambda ()
-                        (asp-gerbil-scheme-native-import-closure (current-directory) roots))
-                      make-source: (current-directory))))))
-          (set! modules
-            (delete-duplicates/hash
-              (append modules
-                (map path-strip-extension
-                  (filter (lambda (source)
-                            (and (not (member source tests))
-                                 (preparation-retained-source? source source-suites? source-consumers))) closure)))
-              from-end?: #t))
-          (displayln "BUILD-TEST-LIBRARY-PHASE resident-context-projection wall-seconds="
-                     (build-elapsed projection-started))))
+                     (build-elapsed loading))
+          (let* ((projection-started (current-jiffy))
+                 (closure
+                  (call-with-asp-gerbil-scheme-prepared-source-graph
+                    (lambda ()
+                      (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots)))))
+            (set! modules
+              (delete-duplicates/hash
+                (append modules
+                  (map path-strip-extension
+                    (filter (lambda (source)
+                              (and (not (member source tests))
+                                   (preparation-retained-source? source source-suites? source-consumers)))
+                            closure)))
+                from-end?: #t))
+            (displayln "BUILD-TEST-LIBRARY-PHASE resident-context-projection wall-seconds="
+                       (build-elapsed projection-started)))))
       (displayln "BUILD-TEST-LIBRARY-PHASE dependency-projection wall-seconds="
                  (build-elapsed phase)))
     (call-with-output-file [path: module-file truncate: #t]
@@ -200,15 +162,10 @@
       ;; Only requested compiled consumers compile; ordinary semantic Suites are
       ;; discovered and loaded by the standard Gerbil test entry.
       (let (phase (current-jiffy))
-        ;; std/make imports carriers again to identify and check dependencies.
-        ;; Reuse admitted interfaces there too, but never as compiler inputs:
-        ;; Gerbil's driver binds current-compile-context for actual builds.
-        (call-with-preparation-production-interfaces
-          production-interfaces-admitted? library (append production admitted-support)
-          (lambda ()
-            (make (map (cut normalize-spec <> gerbil-ascent-compiler-options) all) srcdir: (current-directory) libdir: library
-                  build-deps: (path-expand "build-deps" test-cache)
-                  optimize: optimize?))))
+        (make (map (cut normalize-spec <> gerbil-ascent-compiler-options) all)
+              srcdir: (current-directory) libdir: library
+              build-deps: (path-expand "build_deps" test-cache)
+              optimize: optimize?)
         (displayln "BUILD-TEST-LIBRARY-PHASE make wall-seconds=" (build-elapsed phase)))
       (let (phase (current-jiffy))
         (unless (artifact-matching-sources? sources (artifact-sources))
@@ -247,10 +204,10 @@
            "t/qualification/scheme-higher-order-test.ss"
            "t/qualification/ascent-index-lifecycle-test.ss"
            "t/qualification/scheme-finite-mapping-test.ss"
-    "t/qualification/scheme-session-deletion-test.ss"
-    "t/qualification/ascent-timeout-test.ss"
-    "t/qualification/scheme-stratified-provenance-test.ss"
-    "t/qualification/scheme-model-closure-test.ss"
+           "t/qualification/scheme-session-deletion-test.ss"
+           "t/qualification/ascent-timeout-test.ss"
+           "t/qualification/scheme-stratified-provenance-test.ss"
+           "t/qualification/scheme-model-closure-test.ss"
            "t/qualification/scheme-operator-test.ss"
            "t/qualification/scheme-library-contract-test.ss"
            "t/qualification/scheme-operator-retained-test.ss"
@@ -263,6 +220,8 @@
            "t/qualification/ascent-grouped-eqrel-session-output.ss"
            "t/qualification/ascent-byods-lattice-session-output.ss"
            "t/qualification/ascent-arity-repetition-output.ss"
+           "t/qualification/ascent-aggregate-program-output.ss"
+           "t/qualification/ascent-derived-aggregate-program-output.ss"
            "t/qualification/ascent-lattice-session-output.ss"
            "t/qualification/ascent-integrated-corpus-output.ss"
            "t/qualification/ascent-eqrel-program-output.ss"

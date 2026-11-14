@@ -44,6 +44,10 @@
 ;;; These are the unchanged Rust differential fixtures, compiled into the
 ;;; native entry. The command transports stdin/rows; fixture semantics stay
 ;;; Scheme-owned and Rust still checks every original expected row.
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-aggregate-program-output
+                           (main aggregate-main)) aggregate-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-derived-aggregate-program-output
+                           (main derived-aggregate-main)) derived-aggregate-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-session-output (main byods-session-main)) byods-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-steensgaard-output (main steensgaard-main)) steensgaard-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-multi-source-session-output (main multi-source-session-main)) multi-source-session-main))
@@ -86,6 +90,8 @@
     (["--oracle" name]
      (check-scheme-oracle!)
      (case (string->symbol name)
+       ((aggregate) (aggregate-main))
+       ((derived-aggregate) (derived-aggregate-main))
        ((byods-query) (byods-query-main))
        ((byods-session) (byods-session-main))
        ((steensgaard) (steensgaard-main))

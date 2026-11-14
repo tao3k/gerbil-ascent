@@ -651,7 +651,7 @@ jobs:
       - name: Install independent Python consumer prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-cffi python3-venv
+          sudo apt-get install -y python3-cffi python3-venv libssl-dev pkg-config
       - name: Restore the producer wheel and matching runtime resources
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
@@ -667,7 +667,8 @@ jobs:
           .cache/ascent/python-projects/bin/pip install --no-deps .cache/ascent/wheels/*.whl
           .cache/ascent/python-projects/bin/pip install --no-deps ./workbench
           source .ci/gerbil-release/v19/activate
-          printf 'GERBIL_HOME=%s\nGERBIL_PATH=%s/.gerbil\n' "$GERBIL_HOME" "$PWD" >> "$GITHUB_ENV"
+          printf '%s\n' "$GERBIL_PREFIX/bin" >> "$GITHUB_PATH"
+          printf 'GERBIL_HOME=%s\nGERBIL_PATH=%s/.gerbil\nGAMBOPT=%s\n' "$GERBIL_HOME" "$PWD" "$GAMBOPT" >> "$GITHUB_ENV"
       - name: Qualify Python byte IO and process supervision
         env:
           PYTHONPATH: workbench/src

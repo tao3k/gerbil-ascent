@@ -21,7 +21,7 @@ jobs:
       - name: Check verdict handling and API deadlines
         env:
           PYTHONPATH: workbench/src
-        run: uv run --project workbench --only-group design --locked python -m unittest discover -s workbench/tests -p test_design.py
+        run: uv run --project workbench --only-group design --locked python -m unittest discover -s dev/sysml -p test_design.py
       - name: Check architecture contracts and named counterexamples
         run: uv run --project workbench --only-group design --locked python workbench/src/ascent_workbench/design.py
       - name: Retain design evidence including failures

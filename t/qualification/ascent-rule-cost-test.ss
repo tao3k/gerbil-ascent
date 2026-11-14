@@ -7,9 +7,10 @@
         (only-in :gerbil-ascent/program/analysis
                  gerbil-ascent-program-analysis gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-program)
+        (only-in "./fixtures/semi-naive/recursive.ss" recursive-declaration recursive-rules)
         (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle
                  finite-domain-closure))
-(export ascent-rule-cost-test recursive-declaration recursive-rules)
+(export ascent-rule-cost-test)
 
 ;;; Both lanes use the existing language and the same native evaluator. The
 ;;; reuse lane names the complete
@@ -87,17 +88,6 @@
   (filter-map (lambda (i)
                 (and (not (zero? (bitwise-and mask (arithmetic-shift 1 i))))
                      (list (quotient i 2) (modulo i 2)))) (iota 4)))
-(def recursive-rules
-  '(((path x y) (edge x y))
-    ((path x z) (path x y) (path y z))
-    ((answer x w) (edge x y) (path y z) (path z w))))
-(def (recursive-declaration edges)
-  (relational-program
-    (relation edge (a b) edges) (relation path (a b)) (relation answer (a b))
-    (rule (path ?x ?y) (edge ?x ?y))
-    (rule (path ?x ?z) (path ?x ?y) (path ?y ?z))
-    (rule (answer ?x ?w) (edge ?x ?y) (path ?y ?z) (path ?z ?w))
-    (limits 1000 10000 12000)))
 (def (check-recursive edges domain actual)
   (let (expected (finite-domain-closure domain
                   (list (cons 'edge edges) (cons 'path []) (cons 'answer [])) recursive-rules))

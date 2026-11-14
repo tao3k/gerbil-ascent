@@ -19,6 +19,7 @@
                  relation-shortest-distance-projection
                  indexed-path-distances indexed-sparse-distance-analysis
                  build-indexed-path-layout
+                 indexed-small-closure
                  compute-indexed-path-analysis
                  path-projection
                  path-distance-projection))
@@ -104,11 +105,14 @@
        (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))
          (if layout
            (path-projection (vector-ref (.ref self 'indexed-path-analysis) 0) radix)
-           (let (analysis (.ref self 'native-sparse-analysis))
-             (if analysis
-               (distance-closure-projection analysis)
-               (with-relation-view self
-                 (cut relation-closure <> <> radix #f <>)))))))
+           (or (and (fixnum? radix) (fx<= 2 radix) (fx<= radix 32)
+                    (indexed-small-closure (.ref self 'indexed-source)
+                                           (.ref self 'right-index) radix))
+               (let (analysis (.ref self 'native-sparse-analysis))
+                 (if analysis
+                   (distance-closure-projection analysis)
+                   (with-relation-view self
+                     (cut relation-closure <> <> radix #f <>))))))))
       (closure-bounded
        (lambda (max-pairs)
          (let (layout (and (exact-integer? radix) (<= 32 radix 128) (.ref self 'indexed-path-layout)))

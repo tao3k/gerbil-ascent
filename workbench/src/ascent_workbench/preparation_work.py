@@ -260,20 +260,15 @@ def execute_gsc(arguments, helper=False):
         output = child_env.get(f'BUILD_{arguments[0].upper()}_OUTPUT_FILENAME_PARAM')
         if len(c_sources) == 1 and output and sum(Path(path).suffix == '.c' for path in compiler_input_paths) == 1:
             gcc_source = c_sources[0]['path']
-            # GCC's normal object output uses a different auxiliary basename
-            # from an unknown bundle extension (.o1). Link metadata is not a C
-            # compiler input and must never manufacture an expected report.
             destination = Path(output).resolve()
-            gcc_report = (destination.with_suffix('.c.sarif') if destination.suffix == '.o' else
-                          destination.with_name(destination.name + '-' + Path(gcc_source).name + '.sarif'))
-            # The native compiler writes this diagnostic beside its own output.
-            # Never add diagnostics to the immutable SDK installation.
-            if gcc_report.is_relative_to(Path(command).parent.parent):
-                gcc_report = None
-            else:
-                gcc_report.unlink(missing_ok=True)
+            if not destination.is_relative_to(Path(command).parent.parent):
+                # The driver chooses different auxiliary names for object and
+                # dynamic outputs across platforms. Assign this invocation a
+                # report in the observer's own directory.
+                gcc_report = trace.resolve() / f'{os.getpid()}-{started}.sarif'
                 key = f'BUILD_{arguments[0].upper()}_CC_OPTIONS_PARAM'
-                child_env[key] = child_env.get(key, '') + ' -ftime-report -ftime-report-details -fdiagnostics-format=sarif-file'
+                sink = shlex.quote(f'-fdiagnostics-set-output=sarif:file={gcc_report}')
+                child_env[key] = child_env.get(key, '') + f' -ftime-report -ftime-report-details {sink}'
     child = subprocess.Popen([command, *runtime_options, *arguments], env=child_env)
     exit_code = child.wait()
     process_wall_ns = time.monotonic_ns() - started
@@ -310,6 +305,8 @@ def execute_gsc(arguments, helper=False):
             record['gcc_source'] = gcc_source
         except (OSError, ValueError, KeyError, TypeError) as error:
             record['gcc_allocation_error'] = str(error)
+        finally:
+            gcc_report.unlink(missing_ok=True)
     # One bounded record per process; no concurrent partial text writes.
     (trace / f'{os.getpid()}-{started}.json').write_text(json.dumps(record) + '\n')
     return exit_code if current else 1

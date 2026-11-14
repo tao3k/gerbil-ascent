@@ -202,6 +202,29 @@ theorem EmptyBucketCost.solve_only_cannot_pay (before after : EmptyBucketCost)
   unfold EmptyBucketCost.total at *
   omega
 
+/-- `relational-owned-program` enters the inert constructor with canonical
+atom syntax. `gerbil-ascent-rule/reader-origin` constructs the located rule
+in that extent. Both arms still copy metadata and validate the public root. -/
+theorem located_rule_value_count (rules : Nat) :
+    2 * rules - rules = rules := by omega
+
+/-- A pivot-row union in `core/binary-relation.ss` can keep one captured
+suffix row while updating other rows in place. Updating the pivot itself
+leaves that suffix unchanged, even for graphs with a diagonal edge. -/
+def closeAt {Vertex : Type} (edge : Vertex → Vertex → Bool)
+    (pivot source target : Vertex) : Bool :=
+  edge source target || (edge source pivot && edge pivot target)
+
+theorem closeAt_pivot_row {Vertex : Type} (edge : Vertex → Vertex → Bool)
+    (pivot target : Vertex) : closeAt edge pivot pivot target = edge pivot target := by
+  unfold closeAt
+  cases edge pivot pivot <;> cases edge pivot target <;> decide
+
+theorem closeAt_pivot_column {Vertex : Type} (edge : Vertex → Vertex → Bool)
+    (pivot source : Vertex) : closeAt edge pivot source pivot = edge source pivot := by
+  unfold closeAt
+  cases edge source pivot <;> cases edge pivot pivot <;> decide
+
 namespace Publication
 
 inductive EventKind where

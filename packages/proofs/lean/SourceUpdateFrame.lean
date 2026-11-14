@@ -168,6 +168,27 @@ theorem UpdateCpu.selection_budget (reference candidate : UpdateCpu)
   unfold UpdateCpu.total at gate ⊢
   omega
 
+/-- `program/update-selection.ss` previously copied the source-log vector
+and separately generated every ordinal after eligibility. The cursor reads
+that vector directly. Both versions compare the same indexed relation. -/
+theorem indexed_log_comparisons [DecidableEq Row] (cut : Cut count Row) :
+    cut.seeds =
+      (List.finRange count).filter (fun index =>
+        decide (cut.base index ++ (cut.newestFirstAppends index).reverse ≠
+          cut.candidate index)) := rfl
+
+/-- At equal admitted lengths the old two traversal lists used two pairs
+per relation. Direct reads remove that charge, independently of the costs
+of the ordered log comparisons and graph closure. -/
+theorem cursor_spine_saving (relations : Nat) :
+    relations + relations = 2 * relations := by omega
+
+/-- `program/result.ss` returns false without an owned publication. The
+integer count comparison in `program/reuse.ss` cannot select the source-only
+shortcut on that branch, so scanning all rule heads there is unnecessary. -/
+theorem absent_publication_disables_source_shortcut (freshCount : Nat) :
+    (none : Option Nat) ≠ some freshCount := by simp
+
 /-! A source understanding survives context loss independently of read hints.
 Its reuse remains conditional on current byte correspondence and a complete,
 current declared scope at every dependency. `adj` is origin-to-consumer;

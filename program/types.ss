@@ -28,6 +28,7 @@
   gerbil-ascent-check-owned-term-value
   gerbil-ascent-check-owned-atom-value
   gerbil-ascent-make-rule-value
+  gerbil-ascent-make-located-rule-value
   gerbil-ascent-check-owned-rule-value
   gerbil-ascent-make-aggregate-value
   gerbil-ascent-check-owned-aggregate-value
@@ -175,6 +176,12 @@
   (let (value (.o (:: @ rule) source-origin: origin))
     (if (declared-value-shape? 'rule rule)
       (remember-value-shape! 'rule value) value)))
+
+;; Only inert DSL construction uses this factory. The public root still
+;; validates the rule as an ordinary declaration before it escapes.
+(def (gerbil-ascent-make-located-rule-value prototype heads-value body-value origin)
+  (remember-value-shape! 'rule
+    (.o (:: @ prototype) heads: heads-value body: body-value source-origin: origin)))
 
 ;; BEGIN GENERATED OWNED DECLARATION VALUES
 (def term-value-current? (canonical-value-check-current? GerbilAscentTermContract '(kind value)))

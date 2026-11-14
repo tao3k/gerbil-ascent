@@ -4,7 +4,7 @@
 (import :gerbil/runtime/gambit
         (only-in :clan/poo/object .o .ref object-revision compute-precedence-list!)
         :gerbil-ascent/core/positive-plan
-        (only-in :gerbil-ascent/t/qualification/ascent-rule-cost-test recursive-declaration recursive-rules)
+        (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/recursive recursive-declaration recursive-rules)
         (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle finite-domain-closure)
         (only-in :gerbil/expander core-resolve-library-module-path)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)

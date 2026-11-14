@@ -25,6 +25,7 @@
         (struct-out indexed-path-distances)
         indexed-sparse-distance-analysis
         build-indexed-path-layout
+        indexed-small-closure
         compute-indexed-path-analysis
         path-projection
         path-distance-projection)
@@ -512,6 +513,28 @@
                         (bits (cdr rest) (bitwise-ior mask (arithmetic-shift 1 (car rest))))))
                     (sources (+ from 1))))
                 rows)))))
+
+;; One bit row per origin. Each pivot adds exactly the paths that can
+;; go through that pivot using the already admitted intermediate vertices.
+;; Initialize with direct edges so a diagonal appears only for a real cycle.
+(def (indexed-small-closure view neighbors radix)
+  (and (fixnum? radix) (fx<= 2 radix) (fx<= radix 32)
+       (indexed-relation-view? view) (eq? neighbors (vector-ref view 2))
+       (let ((rows (make-vector radix 0))
+             (targets (vector-ref view 1)))
+         (for (origin (in-range radix))
+           (vector-set! rows origin
+             (foldl (lambda (target mask)
+                      (bitwise-ior mask (arithmetic-shift 1 target)))
+                    0 (targets origin))))
+         (for (pivot (in-range radix))
+           (let (suffix (vector-ref rows pivot))
+             (unless (zero? suffix)
+               (for (origin (in-range radix))
+                 (let (prefix (vector-ref rows origin))
+                   (when (bit-set? pivot prefix)
+                     (vector-set! rows origin (bitwise-ior prefix suffix))))))))
+         (path-projection rows radix))))
 
 ;; : (-> UIntMask PathRows UIntMask UIntMask)
 (def (path-expand mask adjacency full)

@@ -89,6 +89,8 @@
          (admitted-projection #f)
          (admitted-cache #f)
          (selection (list source-suites? tests source-consumers))
+         (optimize? (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
+         (cache-options (cons optimize? gerbil-ascent-compiler-options))
          (started (current-jiffy))
          (sources (artifact-sources))
          (inventory-seconds (build-elapsed started))
@@ -114,15 +116,15 @@
            (roots (preparation-projection-roots production
                     modules tests source-consumers production-current?)))
       (set! production-interfaces-admitted? production-current?)
-      (when production-current?
-        (let ((installed (cached-support-modules))
-              (cached (artifact-support-cache support-file sources library gerbil-ascent-compiler-options)))
-          (when cached
-            (set! admitted-cache cached)
-            (set! admitted-support
-              (filter (lambda (module) (member module installed))
-                      (artifact-support-interfaces cached library)))
-            (set! admitted-projection (artifact-support-projection cached selection modules)))))
+      (let (cached (artifact-support-cache support-file sources library cache-options))
+        (when cached
+          (set! admitted-cache cached)
+          (set! admitted-projection (artifact-support-projection cached selection modules))
+          (when production-current?
+            (let (installed (cached-support-modules))
+              (set! admitted-support
+                (filter (lambda (module) (member module installed))
+                        (artifact-support-interfaces cached library))))))
       (displayln "BUILD-TEST-LIBRARY admitted-support-interfaces=" (length admitted-support))
       (displayln "BUILD-TEST-LIBRARY projection-production-current=" production-current?)
       ;; Source-only consumers have no compiled interfaces. Do not traverse a
@@ -206,7 +208,7 @@
           (lambda ()
             (make (map (cut normalize-spec <> gerbil-ascent-compiler-options) all) srcdir: (current-directory) libdir: library
                   build-deps: (path-expand "build-deps" test-cache)
-                  optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))))
+                  optimize: optimize?))))
         (displayln "BUILD-TEST-LIBRARY-PHASE make wall-seconds=" (build-elapsed phase)))
       (let (phase (current-jiffy))
         (unless (artifact-matching-sources? sources (artifact-sources))
@@ -215,7 +217,7 @@
       (artifact-directory! (path-directory options-file))
       (artifact-record-compiler-options! options-file gerbil-ascent-compiler-options)
       (let (phase (current-jiffy))
-        (artifact-record-support-cache! support-file sources library gerbil-ascent-compiler-options selection modules admitted-cache)
+        (artifact-record-support-cache! support-file sources library cache-options selection modules admitted-cache)
         (displayln "BUILD-TEST-LIBRARY-PHASE support-cache-publication wall-seconds=" (build-elapsed phase)))
       (displayln "BUILD-TEST-LIBRARY production-rebuilt="
                  (length (filter (lambda (same?) (not same?))

@@ -18,7 +18,7 @@
 (export relational-scalar? relational-copy-row relational-copy-rows
         relational-declared-source relational-declared-lattice relational-require-domain
         relational-relation-role relational-with-role relational-source-handles
-        relational-check-roles! relational-with-origin relational-rule-origin
+        relational-check-roles! relational-with-origin relational-rule-origin relational-rule/reader-origin
         RelationalDeclarationError? RelationalDeclarationError-code RelationalDeclarationError-path
         relational-finite-rows
         relational-source relational-finite-source relational-finite-lattice
@@ -123,6 +123,8 @@
          (and origin (copy-rule-origin origin (length (.ref rule 'body)))))))
 (def (relational-with-origin rule origin)
   (if origin (gerbil-ascent-rule-with-origin rule (copy-rule-origin origin (length (.ref rule 'body)))) rule))
+(def (relational-rule/reader-origin heads body origin)
+  (gerbil-ascent-rule/reader-origin heads body (cut copy-rule-origin origin <>)))
 (def (relational-check-roles! program)
   (let ((roles (make-hash-table-eq)) (relations (.ref program 'relations)))
     (for-each (lambda (relation)

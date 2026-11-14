@@ -65,7 +65,7 @@
   (alet (affected (gerbil-ascent-update-selection previous candidate analysis source-cut))
     (make-session-reuse completed affected
       (gerbil-ascent-publication-reader publication completed) publication
-      (source-only-relations analysis (vector-length previous)))))
+      (and publication (source-only-relations analysis (vector-length previous))))))
 
 ;; gerbil-ascent-activate-rules
 ;; : (forall (a r) (-> a (Vector [r])))
@@ -166,7 +166,8 @@
             ;; that state only for a relation with no rule head and the exact
             ;; prior native count. Duplicate buffered appends can change source
             ;; multiplicity, so count disagreement retains full seeding.
-            (unless (and (not (vector-ref lattice-joins index))
+            (unless (and (session-reuse-source-only reuse)
+                         (not (vector-ref lattice-joins index))
                          (vector-ref (session-reuse-source-only reuse) index)
                          (eqv? (vector-ref all-size index)
                                (gerbil-ascent-publication-size
@@ -188,7 +189,12 @@
                                   base)
                         membership)
                       (vector-ref seen index))))
-                   (present (make-hash-table)))
+                   ;; A fresh empty Set already has an empty membership table.
+                   ;; No row validation or derived-count read can observe its reuse.
+                   (present (if (and (null? base) (null? rows)
+                                     (not (vector-ref lattice-joins index)))
+                              (vector-ref seen index)
+                              (make-hash-table))))
               (for-each
                (lambda (row)
                  (unless (and (list? row) (= (length row) (vector-ref arity index)))

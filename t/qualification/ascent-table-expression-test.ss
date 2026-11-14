@@ -26,8 +26,23 @@
         (set! rows (cons (+ (* (quotient left radix) radix) (modulo right radix)) rows)))) edges)) edges)
   (list-sort < (delete-duplicates/hash rows)))
 
+(def (naive-closure edges radix)
+  (let close ((known (list-sort < edges)))
+    (let (next (naive-two-hop known radix))
+      (if (equal? next known) known (close next)))))
+
 (def ascent-table-expression-test
   (test-suite "ASCENT table expression over native persistent tries"
+    (test-case "small canonical closure matches the independent fixed point"
+      (for-each
+        (lambda (graph)
+          (let* ((pair-radix 3)
+                 (edges (filter (lambda (edge) (bit-set? edge graph)) (iota 9)))
+                 (expression
+                  (.mix gerbil-ascent-table-expression-prototype
+                        (.o (source-pairs (.call UIntTrieSet .<-list edges)) (radix pair-radix)))))
+            (check-equal? (.ref expression 'closure-pairs) (naive-closure edges pair-radix))))
+        (iota 512)))
     (test-case "bulk-admitted persistent control matches point updates and independent joins"
       (for-each
         (lambda (input)

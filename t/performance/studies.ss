@@ -135,7 +135,10 @@
       "t/performance/index-entry-benchmark.ss" '("all" "delta" "advance" "scalar" "cold" "solve-wide" "solve-small")
       #f '(scenario library receipt) #f ".sexp")
     (make-study 'empty-bucket-reuse
-      '("program/index" "program/evaluate" "t/performance/index-entry/reference" "t/performance/index-entry/reference-evaluate" "t/performance/index-entry/fixture" "t/qualification/ascent-rule-cost-test" "t/qualification/ascent-rule-cost-kernel-test" "t/qualification/ascent-provider-packet-test" "t/performance/index-entry-benchmark")
+      '("program/index" "program/evaluate"
+        "t/performance/index-entry/reference" "t/performance/index-entry/reference-evaluate"
+        "t/performance/index-entry/fixture" "t/qualification/fixtures/semi-naive/recursive"
+        "t/performance/index-entry-benchmark")
       "t/performance/index-entry-benchmark.ss" '("empty-aa" "empty-bb" "empty-reuse")
       #f '(scenario library receipt) #t ".sexp")
     (make-study 'rule-bindings

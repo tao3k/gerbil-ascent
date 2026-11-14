@@ -3873,4 +3873,50 @@ theorem register_cursor_payload (width : Nat) :
   unfold builderConstructorPayload
   omega
 
+/-- A complete public list owns a distinct spine cell and both tuple cells
+per binary row. Each coordinate occurrence remains writable after export.
+These charges exclude the collector, auxiliary state and all object headers
+other than the three native pair headers. -/
+def detachedBatchPairPayload (width exports : Nat) : Nat :=
+  exports * (width * width) * (3 * 24)
+
+theorem strict_workload_pair_payload :
+    detachedBatchPairPayload 384 32 = 339738624 ∧
+    detachedBatchPairPayload 512 32 = 603979776 := by decide
+
+/-- A different builder can reduce auxiliary work while still paying the
+same public payload. Meeting the strict wall cap also requires the remaining
+collector interval to fit after that payload has been constructed. -/
+theorem detached_batch_requires_collector_budget
+    (width exports allocated materialize collect limit : Nat)
+    (payload : detachedBatchPairPayload width exports ≤ allocated)
+    (pass : materialize + collect < limit) :
+    detachedBatchPairPayload width exports ≤ allocated ∧
+      collect < limit - materialize := by
+  exact ⟨payload, by omega⟩
+
+/-- Work at each whole-heap marking phase. `background` includes the
+reachable roots of the loaded VM and `inFlight` is the live result of the
+current export. The lists price actual pauses, not distinct heap objects. -/
+def repeatedExportMarking (background : Nat) (inFlight : List Nat) : Nat :=
+  (inFlight.map (background + ·)).sum
+
+theorem repeated_export_marking (background : Nat) (inFlight : List Nat) :
+    repeatedExportMarking background inFlight =
+      inFlight.length * background + inFlight.sum := by
+  induction inFlight with
+  | nil => simp [repeatedExportMarking]
+  | cons live rest ih =>
+    simp only [repeatedExportMarking, List.map_cons, List.sum_cons] at ih ⊢
+    rw [ih, List.length_cons, Nat.add_mul]
+    omega
+
+/-- Eliminating all in-flight work still leaves one background charge
+for every whole-heap pause. This accounts for the source work under a
+fixed schedule and price. Collector scheduling remains a native premise. -/
+theorem collector_background_floor (background : Nat) (inFlight : List Nat) :
+    inFlight.length * background ≤ repeatedExportMarking background inFlight := by
+  rw [repeated_export_marking]
+  omega
+
 end Ascent.WeightedCapacity

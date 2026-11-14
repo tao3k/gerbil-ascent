@@ -110,24 +110,26 @@
 ;;     %
 (def (gerbil-ascent-update-selection previous candidate analysis (source-cut #f))
   (let* ((relations (.ref candidate 'relations))
-         (old-relations (vector->list previous))
          (count (length relations))
          (affected (make-vector count #f)))
     (let (eligible?
-          (and (= count (length old-relations))
+          (and (= count (vector-length previous))
                (gerbil-ascent-update-eligible? candidate source-cut)))
       (if (not eligible?)
           #f
           (begin
-            (for-each
-             (lambda (old new index)
-               (let (rows (.ref new 'rows))
+            ;; Read the same ordered relation/log pairs without allocating
+            ;; a copy of the prior vector or a separate list of ordinals.
+            (let compare ((remaining relations) (index 0))
+              (unless (null? remaining)
+                (let ((old (vector-ref previous index))
+                      (rows (.ref (car remaining) 'rows)))
                  (unless (or (and source-cut
                                   (gerbil-ascent-source-log-snapshot-equal?
                                    source-cut candidate index old rows))
                              (gerbil-ascent-source-log-equal? (car old) (cdr old) rows))
-                   (vector-set! affected index #t))))
-             old-relations relations (iota count))
+                   (vector-set! affected index #t)))
+                (compare (cdr remaining) (+ index 1))))
             (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)
             affected)))))
 

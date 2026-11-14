@@ -244,10 +244,9 @@
                             (vector (stx-source (syntax head))
                                     (map stx-source (syntax->list (syntax (body ...))))))))
        (syntax
-        (relational-with-origin
-         (gerbil-ascent-rule
-          (list (atom-lowering head))
-          (list (relational-checked-clause atom-lowering negation-lowering reduce-lowering body) ...))
+        (relational-rule/reader-origin
+         (list (atom-lowering head))
+         (list (relational-checked-clause atom-lowering negation-lowering reduce-lowering body) ...)
          'origin))))))
 
 ;;; This collector preserves declaration and body order for the planner.

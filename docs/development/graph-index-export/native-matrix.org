@@ -1496,3 +1496,72 @@ counts under the locked Guard. Each full list still comes from
 =capture-rows= and =gerbil-ascent-view-rows=. A different collector
 cost could also change the outside-collection interval, so this
 diagnostic does not predict the effect of a new allocation strategy.
+
+** Public allocation floor on the fixed release
+
+For the closed-cycle fixture, =gerbil-ascent-trrel-uf-freeze= borrows
+both axes from the same frozen component. =capture-rows= dispatches to
+the view export, and =materialize-rectangles= constructs one list-spine
+cell and two tuple cells for each ordered row. The detachment tests
+mutate all three cells and check earlier and subsequent results.
+=strict_workload_pair_payload= in =WeightedExportCapacity.lean= binds
+that layout to 339,738,624 and 603,979,776 bytes of pair objects per
+32-export batch at 384 and 512 vertices. These are object bytes before
+copying and exclude auxiliary allocations and collector bookkeeping.
+The two-semispace charge in the separate counter model is twice these
+values, subject to the source accounting premises documented there.
+
+=detached_batch_requires_collector_budget= keeps the public payload
+floor and the residual collector deadline separate. Capture and
+materialization changes may change collection behavior. Counting
+removed lookups or constructor instructions alone gives no latency
+bound. The fixed-release experiment must retain the ordinary detached
+lists, their order and the existing heap and wall limits.
+
+The fixed Gambit source's =garbage_collect_mark_strong_phase= enumerates
+VM and processor roots, RC roots, global cells, symbols and keywords,
+continuations, registers and saved values. =mark_array= forwards the
+reachable movable objects and =scan_movable_objs_to_scan= visits the copied
+objects' pointer fields. A binary result links the outer cdr chain and has
+a pair-valued car on every outer cell. The builder's partial result remains
+reachable from its live cursor while a heap check invokes collection.
+The next collection reconstructs reachability from roots again. Forwarding
+deduplicates aliases within one collection. The live-prefix observations in
+[[file:collector-and-allocation.org][Collector and allocation]] put the loaded
+movable baseline near 85 MB of accounting charge, with median excess charges
+of 3.44 MB and 15.82 MB at 384 and 512. These are native accounting units,
+including semispace and chunk charges. They do not assign elapsed time to
+individual module objects.
+
+=repeated_export_marking= expresses the per-pause background plus in-flight
+terms. =collector_background_floor= keeps the repeated background term when
+the in-flight term is removed at a fixed schedule. Together with the
+section-renewal replay, this explains why another tuple-constructor loop or
+removing the live prefix alone has insufficient support as a solution.
+The inputs are the installed release and Gambit =ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f=,
+=lib/mem.c= SHA-256 =317b5262efd7f3a9418328250c163a9cf3fb9a44fbd573b08fde6f4a3cce2882=.
+
+* Standard-library audit of the changed paths
+
+The ordered rectangle writer uses =std/list/list-builder:with-list-builder=.
+The fixed release expands it to a forward tail splice. Generated C already
+allocates the two tuple cells next to the outer cell, with one heap check
+and poll. The prior =map= and =append!= control used standard list operations
+and preserved order and detachment. Its compiled batch CPU increased at
+both widths. Keep the existing builder for the complete public list.
+=filter=, =delete-duplicates/hash= and standard sorting serve the independent
+small-graph oracle and ordered accumulation. The scalar bitmap still owns
+domain checks and canonical encoded-pair order. Generic sequence folds alone
+cannot supply those invariants. Source update now reads its existing vector
+directly alongside the relation list. The cursor replaces two allocated
+spines and preserves ordered callbacks and dependency closure.
+=indexed_log_comparisons= and =cursor_spine_saving= describe that local
+change. =absent_publication_disables_source_shortcut= records why a source
+ranking pass can be omitted without a publication.
+
+The inert checked DSL constructs one located rule and copies the same
+reader locations before the root validates the program. The ordinary path
+continues to validate the original Rule before creating the metadata view.
+=located_rule_value_count= accounts for one avoided object per inert rule.
+The reduction applies to both empty-bucket arms. The paired net-benefit gate
+still needs its original fifteen percent margin.

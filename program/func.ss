@@ -15,6 +15,7 @@
                  gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
                  gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
                  gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
+                 gerbil-ascent-make-located-rule-value gerbil-ascent-rule-with-origin
                  gerbil-ascent-make-program-value gerbil-ascent-check-source-handles
                  gerbil-ascent-make-aggregate-value gerbil-ascent-check-owned-aggregate-value
                  gerbil-ascent-make-relation-value gerbil-ascent-check-owned-relation-value
@@ -48,6 +49,7 @@
   gerbil-ascent-clause-plan
   gerbil-ascent-bound-membership
   gerbil-ascent-rule
+  gerbil-ascent-rule/reader-origin
   gerbil-ascent-fragment
   gerbil-ascent-program
   gerbil-ascent-construct-inert-program
@@ -479,6 +481,13 @@
 (def (gerbil-ascent-rule head-atoms body-atoms)
   (declaration-check GerbilAscentRuleContract
             (gerbil-ascent-make-rule-value Rule. head-atoms body-atoms)))
+
+(def (gerbil-ascent-rule/reader-origin heads body copy-origin)
+  (if (eq? (current-declaration-check) validate)
+    ;; Check the ordinary rule before reading its body or copying metadata.
+    (let (rule (gerbil-ascent-rule heads body))
+      (gerbil-ascent-rule-with-origin rule (copy-origin (length (.ref rule 'body)))))
+    (gerbil-ascent-make-located-rule-value Rule. heads body (copy-origin (length body)))))
 
 ;;; Copy the signature before closure capture so a caller cannot rewrite an
 ;;; exported handle through the alist passed to this constructor.

@@ -18,6 +18,7 @@
         (only-in :tao3k/yuanxu/module-system/source/static-inputs
                  module-static-compiler-inputs)
         (only-in :std/build-script defbuild-script)
+        (only-in :std/list/list partition)
         (only-in :std/source this-source-file))
 
 ;; BEGIN GENERATED PREPARATION COMPILER
@@ -114,10 +115,21 @@
 
 (def (main . args)
   (def spec (gerbil-ascent-build-spec))
-  (defbuild-script spec
-    optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
-  (def (dispatch) (apply main args))
+  (def optimize? (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
+  (def (dispatch targets)
+    (defbuild-script targets optimize: optimize?)
+    (apply main args))
   ;; Gerbil handles the commands and flags. Only compilation borrows inputs.
   (if (or (null? args) (equal? (car args) "compile"))
-    (with-compiler-inputs spec dispatch)
-    (dispatch)))
+    (with-compiler-inputs spec
+      (lambda ()
+        (let-values (((links modules)
+                      (partition (lambda (target) (eq? (car target) exe:)) spec)))
+          ;; Gambit rewrites C beside the shared static inputs. Native Make
+          ;; drains each link's jobs before the next link can write there.
+          (match links
+            ([first . rest]
+             (dispatch (append modules [first]))
+             (for-each (lambda (link) (dispatch [link])) rest))
+            ([] (dispatch modules))))))
+    (dispatch spec)))

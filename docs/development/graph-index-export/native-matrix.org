@@ -1485,3 +1485,14 @@ Candidate wall P50, P95 and max were 159.176, 259.922 and 295.716 ms.
 The 100 ms gate failed. At 512 vertices all 100 CPU pairs completed;
 the watchdog ended the run after 23 of 100 admissions. It produced
 no P95 receipt. The earlier private runtime's results are separate.
+
+A separate native probe bracketed 100 consecutive batches of the
+same 32 complete exports at each width. Gambit reported at least
+100 ms in collection intervals in 98 of the 384-vertex batches and
+all 100 of the 512-vertex batches. Subtracting collection time within
+each sample leaves median outside-collection intervals of 27.119 ms
+and 47.752 ms. The sample-aligned Lean replay checked those exceedance
+counts under the locked Guard. Each full list still comes from
+=capture-rows= and =gerbil-ascent-view-rows=. A different collector
+cost could also change the outside-collection interval, so this
+diagnostic does not predict the effect of a new allocation strategy.

@@ -1,7 +1,10 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :gerbil/runtime/gambit :asp-gerbil-scheme/benchmark-api)
+(import :gerbil/runtime/gambit
+        (only-in :asp-gerbil-scheme/src/benchmark/gate
+                 benchmark-fixture-contract-pass? benchmark-fixture-ref
+                 benchmark-run/result))
 (export run-paired-study run-paired-scenario)
 (def (median xs) (list-ref (list-sort < xs) (quotient (length xs) 2)))
 (def (measure-cpu call (repetitions 1))
@@ -44,6 +47,8 @@
 (def (run-paired-scenario contract prepare consume expected-for scenario receipt-path (allocate-consumer #f))
   (unless (benchmark-fixture-contract-pass? contract) (error "invalid PAIRED-STUDY execution fixture"))
   (def (get key) (benchmark-fixture-ref contract key))
+  (def sample-count (get 'sampleCount))
+  (def exclusive-p95 (assq 'p95ExclusiveLimitNs contract))
   (def config (assq (string->symbol scenario) (get 'scenarios)))
   (unless config (error "unknown PAIRED-STUDY execution scenario" scenario))
   (with ([ratio overhead minimum-wins] (cdr config))
@@ -93,7 +98,7 @@
           (set! agn (cons nx agn)) (set! bgn (cons ny bgn))
           (when (< q v) (set! wins (+ wins 1))))
         (set! samples (+ samples 1))
-        (displayln "PAIRED-STUDY-CPU " scenario " " samples "/20"
+        (displayln "PAIRED-STUDY-CPU " scenario " " samples "/" sample-count
                    " old-us=" (* (car ac) 1000000) " new-us=" (* (car bc) 1000000)
                    " old-gc=" (car agn) " new-gc=" (car bgn))
         (force-output)
@@ -112,7 +117,7 @@
             (set! cpu-repetitions (* cpu-repetitions 2))
             (calibrate))))
       (displayln "PAIRED-STUDY-CPU-BATCH " scenario " repetitions=" cpu-repetitions)
-      (for-each (lambda (_) (sample)) (iota 20))
+      (for-each (lambda (_) (sample)) (iota sample-count))
       ;; ASP owns its group precondition; do not collect again before entering it.
       (let-values (((api-receipt _)
                     (benchmark-run/result contract
@@ -120,7 +125,7 @@
                        (let (result (map (lambda (_) (consume admission-state input #f)) (iota (get 'trajectoriesPerSample))))
                          (check-results expected result)
                          (set! admissions (+ admissions 1))
-                         (displayln "PAIRED-STUDY-ADMISSION " scenario " " admissions "/20")
+                         (displayln "PAIRED-STUDY-ADMISSION " scenario " " admissions "/" sample-count)
                          (force-output) result)))))
         (for-each
          (lambda (index)
@@ -136,13 +141,17 @@
                       (get 'allocationSampleCount)) (force-output))
          (iota (get 'allocationSampleCount)))
         (let* ((u (median ac)) (v (median bc)) (x (median ab)) (y (median bb))
-               (pass? (and (= samples 20) (= admissions 20)
+               (pass? (and (= samples sample-count) (= admissions sample-count)
                            (= (length ab) (get 'allocationSampleCount))
                            (eq? (benchmark-fixture-ref api-receipt 'status) 'pass)
+                           (or (not exclusive-p95)
+                               (< (benchmark-fixture-ref api-receipt 'p95Ns) (cdr exclusive-p95)))
                            (<= v (+ (* u ratio) overhead)) (>= wins minimum-wins)
                            (<= y (+ (* x (if (memq input (get 'allocationTargets)) (get 'targetAllocationRatio) (get 'allocationRatio))) (get 'allocationOverheadBytes))))))
           (call-with-output-file receipt-path (lambda (out)
             (write (list (cons 'scenario scenario) (cons 'passed? pass?) (cons 'cpu-wins wins)
+                         (cons 'admission-unit 'trajectory-batch)
+                         (cons 'admission-trajectories (get 'trajectoriesPerSample))
                          (cons 'cpu-heap-precondition 'collect-before-each-arm)
                          (cons 'cpu-repetitions cpu-repetitions)
                          (cons 'old-cpu-us (* u 1000000)) (cons 'new-cpu-us (* v 1000000))
@@ -164,4 +173,4 @@
           (path-expand (string-append name "-final.ss") receipt-path) allocate-consumer)))
       (benchmark-fixture-ref contract 'scenarios))
     (run-paired-scenario contract prepare consume expected-for scenario receipt-path allocate-consumer))
-  (displayln "OK") (force-output) (exit 0))
+  (displayln "OK") (force-output))

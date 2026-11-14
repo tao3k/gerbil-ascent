@@ -4,13 +4,14 @@
 (import :gerbil-ascent/core/relation-view :gerbil-ascent/table/trrel-uf
         (prefix-in :gerbil-ascent/t/performance/uf-weighted/reference-relation-view old-view-)
         (prefix-in :gerbil-ascent/t/performance/uf-weighted/reference-trrel-uf old-))
-(export ui-prepare ui-consume ui-expected capture-input capture-view capture-rows capture-query)
+(export ui-prepare ui-consume ui-expected ui-scale-expected capture-input capture-view capture-rows capture-query)
 (def (chain n) (map (lambda (i) (list i (+ i 1))) (iota n)))
 (def (cycle n) (map (lambda (i) (list i (modulo (+ i 1) n))) (iota n)))
 (def (query? scenario) (memq scenario '(left-query right-query)))
 (def (capture-input scenario)
   (case scenario
     ((heavy) (cycle 384))
+    ((large) (cycle 512))
     ((grouped) (apply append (map (lambda (g) (map (cut cons g <>) (cycle 192))) '(0 7))))
     ((left-query right-query) (cycle 384))
     ((dense) (chain 192))
@@ -52,3 +53,32 @@
     ;; Every closure answer is checked independently by native/Python DFS tests;
     ;; measured summaries retain no large full-row results in ASP receipts.
     (summary before)))
+
+(def (ui-scale-expected old-state scenario)
+  ;; A directed cycle reaches each ordered pair, including every diagonal.
+  ;; An independent occupancy vector rejects duplicates, omissions and
+  ;; out-of-domain rows. The timed consumer still materializes full lists.
+  (let* ((vertices (length (capture-input scenario)))
+         (cardinality (* vertices vertices))
+         (new-state (ui-prepare #f scenario)))
+    (def (verify state old?)
+      (let ((seen (make-u8vector cardinality 0))
+            (rows (capture-rows (capture-view state old? #f) old?)))
+        (unless (= (length rows) cardinality)
+          (error "dense cycle export cardinality differs" scenario old?))
+        (for-each
+          (lambda (row)
+            (match row
+              ([left right]
+               (unless (and (exact-integer? left) (<= 0 left) (< left vertices)
+                            (exact-integer? right) (<= 0 right) (< right vertices))
+                 (error "dense cycle export row is outside its domain" scenario row))
+               (let (index (+ (* left vertices) right))
+                 (unless (zero? (u8vector-ref seen index))
+                   (error "dense cycle export repeated a row" scenario row))
+                 (u8vector-set! seen index 1)))
+              (else (error "dense cycle export row has incorrect arity" scenario row))))
+          rows)))
+    (verify old-state #t)
+    (verify new-state #f)
+    (list cardinality)))

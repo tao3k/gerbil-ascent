@@ -1,0 +1,632 @@
+#+title: Research and design
+#+language: en
+
+[[file:../graph-index-export-algorithms-20261112.org][Audit index]]
+
+* Authoritative source boundary
+
+ASCENT base: =668574048ca936bd3224910c7b66c7ef7363b48c=, also the PR #1
+head observed through GitHub on 2026-11-12. This isolated worktree preserves
+that commit's build pipeline and dependencies. The original shared checkout
+and its staged, unstaged and untracked work remain untouched. A complete
+source backup is retained outside the repository.
+
+The ASCENT base selected Yuanxu =fd215418d396aeb5a3aaa8209bc3870ccfbefe9c=.
+Its actual package declaration selects POO
+=1f4b1720d80c3cca1daf64775cd7abfe63bebd0d=.
+POO PR #17 currently exposes =18e3aad23d4dcf737e0f21c671686f6a6f1bfa55=.
+The selected old POO contains neither =support/index.ss= nor the current
+incremental partition interfaces. Merely importing an existing POO object
+interface does not mean ASCENT consumes those newer graph algorithms.
+The first measured integration cohort selected Yuanxu
+=d2239d94411ae4d027ee5c55040bf862623169fe= (PR #19). See the later
+revision refresh in [[file:build-and-integration.org][Build and integration]].
+For local integration, native =gerbil pkg link= binds clean exact-commit
+snapshots of that Yuanxu and POO PR #17 =18e3aad23d4dcf737e0f21c671686f6a6f1bfa55=.
+No shared checkout edits are included. The isolated prefix is
+=.cache/ascent/graph-latest-prefix=; the source revisions are recorded in
+=/private/tmp/ascent-index-graph-dependencies-20261112/revisions.json=.
+
+That Yuanxu revision pinned POO
+=7f6e68a1abce13758793651b723fb0e1d196b057=. The local link is an explicit
+POO override, not proof of a reproducible clean-clone production cohort.
+Do not add two incompatible POO revisions to ASCENT's package declaration.
+The declared and actual revisions must be aligned before final publication.
+At that point both upstream Scheme workflows reported failure (Yuanxu
+=43147379249=; POO =43158952679=). These are not treated as qualified releases
+or as reasons to change the SDK. Local integration is still being validated.
+The superseded old-revision dependency install was terminated deliberately;
+its log and prefix remain. The current release dependency and independent
+installation evidence are recorded in [[file:build-and-integration.org][Build and integration]].
+
+* What to reuse from POO
+
+| Existing POO owner | Concrete mechanism | ASCENT consumer and semantic obligation |
+|--------------------+--------------------+-----------------------------------------|
+| =table.ss= / =table/indexes.scm= | Typed correlated unique/grouped indices, final-state delta updates and guarded deferred cursors | Existing Index Provider: preserve backend key equality, row occurrences/order and delta ownership |
+| =table/fold.scm= / =table/mapping.scm= | Table grouping/projection and join protocols | Reuse compatible existing operations before adding a second relation-index protocol |
+| =support/index.ss= | Immutable admitted base plus private RBTree changes; fork shares base | Reusable symbol-keyed rule/component metadata; preserve exact symbol identity and independently owned forks |
+| =generalized-graph.ss= | Forward/reverse buckets, affected-owner closure and local rank repair | Existing rule dependency/SCC scheduler, after mapping its declared owner identities and preserving strict dependency strata |
+| =strong-components.ss= | Captured graph, packed DFS state, source-order normalization, certificate and retained direction | Rule SCCs or graph relations only after distinguishing their different vertices and update laws |
+| =component-revision.ss= | Expected-publication identity, staged edit, refusal of stale ticket | Session updates and frozen cut generations; no reuse across replacement merely because values compare equal |
+| =read-route.ss= and source witnesses | Issued source authority and changed-footprint invalidation | Private immutable declaration/cut reuse, not caching a successful public Contract check |
+
+The Graph support index is not POO's complete indexing API. The correlated
+=table-indexes= API accepts declared key backends, pure projections and
+unique/grouped recipes. Its =.apply-delta= checks every primary expectation
+before atomically retracting old memberships and inserting final memberships;
+=.index-ref/opt=, =.index-fold= and deferred index cursors retain source
+stamps and origin refusal. This broader API must be evaluated through the
+existing ASCENT Index Provider; a symbol-only conclusion about all POO
+indices would be incorrect.
+
+The narrower support index's changed-key comparator is
+=%compare-symbol-identity=. A relation key can be an integer, tuple, complex
+value or a structural projection. Its =equal?=/occurrence semantics cannot be
+changed to symbol identity by replacing all hash tables with this index.
+The existing =table/provider.ss= already supplies the POO receiver axis and
+validated build/extend/lookup boundary. Improve physical implementations
+through that owner, rather than adding a second provider protocol.
+
+POO's report =doc/graph-benchmark.org= records a million-owner owned edit at
+0.061--0.096 ms CPU. That window checks one owner, opens two search buckets,
+writes two ranks, copies no complete index and enumerates no output order.
+Cold preparation and explicit output are separate windows. This is evidence
+for affected-only work and retained ownership; it is not a universal hash,
+full SCC, cold graph or complete million-row export timing. Those are upstream
+reported measurements, not reproduced ASCENT performance acceptance.
+
+* Actual redundant work in ASCENT
+
+=program/view-state.ss:gerbil-ascent-view-export-cut= binds an immutable view
+and detached injection events. Each ordinary export calls =export-events=;
+the bounded journal route calls
+=program/view-replay.ss:gerbil-ascent-small-journal-export= again.
+=prepare= rebuilds population maps, node/value slots and a bounded V-squared
+bitmap. Insertion reconstructs predecessor/successor selections, missing
+component products and SCC merges before producing the same ordered cut.
+The direct integer projection also enters that replay route.
+
+This is repeated graph preparation on repeated reads, not a proof that a
+single hash probe is slow. The existing UF owner already maintains forward
+and predecessor reachability in =table/trrel-uf.ss= and freezes disjoint
+component rectangles. However, its final rectangles alone do not encode the
+journal's observable insertion/derived-round order. Replacing journal replay
+with arbitrary SCC order would therefore change the existing interface.
+
+The migrated terminal optimization avoids writes that have no later reader,
+and uses population counts for the full singleton terminal mask. It does not
+remove nonterminal reconstruction. The numeric writer removes intermediate
+row spines on its supported path; it does not establish the requested full
+production latency target. Neither is the final algorithmic solution.
+
+* Paper-to-source decisions
+
+| Primary source | Relevant algorithm | Concrete decision |
+|----------------+--------------------+-------------------|
+| [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Ascent, CC 2022, section 5]] | Rule-dependency SCCs, new/delta/total partitions, bound-key indices | Preserve semi-naive scheduling; count candidate/prefix visits and index build/extend/probes separately |
+| [[https://arxiv.org/html/2405.19040v3#S7.SS1][Finite-Choice Logic Programming, section 7.1]] | Prefix-firing cost with explicit map assumptions | Charge number of firings as well as index access; do not claim constant lookup removes excessive firings |
+| [[https://arxiv.org/html/2301.10841v2][Free Join]] | Generalized hash trie unifying binary and multiway joins | Compare existing curried-index layout and cyclic join intersections; do not replace acyclic selective joins indiscriminately |
+| [[https://arxiv.org/html/1307.0441][Aggregation and Ordering in Factorised Databases]] | Factorized products, partial aggregation and ordered enumeration | Retain a cut-owned ordered product/concatenation/reversal graph, with exact output order and separately charged capture |
+| [[https://arxiv.org/html/2201.07197v3][Tarjan and Zwick, Finding Strong Components Using Depth-First Search]] | SCC algorithm and representation engineering | Reuse POO's captured/certified implementation where applicable; avoid a new independent whole-graph SCC engine |
+| [[https://escholarship.org/uc/item/021076bn][Implementing Push-Pull Efficiently in GraphBLAS]] | Choose sparse-frontier or masked traversal by the actual representation | Charge live root probes, stored words and selected roots separately; enumerate the packed UF registry in birth order when the word span fits |
+| [[https://arxiv.org/abs/1812.02639][Shared Arrangements]] | Versioned indexed views shared by maintained computations | Reuse a relation-owned physical arrangement only for its admitted all/delta cut and key equality; retain each logical witness and output order |
+| [[https://graphar.apache.org/docs/specification/format/][GraphAr format specification]] | Source/destination adjacency and offsets (CSR/CSC) | Reuse existing forward/reverse ownership; avoid rebuilding inverse adjacency for every read |
+| [[https://duckdb.org/docs/lts/guides/performance/join_operations][DuckDB join operations]] | Costed join-order search with bounded planning effort | Charge planning and conversion; choose using actual binding/selectivity, not vertex count alone |
+
+GraphAr is a storage/interchange format. Its adjacency representation is
+relevant; this does not call it a general query optimizer. Relational joins
+are represented by query hypergraphs, while SCCs concern directed graphs.
+Do not collapse these different algorithmic problems into one Graph API.
+
+* Next implementation boundary
+
+Capture a private ordered factorized export graph from the admitted cut,
+retaining products/concatenations and per-derived-event reversal. It must not
+retain live UF parents, mutable reach tables or caller-owned row spines.
+Capture has an explicit capacity limit and an exact fallback. Charge its
+first read/capture, retained representation, invalidation and full output.
+A public ordinary =rows-of= still returns independently owned ordinary rows;
+a typed request may write directly into an owned buffer. No full tuple cache,
+user DSL compilation, new loader or cached admission is introduced.
+
+The implementation must preserve duplicates, column order, empty trailing
+events, grouped relation keys, delta slicing and the source generation.
+Keep cancellation/publication checkpoints and existing output resource
+checks; no partially captured graph may become an accepted answer. Set
+answer equality does not establish provenance equivalence: derivation
+identity and alternative supports remain independent obligations.
+
+* Lean status
+
+=OrderedExportGraph.lean= defines ordered products, concatenation and whole-row
+reversal. Its checked laws establish exact product cardinality, graph row
+counts, reversal composition and reversal of both product axes without
+reversing tuple columns. Changed cut generations refuse reuse. The work law
+charges one preparation plus full output for every retained read; it proves
+exactly which repeated preparation terms disappear, including the first
+read's preparation charge.
+
+The focused =just check-lean-file OrderedExportGraph.lean= completed naturally
+under the locked LeanPoo Guard: exit 0, 2.661 s wall, 1.347 s CPU, peak RSS
+699,023,360 bytes, no retained helper threads. Earlier proof syntax/lemma
+failures and a sandbox DNS failure remain in the local evidence.
+
+The complete current-candidate Lean library also completed naturally: 182 jobs,
+51.619 s wall, 217.755 s child CPU, exit 0 under its unchanged 180-second
+Guard. This includes both export models and all original roots/tests.
+
+After updating the hybrid source renderer, the full library passed again:
+182 jobs, 71.969 s wall, exit 0. Three guarded renderings match the actual
+Scheme bytes exactly (hybrid entry, complete integer transfer module, and
+detached projection). Ten formal inventory/admission unit tests pass. The
+initial inventory check exposed three pre-existing additive omissions; their
+fixtures now include every added obligation and retain every old control.
+These equality checks bind emitted text, not full Scheme/C/Rust semantics.
+
+These are representation/work laws. Source extraction, actual journal-to-graph
+construction, alias freedom, capacity accounting, cancellation checkpoints,
+provenance correspondence, POO adapter refinement and native latency remain
+open. The model does not turn unit-operation counts into milliseconds.
+
+* Workload design for weighted UF
+
+Choose the workload before choosing the algorithm. Fix the public
+operation, initial cut and source updates, query sequence, result format,
+and ownership of completed results. The comparison uses one Scheme VM
+and the frozen toolchain. The same request sequence, response semantics,
+and resource envelope apply to both arms.
+
+** Qualification scope for the default Scheme export
+
+The kernel qualification is repeated complete ordered export of an already
+prepared dense binary UF cut into detached Scheme lists. The original
+scale test asks for 32 exports per admission, 100 admissions per width,
+and rank 95 strictly below 100 ms at both 384 and 512 vertices. The
+single-VM comparison retains the default collector policy, 2 GiB heap
+limit, 90-second watchdog, paired CPU and allocation gates, and public
+result and failure semantics. A prepared key lookup, a cold first read,
+and a typed Rust reply each have their own application and cost model.
+
+Use the following source correspondence for this decision.
+
+| Cost or observable | Source owner | Required evidence |
+|--------------------+--------------+-------------------|
+| Closure and bound-key index work | =fixture.ss:ui-prepare=; =trrel-uf.ss:gerbil-ascent-trrel-uf-count-insert!=; =relation-view.ss:gerbil-ascent-rectangle-view= | Closure finishes before the strict timer. This unindexed view constructs no bound-key index. Count closure and probes in the separate cold and selected workloads. |
+| Capture | =trrel-uf.ss:gerbil-ascent-trrel-uf-freeze= | The dense closed group borrows the same immutable member spine for both axes of one rectangle. Count descriptors and time freeze and view construction in the original callback. |
+| Materialization and traversal | =rectangle-geometry.ss:materialize-rectangles= and =fixture.ss:summary= | Count two fresh tuple cells and one fresh spine cell per binary row, preserve order and independent mutation, and time construction and =length= separately. |
+| Collector and other elapsed time | Frozen Gambit =lib/mem.c= and =paired-study.ss:run-paired-scenario= | Attribute collector wall once across the preceding phases. Retain each ordinal's separate validation, harness and clock remainder. Record allocation and renewals in their own units. |
+
+=WeightedExportCapacity.lean:candidate_needs_95_joint_budgets= rejects
+proposals whose justified per-sample lower bounds leave fewer than 95
+eligible admissions. The new
+=prepared_admissions_pass_with_95_aligned_upper_bounds= gives a sufficient
+condition: capture, materialization, consumer traversal, collection and
+the remainder must jointly cover each measured admission, and at least 95
+of those sums must be below the limit. The current receipt establishes
+elapsed totals only. It provides no independent phase upper bounds or
+prediction for a proposed implementation. A separate native diagnostic
+now aligns those intervals and their exclusive GC time by ordinal. It
+locates all collections in list materialization and preserves the paired
+gate as a distinct check. See
+[[file:collector-and-allocation.org::*Exclusive phase costs on the prepared complete-list path][Exclusive phase costs]].
+
+Ascent section 5 gives the SCC and delta work to account for in closure.
+Dusa section 7.1 prices prefix firings under explicit lookup assumptions.
+The local Racket implementation at =8d74d1f7= calls =db-filter= from
+=find-facts=, so its ordinary lookup has a separate fact-scan cost.
+These mechanisms motivate source-update and selected-query experiments.
+Their work is outside the
+strict prepared callback. For the complete list, the next candidate needs
+source evidence for reduced live roots, repeated copy work or other
+allocation overhead while keeping the visible pairs fresh and preserving
+order, cancellation, resource refusal and provenance.
+
+The current direct-commit build repeated the original scale test with
+the four compiled owner modules and the frozen comparison prefix. At
+384, all 100 CPU pairs, 100 wall admissions and five allocation pairs
+completed. Wall P50/P95/max was 245.631/388.176/551.889 ms, and zero of
+100 admissions met the strict threshold. The same-process frozen CPU arm
+and current arm measured 187.567 and 146.653 ms median, respectively,
+with allocation medians of 679,618,176 and 679,519,232 counter bytes.
+That comparison includes accumulated provider changes and does not
+isolate the direct source commit. At 512 the watchdog expired after
+91 CPU pairs; the wall lane did not start. See the logs, receipts and
+matched input hashes under
+=.cache/ascent/yuanxu-v0.1.0/source-cycle-owner.rLVEeF/strict-default-*=.
+The original test remains open at both widths. The data bounds the search
+for an implementation; it does not select a materializer or collector policy.
+
+Both changed Lean files and the complete 183-job proof build passed the
+locked LeanPoo Guard at =b29ea0d9=. The Justfile dependency refresh failed
+to resolve GitHub; verification used the existing checkout at the manifest
+revision and the same guarded check commands. The full build receipt is
+=application-model-lean.log= in the comparison directory above.
+=StrictAdmissionReplay.lean= binds the native receipt by SHA-256 and
+checks the count and rank from all 100 recorded durations. The Guard
+accepted the replay by checking groups of ten under the existing proof
+budget. This verifies the receipt arithmetic, with phase attribution
+and clock validation still open.
+
+** Other application contracts
+
+| Workload | Source boundary | Lean criterion | Decision still required |
+|----------+-----------------+----------------+-------------------------|
+| Complete detached Scheme export | =uf-weighted/fixture.ss:ui-consume= calls =trrel-uf.ss:gerbil-ascent-trrel-uf-freeze= and the unindexed =relation-view.ss= exporter | =prepared_unindexed_export_work= excludes fixpoint and route construction from the timed interval. =budgetedPayload= charges every fresh pair. =strict_p95_iff_ninety_five_pass= checks 100 complete admissions. | Reduce collector and outside-collector elapsed cost enough to pass both widths under the default policy. Use the existing profile as a diagnostic control. |
+| First complete read of a published source result | =view-state.ss:gerbil-ascent-view-export-cut= forces the cut's private capture. =view-replay.ss:visit-captured-cycle= supplies the rows on the recognized path. | =cycle_least_closed= and =complete_cycle_rows_closed= give the least closure. =complete_cycle_rows_nodup= establishes uniqueness. =cold_cycle_skips_private_matrix= counts the open-prefix stores avoided. | Compare fresh sessions with the old journal path. Charge recognition, first capture, materialization and GC. Check exact order and alias freedom at the native boundary. |
+| Repeated selected reads and source edits | =relation-view.ss:indexed-rectangle-view= and =program/index.ss= own bound-key traversal and rule-body caches. | =index_pays_within_cut= includes route build and all probes. =replacement_restarts_index_budget= accounts for both builds when the next cut must rebuild. =changed_generation_refuses= limits old cut reuse. | Measure cold construction, repeated selective and high-fanout probes, and source edits. Reuse the existing provider and evaluate incremental maintenance separately from complete rebuild. |
+| Complete binary integer relation delivered to Rust | =interface/engine-api.ss:source-run= through the production request and decoder. | =rectangle_cells_order=, =rectangle_write_bounds= and =unpack_flatten= describe the typed representation. =direct_binary_payload_saving= counts the representation bytes removed. | Measure actual full-row reply latency and RSS, including request dispatch, Scheme evaluation, packing, transfer, Rust allocation and decode. Validate order, refusal and ordinary-value fallback. |
+
+For the indexed route, sum build and probe costs on one unchanged cut
+and compare with the sum of scan costs for those same requests. Identical
+result enumeration cancels in the inequality. If a different route
+changes enumeration, allocation or GC, measure that difference and
+include it in the total. An incremental route may pay an edit instead
+of a rebuild only after its cache/version correspondence is established.
+The theorem gives a decision rule with supplied costs. It chooses no
+cardinality cutoff or default route by itself.
+
+Maintain two sets of quantities. Count semantic work as admitted delta
+rows, prefix firings, index builds/extends/probes, captured descriptors,
+emitted cells, allocated bytes and collector renewals. Time each
+relevant phase over the same sample and separate GC wall from the other
+elapsed intervals. Record the source revision, product hashes, sample
+ordinal, request, generation, output cardinality, and resource limits.
+Replay the aligned bounds and exact percentile in Lean. Compare complete
+results and refusal behavior using the existing native Test cases.
+Work counts support a claim about the algorithm. The measured time and
+phase alignment support the wall-clock claim.
+
+The source-cycle proof concerns one admitted source event with 2 to 512
+distinct fixnum vertices and a matching square cardinality. Lean proves
+the least reflexive transitive closure and uniqueness in traversal ranks
+for all modeled widths. =labelled_cycle_rows_exact= lifts membership and
+uniqueness to the captured labels under the recognizer's distinctness
+premise. =source_cycle_order= checks the modeled reference emission
+sequence against the writer for every modeled width. The correspondence
+to the native reader and its remaining obligations are recorded in
+[[file:weighted-export.org::*First-read capture for a complete source cycle][the first-read study]].
+The recognizer, mutable bitmap operations, cancellation, resource refusal,
+and provenance still require source refinement.
+
+In the earlier native snapshot, default-policy P95 was 146.111 ms
+at 384 vertices and 271.703 ms at 512. The existing live-ratio control
+gives 43.812 ms and 66.993 ms, respectively, under the same output
+contract. The paired cost model below tests whether each proposed
+change leaves enough room in the default-policy admissions. The
+observed control supplies no policy change for the library. The
+selected and Rust paths have separate acceptance obligations.
+See [[file:native-matrix.org][Native acceptance matrix]].
+
+The first-read candidate reduces median CPU from 25.088 to 9.372 ms
+at 384 vertices and from 43.894 to 12.617 ms at 512. The 384 maximum
+elapsed time increased. This identifies a useful first-read candidate
+while its tail still needs investigation. The typed Rust request completes
+with warm P95 of 9.119 ms and 17.606 ms at the two widths, including
+the fully decoded rows in the initial packed-only run. The subsequent
+same-request comparison locates the seconds-long ordinary path in
+decoding and records both ordinary arms censored. The packed arms
+complete with substantially lower decode CPU but P95 of 139.514 ms
+and 184.602 ms in that comparison. Production elapsed latency remains
+open under the observed host conditions.
+See [[file:weighted-export.org][Weighted relation export]] for the exact
+windows, native controls, and result checks.
+
+* Measurements and checked conditions for complete weighted UF export
+
+The native consumer in =t/performance/uf-weighted/fixture.ss= runs
+=ui-prepare= before the measured callback. That phase closes the source
+cycle. The callback calls =capture-view= with indexing disabled, then
+=capture-rows= and =length= for each of 32 complete results. The path is
+=table/trrel-uf.ss:gerbil-ascent-trrel-uf-freeze= to
+=core/relation-view.ss:unindexed-rectangle-view= and its export closure,
+then =core/rectangle-geometry.ss:materialize-rectangles=. Report
+validation, capture, list construction and consumer traversal separately
+when their clocks allow it. Keep GC elapsed time disjoint from all other
+elapsed buckets. The current phase receipt combines capture, construction
+and =length= in one interval. The separate phase ledger above records
+their individual costs under the default collector.
+
+Ascent section 5 motivates keeping SCC scheduling, the delta frontier
+and index operations in the preparation ledger. Dusa section 7.1
+motivates counting prefix firings separately from lookup cost. The
+local Racket =minidusa/private/runtime.rkt:find-facts= calls
+=database.rkt:db-filter= for ordinary predicates. That filter scans the
+fact set and cannot stand in for the paper's prefix-firing cost model.
+None of these preparation counts reduces the required visible output
+pair count after the weighted closure is already prepared.
+
+** Checked cost conditions
+
+=WeightedExportCapacity.lean:strict_p95_iff_ninety_five_pass= models
+the installed ASP nearest-rank formula for exactly 100 admissions.
+It requires at least 95 durations strictly below 100,000,000 ns.
+=admission_phase_lower_bound= bounds GC wall and outside-GC wall by
+each corresponding admission, allowing observed endpoint skew.
+=preserved_phase_rejects_strict_p95= rejects a candidate that preserves
+an over-budget floor in six or more samples even if it eliminates all
+other costs. The alignment is per sample. Two phases can each have a
+passing P95 while their sum fails, as shown by
+=passing_phase_percentiles_do_not_imply_passing_total=.
+
+The replay joins native receipts and phase observations by their original
+callback ordinal. It rounds GC floors down and subtracts the 160 us
+envelope checked against the largest observed clock difference. This
+envelope belongs to these receipts. Future captures must check their own
+alignment. The CPU column is supplementary and does not define the wall
+gate. The 512 control used an explicit 1344 MiB minimum heap.
+
+| Vertices and policy | Complete admissions under 100 ms | GC wall floors under 100 ms | Outside-GC wall floors under 100 ms | Admission P95 (ms) |
+|---------------------+-----------------------------------+-----------------------------+-------------------------------------+--------------------|
+| 384, default        |                                 0 |                           0 |                                 100 |            242.580 |
+| 512, 1344 MiB min   |                                98 |                         100 |                                 100 |             82.844 |
+
+** Joint cost budget for choosing an application
+
+For a prepared complete-list batch, bound the maximum GC saving and the
+maximum outside-GC saving independently. For each matched observation,
+subtract the two allowances from their respective measured durations,
+clamp each remainder to zero, add them, and deduct the observer skew
+allowance once. =candidate_wall_floor_sound= proves this is a floor on
+candidate wall time if both saving bounds and the phase correspondence
+hold. =candidate_needs_95_joint_budgets= proves that fewer than 95 floors
+below 100 ms rules out a strict pass. A surviving floor permits further
+qualification. It supplies no upper bound on candidate elapsed time.
+
+The replay uses the 100 consecutive prepared batches at each width from
+[[file:collector-and-allocation.org::*Collector wall cost on the same 100 batch intervals][the standalone collector trace]].
+It takes GC and wall from the same ordinal, rounds GC and wall minus GC
+down to integer nanoseconds, and grants a 50 us comparison allowance.
+The savings are hypothetical upper bounds, in elapsed milliseconds.
+The rows below count eligible floors out of 100. They apply to this
+diagnostic trace under the stated bounds and pairing assumptions.
+
+| Maximum GC saving (ms) | Maximum outside-GC saving (ms) | 384 eligible | 512 eligible |
+|------------------------+--------------------------------+--------------+--------------|
+|                      0 | All outside-GC work            |           19 |            0 |
+|                     50 | 0                              |           94 |            0 |
+|                     50 | 10                             |           96 |            0 |
+|                    125 | 0                              |          100 |           80 |
+|                    150 | 0                              |          100 |           99 |
+
+The trace SHA-256 is
+=0c2284cd7bba6a3a34252c06411bdc19a2f3ba64ff7b06f80d924f29d3bd7d08=.
+The ordered phase pairs and kernel replay are retained in
+=.cache/ascent/yuanxu-v0.1.0/empty-stack-sample.b1V0SE/NativeJointBudgetReplay.lean=.
+The replay passed under the locked LeanPoo Guard in 20.971 s. The complete
+183-job Lean build passed under the same Guard in 52.306 s. Both runs
+reaped their child and retained zero additional helper threads. The
+initial flat replay exceeded the default recursion depth. The successful
+replay checks counts in groups of ten and proves that the counts add
+over concatenation under the same budgets.
+
+The next detached-list experiment needs a mechanism that changes the GC
+cost of the complete list or its allocation schedule. Under retained GC
+durations, even eliminating all outside-GC work fails the necessary
+condition at both widths. A constructor may still change GC via its
+allocation order or live roots, but that effect needs source evidence
+and a matched measurement. The typed Rust, selected-read, and first-read
+workloads retain their own tests and cost ledgers.
+
+Before selecting an implementation, identify which source operation
+changes pair allocation or liveness, prove the public result and refusal
+trace remain valid, and measure disjoint capture, materialization,
+consumer traversal and GC on the same ordinals. The frozen SDK exposes
+no Scheme-call-site reservation for movable pairs. A supported mechanism
+and a source-refined wall bound for it remain open. For repeated selective
+reads, a separate proposal must establish generation invalidation and
+price index construction, maintenance and the actual selected probes.
+
+The [[file:collector-and-allocation.org::*Layout-only capacity envelope][mapped-section replay]]
+tests whether better packing alone can close the 512 gap. Even
+granting every word in the largest observed 276 mapped sections
+to every allocation interval, the original output still needs
+four collections. With the retained outside work and the fastest
+no-in-flight pause at each ordinal, only two of 100 sample floors
+fit. The next complete-list candidate must change mapped capacity,
+reduce work per collection, or establish a new joint budget with
+measured reductions in outside-GC work. The default live ratio and
+original resource envelope remain the acceptance conditions.
+
+** Application candidates and refusal conditions
+
+| Candidate | Required correspondence | Measurement that decides whether to proceed |
+|-----------+-------------------------+---------------------------------------------|
+| Cut-owned graph or shared prefixes | Preserve source-version ownership, ordered rows and provenance; prove the affected preparation work is skipped | Compare prefix firings, probes and capture on the same sources. The strict prepared provider fixture excludes the closure build and does not use journal replay. |
+| STD list construction or pair layout | Preserve the exact ordinary list and three fresh mutable cells per binary row; retain checkpoints, bounds and cancellation | Join collector and outside-collector elapsed time by ordinal. A candidate preserving the observed 384 GC floors is rejected for strict admission, regardless of its constructor CPU savings. |
+| Capacity under the Gambit owner | Respect the 2 GiB cap, preserve list and cancellation semantics, and establish the capacity through the actual runtime entry | Measure across more than one 16-collection history window. Qualify both widths under the original gate and record actual heap capacity, collections and wall time. Prior one-time padding and startup overrides remain diagnostic controls. |
+| Consumer traversal or reporting | Keep the timed full-list consumer and receipt; prove output, order and count parity | Measure the removed work in the same callback. The existing 384 GC floors remain sufficient to reject a candidate that changes only reporting or traversal and leaves the GC floors intact. |
+
+Capacity and copy costs are the direct candidates for the measured 384
+default-policy gap. Production integration remains open pending a
+supported runtime boundary and stable native evidence under the original
+contract. The isolated Set routing experiment is a separate matrix item.
+
+** Scope of the native export experiment
+
+Test on the existing single-VM owner with the frozen SDK. Compare the
+same complete ordinary Scheme results at both widths. Keep the untouched
+default-policy control, paired reference and the independent dense-cycle
+oracle. A VM owner capacity proposal must identify how it obtains a
+movable section budget without installing a process-wide library policy
+or requesting extra still objects for accounting. If the existing native
+owner exposes no such boundary, record the missing mechanism before any
+runtime change. Track selected/indexed query and provenance separately
+from the prepared unindexed export.
+
+The pinned Gambit =lib/setup.c:___setup_params_reset= initializes
+=adjust_heap_hook= to zero. =lib/mem.c:adjust_heap= reads that hook from
+global setup parameters and falls back to the live ratio and minimum.
+=bindings/c/runtime.c:ascent_runtime_init= owns the C ABI startup and
+currently supplies neither a hook nor a capacity hint. A C ABI startup
+proposal could be tested at that owner boundary. It would not change
+the already-running VM that loads the native =gerbil test= Scheme module.
+Qualification through both entry points would therefore require separate
+source correspondence. The frozen runtime exposes no public reservation
+operation for movable pairs at the Scheme export call site.
+The existing minimum-heap setter changes process setup. A resize under
+that setting records a target in the VM's history even after the setup
+value is restored. This makes a Scheme-level dynamic extent insufficient
+for request-local capacity ownership. See
+[[file:collector-and-allocation.org::*Restoring a setting does not restore allocator state][Heap target history]].
+
+The 512 collector trace gives two distinct targets for an implementation.
+With the original eight or nine collections, the retained outside-GC
+wall floor leaves a common average collection budget of about 7.19 ms
+for 95 samples. The clean boundary control still had a minimum of about
+16.65 ms of CPU per collection. With two collections, the visible
+payload needs 402,653,184 accounting bytes per interval if all three
+intervals have the same maximum. Neither target is a proven runtime
+latency. Use the original per-ordinal ledger and exact configuration to
+evaluate a different mechanism. See
+[[file:collector-and-allocation.org::*Remove in-flight pairs while retaining the loaded roots][Background collector budget]].
+
+The follow-up 512-vertex run used the default collector, the frozen
+fixture, the count-only UF image and the same native phase observer.
+It reached 68 of 100 CPU pairs before the original 90-second watchdog
+returned 124. Candidate CPU median was 259.693 ms with eight collections
+at the median over the completed pairs. No admission callback ran, so
+this run supplies no default-policy 512 wall floor or P95. The input and
+object hashes matched. The failed run remains in =default-large.log= in
+the application model evidence directory.
+
+The separate default-policy 512-vertex attribution completed 100 batches
+of 32 full exports with the same compiled provider, 2 GiB cap, and
+90-second watchdog. Each diagnostic batch passed its result check. The
+direct Test case measures elapsed and GC clocks around the same batch;
+the original paired CPU, admission and allocation lanes remain a
+separate gate. In all 100 observations GC wall alone exceeded 100 ms.
+The minimum GC wall was 158.591 ms and the minimum GC CPU was 157.978 ms.
+The batch median/P95/maximum was 646.689/1,047.269/1,365.881 ms, with a
+median of eight collections. Outside-GC wall also exceeded 100 ms in 41
+observations, while outside-GC CPU stayed below 53.121 ms. This run does
+not identify why those intervals contained additional elapsed time.
+Lean Guard checked the 100 GC/wall pairs after rounding to integer
+nanoseconds and applied =preserved_phase_rejects_strict_p95=. It also
+checked the outside-GC lower bounds for the same observations. Only
+59 of them fit after subtracting the full observed GC wall time, so
+preserving that outside-GC floor also rules out a passing P95 on this
+run. This counterfactual holds the measured residual fixed. A capacity
+change can also affect page faults and time spent off CPU, so both
+phases must be measured again together on the candidate.
+
+=passing_batch_requires_renewal_capacity= expresses the candidate's
+allocation coverage requirement separately from its elapsed budget.
+For example, =large_capacity_sensitivity= assumes at least 40 ms of
+outside work and 18 ms per collection. Under those assumptions, at most
+three collections fit. If all four allocation intervals supply at most
+301,989,887 charged bytes apiece, the 1,207,959,552-byte pair payload
+cannot fit. An implementation can lower either time floor or enlarge the
+intervals. Native measurements must establish the bounds for its own
+path. The example's 40 ms and 18 ms are sensitivity inputs. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/default-512-floor.OesoS8/=.
+
+The aligned data and Guard replay are under
+=.cache/ascent/yuanxu-v0.1.0/weighted-application-model.6nTbhE/=. Native
+source captures are under
+=.cache/ascent/yuanxu-v0.1.0/admission-attribution.ixpd9l/=. See
+[[file:collector-and-allocation.org][Collector and allocation]] for the
+clock instrumentation, section capacity and failed controls. The locked
+LeanPoo Guard checked every aligned lower bound and sample count in the
+two historical receipts, including the strict rejection derived from
+the 384 GC wall floors. The replay uses exact integer nanosecond inputs
+derived from recorded endpoints. It does not verify the clocks or
+establish that a future candidate inherits the same floors.
+
+** Application choice by result contract
+
+Keep the decision tied to the operation the caller needs. Measure a
+prepared query against its own output and an updated query against the
+same source changes, including the work required to reach a fixpoint.
+
+| Caller requirement | Existing entry point | Cost to establish | Acceptance evidence |
+|--------------------+----------------------+-------------------+---------------------|
+| Complete detached Scheme lists | =rows-of= / =materialize-rectangles= | For R binary rows the result needs at least 3R distinct pair cells. Measure GC wall and outside-GC wall in each complete admission. | Keep order, duplicate semantics, detachment, checkpoints and provenance. Both 384 and 512 workloads must pass the original strict gate. |
+| Count or selected rows from a prepared relation | =relation-sizes= / =visit-rows= | Count uses captured cardinality. For selection, measure route construction and invalidation, descriptor probes and actual matches. Include scan cost for unbound or high-fanout keys. | Compare ordered answers against full traversal with the same keys and source versions. Include cold capture, warm probes, and updates with and without reuse. |
+| Complete binary integer relation consumed by Rust | =source-run= with typed row reply | =pack-binary-rectangle= writes two signed-64 cells per row from one admitted rectangle. Measure admission, packing, transfer and Rust decode through the actual request. | Verify exact order and values, fallback, bounds, cancellation and provenance. Include all Rust-owned rows in the measurement. The boolean module-call diagnostic has no row-transfer measurement. |
+
+The 512 fixture returns 8,388,608 rows across 32 exports per admission.
+The Lean pair model counts 603,979,776 bytes of fresh pair payload,
+charged at 1,207,959,552 bytes in the Gambit movable accounting domain.
+Under a 2 GiB bound on spendable charge per allocation interval, even
+granting the full bound at startup and after each GC, 100 consecutive
+admissions need at least 56 renewals. The stream bound includes GC at
+batch boundaries. It gives neither a minimum pause duration nor the
+number of admissions that reach 100 ms.
+
+For the typed request, =rectangle_cells_order=, =unpack_flatten= and
+=rectangle_write_bounds= specify the left-major order, round trip and
+write offsets. The 32 binary vectors have 134,218,240 bytes of word
+payload in total, including two metadata words per vector. This is a
+representation cost, excluding vector object headers, the bridge copy,
+and Rust-owned output. Packing after list export pays both costs.
+The direct branch in =core/rectangle-geometry.ss:pack-binary-rectangle=
+checks for one nonempty, unprefixed signed-64 rectangle and a fixnum
+allocation size. =interface/engine-api.ss:source-run= selects the branch
+inside the request and otherwise uses detached rows. Equivalence of the
+full writer, cancellation and publication trace still requires native
+source correspondence. The payload calculation grants no latency bound.
+
+The locked LeanPoo Guard accepted the focused model and all 183 jobs
+in the proof build. The original =gerbil test= row-transfer and result
+projection suites passed all nine Cases using the frozen comparison
+image. These Cases cover ordered products, independent result
+ownership, signed cells, and unsupported callbacks and promises.
+
+The same-request test supports the typed path for complete Rust output
+and leaves its wall tail open. For ordinary Scheme lists, use the
+per-admission collector and outside-collector ledger to judge the next
+change. The measured capacity sweep does not support adopting a higher
+default minimum. Index and graph changes should be driven by selected
+queries and source updates.
+
+* Acceptance required before publication
+
+Use one VM and the real Rust request path. Report queue wait, evaluation,
+index work, cut capture, full materialization, codec cost and GC separately.
+Keep the original 38 study groups / 235 scenarios. Validate both 384/512
+vertex complete outputs with the required paired observations and strict
+P95 below 100 ms; supplementary 1000-sample studies do not replace that gate.
+Count complete outputs and actual cells, not only successful lookup probes.
+Require natural exit within the unchanged scenario budget, full semantic and
+formal gates, then exact-head CI. Prior component results on the old working
+baseline do not qualify this candidate. No result in this report claims those
+remaining gates have passed. The complete WeightedExport Quint gate has now
+completed naturally: all 51 positive/fault obligations accepted, including
+the four terminal-store/count negative controls; raw evidence is retained at
+=/private/tmp/ascent-current-pr-quint-weighted-20261112.log=. This is one
+model gate, not full-project formal or semantic acceptance.
+
+* Cut-owned graph implementation candidate
+
+The bounded integer journal now captures ordered immutable ID axes and, only
+for a terminal missing-product selection, the final read-only bitmap. It uses
+the existing =insert!= / =insert-components!= transitions with an internal sink;
+it does not introduce a second UF or Scheme evaluator. No live node, parent,
+population map or mutable mask from an intermediate insertion is retained.
+The ordinary and numeric exporters allocate fresh answers per read.
+
+This first constructor admits only immutable signed binary values, fresh-endpoint
+nonterminal insertions and a terminal old/old insertion. Other histories retain
+the old route. Logical descriptor/axis/mask units are bounded independently at
+512 squared; this is not a physical-byte theorem or a raised heap limit.
+Publication gives every new cut its own private lazy capture. Neither public
+Contract success nor caller object identity supplies authority for reuse.
+
+The focused native compilation and standard =gerbil test= source Suite passed
+four Cases, including 1000 cycles times five source/derived/split/reversed
+histories, exact old row order, independently checked complete Cartesian truth,
+mutable-answer isolation, duplicate and zero frontiers, unsupported-history
+refusal and output-budget rejection. A syntax error in the initial new Suite
+was corrected; its failed harness log is retained. Exit zero alone was not
+accepted: all Case/Module/Harness/final OK markers were verified.
+
+This component check uses only the standalone replay module and Gerbil STD.
+It is not the full current-PR semantic, cancellation/provenance or performance
+acceptance. The new source-to-model construction, capacity/alias proof and
+producer consumer integration remain under validation. The masked-row reversal
+and cardinality bound passed a fresh guarded Lean check before implementation.
+
+POO PR #17 at =18e3aad2= has now completed its local native package build with
+exit zero in the linked prefix. Yuanxu =d2239d94= is being built against that
+actual POO, rather than silently selecting its older transitive pin.

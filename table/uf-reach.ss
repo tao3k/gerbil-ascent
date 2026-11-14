@@ -454,6 +454,14 @@
   (let (degree (reach-length table))
     (cond
       ((zero? degree) (list node))
+      ;; Birth IDs are already ordered by the group-owned packed registry.
+      ;; Use it when the word scan is bounded by the number of selected roots.
+      ((and (compact-reach? table)
+            (<= (##u32vector-length (compact-reach-bits table)) degree))
+       (let (neighbors [])
+         (axis-for-each (lambda (member) (set! neighbors (cons member neighbors)))
+                       (make-closure-axis node table))
+         (if ascending? (reverse! neighbors) neighbors)))
       ((>= (* degree (integer-length degree)) population)
        (select-neighbors (lambda (n) (or (eq? n node) (reach-get table n))) roots ascending?))
       (else (list-sort (lambda (a b) ((if ascending? < >) (uf-node-order a) (uf-node-order b)))

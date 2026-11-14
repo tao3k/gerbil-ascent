@@ -7,11 +7,11 @@
         (only-in "ordered-call.ss" dispatch-ordered-call)
         (only-in "rule-bindings.ss" gerbil-ascent-call-with-bindings)
         (only-in "positive-certificate.ss" gerbil-ascent-positive-certificate?)
-        (only-in "expression-plan.ss" gerbil-ascent-compile-frame-call
-                 gerbil-ascent-compile-frame-sequence gerbil-ascent-compile-input-guard))
+        (only-in "expression-plan.ss" gerbil-ascent-compile-checked-frame-call
+                 gerbil-ascent-compile-frame-sequence))
 (export gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
-        match-row! term-value)
+        match-row! match-parts! term-value)
 
 (def +positive-plans+
   (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-positive-plans)))
@@ -66,6 +66,25 @@
          (map (lambda (column)
                 (lower (vector-ref sources column) (vector-ref actions column))) columns))))) columns))
 
+;; : (-> Body Natural)
+;; Reserve only for variable occurrences in the first source atom. Repeated
+;; variables may overestimate demand, so keep this hint bounded.
+(def (initial-slot-capacity body)
+  (if (and (pair? body) (vector? (car body)) (>= (vector-length (car body)) 2)
+           (eq? (vector-ref (car body) 0) 'atom))
+    (let (atom (vector-ref (car body) 1))
+      (if (and (vector? atom) (>= (vector-length atom) 2))
+        (let (terms (vector-ref atom 1))
+          (if (and (list? terms) (>= (length terms) 64))
+            (let scan ((pending terms) (count 0))
+              (if (or (null? pending) (= count 4096)) count
+                (let (term (car pending))
+                  (scan (cdr pending)
+                    (if (and (pair? term) (eq? (car term) 'variable)) (+ count 1) count)))))
+            0))
+        0))
+    0))
+
 ;;; Plans retain ordered outputs, actions, slot count, purity and atom extent.
 ;;; Unsupported terms or clauses keep the complete rule on the general path.
 ;;; Slot assignment follows admitted body order. A fresh slot is always written
@@ -85,7 +104,9 @@
 ;;     %
 (def (gerbil-ascent-compile-positive-plan heads body)
   (let/cc unsupported
-    (let ((slots (make-hash-table-eq)) (scope #f) (count 0) (pure? #t))
+    (let* ((capacity (initial-slot-capacity body))
+           (slots (if (>= capacity 64) (make-hash-table-eq size: capacity) (make-hash-table-eq)))
+           (scope #f) (count 0) (pure? #t))
       (def (ensure-scope!)
         ;; Materialize at the first consumer, once per plan. Pure rules keep
         ;; only their slot map; callbacks share subsequent immutable tails.
@@ -103,25 +124,13 @@
       (def (lower-call names procedure diagnostic (payload #f) (visible (ensure-scope!)))
         (unless (and (list? names) (procedure? procedure)) (unsupported #f))
         (set! pure? #f)
-        (let ((fast (gerbil-ascent-compile-frame-call procedure (map read-slot names)))
-              (stable-inputs? (gerbil-ascent-compile-input-guard names)))
-          (def (fallback current-procedure current-names frame)
+        (gerbil-ascent-compile-checked-frame-call procedure names (map read-slot names)
+          (lambda (current-procedure current-names frame)
             (gerbil-ascent-call-with-bindings current-procedure current-names
               (map (lambda (entry)
                      (cons (car entry) (vector-ref frame (cdr entry)))) visible)
               diagnostic))
-          (if payload
-            (lambda (frame)
-              ;; The old expression protocol reads procedure before input names.
-              (let* ((current-procedure (vector-ref payload 1))
-                     (current-names (vector-ref payload 0)))
-                (if (and (eq? current-procedure procedure)
-                         (stable-inputs? current-names))
-                  (fast frame)
-                  (fallback current-procedure current-names frame))))
-            (lambda (frame)
-              (if (stable-inputs? names) (fast frame)
-                  (fallback procedure names frame))))))
+          payload))
       (def (lower term head?)
         (case (car term)
           ((literal wildcard) term)
@@ -203,8 +212,13 @@
                (map (lambda (head)
                       (let (terms (map (lambda (term) (lower term #t)) (vector-ref head 1)))
                         (vector head terms (compile-parts-output terms)))) heads)))
-        (let (plan (vector outputs (compile-action-segments actions) count pure?
-                    (length (filter (lambda (action) (vector? (vector-ref action 0))) actions))))
+        (let (plan
+              (if pure?
+                ;; A pure body emitted only atom actions. Keep its private
+                ;; spine and count it directly instead of copying it twice.
+                (vector outputs actions count #t (length actions))
+                (vector outputs (compile-action-segments actions) count #f
+                  (length (filter (lambda (action) (vector? (vector-ref action 0))) actions)))))
           (when (and pure? (not (gerbil-ascent-positive-certificate? heads body plan)))
             (error "ASCENT positive compiler certificate rejected"))
           plan)))))
@@ -302,7 +316,7 @@
        (and (equal? (vector-ref frame a) (car prefix))
             (equal? (vector-ref frame b) left)
             (begin (vector-set! frame c right) #t))))
-    (else (lambda (prefix left right frame) (match-parts! terms prefix left right frame)))))
+    (else #f)))
 
 ;; The synchronous index owner guarantees exact canonical key selection.
 ;; Only prior-bound actions present in the key can omit their second equality

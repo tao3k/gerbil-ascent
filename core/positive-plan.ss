@@ -6,7 +6,7 @@
 ;;; each engine owns its variable frames, including nested/concurrent solves.
 (import (only-in "positive-lowering.ss" gerbil-ascent-positive-plan
                  gerbil-ascent-compile-positive-plan gerbil-ascent-positive-plan-with-outputs
-                 gerbil-ascent-pure-positive-plan? match-row! term-value)
+                 gerbil-ascent-pure-positive-plan? match-row! match-parts! term-value)
         (only-in "ordered-call.ss" dispatch-ordered-call)
         (only-in "positive-certificate.ss" gerbil-ascent-positive-certificate?)
         (only-in "execution-policy.ss" gerbil-ascent-old-lane gerbil-ascent-delta-lane)
@@ -250,6 +250,11 @@
         (if (null? (cdr atoms))
           (emit-complete-heads! heads frame emit-row! cost next-signature next-witness owner)
           (resume (+ depth 1) next-signature next-witness)))))
+  (defrule (match-parts action matcher prefix left right)
+    (let (specialized matcher)
+      (if specialized
+        (specialized prefix left right frame)
+        (match-parts! (vector-ref action 1) prefix left right frame))))
   (match atoms
     ([] (emit-complete-heads! heads frame emit-row! cost signature witness owner))
     ([action . _]
@@ -317,8 +322,8 @@
         (unless (and (not old?) parts-access
                   (parts-access (vector-ref action 0) frame delta? (vector-ref action 2)
                     (lambda (prefix left right)
-                      (accept ((or (vector-ref action 4) (vector-ref action 3))
-                               prefix left right frame)
+                      (accept (match-parts action (or (vector-ref action 4) (vector-ref action 3))
+                                prefix left right)
                               (and cost (append prefix (list left right))) action #f))))
           (let (rows (if old?
                       (old-rows-access (vector-ref action 0) frame (vector-ref action 2) checkpoint!)
@@ -334,7 +339,7 @@
               ((gerbil-ascent-row-parts? rows)
                (gerbil-ascent-for-each-row-parts
                 (lambda (prefix left right)
-                  (accept ((vector-ref action 3) prefix left right frame)
+                  (accept (match-parts action (vector-ref action 3) prefix left right)
                           (and cost (append prefix (list left right))) action #f)) rows))
               (else
                (gerbil-ascent-for-each-row

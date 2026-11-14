@@ -1,0 +1,1669 @@
+#+title: Weighted relation export
+#+language: en
+
+[[file:../graph-index-export-algorithms-20261112.org][Audit index]]
+
+* Native weighted export call-path and kernel audit
+
+The seven original weighted scenarios now have direct STD Suites in
+=benchmarks/uf-weighted-test.ss=. Native =gerbil test -r= matches exported
+=*-test= identifiers, not the descriptive Suite label. The optional native
+benchmark package build compiles modules only, through STD =defbuild-script=.
+The original launcher migration for other groups remains incomplete.
+
+The first two heavy measurements were incorrectly described as compiled
+comparisons. Their =GERBIL_LOADPATH= put the source root first. Native sampling
+confirmed =___H___eval= in the hot path. Those failed 90-second runs remain
+source-mode controls; compiling files first did not establish their runtime
+selection. In source mode, replacing the per-row match expansion with explicit
+list branches reduced current median batch CPU from 3522.887 ms to 1532.3825 ms
+and median GC count from 42 to 12. This is not compiled performance acceptance.
+
+With library-first native selection, an attribution experiment measured current
+freeze-only CPU at 0.055 ms per 32 captures, complete frozen-row CPU at
+117.058 ms (88.342 ms GC), and complete capture-plus-row CPU at 97.236 ms
+(74.632 ms GC). The latter runtime allocation counter was 679632368 bytes;
+the model's doubled fresh-constructor budget is 679477248 bytes. Agreement
+in scale does not identify all counter terms or prove exact physical bytes.
+The full output remains fresh; no output-count substitute is used.
+
+The row-kernel generated Scheme lambda forms fell from 32 to 8 while all
+seven rejection sites remained. The new kernel control passed 1000 proper
+products, malformed axes including partial emission, and callback failures.
+Those are executable controls, not a source-to-C compiler proof.
+
+The first correct compiled original heavy gate passed every fixed stage:
+20 CPU pairs, 20 admissions and five allocation observations, with CPU median
+157.508 ms reference versus 122.640 ms current and 20 wins. A later full
+seven-scenario run exposed a real small-input failure (24.294 ms reference
+versus 37.520 ms current). An unindexed constructor now reuses the existing
+checked/admitted scan kernels without constructing indexed helper closures.
+All 42 focused query, callback, snapshot, numeric and kernel Cases passed.
+The next small gate passed with 17 wins and allocation counters
+208384 versus 197120 bytes. A left-query gate still missed its original
+10-percent target by 0.3 percent; it is not waived. The extracted key validator
+was therefore changed to one shared lexical macro, retaining one-time argument
+evaluation and every existing check; validation is pending.
+
+The strict scale contract has been ported unchanged: 100 paired CPU samples,
+100 admission batches, 32 complete exports per batch, five allocation samples
+and exclusive 100000000 ns P95. The paired helper now honors the declared
+sample count; the original contract remains at 20. At 384 vertices the run
+completed in 83.739 seconds but failed with admission P95 389672000 ns, despite
+100 CPU wins. At 512 vertices the original 90-second watchdog stopped the
+run at admission 74/100. Neither scale is accepted. The corresponding JSON
+execution inventory is =/private/tmp/ascent-unindexed-weighted-matrix-20261112.json=.
+All failed controls remain on disk; there is no deadline, heap or threshold
+relaxation. These outcomes leave GC/tail work, complete 38-group conversion,
+source refinement, full semantics, Rust/PyO3 and final CI acceptance open.
+
+* Stateful numeric writer qualification
+
+The numeric product writer now uses standard Scheme =do= loops, with an
+outer stride equal to twice the right-axis length. Both axes are validated
+before the buffer is allocated. The private span reverser likewise uses =do=
+and swaps whole binary rows without reversing columns. These are stateful
+buffer writes, not allocating list transformations.
+
+The generic row packer's next-cell increment uses =fx+= only after its full
+positive rectangular allocation size has passed =fixnum?=. The new Lean
+=cell_increment_within_capacity= lemma proves that a position strictly inside
+the admitted size has its next position at most that size and the native
+limit. This is an arithmetic precondition proof; native fixnum and buffer
+implementation correctness are still premises, not discharged compiler
+refinement obligations.
+
+Validation on the resulting cut:
+
+- Native package build completed naturally.
+- Four native qualification modules completed 18 Cases, with no errors,
+  including 1,000 rectangular numeric exports and failure/fallback controls.
+- ASP policy completed with zero findings and zero errors. No rules, thresholds
+  or exceptions were changed.
+- The full guarded Lean inventory completed all 182 jobs. Rendering
+  =integer-row-transfer= from freshly rebuilt proof artifacts is byte-identical
+  to =interface/row-transfer.ss=. A first diagnostic render read the old
+  =.olean= and did not match; it was not accepted.
+- Ten formal-driver/inventory Python tests passed.
+
+Evidence: =/private/tmp/ascent-row-contract-build-20261112.log=,
+=/private/tmp/ascent-row-contract-semantics-final-20261112.log=,
+=/private/tmp/ascent-loop-contract-policy-final-20261112.log=,
+=/private/tmp/ascent-row-contract-lean-full-20261112.log=,
+=/private/tmp/ascent-row-contract-render-current-20261112.ss= and its Guard
+receipt, and =/private/tmp/ascent-loop-contract-formal-driver-20261112.log=.
+
+These checks do not change the recorded strict-scale failures. No new strict
+P95 pass, complete 38-group result or current-head remote CI result is claimed.
+
+* Standard list materialization control and tiny membership
+
+A separate control mapped each right axis to fresh tuples, then used native
+=append!= to splice the private row spines. It matched the exact ordered
+export and passed mutation isolation. The guarded Lean model proves
+ordered flattening and a payload of three pairs per row plus one private
+descriptor per left coordinate. It does not equate payload with collector
+traffic. The conditional collector bound also shows that a 180,000,000
+movable-byte limit per allocation interval and a 27 ms floor per collection
+would exclude the 512-vertex target. Those are model premises, not asserted
+future runtime bounds.
+
+In the source diagnostic, 512 median CPU was 2,687.676 ms for the current
+rectangle and 553.429 ms for the STD control. Both materializers were then
+built with identical production C options in one isolated prefix; the
+diagnostic Suite itself was loaded as source. Five alternating pairs
+gave current/STD CPU medians of 115.261/131.998 ms at 384 and
+192.509/207.256 ms at 512. At 512 the candidate GC median fell from eight
+to seven collections, but the whole batch regressed. The candidate is
+not in the production path. These are materialization diagnostics, not
+100-observation admissions.
+
+The original UF plan, query and membership groups now have native source
+Suites. Each group loads only its own reference and fixture. Six of the
+seven dedicated small scenarios passed before the membership change. The
+initial membership small case failed: current CPU 32.768 ms and 49,456
+allocation accounting bytes. Explicit pair-tag checks alone reduced this
+to 26.899 ms and 32,560 bytes but still failed. Binding the proper short
+binary axes at frozen-view construction removed the repeated dispatch;
+the unchanged gate then passed with 16.047 ms, 7,344 bytes and 20 CPU wins.
+These are separate source-mode observations under the same contract,
+not a compiled speedup claim. Grouped, wide or nonproper axes retain
+general membership handling.
+
+The native membership, relation view and UF semantic Suites passed all
+29 cases, including malformed rows and both sides of the fifth-pair
+boundary. Separately, a production build against the archive-linked
+Yuanxu prefix stopped before ASCENT compilation: Gerbil requires the
+package manifest generated from a real Git checkout. The archive had
+passed its own native build, but cannot stand in for package registration.
+The exact commits are being fetched incrementally from the previous
+local Yuanxu snapshot for the prefix with the declared POO pin.
+
+Evidence: =/private/tmp/ascent-std-rectangle-control-source-20261112.log=,
+=/private/tmp/ascent-std-rectangle-control-native-20261112.log=,
+=/private/tmp/ascent-native-dedicated-uf-membership-small-20261112.log=,
+=/private/tmp/ascent-membership-pair-tags-small-20261112.log= and
+=/private/tmp/ascent-membership-small-predicate-20261112.log=.
+
+* Current production build, frozen reference and strict scale
+
+Both scale suites use the native =gerbil test= source entry. Neither
+requires a benchmark build. The 384-vertex run with a compiled candidate
+and source reference reached 24 of 100 CPU pairs at the original
+90-second limit. Median batch CPU among those pairs was 1986.705 ms
+for the reference and 107.352 ms for the candidate. No admission
+sample or final receipt was produced. That mixed run is not a
+compiled comparison.
+
+The fixture now uses normal module identities for both implementations
+so Gerbil can choose installed library products or fall back to source.
+With the exact production prefix and a separate directory containing
+only the previously compiled reference artifacts, the 384-vertex
+diagnostic reached all 100 CPU pairs, 100 admissions and five allocation
+pairs. The reference artifacts came from the preceding benchmark prefix;
+their independent source/compiler receipt has not been established for
+this run. Treat the comparison as diagnostic.
+
+| 384 vertices, 32 complete exports | Reference | Current |
+|----------------------------------+-----------+---------|
+| Paired batch CPU median (ms)     |   151.635 | 115.229 |
+| Paired GC CPU median (ms)        |    97.004 |  97.354 |
+| Paired GC count median           |         5 |       5 |
+| Allocation counter median bytes  | 679633072 | 679629488 |
+
+The current arm won all 100 CPU pairs. Its paired GC CPU was at least
+100 ms in 33 pairs; the median of the per-pair CPU-minus-GC values was
+18.157 ms. Admission wall time ranged from 106.579 to 153.973 ms
+with P50 113.577 ms and P95 134.378 ms. Every admission sample missed
+the strict target. The roughly 24 percent paired CPU reduction is
+outside GC; reducing constructor dispatch alone does not remove the
+observed collection cost. Do not infer a platform-independent pause
+floor or compare this P95 directly with the earlier unpaired cuts.
+
+Evidence: =/private/tmp/ascent-weighted-current-384-20261112.log= and
+=/private/tmp/ascent-weighted-current-compiled-ref-384-20261112.sexp=.
+
+The 512-vertex suite also completed 100 CPU pairs, 100 admissions and
+five allocation pairs under the original 2 GiB/90-second envelope.
+Paired batch CPU improved from 262.284 to 196.457 ms with 100 wins.
+The current GC CPU median was 164.021 ms across a median of seven
+collections. GC alone took at least 100 ms in all 100 candidate CPU
+samples; median per-pair CPU minus GC was 32.336 ms. The allocation
+counter medians were 1208115376 and 1208111792 bytes. Admission P50,
+P95 and maximum were 274.725, 320.109 and 352.430 ms, respectively.
+The minimum was 223.536 ms. Both Suites printed =ERROR CASE= and
+recorded a failed receipt despite the native command returning zero.
+
+The results direct the next experiment toward collection frequency
+and live-root cost while retaining every fresh list export. They do
+not establish an absolute lower bound on a different execution
+strategy. The full original scenario matrix and PR CI remain open.
+
+Evidence: =/private/tmp/ascent-weighted-current-compiled-ref-512-20261112.sexp=.
+
+* Matched allocation and the default heap ratio
+
+The original weighted UF group ran its seven native source Suites against
+the preceding production build and the same existing reference artifacts.
+All seven emitted the complete passing Suite and scenario markers and
+passing receipts. Each used 20 CPU pairs, 20 admissions and five allocation
+pairs. On this host, the outer =time -l= observer returned 1 after the
+success markers because =sysctl kern.clockrate= was denied. The logs and
+verdicts are kept separately; these are not clean-process-exit or
+reference-provenance qualification.
+
+| Original scenario | Candidate batch CPU median (ms) | Admission P95 (ms) | Admission maximum (ms) |
+|-------------------+---------------------------------+--------------------+------------------------|
+| heavy             |                         133.519 |            162.338 |                182.635 |
+| grouped           |                          71.856 |             94.156 |                112.497 |
+| left-query        |                          45.984 |              0.474 |                  0.482 |
+| right-query       |                          16.244 |              0.604 |                  0.642 |
+| dense             |                          33.001 |             52.235 |                 52.275 |
+| sparse            |                          28.579 |              3.904 |                 24.208 |
+| small             |                          12.089 |              0.064 |                  0.123 |
+
+The paired CPU lane calibrates repetitions. Its batch is not the same unit
+as the fixed admission batch in the short query scenarios. These original
+thresholds do not replace the independent strict-scale gate.
+
+A separate native diagnostic ran eight alternating pairs of 32 traversals
+over the same frozen 512-vertex cut. Both arms used the same compiled row
+writer and allocated a fresh outer pair per tuple. The callback either
+linked that pair to the preceding spine or released the preceding spine
+immediately. The retained arm's ordered rows were checked against the
+ordinary full exporter, and both arms checked every traversal's row count.
+The release arm is a diagnostic control and cannot implement the public
+full-list export.
+
+| Liveness control | Counter bytes per batch | Last-collection live bytes, median | GC count, median | GC CPU, median (ms) |
+|------------------+-------------------------+------------------------------------+------------------+---------------------|
+| Retain the spine |              1744857472 |                          104661776 |             10.5 |             227.208 |
+| Release the spine |             1744857472 |                           89645160 |               14 |             272.337 |
+
+The diagnostic allocates more than the production materializer, so
+its absolute latency is not transferable. It does isolate the same
+observed allocation charge across its two arms. Lower liveness led to
+more collections in this run. The guarded Lean =rawHeadroom50_aligned=
+and =rawHeadroom50_rounding= theorems capture Gambit's divide-first
+50-percent target: before minimum, reserve, history and section adjustments,
+losing 50 aligned live words also loses 50 raw free words. This is not
+a claim that the real collector's free capacity or pause count is a
+function only of that raw target.
+
+Evidence: =/private/tmp/ascent-original-weighted.F6Ylhr/=,
+=/private/tmp/ascent-weighted-liveness.6AQnK0/liveness.log=, and
+=/private/tmp/ascent-weighted-headroom-capture-lean-20261112.log=.
+
+* Closed component capture and complete export
+
+For a group with one closed component, =table/trrel-uf.ss= now captures
+the persistent member axis once and publishes its product with itself.
+The general branch still owns all other group shapes. The guarded Lean
+=closed_owner_capture_exact= check gives the exact rectangle, squared
+cardinality and count of physical units. The native baseline/candidate
+Suite checked the selected compiled module, indexed and unindexed
+row order, all 262,144 distinct pairs, detached result mutation and
+stability after a source insertion. Both selected modules produced
+ordered digest 167544629. The native UF qualification Case also passed.
+
+In 24 batches of 4096 captures, baseline/candidate medians were
+0.786/0.349 microseconds CPU per capture and 4080/1120 allocation
+counter bytes per capture. This is a capture improvement, not an
+end-to-end attribution of the wall-time differences below.
+
+| Vertices | Candidate CPU median (ms) | GC CPU median (ms) | Median collections | Admission P95 (ms) | Admission maximum (ms) |
+|----------+---------------------------+--------------------+--------------------+--------------------+------------------------|
+|      384 |                   147.982 |            125.286 |                  5 |            261.487 |                540.120 |
+|      512 |                   214.440 |            174.486 |                  7 |            291.809 |                376.524 |
+
+Each unchanged native scale Suite reached 100 CPU pairs, 100 admissions,
+and five allocation pairs within the 2 GiB and 90-second envelope.
+Both won every CPU pair against the retained compiled reference, but
+both produced failed receipts and =ERROR CASE= at the exclusive 100 ms
+gate. The reference artifact compiler provenance is still incomplete.
+The benchmark command's zero exit does not supersede its failed receipt.
+This is not an isolated comparison of admission tails across revisions.
+
+Evidence: =/private/tmp/ascent-closed-owner-test.jxeTBh/= and
+=/private/tmp/ascent-closed-owner-strict.tVljli/=.
+
+* Backward list construction control
+
+The candidate reversed one borrowed axis and constructed the binary
+Cartesian product from its last row to its first. Every returned row and
+outer cell remained fresh. The guarded model gives the same ordered
+product; the native control also checked boundary widths and detached
+mutations. The production build used the installed SDK wrapper after a
+raw binary invocation resolved the nonexistent release-builder =gsc=
+path. No toolchain, dependency, or build-script source changed.
+
+The native Suite resolved the intended compiled module in each process.
+It ran forward, backward, backward, forward without concurrent builds.
+Each process measured 12 batches of 32 complete exports per width.
+
+| Vertices | Layout | CPU medians (ms) | GC CPU medians (ms) | Median collections | Counter bytes per batch |
+|----------+--------+------------------+---------------------+--------------------+-------------------------|
+|      384 | forward | 122.389, 127.106 | 102.687, 108.026 | 5 | 679486080 |
+|      384 | backward | 135.600, 131.903 | 118.490, 114.967 | 6 | 680073344 |
+|      512 | forward | 209.712, 225.314 | 175.089, 180.938 | 8 | 1207968384 |
+|      512 | backward | 196.348, 196.376 | 164.587, 166.419 | 8 | 1208752256 |
+
+The candidate was withdrawn: it regressed 384 and still missed the
+diagnostic 100 ms target at 512. The measured charge differences
+(587,264 and 783,872 bytes) match
+=reverse_axis_fixed_width_counter_deltas=: two semispaces charge 48
+bytes per copied member and save 80 bytes per export from the old
+builder sentinel and box. At 384, a charge increase under 0.1 percent
+coincided with a whole additional collection. The arithmetic identifies
+the source of the charge difference; without per-collection offsets it
+does not establish that the additional charge alone caused the extra
+collection. Further work must locate the allocation boundary and
+consider traversal locality separately. These are diagnostic medians,
+not strict admission P95 samples.
+
+Evidence: =/private/tmp/ascent-backward-axis-test.zgAKAP/=,
+=/private/tmp/ascent-backward-shared-axis-build-20261112.log=,
+=/private/tmp/ascent-backward-shared-axis-build-wrapper-20261112.log=,
+=/private/tmp/ascent-forward-export-restored-build-20261112.log= and
+=/private/tmp/ascent-backward-axis-cost-lean-local-20261112.log=.
+The restored forward build completed normally. The locked LeanPoo Guard
+passed using the installed pinned dependency after the preparatory Lake
+fetch failed DNS resolution.
+
+* Bounded continuation materializer control
+
+The candidate used nested right folds over the original proper axis.
+On return, each inner call created two fresh tuple cells and one fresh
+outer cell. It avoided a reversed copy and the list builder sentinel
+and tail box. The guarded =unwindProduct_exact= proof matches the
+left-major rectangle, and =unwind_frames_bound= limits model frames to
+two axis lengths. This does not model physical stack words. Generated
+C polls on descent; the allocation-return labels perform heap checks.
+They do not independently establish the existing row-poll refinement.
+
+An alternating four-process native Suite resolved the intended compiled
+module and checked independent mutation and exact order at boundary
+widths. It measured 12 batches of 32 complete exports at each fixed
+width per process.
+
+| Vertices | Layout | CPU medians (ms) | GC CPU medians (ms) | Median collections | Counter bytes per batch |
+|----------+--------+------------------+---------------------+--------------------+-------------------------|
+|      384 | forward | 133.311, 123.440 | 113.112, 104.239 | 5 | 679486080 |
+|      384 | unwind | 140.831, 144.263 | 119.022, 121.755 | 6 | 679483520 |
+|      512 | forward | 230.821, 237.788 | 193.135, 195.965 | 8 | 1207968384 |
+|      512 | unwind | 239.092, 212.175 | 186.721, 170.545 | 8 | 1207965824 |
+
+Both widths charged 2,560 fewer bytes, exactly the modeled sentinel
+and box saving. The candidate still regressed at 384 and was withdrawn.
+A separate six-batch 384 trace saw five collections in all forward
+batches, versus five in the first three and six in the last three
+unwind batches. In the stable five-collection phase the successive
+allocation watermarks were about 127 MB apart. In the six-collection
+unwind phase this spacing fell to about 106 MB, with a reported heap
+near 215 MB versus about 239 to 247 MB in the stable forward phase.
+The extra collection appeared during export 30, 31, or 32. Lower total
+allocation did not prevent that transition. The traces identify a
+different capacity regime; they do not isolate stack size, live row
+layout, or preceding heap state as its sole cause.
+
+Evidence: =/private/tmp/ascent-unwind-export-abba.vCNljg/= and
+=/private/tmp/ascent-unwind-export-cost-final-lean-20261112.log=.
+
+The installed Gambit header sets =___TARGET_HEAP_SPACE_HIST_LENGTH= to
+16. In =resize_heap=, Gambit takes the maximum of the new target
+and the recorded recent targets before section rounding, and records
+the new target only after a successful resize. An explicit collection
+before a sample therefore does not clear the history. The guarded
+=retained_heap_target= and =expired_heap_target= lemmas separate the
+retained high-water target from the case where sixteen newer low
+targets displace it. The phase change in the trace is consistent with
+this mechanism; the trace does not expose the internal target ring.
+
+The native production build and four relevant semantic Cases passed
+after restoration of the forward path. There is no new strict-scale
+pass or complete scenario-matrix claim.
+
+Evidence: =/private/tmp/ascent-heap-history-lean-final-20261112.log=,
+=/private/tmp/ascent-unwind-export-restored-build-20261112.log= and
+=/private/tmp/ascent-unwind-export-restored-semantics-20261112.log=.
+
+* Paired CPU collector budget and native UF commit coverage
+
+The complete strict-run receipts contain 100 aligned candidate CPU and
+GC CPU observations at each width. The CPU lane starts each measured arm
+from a collected heap and uses one fixed batch of 32 complete exports.
+Subtract the GC CPU from the total for the same sample before computing
+the outside-collector distribution; subtracting separate percentiles
+would lose that correspondence.
+
+| Vertices | GC CPU min (ms) | GC CPU P95 (ms) | Batches with GC CPU >= 100 ms | Outside CPU min (ms) | Outside CPU median (ms) |
+|----------+-----------------+-----------------+--------------------------------+----------------------+-------------------------|
+|      384 |         105.301 |         138.951 |                            100 |               19.578 |                  22.758 |
+|      512 |         137.583 |         209.210 |                            100 |               33.757 |                  38.864 |
+
+The new Lean =paired_cpu_collector_budgets= lemma gives GC CPU budgets
+of strictly less than 80,423 and 66,244 microseconds if outside CPU stays
+above the respective observed minima, conservatively rounded down. These
+constraints apply only to that conditional CPU comparison. They do not
+substitute CPU for admission wall time or establish a collector floor on
+a different execution. All 200 paired observations rule out reaching the
+CPU target by removing only outside-collector work while keeping the
+observed collection costs. The independent admission P95 remains 261.487
+and 291.809 ms in those receipts.
+
+UF commit now also enters through the native =uf-commit-test= Suite. Its
+six original scenarios completed 50 pairs each, under 2 GiB and a 90-second
+per-process watchdog, with successful result receipts, Case and Harness
+markers, and exit zero. The native run used a compiled production UF and
+source reference; it is not a substitute for the old explicit compiled
+module provenance check. The original thresholds and ordered frontier,
+closure truth and duplicate-retry checks are shared with the old entry.
+
+Evidence: =/private/tmp/ascent-closed-owner-strict.tVljli/= and
+=/private/tmp/ascent-native-uf-commit.vcnXrz/=.
+
+* Four-row forward splice control
+
+An isolated materializer grouped four binary rows into a fresh forward
+chunk, retaining the last outer cell so the next chunk could be linked
+with one mutation. A short axis suffix used the ordinary single-row
+loop. This tests allocation and link scheduling without reversing an
+axis, retaining an axis-sized continuation, or changing heap settings.
+The guarded =fourRows_product_exact= lemma proves proper-axis output
+order. The existing fresh-cell floor still applies; the model does not
+prove where the compiler inserts heap checks.
+
+Native =gerbil build= compiled both overlays with the production C
+option. Native =gerbil test= checked the resolved geometry artifact,
+exact output and independently mutable results at twelve widths including
+the chunk boundaries. The four processes used forward, splice, splice,
+forward order. Each measured twelve collected-start batches per scale,
+each of 32 complete exports. The 2 GiB cap, default live ratio and
+90-second watchdog remained in place.
+
+| Vertices | Layout | Wall medians (ms) | Outside-GC wall medians (ms) | Median collections | Counter bytes per batch |
+|----------+--------+-------------------+-------------------------------+--------------------+-------------------------|
+|      384 | forward | 112.206, 117.023 | 18.528, 18.568                |                  5 |               679486080 |
+|      384 | splice  | 115.102, 113.191 | 18.760, 18.862                |                  5 |               679486080 |
+|      512 | forward | 190.593, 187.425 | 33.037, 33.316                |                  8 |              1207968384 |
+|      512 | splice  | 185.863, 186.695 | 33.031, 33.750                |                  8 |              1207968384 |
+
+The splice does not reduce allocation charge or collection count and
+shows no consistent reduction in work outside GC. The source candidate
+stays in the diagnostic overlay. The production geometry was not
+modified. This control does not cover malformed axis errors in the new
+specialization and is not strict admission or matrix acceptance.
+
+Evidence: =/private/tmp/ascent-four-row-splice.G9AE0O/=.
+
+The compiled forward binary loop in =rectangle-geometry~0.c= emits
+=___BEGIN_ALLOC_LIST(2UL,...)= and then =___CONS= before a single
+=___CHECK_HEAP= and =___POLL=. The row tuple and the outer cell are already
+adjacent allocations. The next operations update the prior tail and
+the builder cursor. A foreign helper that merely groups those same
+three allocations would retain the payload and collector traffic.
+The inspected C artifact's SHA-256 is
+=503e7c63d1994288635452a23ee53749518d1dfc6be454fcdcf1dba3cc3db2a0=
+in the =prefix-bbcb8fe9-6cf940be= build. This observation applies to that
+compiled path; it does not identify a universal Gambit heap-check cost.
+
+* Separate spine and tuple allocation
+
+The forward builder interleaves fresh tuples with their outer cells. Two
+isolated source controls change the placement while keeping the same ordered
+mutable result. The first uses standard =make-list= to allocate the full
+private outer spine, then fills it in left-major order. The second places
+fresh tuples in a flat vector, builds the spine right to left, and clears
+each vector slot as ownership passes to the result. Both use the ordinary
+forward builder for unsupported shapes. The vector control limits its
+experiment to at most 262,144 rows.
+
+Lean =PrivateSpine= proves the ordered fill and drain, the common three-cell
+count, and the live-pair comparison during construction. After =k= tuples,
+the skeleton holds =n + 2k= pairs and the interleaved builder holds =3k=.
+Any skeleton win must therefore come from placement or less bookkeeping.
+The vector control holds =2k= pairs during tuple construction and adds a
+vector of =n= pointer slots. During drain, the result owns the acquired
+rows and all other rows remain rooted in the vector. The model does not
+establish GC cost from these counts. The staged native Suite checks result
+order and post-GC mutation, including adjacent rows and independent exports.
+The LeanPoo Guard passed. Native =gerbil build= compiled all three controls
+against the same frozen SDK and package prefix. Each native =gerbil test=
+semantic run confirmed the resolved module and passed both Cases, including
+unequal axes, grouped and multi-block fallback, malformed axes, and mutation
+after collection. Source and object hashes were rechecked after measurement.
+
+Each timed process validated every row at both widths before taking twelve
+collected-start samples per width. Each sample consumed 32 complete exports.
+Process order was forward, skeleton, vector, vector, skeleton, forward.
+
+| Width | Layout   | CPU medians (ms) | GC CPU medians (ms) | Median collections |
+|-------+----------+------------------+---------------------+--------------------|
+|   384 | Forward  | 117.476, 120.422 |  98.384, 101.917    | 5, 5               |
+|   384 | Skeleton | 133.960, 113.955 | 112.437,  95.901    | 5, 5               |
+|   384 | Vector   | 134.642, 128.824 | 108.039, 102.887    | 5, 5               |
+|   512 | Forward  | 231.909, 213.923 | 196.522, 180.103    | 8, 8               |
+|   512 | Skeleton | 257.411, 207.609 | 217.674, 174.114    | 8, 8               |
+|   512 | Vector   | 204.265, 208.259 | 159.287, 163.855    | 7, 7               |
+
+The full directory crosses Gambit =ea114fc3= =___MSECTION_BIGGEST= (255
+words). =lib/_kernel.scm= routes such =make-vector= allocations through
+=___alloc_scmobj=, and =lib/mem.c= allocates them as still objects. The vector
+experiment therefore changes both traversal locality and the allocation
+class. Its mixed-domain allocation-counter delta cannot be used as the
+cumulative size of all vectors allocated in a batch. A movable scratch
+directory would need at most 254 pointer slots with this Gambit build.
+
+The vector eliminated one median collection at width 512 in both processes,
+with wall medians of 208.355 and 208.104 ms. The increase in time outside GC
+was visible at both widths, and the vector regressed at width 384. The
+skeleton's change in time reversed across the process order. The original
+scenario batch overlapped the diagnostics, so these wall observations do not
+qualify admission P95. Neither control was selected for production. The native
+Suite evidence and input hashes are in =/private/tmp/ascent-private-spine.aebcm7iq/=.
+
+* Deferred stitching of complete outer-spine chunks
+
+An isolated constructor kept each completed left-axis chunk independent
+until all rows were allocated. A private directory stored each chunk's
+head and tail. Walking the directory in reverse linked only the private
+terminal cdrs to recover the exact left-major result. The general builder
+handled other shapes. Lean proved the stitch preserves the ordered
+product. The three native ordered-detachment Cases passed on the
+candidate, including the deliberately shared-tail negative control.
+
+Two consecutive native Test processes used the same compiled dependency
+prefix, default collector, 2 GiB heap cap and 90-second watchdog. Each
+process checked the dense-cycle oracle and measured twelve collected-start
+batches of 32 complete exports at both widths.
+
+| Vertices | Layout   | Median wall ms | Median GC wall ms | Median collections | Median counter bytes |
+|----------+----------+----------------+-------------------+--------------------+----------------------|
+|      384 | Forward  |        115.727 |            97.637 |                  5 |            679521776 |
+|      384 | Stitched |        120.433 |           100.087 |                  5 |            680698864 |
+|      512 | Forward  |        185.938 |           151.876 |                  7 |           1208004080 |
+|      512 | Stitched |        194.278 |           163.178 |                7.5 |           1209574384 |
+
+The counter deltas are 1,177,088 and 1,570,304 bytes. They match the
+modeled two directory pairs per chunk, less the forward builder's
+sentinel and box. Deferred linking kept all completed chunks reachable.
+At 512 the construction wall median outside GC decreased from 34.679 to
+31.100 ms, while the total and GC wall medians increased. This comparison
+does not qualify a tail or isolate the separate effects of the directory
+and the link topology. The candidate remains in the isolated overlay.
+Evidence: =.cache/ascent/yuanxu-v0.1.0/weighted-stitch/=.
+
+A third native process used the same directory and per-chunk pair
+construction, but linked a completed chunk to its predecessor immediately.
+Its three ordered-detachment Cases passed. Its counter medians exactly
+matched the deferred run at both widths. Wall and GC wall medians were
+115.548/95.083 ms at 384 and 190.458/160.232 ms at 512. Both variants
+had median collection counts of 5 and 7.5 at the two widths. At 512 the
+immediate variant recovered 3.820 ms of the deferred variant's wall
+median, while the ordinary forward builder remained faster. This controls
+for the directory's allocation charge. Different native processes still
+have separate heap histories. The immediate variant also stays in its
+overlay. Evidence: =.cache/ascent/yuanxu-v0.1.0/weighted-stitch-immediate/=.
+
+* Nonmoving terminal pair control
+
+Gambit's =##still-copy= accepts an ordinary one-cell list.
+The control copies one private terminal cell per binary row. It leaves
+the row's first cell and the output spine in the ordinary movable heap.
+The control uses normal pair tags and gives each result its own cells.
+The native Suite checked exact ordering at twelve widths, then mutated
+an output after GC and checked another output and a newly generated
+output across a second collection.
+
+The guarded Lean =terminalStillCharge_exceeds_movable= lemma models the
+word charge when the nonmoving object has six header words plus its two
+fields. Replacing one six-word semispace charge by one eight-word still
+charge adds sixteen bytes per row. This uses the still allocator layout
+in the inspected Gambit source. Deferred accounting and the lifetime of
+the separate still allocations affect the measured counter.
+
+The isolated =gerbil build= overlays used the same production C option.
+Each =gerbil test= process measured six collected-start batches of 32
+full exports per width with the default live ratio, 2 GiB cap and
+90-second watchdog. Both processes completed their Case and Harness
+checks and exited zero.
+
+| Vertices | Movable CPU / GC CPU median (ms) | Terminal still CPU / GC CPU median (ms) | GC count median, movable / still |
+|----------+----------------------------------+-----------------------------------------+---------------------------------|
+|      384 |                  125.250 / 105.969 |                       304.606 / 193.242 |                           5 / 6 |
+|      512 |                  199.982 / 163.695 |                       497.267 / 298.259 |                           7 / 8 |
+
+The runtime counter read lower for the still arm. The counter does not
+identify cumulative bytes allocated for that representation because still
+occupancy can be reclaimed or accounted for at collection boundaries.
+The increased GC and total CPU exclude this implementation from the
+production path. Evidence: =/private/tmp/ascent-terminal-still-pair.1Wdv73/=.
+
+* Current original weighted scenarios
+
+All seven original weighted scenarios passed from the current native
+production library and the provenance-checked compiled reference overlay.
+Each process finished the 20 CPU pairs, 20 admissions and five allocation
+pairs with exit zero, a passing receipt and native Case and Harness
+markers. The source digest inventory matched at the end.
+
+| Scenario | Admission P95 (ms) | Maximum (ms) |
+|----------+--------------------+--------------|
+| heavy    |            223.715 |      294.379 |
+| grouped  |            225.409 |      279.376 |
+| left-query |            0.300 |        0.400 |
+| right-query |           0.405 |        0.468 |
+| dense    |             92.248 |      112.509 |
+| sparse   |              3.372 |       29.117 |
+| small    |              0.082 |        0.128 |
+
+The separate strict scale gate still requires 100 admissions and the
+exclusive 100 ms threshold. Evidence:
+=/private/tmp/ascent-current-weighted-original.McEpy3/=.
+
+* Dense-cycle pair identity and order
+
+The separate native =uf-weighted-ordered-detachment-test= checks the actual
+384- and 512-vertex materialized lists from both compiled implementations.
+The first two births enter the roster as a single block, yielding the
+fixture axis =1, 0, 2, ..., n-1= after the count-only cycle merge. The
+oracle enumerates the Cartesian square directly in that order. The first
+version assumed numerical order and was refused at the first row on both
+widths. Lean =count_only_dense_cycle_axis= derives the axis from the native
+first-birth roster and singleton fold order.
+
+The test takes two exports of one captured view, collects, then marks the
+car of every outer cell and both row cells in the first export. Any later
+visit to a previously marked pair encounters a nonnumeric symbol. It checks
+the second export and a newly materialized third export against the same
+independent ordered oracle. A deliberate shared terminal pair passes the
+value-only check and fails the destructive check. The marking needs no
+per-row identity table. Lean =fresh_pair_visits_exact= proves equivalence
+between successful visits and pair identity disjointness for the modeled
+trace. The locked LeanPoo Guard and all three native Cases passed. This
+Suite is separate from the 100-pair performance intervals and contracts.
+
+#+begin_src sh
+timeout --kill-after=3s 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^uf-weighted-ordered-detachment-test$' benchmarks/uf-weighted-test.ss
+#+end_src
+
+Evidence: =/private/tmp/ascent-dependency-reads.HKmSAF/=.
+
+* Demand on an already frozen UF cut
+
+The clean Yuanxu v0.1.0 image ran 1,000 calls per demand and width through
+native =gerbil test=. Each width used one prebuilt indexed view. The
+point path used =gerbil-ascent-view-select= and the existing row-parts
+visitor, rotating through every diagonal key. The axis path checked
+every selected endpoint and cardinality. The full path materialized a
+detached Scheme list and checked its length on each call. There was no
+forced GC between calls. Both native Cases passed at the default GC
+policy, 2 GiB cap and 90-second watchdog.
+
+| Vertices | Point P95 (ms) | One axis P95 (ms) | Complete single export P95 (ms) | Rows per complete export |
+|----------+----------------+-------------------+--------------------------------+--------------------------|
+|      384 |          0.001 |             0.087 |                         22.918 |                  147456 |
+|      512 |          0.001 |             0.078 |                         25.658 |                  262144 |
+
+These warm measurements exclude initial closure, capture and index
+construction. The existing 32-export admission contract remains a
+separate gate. The POO graph study's million-owner sparse edit likewise
+measures the affected owner and two search buckets after preparation.
+It materializes no complete order. Its applicable design is
+affected-only index maintenance with explicit materialization.
+Evidence: =.cache/ascent/yuanxu-v0.1.0/weighted-demand.pKeMUd/=.
+
+* Outer-pair allocation order
+
+The C that Gambit generates for =materialize-rectangles= builds the
+two-cell tuple, allocates its outer cell, links the outer cell and then
+checks the heap. A separate native allocation primitive would not
+remove an intervening heap check in this loop.
+
+An isolated Scheme candidate allocated the outer cell first and filled
+its car before linking it. The Lean Guard checked
+=spine_first_row_publication=. All three native order and detachment
+Cases passed, including the destructive shared-pair negative control.
+The standard materializer's first 100-batch-per-width diagnostic
+reached the original 90-second deadline in the 512 Case.
+
+The shorter diagnostic used 20 batches of 32 exports at each width in
+each of four native Test processes, in standard, candidate, candidate,
+standard order. The default collector, 2 GiB cap and 90-second deadline
+applied. All eight Cases passed.
+
+| Width | Layout | Wall medians (ms) | GC wall medians (ms) | Median collections |
+|-------+--------+-------------------+----------------------+--------------------|
+|   384 | Standard | 413.413, 158.034 | 346.411, 132.966 | 5.5, 5.5 |
+|   384 | Outer first | 149.757, 133.224 | 126.759, 110.473 | 5, 5 |
+|   512 | Standard | 259.630, 249.093 | 214.046, 206.883 | 8, 8 |
+|   512 | Outer first | 258.490, 263.469 | 216.795, 218.646 | 9.5, 9.5 |
+
+The first standard 384 run differs substantially from the final control.
+At 512, both candidate processes collected more often and recorded
+higher GC wall medians. The candidate stays in its isolated overlay.
+Evidence: =.cache/ascent/yuanxu-v0.1.0/weighted-pair-placement.Vex0yA/=.
+
+* Demand at the production Result boundary
+
+Native =gerbil test= used the installed Yuanxu v0.1.0 image and the
+frozen SDK with the default collector, one Scheme VM, one engine worker,
+a 2 GiB cap and a 90-second watchdog. Each Case admitted the same cycle
+through =gerbil-ascent-evaluate-program= and checked the published
+cardinality. It rotated the bound key over every vertex in 1,000 point
+calls and 1,000 one-axis calls, checking the selected values and counts.
+The indexed control uses the same public visitor with a preindexed
+frozen view. It measures lookup after construction, without changing
+when the engine prepares routes for rule evaluation.
+
+| Width | Point P95 (ms) | Indexed point P95 (ms) | Axis P95 (ms) | Indexed axis P95 (ms) |
+|-------+----------------+------------------------+---------------+-----------------------|
+|   384 |          0.007 |                  0.002 |         0.154 |                 1.674 |
+|   512 |          0.007 |                  0.001 |         4.357 |                 2.879 |
+
+The point control isolates the frozen endpoint route. The axis arms
+each emit and check 384 or 512 row objects per call and their P95 order
+differs between runs. These observations do not establish a stable axis
+benefit or justify eager indexing at publication. Mutation in one
+public callback does not change a subsequent point result.
+
+The full-list arm uses =rows-of= on the same production Result.
+=program/view-state.ss= binds a promise that replays the injection
+journal into ordered products. =program/view-replay.ss= marks the
+reachability matrix to retain pre-injection exclusion and preserves the
+source and derived batch orders. The raw frozen-view collector uses
+descriptor order and serves as a traversal control. Both were measured for 100 calls
+after the selective workload. Both native Cases exited normally.
+
+| Width | Isolated journal capture (ms) | Raw full P50/P95 (ms) | Result full P50/P95 (ms) |
+|-------+-------------------------------+-----------------------+--------------------------|
+|   384 |                        23.238 | 0.761 / 202.572       | 3.716 / 201.239          |
+|   512 |                       443.681 | 1.876 / 261.941       | 15.441 / 251.468         |
+
+A separate 100-call diagnostic per arm records first-call and GC costs
+on the production Result. It runs the list arm before the signed-buffer
+arm, so the latter uses the same already-forced journal. It checks the
+buffer layout on each call and verifies exact order against the list
+after the measurements.
+
+| Width | First list wall / GC (ms) | List wall / GC P95 (ms) | Packed wall / GC P95 (ms) |
+|-------+---------------------------+-------------------------+---------------------------|
+|   384 | 123.551 / 0.000           | 123.551 / 115.222       | 68.392 / 0.000            |
+|   512 | 320.268 / 150.302         | 62.470 / 58.248         | 44.201 / 0.000            |
+
+The two diagnostics use different preceding workloads and expose
+different heap states. The isolated 512 journal-capture time is one
+observation, not a matched before/after effect. The data separate the
+cold journal reconstruction from the warm output and collector costs.
+The packed arm does not qualify the detached Scheme-list contract.
+The initial 1,000-call complete-export diagnostic produced no full-export
+receipt for the 512 Case within the watchdog window. The short
+diagnostics are separate from that attempt and from the unchanged
+32-export admission gate.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/production-demand.OKxTe0/=.
+
+* Bulk commit of a fresh target's predecessor column
+
+Ascent's incrementalization retains old and new facts separately so
+old-only work need not recur. Dusa's binarized premise processing makes
+bound keys available to select matching inputs. The local MiniDusa
+Racket =private/runtime.rkt:find-facts= is a scan reference. The
+experiment applies the same restriction of work to a private
+ordered-export replay, after the existing output budget is checked.
+It uses the Gerbil =subu16vector-move!= primitive, also used for
+the corresponding immutable copy in =table/uf-reach.ss=.
+
+If an existing source reaches a freshly allocated, distinct target,
+the old predecessor column of the source and the target's reflexive
+bit determine the entire new target column. There are no preexisting
+target successors. A copy is eligible in the capture-only lane when
+the predecessor volume exceeds its word cost. The ordinary writer
+still handles callbacks and enumerates the same output in the same
+order. Every predecessor other than the source already reaches a
+distinct root, so its outbound flag is already set.
+
+The LeanPoo Guard passed =WeightedExportCapacity.ReplayColumn=. The
+lemmas check the copied word plus reflexive bit, aligned addressing,
+disjoint column writes, outbound flags under the predecessor invariant,
+and the local store bound. The bound charges one store per copied
+16-bit word and one to restore the reflexive bit. It excludes row
+allocation, the initial reflexive store shared by both paths, root
+scans, and GC. On the increasing cycle prefixes the bound sums to
+9,275 versus 73,536 stores at 384 vertices, and 16,335 versus 130,816
+at 512 vertices. These are calculated counts, not collector observations.
+
+Two isolated versions were built through native =gerbil build=.
+Each measured 100 captures at each width in each of two interleaved
+baseline and candidate processes, at the default GC policy, 2 GiB
+and 90 seconds. Each process compared 1,000 ordered source, append
+and derived histories with the old ordered exporter. The unpadded
+version retains the existing bitmap size and uses the bulk operation
+only where the column is word aligned.
+
+| Layout | Width | Baseline capture P50 (ms) | Candidate capture P50 (ms) | Baseline P95 (ms) | Candidate P95 (ms) |
+|--------+-------+---------------------------+----------------------------+-------------------+--------------------|
+| Padded |   384 | 21.896, 21.482            | 16.712, 16.624             | 47.687, 39.066    | 34.527, 34.029     |
+| Padded |   512 | 39.119, 38.318            | 29.256, 29.309             | 73.436, 56.697    | 51.941, 47.755     |
+| Aligned |  384 | 21.856, 22.027            | 21.345, 15.922             | 43.640, 40.778    | 163.700, 35.452    |
+| Aligned |  512 | 39.086, 41.249            | 43.494, 27.988             | 82.394, 76.081    | 244.830, 51.868    |
+
+The padded variant passed the existing captured and integer journal
+Suites. The aligned variant also passed the UF reuse Suite, for
+20 Cases across the three Suites. The existing captured-journal
+benchmark completed 100 full pairs at each width on the baseline and
+padded candidate and checked ordinary and typed output order. At 512,
+its cold export was 79.393 versus 74.485 ms (one observation per arm).
+Ordinary replay wall median was 45.86 versus 50.30 ms. The aligned
+variant showed a capture-tail regression in one of its two runs.
+Both versions remain isolated. The default-collector 32-export
+admission gate and full matrix remain open.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/replay-column.Vr9IzL/=.
+
+* Retain ordered source products during UF commit
+
+An isolated production-path experiment feeds the existing UF
+admission's ordered rectangles into the source storage owner. The
+capture lane factors a fresh endpoint's complete product, keeping
+the ordinary count traversal's birth order and borrowing singleton
+component member spines. It installs an exporter only after successful
+batch admission. The exporter closes over immutable blocks, owns no
+UF nodes, and uses the native rectangle materializer for each read.
+The implementation retains the existing ordered replay when the
+logical descriptor/axis cap is exhausted. Appends and derived rounds
+still use the existing journal route.
+
+The LeanPoo Guard passed =OrderedExportGraph.Publication=. The added
+laws show that reversing the private batch spine preserves the
+concatenated order of the original injections, and that factoring a
+shared target preserves exact rows and reduces logical descriptor and
+axis units. The proof assumes the admitted member order and does
+not identify logical units with measured heap bytes.
+
+The native candidate passed 1,000 mixed histories against the old
+ordered exporter, destructive mutation of a held result, failed
+append with an unchanged held result, successful append, replacement,
+and the nine original UF reuse Cases. The initial diagnostic had a
+budgeted failure and a success on the same Session; both baseline and
+candidate correctly required recovery. The corrected control uses a
+separate limited Session for the failing append and preserves the
+earlier logs.
+
+An isolated capacity probe charged 149,756 units at width 384. At
+width 512 it charged 133,374 units before the last injection and
+265,212 after it, exceeding the existing 262,144-unit cap. Both
+probes independently checked the exact full cardinality and the
+owner's retain/refuse decision. The 512 cold result still uses
+replay. The next candidate needs an ordered compact representation
+for that closing frontier, such as the existing terminal mask with
+immutable pre-merge axes. Increasing the cap would hide this refusal.
+
+The first broad diagnostic completed 100 results at width 384 for
+both arms, but both 512 Cases ended without complete observations.
+A separate collected-start diagnostic measured 100 production
+results at each width. Collections before each sample are outside
+the timed interval. The baseline did not complete width 512 within
+the watchdog window. This diagnostic does not establish a matched
+wall-time effect at that width or qualify the 32-export gate.
+
+| Width | Arm | First export P50/P95 (ms) | Solve plus export P50/P95 (ms) |
+|-------+-----+---------------------------+--------------------------------|
+|   384 | Baseline | 122.535 / 422.670     | 195.755 / 610.186              |
+|   384 | Candidate | 0.735 / 1.556       | 21.570 / 67.783                |
+|   512 | Candidate with replay fallback | 91.153 / 359.347 | 164.412 / 533.583 |
+
+The 384 result confirms that the first-read export follows the
+retained descriptor path. The total wall result is sensitive to the
+preceding workload and cannot justify promotion. The runtime
+candidate remains in an isolated overlay.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/commit-frontiers.Porw1S/=.
+
+* Share the closing frontier's ordered target axis
+
+The complete cycle's closing injection originally retained a separate
+target list for each source. Inspection of the actual 512-vertex
+frontier showed growing prefixes of one birth-ordered target axis.
+The revised isolated capture checks that all preceding occupied words
+are fully selected and the last selected word contains the lowest
+eligible target bits. Sparse roots check the equivalent ordered
+prefix directly. Empty words between birth IDs are allowed. The
+source matching the first target omits its already admitted reflexive
+row. Any nonprefix selection keeps ordinary rectangle capture.
+
+The exporter owns one target vector and alternating source/stop
+slots. It sends each slice through the same invocation-owned standard
+list builder used by the rectangle collector. No mutable reach table
+or UF node escapes into the descriptor. Lean Guard passed
+=share_prefix_rows=, =join_prefix_words=,
+=prefix_without_reflexive_head= and =cycle512_prefix_fits=. The
+native capacity and full-order check verifies the admissible branches
+on the actual frozen image, including mutation of a returned list.
+
+| Width | Previous logical units | Shared-prefix logical units | Existing cap | Retains ordered cut |
+|-------+------------------------+-----------------------------+--------------+---------------------|
+|   384 |                  149756 |                       76605 |       262144 | yes                 |
+|   512 |                  265212 |                      134909 |       262144 | yes                 |
+
+The 512 closing descriptor costs 1,535 units. The first prototype
+declined the 512 cut, because the first target's reflexive slot was
+treated as an ordinary hole in the prefix. That failing native
+assertion is retained even though the command exited zero.
+
+The default-collector production Result diagnostic used one native
+Test process per arm and width, serially. Each process checked the
+exact ordered first export against the reference for every one of
+100 complete solves. No forced collection preceded the samples.
+
+| Width | Arm | Solve P95 ms | First export P50/P95 ms | Solve plus export P95 / max ms | GC wall P95 ms | Native exit |
+|-------+-----+--------------+--------------------------+--------------------------------+----------------+-------------|
+|   384 | Baseline  |  42.352 | 45.374 / 208.139         | 235.616 / 383.992              |         81.034 |           0 |
+|   384 | Candidate |  57.289 | 0.676 / 41.522           | 63.112 / 86.235                |         42.527 |           0 |
+|   512 | Baseline  | 353.284 | 332.559 / 703.291        | 900.997 / 2550.508             |        295.829 |         124 |
+|   512 | Candidate | 480.804 | 8.198 / 442.918          | 802.632 / 1339.151             |        435.260 |           0 |
+
+The 512 baseline printed all 100 sample statistics and the Harness
+verdict, then exceeded the watchdog. The candidate completes but
+shifts preparation into solve and retains a substantial collector
+tail. The phase P95 values come from separate sample distributions
+and must not be added or subtracted as if they were paired intervals.
+The measured 512 tail prevents promotion.
+
+The original strict weighted tests were run serially with the same
+2 GiB cap, default GC and 90-second watchdog. Heavy reached 40/100
+CPU pairs and large reached 46/100. Both exited 124 before producing
+admission receipts. The strict fixture uses count-only insertion,
+then freezes and materializes the provider view directly, so it does
+not consume the new ordered source exporter. The production-path
+gain and the batch materialization failure remain separate findings.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/commit-prefix.tQXYUJ/=.
+
+* Share the birth directory across admitted predecessor prefixes
+
+The closing-frontier candidate still constructs a predecessor list for
+each new sink along a chain. The new isolated storage owner reserves
+one private binary birth vector and charges its full capacity before
+retaining descriptors. Each accepted birth assigns one slot after fact
+budget preflight. When the source is an existing singleton, its fresh
+sink has exactly one new self row. The capture can share the old
+birth prefix if the admitted count says every previous singleton is
+a predecessor. Other cases retain their existing rectangle capture.
+The writer reads only the stored exclusive bound. Later births use
+disjoint slots. The owner publishes the exporter after successful
+batch admission.
+
+The guarded Lean model verifies that an ordered filter of full
+cardinality is the original roster, that appending births preserves
+earlier prefixes, and that the resulting rows have the exact product
+order. =cycle_birth_directory_cost= counts the shared directory,
+bounded descriptors, first product, singleton births and closing
+descriptor. It does not derive cumulative allocator bytes from those
+units.
+
+| Width | Closing-only units | Both axes shared | Old capacity limit |
+|-------+--------------------+------------------+--------------------|
+|   384 |              76605 |             4602 |             262144 |
+|   512 |             134909 |             6138 |             262144 |
+
+Native =gerbil build= compiled the isolated change. The native
+ordered-capacity Cases checked exact counts against the model,
+complete ordered equality against the frozen exporter, and destructive
+mutation isolation at both widths. The first diagnostic used an
+incorrect speculative unit bound and failed both capacity assertions.
+Its log remains alongside the exact-model assertion. The candidate
+also passed the original nine UF reuse Cases and the production
+1,000-history and held-result lifecycle Cases in that diagnostic.
+
+Four serial native processes interleaved the previous closing-only
+implementation and the shared predecessor candidate. Each performed
+100 complete solves and first exports at width 512, comparing every
+result with the frozen ordered reference. Every Case and Harness
+completed naturally under the 2 GiB cap, default collector and
+90-second watchdog.
+
+| Run | Solve P95 ms | First export P95 ms | Solve and export P95 ms | Solve counter median bytes | Negative samples |
+|-----+--------------+---------------------+-------------------------+----------------------------+------------------|
+| Previous 1 | 523.958 | 394.558 | 717.414 | 15447688 | 0 |
+| Shared 1   | 350.981 | 442.621 | 588.535 |  9159720 | 1 |
+| Shared 2   | 399.297 | 369.270 | 487.482 |  9159720 | 1 |
+| Previous 2 | 147.482 | 123.684 | 209.601 | 15448072 | 0 |
+
+The repeated capacity result establishes a structural reduction. The
+raw allocator median differs by about 6.29 MB, but both shared runs
+contain one invalid negative delta. The median cannot qualify the
+allocation gate or be treated as cumulative physical bytes.
+The final previous run also has a substantially lower tail than
+both candidate runs. These observations do not support promotion.
+The original provider-only 32-export gate does not use either
+ordered-source implementation.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/commit-birth-axis.a1SRil/=.
+
+* Commit a recognized source cycle directly
+
+An isolated provider candidate recognizes a fresh binary source batch
+of two to 512 distinct fixnum vertices, with consecutive edges in
+walk order and a final edge to the first vertex. It checks each source
+occurrence, charges exactly the successive triangle sizes and the
+final square, and commits the final UF component only after admission.
+It calls the existing merge routine to preserve the winning root and
+member order. A private vertex vector supplies the ordered triangles
+for ordinary list export. Other graph shapes take the normal path.
+
+Lean Guard passed the =OrderedExportGraph.Publication.SimpleCycle=
+lemmas. The upper triangle grows by one disjoint column on each
+birth. Closing the cycle adds the complementary lower triangle. The
+proof checks the cumulative budget recurrence and the 73,536 and
+130,816 transient nonreflexive forward arcs that the old insertion
+path installs before collapsing the component. Source correspondence
+for the writer order is checked by the native reference tests.
+
+Native =gerbil build= and =gerbil test= passed the exact cycle contract.
+Eleven widths with reordered scalar labels agreed with per-edge UF
+admission on the frozen provider view, ordered journal rows and
+subsequent append frontier. Held outputs were mutated and re-read.
+For five smaller widths every integer budget from zero through the
+complete square agreed on accepted count and on the last source
+occurrence visited before failure. Open, repeated and disconnected
+negative inputs did not select the specialization.
+
+Each sequential production Result process checked all 100 complete
+results against the same frozen ordered reference. The controls used
+the prior shared-axis candidate and the same default GC policy,
+2 GiB cap and 90-second deadline. All four completed naturally.
+
+| Width | Arm | Solve P50/P95 ms | First export P50/P95 ms | Total P50/P95 ms | Total max ms |
+|-------+-----+------------------+-------------------------+------------------+--------------|
+|   384 | Shared axis | 107.043 / 324.995 | 1.216 / 235.503 | 120.190 / 389.334 | 547.612 |
+|   384 | Direct cycle | 1.023 / 32.403 | 1.268 / 334.367 | 2.847 / 335.249 | 783.578 |
+|   512 | Shared axis | 207.486 / 392.490 | 3.133 / 316.536 | 244.577 / 564.599 | 770.208 |
+|   512 | Direct cycle | 1.145 / 46.570 | 1.193 / 368.256 | 3.899 / 369.402 | 455.948 |
+
+The direct commit removes intermediate adjacency construction and
+reduces solve time. At both widths, first-list export still has a
+long collector tail. The 512 allocation counter had one negative
+delta in each arm. Its medians are retained as diagnostic evidence
+only. This is a source-admission specialization, so the strict
+provider fixture's count-only insertion and 32-export materializer
+still need independent qualification.
+
+The additional lifecycle, original UF reuse, Actor and bounded
+positive-provenance run printed 41 passing Cases and its Harness
+verdict. The command still returned 124 at the original watchdog,
+so it is retained as incomplete process acceptance.
+
+The unchanged strict tests used the default collector, 2 GiB cap and
+90-second watchdog. The 384 arm terminated at 21/100 CPU pairs with
+exit 137; the 512 arm terminated at 15/100 pairs with exit 124.
+Neither reached admission or generated a qualifying P95 receipt.
+The candidate remains in the isolated overlay.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/commit-simple-cycle.7Ml9zA/=.
+
+* Reuse the fresh outer spine in the initial delta
+
+=program/view-state.ss:initial-delta= runs only on the private
+source-cut exporter. Both its captured-product and journal-replay
+branches return fresh mutable list cells for every call. The initial
+delta needs reverse chronological order for the evaluator. It now
+uses STD =reverse!= on that fresh outer spine. Neither row cells nor
+the cut's retained axes are written. Publication, admission and
+frontier selection follow the same paths.
+
+The guarded Lean =initial_delta_spine= theorem checks that reversing
+the modeled cells preserves the row projection and permutes the
+same outer identities. For a binary relation, copying the spine
+requires four allocated cells per row across the two operations.
+Relinking requires the original three. The model charges allocations,
+independently of how long the collector retains either representation.
+
+Native =gerbil build= compiled two overlays that differ only in the
+initial delta's use of =reverse= or =reverse!=. Native =gerbil test=
+ran in old, current, current, old order. Each of the eight Cases
+checked ordered equality and mutation isolation, then measured 12
+collected-start batches of 32 complete initial delta exports. Both
+widths retained the default collector, 2 GiB cap and 90-second watchdog.
+
+| Width | Old/current single-export allocation counter bytes | Old/current median collections per batch | Old/current batch wall medians ms |
+|-------+----------------------------------------------------+-----------------------------------------+-----------------------------------|
+|   384 | 28348592 / 21270704 | 4, 4 / 3, 3 | 534.797, 194.558 / 242.023, 199.230 |
+|   512 | 50380976 / 37798064 | 7, 7 / 6, 6 | 550.032, 426.693 / 466.986, 473.733 |
+
+The allocation measurements agree across both repetitions per arm.
+The saved 7,077,888 and 12,582,912 charged bytes equal one 48-byte
+semispace pair charge for each of the 147,456 and 262,144 rows.
+The final baseline wall median is lower than both candidate wall
+medians at each width. The comparison establishes the reduced
+allocation and observed collection count. It does not establish
+a wall-latency gain or qualify the strict complete export gate.
+That gate exercises the provider's ordinary frozen view exporter,
+which does not call the initial delta helper.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/delta-spine.ND0HJ8/=. The initial
+overlay build required executable mode and the relative replay import
+source. Both failed build logs are retained. The Justfile's Lean
+preparation hit a GitHub DNS error. The check used the same Guard and
+the already installed pinned dependency.
+
+* Skip the terminal walk when capture declines output
+
+The terminal journal insertion checks the fact budget and hands
+the pre-insertion reachability mask to the capture sink. The
+sink returns no row writer. The former terminal traversal still
+tested every candidate component pair, although it emitted no
+rows and performed no matrix writes. The new branch skips that
+walk. Nonterminal replay still marks reachability even if no
+rows are requested. Terminal replay with an actual writer still
+visits the same rows in the same order.
+
+Lean Guard passed =TerminalReplay.declined_terminal_writer=.
+The native candidate passed 53 Cases covering exact source and
+derived order, unaligned bitmap widths, sparse right axes,
+mutation isolation, resource refusal, Actor cancellation, and
+provenance. An isolated native =gerbil test= comparison alternated
+old, candidate, candidate, old under Gambit's default collector,
+the 2 GiB cap and the 90-second watchdog. Each process completed
+12 captures per width and checked exact ordered list output
+against the frozen reference before measurement.
+
+| Width | Old capture CPU medians ms | Candidate capture CPU medians ms | Old capture wall medians ms | Candidate capture wall medians ms |
+|-------+----------------------------+----------------------------------+-----------------------------+-----------------------------------|
+|   384 | 35.720, 32.196             | 20.422, 19.583                   | 102.887, 77.447             | 42.809, 40.905                    |
+|   512 | 57.815, 61.776             | 38.496, 38.610                   | 179.000, 136.174            | 116.131, 93.386                   |
+
+The median GC count was zero in every capture arm. A separate
+control enumerated retained terminal masks by 16-bit words, using
+Gambit fixnum primitives on homogeneous vectors and Gerbil's
+standard traversal functions. Lean checked interval clipping,
+ordered concatenation and address decoding. Its full-list wall
+results did not show a stable benefit, and both 384 candidate CPU
+medians exceeded both baselines. The word control stays in the
+isolated overlay. The retained capture improvement does not alter
+the provider materializer or its strict 32-export workload.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/terminal-word.YYghUk/=.
+
+* Packed axis for the detached square materializer
+
+The isolated candidate recognizes one binary rectangle whose two
+axes are the same proper list. It checks 128 through 512 fixnum
+coordinates and their unsigned 16-bit range. Gambit's existing
+=list->u16vector= packs that axis once. Two backwards cursors
+prepend three fresh pairs per row, eliminating the forward
+builder's tail updates and the preceding control's copied pair
+axis. Other shapes use the existing standard list builder.
+
+Lean Guard passed =packed_axis_order_exact= and
+=packed_axis_payload_smaller=. The first lemma assumes exact
+coordinate encoding and relates the cursor order to the existing
+ordered product. The second charges two bytes per axis element
+plus its header, against one pair per element for a reversed list.
+The full detached output still has three allocated pairs per row.
+
+Two native builds used the same Gerbil and Gambit release package.
+All three original order and detachment Cases passed on the
+candidate, including the shared-tail negative control. Four
+serial native =gerbil test= processes ran forward, packed, packed,
+forward. Each completed 20 batches of 32 full list exports per
+width at the default live ratio, 2 GiB cap and 90-second watchdog.
+Every process exited normally and the artifact hashes matched.
+
+| Width | Layout | Wall P95 ms | Process CPU median ms | GC CPU median ms | Median collections |
+|-------+--------+-------------+-----------------------+------------------+--------------------|
+|   384 | Forward | 1403.398, 1213.906 | 177.505, 184.490 | 152.091, 157.802 | 6, 6 |
+|   384 | Packed | 1224.040, 1450.937 | 169.914, 183.321 | 146.655, 155.169 | 5.5, 5.5 |
+|   512 | Forward | 1176.139, 4554.979 | 252.706, 317.321 | 212.602, 266.461 | 8, 8 |
+|   512 | Packed | 2595.220, 2198.101 | 279.424, 291.953 | 240.148, 250.234 | 8, 8 |
+
+At 512 vertices the packed axis leaves the median collection
+count at eight. CPU and wall improvements do not reproduce
+across both forward runs. In particular, changing the small axis
+representation and removing tail writes still leaves more than
+240 ms of median collector CPU in both packed runs. The candidate
+stays in the isolated overlay. These 20-batch diagnostics do not
+qualify either original 100-pair gate. The first Lean proof attempt
+failed on a rewrite and is retained beside the corrected receipt.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/packed-axis-export.94kUjC/=.
+
+* Commit ordered journal reachability by live component
+
+Ascent's semi-naive evaluation separates existing facts from the
+frontier. Dusa section 7.1 counts prefix firings with an explicit map
+cost. The local MiniDusa =private/runtime.rkt:find-facts= instead
+filters the fact database for a grounded premise. At ASCENT's ordered
+journal boundary, the analogous avoidable work was writing the same
+reachability decision for every member pair of a newly reachable
+component pair. The journal still admits and emits the exact original
+row frontier.
+
+=program/view-replay.ss= uses the live representative's original ID
+for bitmap reads and writes. The member list continues to own emission
+order, including when its first element is a retired ID. The merge
+uses the existing winner and runs after the frontier is committed.
+No member traversal occurs in the bitmap update when the consumer
+declines rows. The terminal mask records the representative separately
+from its ordered member spine.
+
+Lean Guard checked =ReplayRepresentative.extend_transitive=, =extend_least=,
+=mutual_reach_has_same_neighborhood=,
+=merge_preserves_representative_reads=, and the store count for
+nonempty components. The model assumes a transitive old cut and models
+the complete predecessor-by-successor frontier. Source correspondence
+was checked against the frozen native exporter, including 1,000
+relabeled histories with successive component merges, later edges,
+ordinary and typed exports, and mutation of returned rows. Both
+isolated builds passed all 13 native Cases, including the count budget
+and capacity refusal controls.
+
+Separate instrumented builds counted actual calls to =mark!= during
+ordered capture. Every row was compared in order with the reference.
+Both =gerbil test= processes used the default Gambit collector, a
+2 GiB heap cap, and a 90-second watchdog.
+
+| Shape | Vertices | Baseline stores | Representative stores |
+|-------+----------+-----------------+-----------------------|
+| Simple directed cycle | 384 | 73920 | 73920 |
+| Simple directed cycle | 512 | 131328 | 131328 |
+| Cycle of four-member components | 384 | 74496 | 6096 |
+| Cycle of four-member components | 512 | 132096 | 10176 |
+
+Uninstrumented capture-only controls ran 100 samples per width in four
+serial native processes, in baseline, candidate, candidate, baseline
+order. Wall P95 for the cycle of components was 15.650 and 48.530 ms
+on the baseline versus 51.097 and 81.295 ms on the candidate at 384.
+At 512 it was 51.047 and 46.348 ms versus 80.131 and 39.434 ms.
+GC wall P95 was zero in all these capture controls. The reduced stores
+are reproducible by operation count. The capture timing does not
+establish a tail improvement. The optimization is retained for the
+measured reduction in component-pair work, with the ordered-history Case
+in the production test suite.
+
+A second matched series recorded process CPU as well as wall time.
+Each native process measured 100 captures per shape and width.
+All four processes completed normally.
+
+| Shape | Vertices | Baseline CPU medians (ms) | Representative CPU medians (ms) |
+|-------+----------+---------------------------+---------------------------------|
+| Simple directed cycle | 384 | 20.078, 18.899 | 15.983, 20.030 |
+| Simple directed cycle | 512 | 31.707, 33.930 | 27.573, 32.571 |
+| Cycle of four-member components | 384 | 10.595, 9.801 | 6.017, 7.790 |
+| Cycle of four-member components | 512 | 15.050, 16.322 | 9.498, 11.508 |
+
+Both component-cycle candidate CPU medians were below both baseline
+medians at each width. Simple-cycle CPU medians overlapped at both
+widths. Capture-only wall tails varied across processes.
+
+The strict provider fixture calls =trrel-uf-freeze= and
+=materialize-rectangles= directly on an already solved relation. It
+does not enter journal replay. The simple-cycle counts also show no
+store saving before its final merge. All three detached pairs per
+ordinary exported row and the default collector cost remain charged
+by the original strict gate.
+
+The latest strict default-collector run used the existing compiled provider and
+frozen reference prefix. With the 2 GiB cap and 90-second watchdog, the 384
+case ended with exit 137 at 26/100 CPU pairs, and the 512 case ended with
+exit 124 at 18/100 pairs. Their candidate CPU medians were 176.615 and
+291.953 ms over those completed pairs, with median GC counts of five and
+seven. Neither process reached the admission lane or wrote a P95 receipt.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/replay-representative.iVVHnB/=.
+
+* Tail cursor and reverse-spine allocation
+
+Two isolated materializers specialize a single nonempty binary rectangle with
+the same proper list on both axes. The tail-cursor version allocates the first
+row and passes the tail cell in its loop arguments. The prepend version
+traverses the same axes forward, links each new outer cell to the accumulated
+spine, then reverses that private spine using Gambit's =reverse!=. Other
+shapes use the original STD builder. The first variant targets the mutable
+cursor box. The second tests whether following the newest-to-oldest cdr
+chain reduces collection costs enough to pay for reversing the spine.
+
+The LeanPoo Guard checked =reverse_collector_exact= and
+=register_cursor_payload=. Both variants retain the three fresh pairs per
+row. The constructor ledger removes 80 accounting bytes per export for the
+builder sentinel and cursor box. The lemma excludes stack and collector
+traffic. Both compiled variants passed all three native order and
+detachment Cases, including the shared terminal pair negative control.
+
+Native =gerbil build= compiled the three geometry overlays with the
+production C options. The native Test diagnostics used the original
+=ui-consume= and dense-cycle oracle. The twelve serial processes alternated
+widths in the order forward, cursor, prepend, prepend, cursor, forward.
+Each width and process completed 12 natural batches of 32 full exports
+under the default Gambit collector, 2 GiB cap and 90-second watchdog.
+
+| Width | Layout | CPU medians ms | GC CPU medians ms | Outside-GC CPU medians ms | Median GC count |
+|-------+--------+----------------+-------------------+---------------------------+-----------------|
+| 384 | STD builder | 174.041, 177.653 | 148.210, 150.174 | 24.630, 26.200 | 5.5 |
+| 384 | Tail cursor | 149.200, 193.018 | 129.389, 166.789 | 20.270, 25.283 | 5.5 |
+| 384 | Prepend then reverse | 194.832, 194.509 | 160.676, 161.717 | 36.932, 33.674 | 5.5 |
+| 512 | STD builder | 282.507, 329.702 | 240.905, 277.877 | 43.522, 53.050 | 8 |
+| 512 | Tail cursor | 318.179, 308.974 | 270.328, 260.814 | 43.736, 47.984 | 8 |
+| 512 | Prepend then reverse | 326.351, 341.776 | 258.929, 269.891 | 62.599, 69.596 | 8 |
+
+The tail cursor improved some samples, with overlap against the STD
+builder at both widths. The prepend variant increased outside-GC CPU in
+both runs and did not lower collection count. Its 512-vertex maximum
+wall interval reached 2,237.122 ms. The production materializer continues
+using the STD builder. Both candidate sources, native products, logs,
+and the Guard receipt are preserved in
+=.cache/ascent/yuanxu-v0.1.0/weighted-cursor.2LRBmR/=.
+
+* Pair-first rectangle cursor control
+
+The existing rectangle loop tests for an empty cursor before
+testing for a pair. An isolated candidate reverses those two
+tests in both axes, retaining the same pair, empty and malformed
+branches. It uses the existing STD list builder and allocates
+the same three cells for every binary row. The source change
+has no new preflight traversal or mutable state.
+
+=pair_first_preserves_cursor_action= checks the three-way cursor
+decision. =pair_first_product_tag_tests= counts source-level tag
+tests on proper axes. For a nonempty product of R rows the
+reordered tests avoid R-1 checks per export. The compiler can
+combine branches, so this count does not price machine instructions
+or collector work.
+
+Native =gerbil build= compiled the candidate geometry module
+with the existing C option. Native =gerbil test= passed all three
+ordered-detachment Cases, including the shared terminal-pair
+negative control. A separate native Case verified that the installed
+loader actually selected the new =rectangle-geometry~0.o2= object
+in the candidate prefix. The existing phase fixture then ran 12 batches
+of 32 complete exports in each of eight serial processes. For
+each width the order was original, pair-first, pair-first,
+original. Every batch returned the expected dense-cycle
+cardinality. All eight Cases, Modules, Harnesses and processes
+completed naturally with the default collector, 2 GiB cap, and
+90-second deadline. The recorded source and native inputs
+matched after the experiment.
+
+| Vertices | Layout | Outside-GC CPU median (ms) | GC CPU median (ms) | Median collections |
+|----------+--------+----------------------------+--------------------+--------------------|
+| 384 | Original | 18.196, 21.085 | 108.952, 124.381 | 5.5, 5.5 |
+| 384 | Pair first | 18.989, 19.547 | 108.341, 114.316 | 5.5, 5.5 |
+| 512 | Original | 32.982, 38.786 | 183.411, 206.926 | 8, 8 |
+| 512 | Pair first | 33.877, 40.094 | 184.229, 206.643 | 8, 8 |
+
+The candidate did not reproduce a CPU saving at either width.
+At 512 its outside-GC CPU exceeded the corresponding original
+observations and the collection count held at eight. This rejects
+the cursor change as a complete-export candidate. The production
+builder keeps its current cursor order. The isolated source,
+build, object disassemblies and native receipts are in
+=.cache/ascent/yuanxu-v0.1.0/rectangle-pair-first.RSDNDM/=.
+The focused Lean model and all 185 Lean jobs passed under the
+locked LeanPoo Guard.
+
+* First-read capture for a complete source cycle
+
+The published cut already owns the source journal and the admitted
+cardinality. For one source event, check the standard bounded list
+length, a closed walk of distinct fixnums, and agreement between
+the square of the width and the admitted row count. The retained
+cut owns one vector of endpoints in walk order. Other event histories
+and refused shapes use the existing captured-product path. Selection,
+rule execution, admission and provenance continue to use their
+original sources and data structures.
+
+For the admitted path the first read no longer reconstructs a private
+reachability matrix. =SimpleCycle.cold_cycle_skips_private_matrix=
+counts the former open-prefix stores, including the reflexive births.
+At widths 384 and 512 that is 73,920 and 131,328 stores, respectively.
+The special capture performs at most 512 endpoint insertions and
+retains no hash table. Both result formats use one traversal of the
+birth and closing frontiers. Lean checks the least reflexive transitive
+closure, uniqueness and square cardinality in traversal ranks. The
+Scheme writer allocates detached
+rows with =std/list/list-builder=. The numeric writer allocates its
+usual fresh signed buffer and checks the final write position.
+
+The locked LeanPoo Guard accepted the model. Native =gerbil build=
+and =gerbil test= accepted the source cut and all ten focused Cases,
+including exact row order against the frozen journal reference, both
+large widths, mutation isolation, refusal, and a complete same-generation
+=source-run= reply. The native tests supply the correspondence between
+the reference's ordered rows and the specialized traversal. A separate
+native comparison measures the first published read across 100 fresh
+sessions per width and arm, with the default collector, 2 GiB ceiling,
+and 90-second watchdog. Each timed request returns the complete ordinary
+Scheme row list after a separate solve with no row query. The observer
+keeps one prior full list per process for exact order checks outside the
+timed interval. Both arms completed naturally with native Test markers.
+
+| Vertices | Previous median / P95 / max (ms) | Candidate median / P95 / max (ms) | Previous / candidate median CPU (ms) |
+|----------+----------------------------------+-----------------------------------+--------------------------------------|
+|      384 |           27.120/102.864/163.747 |              10.527/73.494/243.066 |                        25.088/9.372 |
+|      512 |           47.796/152.951/250.235 |               12.631/60.603/80.157 |                       43.894/12.617 |
+
+The 384 maximum increased. At that candidate observation (ordinal 57),
+225.474 ms fell inside the collector wall interval and total CPU was
+63.546 ms. The time counters do not identify why elapsed time exceeded
+CPU time. The two arms ran serially in separate processes. This
+comparison establishes the first-read observation for those sessions,
+including their allocation and collector costs.
+The strict UF provider fixture still times 32 materialized lists from
+its own unindexed snapshot. It does not traverse the journal writer.
+
+The source-cycle overlay and frozen product prefix also completed 47
+native Cases across capture, integer journal, result projection, row
+transfer, Actor session, datum budget and positive provenance suites.
+The process exited zero with the native Harness verdict. This focused
+semantic run uses the original 180-second deadline and 2 GiB ceiling.
+It covers existing cancellation, budget and proof checks at those
+entry points. The full Scheme inventory and source-level refinement
+remain separate.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/source-cycle-export.M57Ixg/=.
+
+** Ordered reference replay in Lean
+
+The reference uses =insert-components!= to prepend new roots, emit
+reflexive births, and visit missing pairs with =write-sources!= and
+=write-targets!=. For the admitted source cycle all roots are singletons
+until the last injection. =replayRoots= represents the prepends and
+=replayCollect= represents the selected reverse traversal. =replayFrontier=
+emits births and then the left-major missing pairs. Its bitmap predicate
+represents the mask just before emission. Updates to one singleton pair
+have no effect on a different visited pair.
+
+=source_cycle_open_mask= proves that first births and subsequent columns
+give the chain mask used by the last injection. =initial_replay_order=,
+=open_replay_order=, and =closing_replay_order= derive the exact ordered
+frontiers from the reference's axes and mask. =source_cycle_order= proves
+equality to the concatenated sequence emitted by =visit-captured-cycle=
+for every width at least two in the rank model. The comparison is list
+equality. The checked =sorted_roster_changes_closing_order= control
+detects an alternative that keeps the same rows but changes their order.
+
+Native =gerbil test= on the existing compiled cycle candidate and
+frozen reference passed all nine capture Cases, including exact list
+and signed-buffer order at 384 and 512 vertices and mutation of input
+and returned results. It used the original 2 GiB ceiling and 90-second
+watchdog. Source and product identities are recorded in
+=order-replay-inputs.sha256= and verdicts in =order-replay-native.log=
+in the evidence directory above.
+
+The ordered model assumes a single admitted source cycle and singleton
+roots through the closing edge. Its links to the Scheme functions are
+by source inspection and native comparison. A mechanized refinement
+of the recognizer, mutable mask, budgets, cancellation and provenance
+remains open. This result applies to the published first read. The
+strict prepared provider fixture uses another materializer.
+
+** Commit the closed cycle in native source initialization
+
+The current source initializer now selects direct commit only for a
+fresh built-in binary UF source with no user field checker. The source
+initializer and ordered journal share =gerbil-ascent-trrel-uf-cycle-vertices=.
+It checks at most 512 edges, their fixnum labels, adjacency in input
+order, distinctness, and closure back to the first label. Unrecognized
+inputs use the original per-edge insertion and duplicate handling.
+
+The initializer retains each source occurrence check before that
+occurrence's output-budget check. It charges the initial three rows,
+each open column, and the final square against the prior materialized
+count. =source_cycle_absolute_charge= checks the absolute comparison;
+the existing =first_prefix_charge=, =open_prefix_charge= and
+=closed_prefix_charge= check the cumulative charges. Successful commit
+builds the same singleton birth roster and calls the existing
+=merge-cycle!= for winner selection, member order and parent ownership.
+=source_cycle_merge_members= checks the member order under the singleton
+roster and first-winner tie rule: prepend each loser's member to the
+winner's initial list, yielding the same ordered axis as edge replay.
+This result assumes the admitted roster and does not refine the native
+parent writes, hash-table publication or refusal trace.
+The original journal still owns result order and provenance inputs.
+The direct path skips 73,536 and 130,816 transient forward arcs at
+384 and 512 vertices, respectively.
+
+Native =gerbil build= compiled the four affected modules. Native
+=gerbil test= passed 28 Cases across UF admission, captured journal and
+positive provenance. The added control compares every budget through
+the square for widths 2, 3, 4, 7 and 12, with a nonzero prior charge.
+It compares refusal position, frozen order, the next insertion frontier,
+and the held result after insertion. Larger controls include the 64/65
+index boundary and both benchmark widths. The first invocation lacked
+a historical fixture import. Both that log and the complete run are
+retained. The locked Lean Guard accepted the focused model.
+
+The native production API diagnostic times =owner-program=, the first
+=source-run= with no queries, and the following complete-list read
+separately, for 100 fresh sessions per arm. Both arms include the
+existing first-read specialization. The comparison selects the original
+default GC policy, 2 GiB ceiling and 90-second watchdog. All four Cases
+and Harnesses completed naturally. The earlier run omitted the owner
+open duration and is retained separately.
+
+| Vertices | Arm | Owner open P50 / P95 (ms) | First list P95 (ms) | Open, solve and read P95 / max (ms) |
+|----------+-----+---------------------------+---------------------+-------------------------------------|
+|      384 | Reference | 15.720 / 22.429 | 59.615 | 77.282 / 130.850 |
+|      384 | Direct commit | 5.369 / 11.644 | 55.757 | 62.535 / 112.509 |
+|      512 | Reference | 29.007 / 47.081 | 96.591 | 138.464 / 225.320 |
+|      512 | Direct commit | 5.347 / 8.549 | 92.248 | 99.259 / 346.209 |
+
+The 512 maximum increased. The diagnostic separately measures cold
+admission and one full list read. The strict prepared-provider case
+builds its state before timing by calling =gerbil-ascent-trrel-uf-count-insert!=
+once per edge, then times 32 lists. It remains a separate failed gate.
+The current strict rerun at 384 completed all 100 admissions and reported
+388.176 ms P95. The 512 run hit the 90-second watchdog during CPU pair
+sampling and produced no admission receipt. Neither rerun was repeated.
+
+The 384 receipt keeps all four CPU arrays in the same reverse sample
+order. Subtracting collector CPU within each arm and pairing the same
+ordinal gives 100 outside-collector wins. Median paired savings were
+42.919 ms outside collection and 0.152 ms inside collection. The
+outside-collector saving was at least 36.256 ms in every pair. The
+current arm spent at least 103.716 ms of CPU in collection alone,
+with exactly five collections per arm in every pair. These are paired
+CPU observations, independent of the 100 wall observations. The CPU
+reference is the frozen comparison and includes accumulated provider
+changes. It does not isolate the source initializer.
+The guarded =PairedCpuReplay.lean= checks the counter bounds and
+per-pair minimum savings from the SHA-256-bound receipt in groups of
+ten. Its proof and Guard log are in
+=.cache/ascent/yuanxu-v0.1.0/restored-heap-minimum.FSxSPs/=.
+
+The censored 512 CPU lane recorded 91/91 wins, with reference/current
+CPU medians of 332.311/249.313 ms among the observed pairs. Both GC
+count medians were eight. This records the completed work without
+estimating an admission percentile or treating missing pairs as wins.
+
+The production initializer changes are local pending the original
+full matrix, strict export and exact-head CI. Evidence:
+=.cache/ascent/yuanxu-v0.1.0/source-cycle-owner.rLVEeF/=.
+
+** Keep only the final component owner for a closed source cycle
+
+The next candidate keeps one endpoint-directory entry per vertex and
+maps every entry directly to the final component owner. The earlier
+direct commit created all singleton nodes, merged them, and retained
+the loser nodes as parent links in that directory. The new writer keeps
+the original merged member order and winning root ordinal, including
+the two-vertex case. A later merge can attach that owner to another
+root through the ordinary parent mechanism. No public view holds an
+endpoint-directory entry.
+
+The guarded Lean lemmas =source_cycle_resolved_directory=,
+=source_cycle_winner_rank= and =source_cycle_directory_owner_saving=
+model lookup equivalence, the winner choice and the difference in
+owner record count. The candidate removes 383 records at width 384
+and 511 at width 512 from the earlier closed owner. The theorem scope
+does not price the hash table or the collector, or prove the mutation
+implementation. Native qualification also exercises a later collapse,
+duplicate admission and retained cut order on both sides of the
+64/65 index boundary.
+
+The frozen matrix used the preceding source-cycle implementation.
+The isolated candidate built with =gerbil build= after restoring the
+existing dependency manifests and the build script's executable bit.
+Native =gerbil test= passed 32 Cases: 11 for UF reuse, nine for
+positive provenance and 12 for Actor Session. All three invocations
+exited zero. This includes the retained cut, second collapse and
+budget refusal controls.
+
+The first timing attempt used a stale source snapshot of the
+diagnostic module which did not export =weighted-cycle-program=.
+It failed before taking any samples in all four arms. Using the
+same pinned fixture source for both arms, the production request
+completed 100 fresh sessions per arm and width. Each opened and
+closed the owner through the normal request interface, checked
+complete row count and exact order against its first result,
+and retained the default collector, 2 GiB and 90-second limits.
+Artifact hashes matched. The native Cases and Harnesses passed.
+
+| Vertices | Before first-read wall P50 / P95 / max (ms) | Candidate first-read wall P50 / P95 / max (ms) | Read CPU median before / candidate (ms) |
+|----------+----------------------------------------------+-------------------------------------------------+-----------------------------------------|
+| 384      | 33.267 / 184.000 / 540.174                    | 136.529 / 915.700 / 1375.686                      | 27.521 / 34.498                         |
+| 512      | 80.559 / 434.815 / 737.612                    | 121.115 / 489.029 / 825.443                       | 50.515 / 56.455                         |
+
+At 384 both arms had 26 reads with a collection. At 512 the
+counts were 30 and 34. The processes ran serially and exhibit
+different wall and CPU distributions. This does not identify
+one cause for the elapsed differences. The candidate did not
+demonstrate a gain and the constructor was restored to the
+matrix implementation. The restored source matched the compiled
+matrix snapshot byte for byte, and its 11 UF reuse Cases, including
+the retained second-collapse control, completed with exit zero.
+The original strict prepared export
+uses count insertion and still pays every public pair. The
+isolated implementation, Lean checks, retained semantic control
+and all observations are in
+=.cache/ascent/yuanxu-v0.1.0/source-cycle-directory.gXs55g/=.
+
+* Complete binary row transfer through Rust
+
+The native benchmark uses the same source constructor and a real
+=Runtime::call= to =source-run=. For each width it solves once without a
+row query, requests the first complete answer, then repeats 100 complete
+queries on that generation. It verifies cardinality, unique dense-cycle
+coverage, and stable ordered output. Result release, verification, and
+dropping the Rust-owned output are outside the request time. The
+throughput column sums request times serially with those exclusions.
+
+| Vertices | First request (ms) | Warm median / P95 / max (ms) | Requests/s | Rows/s | Request RSS high water (MiB) |
+|----------+--------------------+------------------------------+------------+--------+------------------------------|
+|      384 |              9.656 |            8.753/9.119/38.606 |      108.2 | 15.95M |                        656.2 |
+|      512 |             17.061 |          15.359/17.606/45.704 |       62.3 | 16.34M |                        722.0 |
+
+Median evaluate/decode was 6.053/2.631 ms at 384 and 10.690/4.587 ms
+at 512. Evaluation includes Scheme result projection and packing.
+It has no separate packing clock. The benchmark contains one complete
+export per request. Both runs completed under the existing limits.
+An ordinary row transfer through the same Rust request is still needed
+for a measured estimate of the direct packing gain.
+
+The initial Cargo link used the default Apple linker, which raised
+SIGBUS. The macOS report =ld-2026-11-13-204004.ips= attributes it to
+thread-stack exhaustion in =AtomFileConsolidator::markLive= during dead
+stripping. The captured linker response file preserved the compiled
+objects. Relinking those inputs with the existing CI's classic linker
+and macOS 26.0 deployment target succeeded. No rebuild or SDK change
+was needed for this diagnostic. The original Cargo failure is retained.
+
+Evidence: =.cache/ascent/yuanxu-v0.1.0/current-source-cut.JDMcrz/source-run-rust/=.
+
+** Same-request ordinary C ABI control
+
+The existing benchmark also calls the ordinary rooted export for the
+same =source-run= request. The private selector shares request control,
+deadline, generation, production Scheme entry, and result checks with
+the packed arm. Cargo built one benchmark with the existing classic
+linker option. Both encodings and widths used that one binary, one
+processor, the default live ratio, 2 GiB, and the 90-second watchdog.
+The source inputs and binary fingerprints matched after the sequence.
+
+| Vertices | Encoding | Warm samples | Wall median / P95 / max (ms) | Median decode CPU (ms) | Request RSS high water (MiB) | Exit |
+|----------+----------+--------------+-------------------------------+------------------------+------------------------------+------|
+|      384 | List     |       41/100 |         1843.836/--/3547.104 |                474.911 |                        725.4 |   -9 |
+|      384 | Packed   |      100/100 |           25.875/139.514/180.018 |               2.825 |                        656.2 |    0 |
+|      512 | Packed   |      100/100 |           49.186/184.602/253.650 |               4.876 |                        720.9 |    0 |
+|      512 | List     |       30/100 |         2255.033/--/3517.277 |                848.994 |                        809.6 |  124 |
+
+Each arm additionally completed its first read. The 384 ordinary
+command returned SIGKILL with the watchdog active. The 512 ordinary
+command returned the watchdog's timeout status. Neither supplies a
+full-sample P95. The ordinary decoder traverses the rooted snapshot and
+promotes one complex row at a time. It recorded 135 and 167 collections
+in the completed warm decodes. The packed decoder copies the numeric
+buffer and recorded zero collections in either warm decode sequence.
+Those traces localize the seconds-long cost to the ordinary decode
+interval. They do not establish a precise improvement ratio over the
+censored ordinary sequence. Both packed wall P95 observations exceeded
+100 ms in this run, despite the reduction in decode CPU. Joining the
+rank-95 request to its own VM receipt gives 13.247 and 21.326 ms CPU,
+with zero collections in both requests. Of 15 and 26 warm requests
+over the limit, only one and two collected, respectively. Every one
+used less than 100 ms of CPU. The wall/CPU split does not identify the
+reason for the uncharged elapsed time. The earlier packed-only receipt
+remains a separate observation. These measurements
+still concern one Rust request per sample. Evidence: =source-run-rust/paired/=
+under the directory above.

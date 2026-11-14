@@ -6,7 +6,7 @@
 ;;; whether dispatch executes now or publishes a frame reader. Small calls
 ;;; resolve operands once, in order, before invoking user code. Larger shapes
 ;;; retain the ordered map/apply protocol. No callback value is cached.
-(export dispatch-ordered-call)
+(export dispatch-ordered-call ordered-call-values)
 
 ;;; Boundary: Each read completes before the next operand is inspected.
 ;;; Invariant: The procedure runs only after every selected operand is bound.

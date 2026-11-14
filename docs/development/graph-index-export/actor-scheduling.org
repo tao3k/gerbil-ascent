@@ -1,0 +1,292 @@
+#+title: Actor scheduling
+#+language: en
+
+[[file:../graph-index-export-algorithms-20261112.org][Audit index]]
+
+* Trace the frozen Actor allocation child
+
+The refreshed matrix failed =actor-admission/wide= with the exact same
+=-10254456= byte observation as the first matrix. The native child
+binary is byte-identical to the original fenced executable. The benchmark
+rejects this observation before applying its allocation threshold.
+
+Disassembly of that arm64 child shows that =___bytes_allocated= obtains
+its base from a fixed native address. It does not use a caller-supplied
+processor pointer. Its loads separately expose the heap and stack spans,
+prior-section charge, processor still and deferred words, the rebased
+double counter and VM-wide still words. This bounds the diagnosis to
+the state read at one base. It does not attribute the reported loss to
+one term.
+
+The isolated LLDB trace is bound to the same executable digest and both
+instruction addresses. It reads the terms after the base is established,
+then compares the reconstructed value with the actual return register.
+Breakpoint locations were verified against the frozen image. The trace
+changes no SDK, benchmark fixture, reported byte value or acceptance
+decision.
+
+The original native child then reproduced the exact failure under LLDB
+at the unchanged 1 GiB cap and exited with its original status 70.
+Four complete native function calls were observed. LLDB duplicated the
+callback stream. The parser coalesced only adjacent byte-identical
+lines and independently matched every reconstructed value to the return
+register. The two benchmark endpoints used the same thread and native
+base. Their byte terms were:
+
+| Term | After minus before (bytes) |
+|------+----------------------------|
+| Adjusted base counter | -10513912 |
+| Current heap span | 178016 |
+| Current stack span | 36864 |
+| Prior section charge | -480 |
+| Processor still occupancy | 22632 |
+| Deferred still occupancy | -208 |
+| VM still occupancy | 22632 |
+| Total | -10254456 |
+
+Both bracketing statistics calls add 208 bytes of deferred still charge.
+The cold allocation sample is the after-call value excluding its own
+statistics charge minus the before-call value including that charge.
+=actor_admission_counter_replay= reconstructs the observed signed
+result from the frozen endpoints. The adjusted base write is the next
+source attribution. No correction or acceptance claim follows from
+this snapshot.
+
+A hardware write observation tied the drop to
+=___garbage_collect_pstate=. The first in-window write changed the
+adjusted base from 6,830,696 to -1,755,864. The instruction at offset
+144 adds the pre-collection processor occupancy. The second in-window
+write, at offset 6664, subtracts post-collection processor occupancy
+and changed it to -4,043,664. A second pair of writes belongs to the
+child's cleanup collection after its endpoint. The watchpoint arm
+reported -10,614,904 rather than -10,254,456 and still failed the
+original gate. The exact endpoint trace and the instrumented writer
+trace are separate runs. The writer trace establishes the native
+update locations.
+
+A breakpoint before the GC addition reproduced the exact original
+=-10254456= delta and matched the computed prelude operand to register
+=x0=. The heap and stack spans were +427,648 and +66,336 bytes. The
+prior-section field was already -579,581 words, which made the prelude
+add -8,226,112 bytes to the adjusted base. Breakpoints at the candidate
+store instructions then located a negative write in =___stack_limit=.
+It changed 188,411 prior words to -1,110,013. In that separate diagnostic
+the original signed gate also failed. The disassembly loads the old
+section start before switching sections, publishes the new section,
+then subtracts the new allocation cursor from the old start before
+charging prior words. The observed operand was -10,387,392 bytes.
+The new section's own span was 64 bytes. The exact endpoint replay,
+prelude attribution and instrumented stack-limit store are distinct
+receipts. Evidence: =/private/tmp/ascent-actor-frozen-counter.OnqQIS/=.
+
+* Actor mailbox and continuation lifetime
+
+Gerbil's =spawn/name= initializes an actor thread and starts it with
+=thread-main='s abortive handler. Local delivery ultimately uses
+=thread-send=. ASCENT's round coordinator owns admission and row
+publication. A worker receives an assignment through its existing
+mailbox, runs it and returns a completion envelope. A monitor joins
+that worker. The worker already persists across assignments, so the
+scope of the abort continuation can follow the native mailbox loop.
+
+The isolated candidate captures one landing continuation per worker.
+Each task still installs its own exception handler and starts with
+an empty batch and checkpoint window. A refused credit jumps out of
+that handler and through dynamic cleanup. The landing point publishes
+the exact task and outcome in the existing completion envelope. The
+coordinator retains ownership of merge, credit, cancellation and join.
+
+=reusable_worker_abort_preserves_envelope= verifies the modeled
+assignment-to-message mapping. The capture-count bound compares the
+number of used workers with the sum of their assignments. For 1,024
+completed assignments on two workers this changes the modeled capture
+count from 1,024 to two. The bound counts calls to =call/cc= at this
+source boundary. Gambit stack bytes, mailbox latency and the effects of
+stack-section accounting still require native measurements.
+
+The candidate passed 33 native Actor, Session and credit Cases. These
+include worker reuse, first-failure identity, refusal through dynamic
+cleanup, caller mailbox isolation, cancellation drains and the unique
+derived-row budget. The initial source Suite invocation timed out before
+any Case. The same Suites were then loaded as compiled Gerbil modules
+through the native Test entry, with the original 90-second deadline.
+
+The original admission gates for =wide=, =backlog= and =small= passed
+with 50 CPU and 50 fresh-process allocation pairs per Case at 1 GiB.
+The previous Actor source was also rebuilt through the same native link
+path. Its =wide= Case passed, so the signed-counter failure observed in
+the earlier executable is sensitive to the executable image. This does
+not qualify the Gambit counter across images. The cold allocation medians
+from the two rebuilt images were:
+
+| Case | Previous source (bytes) | Worker landing (bytes) |
+|------+-------------------------+------------------------|
+| wide |                 6522760 |                2601224 |
+| backlog |              3265488 |                2885384 |
+| small |                  47536 |                  46896 |
+
+The separate =wide= CPU medians were 533 and 593 us, while the same
+embedded historical reference shifted from 5,368 to 6,320 us. A native
+diagnostic then loaded both sources in one VM and alternated arm order
+for 1,000 CPU pairs per Case. Both arms produced the full expected rows.
+The CPU medians and tails were:
+
+| Case | Previous P50/P95 (us) | Worker landing P50/P95 (us) | Candidate wins |
+|------+-----------------------+-----------------------------+----------------|
+| wide |               456/547 |                     440/518 |       914/1000 |
+| backlog |            528/596 |                     515/561 |       887/1000 |
+| small |             4.70/5.05 |                   4.70/5.00 |       466/1000 |
+
+This CPU diagnostic uses the same assignment dimensions and avoids the
+separate-image comparison for CPU. Allocation remains an observation
+from the two linked images. The tested Actor source was integrated in
+the working tree after verifying the original source and candidate
+digests. The complete Lean Guard build succeeded with 183 jobs. The
+four existing Actor Quint groups checked 15 obligations, including
+seven expected counterexamples. Quint needed loopback access for its
+local compiler service. These checks cover the modeled protocols;
+the native Cases exercise their current worker implementation.
+
+The complete matrix and default-policy weighted export gates remain
+open. Evidence: =/private/tmp/ascent-worker-landing.Q63gwd/= and
+=/private/tmp/ascent-worker-landing-control.mNbWAa/=.
+
+* Automatic Actor dispatch and SCC readiness
+
+The number 64 belongs to the =backlog= fixture's explicit worker
+capacity. The Actor Session now defaults to =auto=. The round owner
+checks cancellation and reads any pending result or credit request
+before dispatching. If a task is ready, it reuses an idle worker or
+starts a Gerbil Actor, sends the assignment, and yields to the native
+scheduler. If all remaining tasks are blocked, the owner waits for
+active workers. The automatic path has no configured worker count.
+An explicitly supplied capacity still drives the original comparison
+and the existing caller option.
+
+In an SCC round with dependency edges, the owner seeds the zero-count
+components into =std/struct/pqueue=. Completion follows the final
+candidate merge. It decrements only the completed component's direct
+successors and queues each newly zero count. The original ordinal is
+the priority, including when a newly ready component precedes an
+already queued independent component. Source-only predecessors remain
+complete at admission. The round's existing credit, cancellation,
+monitor join and completed-publication checks also govern this path.
+
+Lean =ScheduledExecution= checks the zero transition, equality of
+minimum ready IDs, the dependency-chain probe count, and the automatic
+dispatch decision. The last decision admits ready work at any modeled
+active count when the mailbox is empty. Actual heap capacity and thread
+scheduling time require native measurements.
+
+Four compiled native Test Suites completed all 56 Cases using the same
+2 GiB cap and 90-second per-invocation limit. The 128-task rendezvous
+required 128 distinct live Actors before any could emit a row. A separate
+Case checked release only after all 33 predecessor rows were merged.
+The initial combined Suite command reached its deadline before emitting
+Case output. The individual Suite runs preserve that failure record.
+
+The isolated source Test resolved the newly compiled scheduler and ran
+on one Gambit processor. Each chain comparison used twelve alternating
+pairs and checked every published task in order. The chain uses spare
+explicit capacity to isolate readiness selection from automatic growth.
+
+| Tasks in chain | Ready probes, scan / queue | CPU P50, scan / queue (ms) |
+|----------------+----------------------------+---------------------------|
+|            512 |               131328 / 512 |             12.893 / 1.167 |
+|           2048 |             2098176 / 2048 |            240.573 / 4.166 |
+
+Automatic dispatch completed 50,000 ready tasks using two Actor
+identities, with 101.866 ms CPU and 321.123 ms elapsed. It completed
+1,000,000 ready tasks using three identities, with 1,891.698 ms CPU
+and 7,749.315 ms elapsed. Each task emitted a row and the owner checked
+each task ID for uniqueness. These measurements cover short-task
+dispatch, result checking and drain. All five original component-scope
+gates passed with their original 50 pairs. The complete Lean Guard
+build succeeded with 183 jobs.
+Evidence: =/private/tmp/ascent-actor-auto.OmXo0s/=.
+
+* Native mailbox comparison and completion ownership
+
+The Gerbil Scheme Rust PR 18 port receipt reports 1,000,000 verified
+completions on one VM at 995,241.29 completions/s, with 10.083 ms
+planned-to-consumed P99 and 11.019 ms P99.9. That tail starts at the
+original scheduled arrival for each request. The observed peak due
+and unconsumed was 11,110, exceeding the original limit of 128.
+The relevant Scheme implementation transfers a resident frame into
+a worker, checks its identity and the immutable request ID on return,
+and releases the frame after verified consumption. The local records
+are =docs/10-19-design/single-vm-audit/mailbox-pr18-3477-port.json=
+and =crates/gerbil-scheme-qualification/scheme/instance-mailbox-backpressure.ss=
+in the Gerbil Scheme Rust checkout.
+
+ASCENT's native control compared the same million IDs and checked
+each for uniqueness in one VM. Each arm started after a collection.
+Raw numbers below are one diagnostic sample per million-task arm.
+
+| Path | Elapsed (ms) | Process CPU (ms) | Elapsed GC (ms) |
+|------+--------------+------------------+-----------------|
+| Direct consumer |      229.387 |          158.052 |               0 |
+| Gerbil one-way mailbox | 498.125 |          361.174 |          63.827 |
+| Gerbil request/reply |  1175.104 |         1000.233 |         420.691 |
+| ASCENT one worker |     2643.526 |         1696.688 |        1130.630 |
+| ASCENT automatic |      2938.214 |         1572.080 |        1279.727 |
+| ASCENT automatic, with worker observation | 2562.091 | 1668.594 | 986.990 |
+
+The original 7.749-second elapsed observation remains part of the
+record. The shorter million-task control also charged collection time
+and verified every task. Its elapsed timing varies by arm and process
+state. The comparison establishes substantial mailbox round-trip and
+ASCENT owner costs at this workload. The original off-CPU interval
+remains unattributed. Evidence:
+=/private/tmp/ascent-actor-auto.OmXo0s/actor-mailbox-cost.log=.
+
+The candidate gives each worker one completion vector. The native
+mailbox transfers that vector in both directions. The owner writes the
+task and the worker writes the result. The owner checks the run, worker
+and lease identities, consumes the task and result fields, and merges
+the final batch. It can send the lease again only after completion.
+The identity table stores one entry per worker and the task slot records
+whether that worker has an assignment. The worker accepts the exact
+lease or a stop request. Checkpoint and exceptional envelopes still
+carry all five fields, and batch credit stays separate.
+
+Lean =ActorEnvelope= checks field order and vector arity, completion
+custody, and the constructor-word bound. The old success path used
+five pair objects for the completion and two for the assignment.
+The candidate uses one vector per worker for both messages. The model
+counts these constructor words. Native timing includes the mailbox
+cells, task bodies, owner validation, GC and drain.
+
+The first prototype reused the completion vector and sent a separate
+assignment pair. Its million-task pairs measured 2203.899/1936.710 ms
+and 2311.190/3071.113 ms for list/frame elapsed time. The direction
+changed between the two pairs. Both returned the complete set of task
+IDs. The raw allocation counter reported negative deltas in both arms,
+so those samples cannot qualify the allocation lane. Evidence:
+=/private/tmp/ascent-actor-frame.I3kiEk/frame-cost.log=.
+
+The bidirectional frame used the same 2 GiB cap, default collector and
+one Gambit processor. Both implementations ran in the same process with
+alternating arm order and checked every task ID. Six 100,000-task pairs
+had process CPU medians of 139.252/131.506 ms and elapsed medians of
+178.581/161.969 ms for list/frame. The two million-task pairs were:
+
+| Pair | CPU, list / frame (ms) | Elapsed, list / frame (ms) | GC CPU, list / frame (ms) |
+|------+------------------------+----------------------------+----------------------------|
+|    1 |      1758.933/1600.827 |          5088.865/5355.566 |            798.996/685.539 |
+|    2 |      1602.445/1545.841 |          1841.258/1869.377 |            650.030/678.759 |
+
+Every timed arm completed and drained. Million-task CPU improved in
+both pairs, while elapsed time increased in both. All sixteen raw
+allocation observations were negative. Those observations remain
+invalid for allocation acceptance. The constructor-word proof and
+timing observations have their own evidence. The complete Lean Guard
+build succeeded with 183 jobs. Evidence:
+=/private/tmp/ascent-actor-shared-frame.eSrARi/frame-cost.log=.
+
+All 69 native Cases completed against the bidirectional-frame image.
+They cover Actor rounds, Session, batch credit, SCC scheduling and
+compiler certificates. The source hashes matched the benchmark image
+after the runs. Five existing Quint groups checked all 23 obligations,
+including expected counterexamples for stale or premature publication.
+Evidence: =/private/tmp/ascent-actor-shared-frame.eSrARi/=.

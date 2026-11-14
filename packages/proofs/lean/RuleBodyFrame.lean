@@ -15,6 +15,26 @@ semi-naive pivots, index providers, mutable buffers or actor scheduling.
 
 namespace Ascent.RuleBodyFrame
 
+/-- Scheme binds both arguments before calling the host procedure. For a
+two-input closure the inlined shape guard selects the same ordered read
+and refusal trace as the separately compiled guard and reader. `read`
+models a frame read that may fail before the callback can execute. -/
+theorem guarded_two_frame_reads {Slot Value Fault Result : Type}
+    (read : Slot → Except Fault Value) (invoke : Value → Value → Except Fault Result)
+    (fallback : Except Fault Result) (sameProcedure sameNames : Bool) (first second : Slot) :
+    (if sameProcedure && sameNames then
+      (do
+        let x ← read first
+        let y ← read second
+        invoke x y)
+    else fallback) =
+    (if sameProcedure then
+      if sameNames then
+        (read first).bind fun x => (read second).bind fun y => invoke x y
+      else fallback
+    else fallback) := by
+  cases sameProcedure <;> cases sameNames <;> rfl
+
 open RuleGraphClosure DependencyInvalidation
 
 inductive Clause (Key Row Env : Type) where

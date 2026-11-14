@@ -6,13 +6,14 @@
         (only-in :gerbil-ascent/table/storage gerbil-ascent-trrel-uf-storage-provider
           gerbil-ascent-storage-engine-state gerbil-ascent-storage-initialize-uf!
           gerbil-ascent-storage-admit-state! gerbil-ascent-storage-check-state!
-          gerbil-ascent-storage-freeze-view))
+          gerbil-ascent-storage-freeze-view gerbil-ascent-storage-view-extension!))
 (import :clan/poo/object :gerbil-ascent/program/func
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
         (prefix-in :gerbil-ascent/t/performance/uf-reuse/reference-evaluate historical-))
 (import (only-in :gerbil-ascent/table/trrel-uf gerbil-ascent-trrel-uf-state
           gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-count-insert!
+          gerbil-ascent-trrel-uf-commit-source-cycle! gerbil-ascent-trrel-uf-freeze
           gerbil-ascent-trrel-uf-observation gerbil-ascent-trrel-uf-validate))
 (export ascent-uf-reuse-test)
 (import (only-in :gerbil-ascent/program/view-replay gerbil-ascent-small-journal-export))
@@ -89,6 +90,68 @@
         (check-exception (gerbil-ascent-storage-check-state! owner) true)
         (gerbil-ascent-storage-admit-state! owner)
         (check-equal? (relation-view-count (gerbil-ascent-storage-freeze-view owner #f)) 6)))
+    (test-case "closed source batches match incremental UF order and budget refusal"
+      (def (edges width)
+        (let (vertices (map (lambda (rank) (- 9001 (* rank 7))) (iota width)))
+          (map list vertices (append (cdr vertices) (list (car vertices))))))
+      (def (outcome rows limit direct?)
+        (let ((owner (gerbil-ascent-storage-engine-state gerbil-ascent-trrel-uf-storage-provider))
+              (seen []))
+          (let (accepted (with-catch (lambda (_) #f)
+                           (lambda ()
+                             (gerbil-ascent-storage-initialize-uf! owner rows
+                               (lambda (row) (set! seen (cons row seen))) 7 (+ 7 limit) direct?))))
+            (if accepted
+              (let ()
+                (gerbil-ascent-storage-admit-state! owner)
+                (let* ((held (gerbil-ascent-storage-freeze-view owner #f))
+                       (initial (gerbil-ascent-view-rows held))
+                       (frontier (gerbil-ascent-storage-view-extension! owner
+                                   (list (caar rows) 'fresh) (+ 1 (length rows)))))
+                  (gerbil-ascent-storage-admit-state! owner)
+                  (check-equal? (gerbil-ascent-view-rows held) initial)
+                  (list accepted (reverse! seen) initial (gerbil-ascent-view-rows frontier))))
+              (begin
+                (check-exception (gerbil-ascent-storage-freeze-view owner #f) true)
+                (list #f (reverse! seen)))))))
+      (for-each (lambda (width)
+        (let (rows (edges width))
+          (for-each (lambda (limit)
+            (check-equal? (outcome rows limit #t) (outcome rows limit #f)))
+            (iota (+ 1 (* width width)))))) '(2 3 4 7 12))
+      (for-each (lambda (width)
+        (let ((rows (edges width)) (limit (* width width)))
+          (check-equal? (outcome rows limit #t) (outcome rows limit #f))))
+        '(63 64 65 384 512)))
+    (test-case "direct endpoint aliases survive a second component collapse"
+      (for-each
+        (lambda (width)
+          (let* ((values (iota width))
+                 (edges (map list values (append (cdr values) (list (car values)))))
+                 (other-values (iota (+ width 1) width))
+                 (other-edges (map list other-values
+                                (append (cdr other-values) (list (car other-values)))))
+                 (direct (gerbil-ascent-trrel-uf-state))
+                 (incremental (gerbil-ascent-trrel-uf-state)))
+            (gerbil-ascent-trrel-uf-commit-source-cycle! direct (list->vector values))
+            (for-each (lambda (row) (gerbil-ascent-trrel-uf-count-insert! incremental row 1000000)) edges)
+            (let* ((held (gerbil-ascent-trrel-uf-freeze direct #f))
+                   (initial (gerbil-ascent-view-rows held))
+                   (first (car values))
+                   (last (- width 1)))
+              (for-each
+                (lambda (row)
+                  (check-equal?
+                    (gerbil-ascent-view-rows (gerbil-ascent-trrel-uf-insert! direct row 1000000))
+                    (gerbil-ascent-view-rows (gerbil-ascent-trrel-uf-insert! incremental row 1000000)))
+                  (check-equal? (gerbil-ascent-trrel-uf-observation direct)
+                    (gerbil-ascent-trrel-uf-observation incremental))
+                  (check-equal? (gerbil-ascent-trrel-uf-validate direct) #t))
+                (append other-edges
+                  (list (list last width) (list width first) (list width last)
+                        (list first 'new-c) (list 'new-c last))))
+              (check-equal? (gerbil-ascent-view-rows held) initial))))
+        '(2 3 64 65)))
     (test-case "output and source failures poison the private batch owner"
       (for-each (lambda (source-failure?)
         (let ((owner (gerbil-ascent-storage-engine-state gerbil-ascent-trrel-uf-storage-provider)) (seen []))

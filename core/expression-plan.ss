@@ -6,9 +6,9 @@
 ;;; at their original execution points; neither results nor frames are cached.
 ;;; Known arities avoid a transient argument list; ordered reads finish before
 ;;; invoking the callback. Larger arities retain the general apply path.
-(import (only-in "ordered-call.ss" dispatch-ordered-call))
+(import (only-in "ordered-call.ss" dispatch-ordered-call ordered-call-values))
 (export gerbil-ascent-compile-frame-call gerbil-ascent-compile-frame-sequence
-        gerbil-ascent-compile-input-guard)
+        gerbil-ascent-compile-input-guard gerbil-ascent-compile-checked-frame-call)
 
 ;; : (-> Procedure Slots (-> Frame Value))
 (def (gerbil-ascent-compile-frame-call procedure slots)
@@ -59,6 +59,40 @@
    (and (pair? current) (eq? (car current) one)
         (pair? (cdr current)) (eq? (cadr current) two)
         (null? (cddr current)))))
+
+;; A one- or two-input call can check live names and read its frame slots
+;; in the same closure. Expression payloads read the procedure before the
+;; input names, just as the general evaluator does.
+(def (gerbil-ascent-compile-checked-frame-call procedure names slots fallback payload)
+  (defrule (checked-call (name ...) (slot ...))
+    (if payload
+      (lambda (frame)
+        (let* ((current-procedure (vector-ref payload 1))
+               (current-names (vector-ref payload 0)))
+          (if (and (eq? current-procedure procedure)
+                   (input-shape? (name ...) current-names))
+            (ordered-call-values procedure (index (vector-ref frame index)) () (slot ...))
+            (fallback current-procedure current-names frame))))
+      (lambda (frame)
+        (if (input-shape? (name ...) names)
+          (ordered-call-values procedure (index (vector-ref frame index)) () (slot ...))
+          (fallback procedure names frame)))))
+  (match [names slots]
+    ([[one] [first]] (checked-call (one) (first)))
+    ([[one two] [first second]] (checked-call (one two) (first second)))
+    (else
+     (let ((fast (gerbil-ascent-compile-frame-call procedure slots))
+           (stable-inputs? (gerbil-ascent-compile-input-guard names)))
+       (if payload
+         (lambda (frame)
+           (let* ((current-procedure (vector-ref payload 1))
+                  (current-names (vector-ref payload 0)))
+             (if (and (eq? current-procedure procedure) (stable-inputs? current-names))
+               (fast frame)
+               (fallback current-procedure current-names frame))))
+         (lambda (frame)
+           (if (stable-inputs? names) (fast frame)
+             (fallback procedure names frame))))))))
 
 ;;; Observe the current input tuple without retaining a borrowed mutable spine.
 ;;; Common arities use identity checks; larger shapes walk a detached vector.

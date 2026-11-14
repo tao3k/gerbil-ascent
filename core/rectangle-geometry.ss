@@ -344,15 +344,20 @@
 ;;   %
 (defrule (collect-rectangle-product left right lefts rights emit tuple)
   (let collect-left ((pending lefts))
-    (match pending
-      ([] (void))
-      ([left . tail]
-       (let collect-right ((remaining rights))
-         (match remaining
-           ([] (collect-left tail))
-           ([right . rest]
-            (emit tuple)
-            (collect-right rest))))))))
+    (cond
+      ((null? pending) (void))
+      ((pair? pending)
+       (let ((left (car pending)) (tail (cdr pending)))
+         (let collect-right ((remaining rights))
+           (cond
+             ((null? remaining) (collect-left tail))
+             ((pair? remaining)
+              (let ((right (car remaining)) (rest (cdr remaining)))
+                (emit tuple)
+                (collect-right rest)))
+             (else (error "No clause matching" remaining '([]) '([right . rest])))))))
+      (else (error "No clause matching" pending '([]) '([left . tail]))))))
+
 (def (materialize-rectangles blocks)
   (with-list-builder (collect!)
     (for-each (lambda (block)

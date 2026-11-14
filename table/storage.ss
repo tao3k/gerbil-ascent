@@ -21,6 +21,7 @@
                  gerbil-ascent-trrel-extension)
         (only-in "trrel-uf.ss" gerbil-ascent-trrel-uf-state
                  gerbil-ascent-trrel-uf-extension
+                 gerbil-ascent-trrel-uf-cycle-vertices gerbil-ascent-trrel-uf-commit-source-cycle!
                  gerbil-ascent-trrel-uf-insert! gerbil-ascent-trrel-uf-freeze gerbil-ascent-trrel-uf-count-insert!))
 
 (export gerbil-ascent-storage-initialize-uf! gerbil-ascent-canonical-view-storage-provider? gerbil-ascent-storage-eqrel-state?
@@ -352,20 +353,38 @@
 ;;     ;; => 3 materialized rows, with the private owner awaiting admission
 ;;     ```
 ;;   %
-(def (gerbil-ascent-storage-initialize-uf! state rows check-source! count output-limit)
+(def (gerbil-ascent-storage-initialize-uf! state rows check-source! count output-limit
+                                          (pure-binary-source? #f))
   (call-with-storage-state state
     (lambda (raw)
-      (def previous #f)
-      ;; A bounded, batch-local witness records successful injections only.
-      ;; UF closure is monotone; intervening admissions cannot invalidate it.
-      (def admitted (make-hash-table))
-      (for-each (lambda (row)
-        (check-source! row)
-        ;; A witnessed duplicate follows successful admission to the same
-        ;; monotone owner with a nonnegative remaining budget. Source
-        ;; occurrence checks still execute; its empty frontier changes no count.
-        (unless (or (equal? previous row) (hash-get admitted row))
-          (set! count (+ count (gerbil-ascent-trrel-uf-count-insert! raw row (- output-limit count))))
-          (when (< (hash-length admitted) 256) (hash-put! admitted row #t)))
-        (set! previous row)) rows)
-      count)))
+      (let (vertices (and pure-binary-source? (zero? (hash-length raw))
+                          (gerbil-ascent-trrel-uf-cycle-vertices rows)))
+        (if vertices
+          (let* ((width (vector-length vertices)) (last (- width 1)))
+            (let admit ((pending rows) (index 0) (charged count))
+              (if (null? pending)
+                (begin (gerbil-ascent-trrel-uf-commit-source-cycle! raw vertices) charged)
+                (begin
+                  (check-source! (car pending))
+                  (let (next (if (= index last) (+ count (* width width))
+                               (+ charged (if (zero? index) 3 (+ index 2)))))
+                    (when (> next output-limit)
+                      (error "ASCENT trrel output fact budget exceeded"))
+                    (admit (cdr pending) (+ index 1) next))))))
+          (initialize-uf-rows! raw rows check-source! count output-limit))))))
+
+(def (initialize-uf-rows! raw rows check-source! count output-limit)
+  (def previous #f)
+  ;; A bounded, batch-local witness records successful injections only.
+  ;; UF closure is monotone; intervening admissions cannot invalidate it.
+  (def admitted (make-hash-table))
+  (for-each (lambda (row)
+    (check-source! row)
+    ;; A witnessed duplicate follows successful admission to the same
+    ;; monotone owner with a nonnegative remaining budget. Source
+    ;; occurrence checks still execute; its empty frontier changes no count.
+    (unless (or (equal? previous row) (hash-get admitted row))
+      (set! count (+ count (gerbil-ascent-trrel-uf-count-insert! raw row (- output-limit count))))
+      (when (< (hash-length admitted) 256) (hash-put! admitted row #t)))
+    (set! previous row)) rows)
+  count)

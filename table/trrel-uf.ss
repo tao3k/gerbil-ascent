@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Private union-find SCCs and reachability between component roots.
 ;;; Concrete frontier rows are returned, never retained in this provider.
-(import "uf-reach.ss"
+(import "uf-reach.ss" (only-in :std/list/list length<=n?)
         :gerbil-ascent/core/relation-view (only-in :std/vector/extensible make-ExtensibleVector ExtensibleVector-ref
                  ExtensibleVector-set! ExtensibleVector-fill-pointer
                  ExtensibleVector-fill-pointer-set! ExtensibleVector->list))
@@ -13,86 +13,133 @@
         gerbil-ascent-trrel-uf-view-count gerbil-ascent-trrel-uf-view-for-each
         gerbil-ascent-trrel-uf-view-lookup
         gerbil-ascent-trrel-uf-observation gerbil-ascent-trrel-uf-resource-observation gerbil-ascent-trrel-uf-validate
-        gerbil-ascent-trrel-uf-replay-insert! gerbil-ascent-trrel-uf-count-insert!)
+        gerbil-ascent-trrel-uf-replay-insert! gerbil-ascent-trrel-uf-count-insert!
+        gerbil-ascent-trrel-uf-cycle-vertices gerbil-ascent-trrel-uf-commit-source-cycle!)
+
+;; Borrow the edge spine only during recognition. The private vector retains
+;; immutable endpoint values in injection order.
+(def (gerbil-ascent-trrel-uf-cycle-vertices rows)
+  (and (length<=n? rows 512) (list? rows)
+       (let (width (length rows))
+         (and (>= width 2)
+              (let ((vertices (make-vector width)) (seen (make-hash-table-eqv size: width)))
+                (let scan ((pending rows) (rank 0) (next #f))
+                  (match pending
+                    ([] (and (= next (vector-ref vertices 0)) vertices))
+                    ([[left right] . rest]
+                     (and (fixnum? left) (fixnum? right)
+                          (or (zero? rank) (= left next))
+                          (not (hash-key? seen left))
+                          (begin
+                            (hash-put! seen left #t)
+                            (vector-set! vertices rank left)
+                            (scan rest (+ rank 1) right))))
+                    (else #f))))))))
 (def (rebuild-predecessors! group roots)
   (for-each (lambda (n) (set! (uf-node-predecessors n) (make-hash-table-eq))) roots)
   (for-each (lambda (n)
     (reach-for-each (lambda (target _)
       (set! (uf-node-predecessors target) (reach-put! (uf-node-predecessors target) n group))) (uf-node-reach n))) roots))
-;; Closure supplies every external edge to/from the surviving winner already.
-;; Retire absorbed reverse keys before clearing any component's storage.
-;; : (-> UfNode [UfNode] Void)
-(def (retire-cycle-predecessors! winner cycle)
-  (for-each (lambda (n)
-    (unless (eq? n winner)
-      (reach-for-each (lambda (target _)
-        (reach-remove! (uf-node-predecessors target) n)) (uf-node-reach n)))
-    (reach-remove! (uf-node-predecessors winner) n)) cycle))
-;; Complete closure already gives the winner every outgoing cycle edge.
-;; Keep its owned reach table; only absorbed keys need removal.
+;; The group owns its newest-first roster. The unchanged suffix predates
+;; every retired root; splice only the freshly allocated prefix onto it.
+(def (prune-cycle-roots roots oldest)
+  (let loop ((remaining roots) (kept []))
+    (match remaining
+      ([] (reverse! kept))
+      ([node . rest]
+       (if (< (uf-node-order node) oldest)
+         (append-reverse! kept remaining)
+         (loop rest (if (uf-node-parent node) kept (cons node kept))))))))
+
+;; All missing arcs have been committed, except on a whole-group collapse.
+;; In that closed graph any surviving owner adjacent to a loser is adjacent
+;; to the winner. Remove loser keys from the winner first. Its two remaining
+;; rows then name exactly the external owners to update, without scanning
+;; the group or allocating a copy of either adjacency row.
 ;; : (-> UfGroup [UfNode] [UfNode] Void)
 (def (merge-cycle! group roots cycle)
-  (let* ((winner (foldl (lambda (n best)
-                         (if (> (uf-node-size n) (uf-node-size best)) n best))
+  (let* ((winner (foldl (lambda (node best)
+                         (if (> (uf-node-size node) (uf-node-size best)) node best))
                        (car cycle) (cdr cycle)))
+         (cycle-size (length cycle))
+         (remaining (- (+ 1 (uf-group-population group)) cycle-size))
+         (whole-group? (= remaining 1))
+         (indexed? (uf-group-indexed? group))
+         (retired (and (not whole-group?) (cycle-mask group cycle)))
+         (losers (filter (lambda (node) (not (eq? node winner))) cycle))
          (merged (uf-node-members winner))
          (size (uf-node-size winner))
-         (retired (cycle-mask group cycle)))
-    (when (uf-group-indexed? group)
-      (if (= (length cycle) (uf-group-population group))
-        ;; Every reverse key belongs to a retiring root. No external owner
-        ;; survives to observe it; release the winner's whole backing table.
-        (set! (uf-node-predecessors winner) (make-hash-table-eq))
-        (unless retired (retire-cycle-predecessors! winner cycle))))
-    (for-each (lambda (n)
-      (unless (eq? n winner)
-        (set! merged (append (uf-node-members n) merged))
-        (set! size (+ size (uf-node-size n)))
-        (set! (uf-node-parent n) winner)
-        (set! (uf-node-members n) [])
-        (set! (uf-node-size n) 0)
-        (set! (uf-node-reach n) (make-hash-table-eq))
-        (set! (uf-node-predecessors n) #f))) cycle)
+         (oldest #f))
+    (def (retire-keys table)
+      (if (and retired (compact-reach? table))
+        (reach-remove-mask! table retired)
+        (for-each (lambda (node) (reach-remove! table node)) losers))
+      (reach-retired table))
+    (when retired (reach-remove! retired winner))
+    (if whole-group?
+      (begin
+        (set! (uf-node-reach winner) (make-hash-table-eq))
+        (when indexed?
+          (set! (uf-node-predecessors winner) (make-hash-table-eq))))
+      (begin
+        (let (table (retire-keys (uf-node-reach winner)))
+          (set! (uf-node-reach winner)
+            (if (zero? (reach-length table)) (make-hash-table-eq) table)))
+        (if indexed?
+          (begin
+            (set! (uf-node-predecessors winner) (retire-keys (uf-node-predecessors winner)))
+            (reach-for-each (lambda (owner _)
+              (set! (uf-node-reach owner) (retire-keys (uf-node-reach owner))))
+              (uf-node-predecessors winner))
+            (reach-for-each (lambda (owner _)
+              (set! (uf-node-predecessors owner) (retire-keys (uf-node-predecessors owner))))
+              (uf-node-reach winner)))
+          ;; The small-group path has no reverse index. Only a surviving
+          ;; predecessor of the winner can own a forward key to a loser.
+          (for-each (lambda (owner)
+            (when (reach-get (uf-node-reach owner) winner)
+              (unless (memq owner losers)
+                (set! (uf-node-reach owner) (retire-keys (uf-node-reach owner)))))) roots))))
+    (for-each (lambda (node)
+      (let (order (uf-node-order node))
+        (set! oldest (if oldest (min oldest order) order))
+        (when (and (not whole-group?) (uf-group-registry group))
+          (ExtensibleVector-set! (uf-group-registry group) order #f)))
+      (set! merged (append (uf-node-members node) merged))
+      (set! size (+ size (uf-node-size node)))
+      (set! (uf-node-parent node) winner)
+      (set! (uf-node-members node) [])
+      (set! (uf-node-size node) 0)
+      ;; Endpoint lookup follows the parent before reading adjacency. A retired
+      ;; node retains its identity for that lookup, with no adjacency owner.
+      (set! (uf-node-reach node) #f)
+      (set! (uf-node-predecessors node) #f)) losers)
     (set! (uf-node-members winner) merged)
     (set! (uf-node-size winner) size)
-    (set! roots (filter (lambda (n) (not (uf-node-parent n))) roots))
-    (set! (uf-group-roots group) roots)
-    (set! (uf-group-population group) (length roots))
-    (when (null? (cdr roots)) (set! (uf-group-registry group) #f))
-    ;; Dense SCCs retire one stable mask from each surviving reverse owner.
-    ;; This avoids revisiting every outgoing arc of every absorbed component.
-    (when (and retired (uf-group-indexed? group))
-      (reach-remove! retired winner)
-      (for-each (lambda (n)
-        (let (table (uf-node-predecessors n))
-          (if (compact-reach? table) (reach-remove-mask! table retired)
-            (for-each (lambda (loser) (unless (eq? loser winner) (reach-remove! table loser))) cycle))
-          (when (eq? n winner) (reach-remove! table winner)))) roots)
-      (compact-reach-put! retired winner))
-    ;; Canonical pre-merge keys plus complete closure mean any external
-    ;; predecessor of an absorbed root already reaches the winner. Other DAG
-    ;; keys need no rewrite. Iterate a stable list, never the changed table.
-    (for-each (lambda (n)
-      (if (and (eq? n winner)
-               (or (null? (cdr roots))
-                   (= (reach-length (uf-node-reach n)) (- (length cycle) 1))))
-        ;; No external target: release the old backing array as well as keys.
-        (set! (uf-node-reach n) (make-hash-table-eq))
-        (when (or (eq? n winner) (reach-get (uf-node-reach n) winner))
-          (if (and retired (compact-reach? (uf-node-reach n)))
-            (begin
-              (unless (eq? n winner) (reach-remove! retired winner))
-              (reach-remove-mask! (uf-node-reach n) retired)
-              (unless (eq? n winner) (compact-reach-put! retired winner)))
-            (for-each (lambda (target)
-              (when (or (not (eq? target winner)) (eq? n winner))
-                (reach-remove! (uf-node-reach n) target))) cycle))))) roots)
-    (for-each (lambda (n)
-      (set! (uf-node-reach n) (reach-retired (uf-node-reach n)))
-      (when (uf-node-predecessors n)
-        (set! (uf-node-predecessors n) (reach-retired (uf-node-predecessors n))))) roots)
-    (when (uf-group-registry group)
-      (for-each (lambda (n) (unless (eq? n winner) (ExtensibleVector-set! (uf-group-registry group) (uf-node-order n) #f))) cycle))))
+    (set! (uf-group-population group) remaining)
+    (set! (uf-group-roots group)
+      (if whole-group? (list winner) (prune-cycle-roots roots oldest)))
+    (when whole-group? (set! (uf-group-registry group) #f))))
+
+;; The source owner has admitted every prefix on a fresh group. The open
+;; chain's arcs all disappear at closure. Build the same singleton roster
+;; and let the ordinary collapse choose the winner and merge its members.
+(def (gerbil-ascent-trrel-uf-commit-source-cycle! groups vertices)
+  (let* ((width (vector-length vertices))
+         (indexed? (> width 64))
+         (nodes (make-hash-table size: width)))
+    (def (birth rank order)
+      (let* ((value (vector-ref vertices rank)) (node (fresh value order indexed?)))
+        (hash-put! nodes value node)
+        node))
+    (let* ((first (birth 0 2))
+           (second (birth 1 1))
+           (roots (let build ((rank 2) (roots (list first second)))
+                    (if (= rank width) roots
+                      (build (+ rank 1) (cons (birth rank (- (* 2 rank) 1)) roots)))))
+           (group (make-uf-group nodes roots (* 2 (- width 1)) indexed? width #f)))
+      (merge-cycle! group roots roots)
+      (hash-put! groups '(2 #f) group))))
 
 ;; : (forall (a) (-> UfState Row Natural (-> [Rectangle] Natural Natural a) a))
 ;; : (-> UfState Row Natural FrontierPublisher Publication)
@@ -153,46 +200,61 @@
          (roots (append new (uf-group-roots group)))
          (population (+ (uf-group-population group) (length new)))
          (fresh-product? (and (not (eq? a b)) (or (not left-node) (not right-node))))
+         (closes-cycle? (and (not (eq? a b)) (reachable? b a)))
          (preds (cond ((not left-node) (list a))
-                      ((and (not rectangles?) (not (reachable? b a)) (uf-group-indexed? group)
+                      ((and (not rectangles?) (not (eq? a b)) (not closes-cycle?) (uf-group-indexed? group)
                             (compact-reach? (uf-node-predecessors a)))
                        (make-closure-axis a (uf-node-predecessors a)))
                       ((uf-group-indexed? group)
                        (ordered-neighbors a (uf-node-predecessors a) roots population (not rectangles?)))
                       (else (select-neighbors (lambda (p) (reachable? p a)) roots (not rectangles?)))))
-         (succs (cond ((not right-node) (list b))
-                      ((and (not rectangles?) (not (reachable? b a)) (compact-reach? (uf-node-reach b)))
-                       (make-closure-axis b (uf-node-reach b)))
-                      ((uf-group-indexed? group)
-                       (ordered-neighbors b (uf-node-reach b) roots population (not rectangles?)))
-                      (else (select-neighbors (lambda (s) (reachable? b s)) roots (not rectangles?)))))
          ;; Capture the intersection in root order before adjacency mutation.
          ;; Succ(b) membership is already represented by b's reach table.
-         (cycle (and (not (eq? a b)) (reachable? b a)
+         (cycle (and closes-cycle?
                      (if rectangles?
                        (filter (lambda (p) (reachable? b p)) preds)
                        (foldl (lambda (p selected)
                          (if (reachable? b p) (cons p selected) selected)) [] preds))))
+         (whole-group? (and cycle (= (length cycle) population)))
+         (singleton? (= (uf-group-population group) (hash-length nodes)))
+         ;; A count-only closure over all singleton roots needs only the
+         ;; existing row degrees. Materialized frontiers still use the
+         ;; ordered difference, including every missing rectangle.
+         (count-square? (and (not rectangles?) whole-group? singleton?))
+         (succs (cond (count-square? [])
+                      ((not right-node) (list b))
+                      ((and (not rectangles?) (not (eq? a b)) (not closes-cycle?)
+                            (compact-reach? (uf-node-reach b)))
+                       (make-closure-axis b (uf-node-reach b)))
+                      ((uf-group-indexed? group)
+                       (ordered-neighbors b (uf-node-reach b) roots population (not rectangles?)))
+                      (else (select-neighbors (lambda (s) (reachable? b s)) roots (not rectangles?)))))
          ;; A fresh source or sink has no external arc. Every pair on these
          ;; axes is missing; self-injections retain ordinary admission.
          (changes []) (needed (length new)) (added [])
-         (target-mask (and (not fresh-product?)
+         (target-mask (and (not count-square?) (not fresh-product?)
                            (uf-group-indexed? group) (reach-copyable? (uf-node-reach b) b)
                            (reach-copy-with-node (uf-node-reach b) b)))
-         (singleton? (= (uf-group-population group) (hash-length nodes)))
          (excess (and target-mask (target-excess target-mask succs singleton?)))
          (target-weight (and target-mask (axis-weight succs singleton?))))
     ;; Count each missing component rectangle before rows or graph mutation.
-    (if (and fresh-product? (not rectangles?))
+    (cond
+     (count-square?
+      (set! needed
+        (foldl (lambda (node missing)
+                 (+ missing (- population 1 (reach-length (uf-node-reach node)))))
+               0 cycle)))
+     ((and fresh-product? (not rectangles?))
       (set! needed (+ needed
-        (* (axis-weight preds singleton?) (axis-weight succs singleton?))))
+        (* (axis-weight preds singleton?) (axis-weight succs singleton?)))))
+     (else
       (axis-for-each (lambda (p)
         (if target-mask
           (set! needed (+ needed (reach-difference-weight target-mask p excess target-weight)))
           (axis-for-each (lambda (s)
             (when (or fresh-product? (not (reachable? p s)))
               (set! needed (+ needed (* (uf-node-size p) (uf-node-size s))))
-              (when (and rectangles? (not target-mask)) (set! changes (cons (cons p s) changes))))) succs))) preds))
+              (when (and rectangles? (not target-mask)) (set! changes (cons (cons p s) changes))))) succs))) preds)))
     (when (> needed budget) (error "ASCENT trrel output fact budget exceeded"))
     (when rectangles?
     (let (prefix (if (= width 3) (list (car row)) []))
@@ -250,7 +312,7 @@
           (set! (uf-node-reach p) (reach-put! (uf-node-reach p) s group)))
         (when (and (uf-group-indexed? group) (not copied-sources?))
           (set! (uf-node-predecessors s) (reach-put! (uf-node-predecessors s) p group))))
-    (unless (and cycle (= (length cycle) population))
+    (unless whole-group?
       (if (and rectangles? (not target-mask))
         (for-each (lambda (change) (commit-arc! (car change) (cdr change))) changes)
         ;; Each root pair is unique. Installing its own arc changes no other
@@ -362,7 +424,7 @@
           (require! (member value (uf-node-members owner)) "ASCENT UF missing member")
           (when (uf-node-parent node)
             (require! (and (null? (uf-node-members node)) (= (uf-node-size node) 0)
-                           (= (reach-length (uf-node-reach node)) 0)
+                           (not (uf-node-reach node))
                            (not (uf-node-predecessors node)))
                       "ASCENT UF absorbed storage retained")))) nodes)
       (for-each (lambda (n)
@@ -420,17 +482,30 @@
     (values (reverse! rights) mass)))
 (def (gerbil-ascent-trrel-uf-freeze groups (indexed? #t))
   (let ((blocks []) (count 0) (units 0))
-    (hash-for-each (lambda (key group)
-      (let* ((roots (uf-group-roots group))
-             (span (foldl (lambda (n bound)
+    ;; Sparse adjacency already names live roots directly. The owner
+    ;; supplies a stable read and only member spines escape this traversal.
+    (def (capture-sparse-group! roots prefix)
+      (for-each
+        (lambda (node)
+          (let ((left (uf-node-members node)) (size (uf-node-size node)))
+            (def (capture target _)
+              (set! count (+ count (* size (uf-node-size target))))
+              (set! units (+ units 1))
+              (set! blocks
+                (cons (make-rectangle prefix left (uf-node-members target)) blocks)))
+            (set! units (+ units size))
+            (capture node #t)
+            (hash-for-each capture (uf-node-reach node))))
+        roots))
+    (def (capture-group! roots prefix)
+      (let* ((span (foldl (lambda (n bound)
                      (let (reach (uf-node-reach n))
                        (if (compact-reach? reach)
                          (max bound (* 32 (##u32vector-length (compact-reach-bits reach)))) bound))) 0 roots))
              ;; Capture-only member references, bounded by existing bitmap span.
              ;; Sparse births beyond that span do not enlarge this array.
              (slots (and (> span 0) (make-vector span #f)))
-             (members (make-hash-table-eq))
-             (prefix (if (= (car key) 3) (list (cadr key)) [])))
+             (members (make-hash-table-eq)))
         (for-each (lambda (node)
           ;; Merge replaces member fields with append-created spines and clears
           ;; absorbed records; it never mutates an existing member pair. Like
@@ -440,7 +515,7 @@
             (let (record (make-frozen-members owned (uf-node-size node)))
               (hash-put! members node record)
               (when (and slots (< (uf-node-order node) span))
-                (vector-set! slots (uf-node-order node) record))))) (uf-group-roots group))
+                (vector-set! slots (uf-node-order node) record))))) roots)
         (for-each (lambda (node)
           ;; Capture each source owner once. Counts come from committed SCC
           ;; metadata; no arc rescans a copied member spine for cardinality.
@@ -463,7 +538,25 @@
                 (if (compact-reach? reach)
                   (compact-reach-for-each-id (lambda (id) (capture (vector-ref slots id))) reach)
                   (hash-for-each (lambda (target _) (capture (hash-get members target))) reach))))))
-          (uf-group-roots group)))) groups)
+          roots)))
+    (hash-for-each
+      (lambda (key group)
+        (let ((roots (uf-group-roots group))
+              (prefix (if (= (car key) 3) (list (cadr key)) [])))
+          (if (and (pair? roots) (null? (cdr roots))
+                   (zero? (reach-length (uf-node-reach (car roots)))))
+            ;; The closed owner needs no routing index. Both axes borrow the
+            ;; same immutable members as the general capture.
+            (let* ((owner (car roots))
+                   (rows (uf-node-members owner))
+                   (size (uf-node-size owner)))
+              (set! count (+ count (* size size)))
+              (set! units (+ units size 1))
+              (set! blocks (cons (make-rectangle prefix rows rows) blocks)))
+            (if (uf-group-registry group)
+              (capture-group! roots prefix)
+              (capture-sparse-group! roots prefix)))))
+      groups)
     (gerbil-ascent-rectangle-view (reverse! blocks) count units indexed?)))
 
 ;; The proved Provider API and engine adapter share one frozen carrier/kernel.

@@ -1,0 +1,33 @@
+#+title: Source audit: indexed graph reuse and ordered relation export
+#+language: en
+#+property: STATUS implementation-and-proof-in-progress
+
+This audit follows ASCENT from source and paper analysis through native
+implementation, formal checks, and benchmark qualification. Each study
+retains its original source revisions, conditions, and observed results.
+Gerbil Scheme supplies the language, standard library, and =gerbil=
+commands. Gambit supplies the VM, allocator, and collector. SDK in an
+experiment receipt refers to the pinned =gerbil-bazel= release archive.
+
+* Checkpoint scope
+
+This revision publishes the Scheme weighted UF changes, native weighted
+benchmark entry, and Lean and Org studies. Some experiments below used
+additional local source changes or a privately linked Gambit runtime.
+Those receipts identify their own inputs and remain separate from this
+revision's verification. The published toolchain pin remains the
+one inherited from PR #1. The full 235-case matrix and repeatable strict
+100 ms scale acceptance remain open on a publishable build.
+
+* Studies
+
+- [[file:graph-index-export/research-and-design.org][Research and design]]. Paper correspondence, POO mechanisms, and proof obligations.
+- [[file:graph-index-export/application-direction.org][Application selection]]. Existing caller contracts, Lean obligations, and the scoped-query experiment.
+- [[file:graph-index-export/build-and-integration.org][Build and integration]]. Package revisions, native build boundaries, and integration receipts.
+- [[file:graph-index-export/weighted-export.org][Weighted relation export]]. Complete export, order and detachment, and materializer controls.
+- [[file:graph-index-export/collector-and-allocation.org][Collector and allocation]]. Retained roots, GC policy, allocation attribution, and strict scale evidence.
+- [[file:graph-index-export/graph-ownership.org][Graph ownership and packed reachability]]. POO graph comparisons, affected SCCs, and ordered packed axes.
+- [[file:graph-index-export/index-and-expression-execution.org][Index and expression execution]]. Index admission, compiler and evaluation costs, and candidate controls.
+- [[file:graph-index-export/incremental-reasoning.org][Incremental reasoning]]. Projection admission, source updates, rule selection, and stratification.
+- [[file:graph-index-export/native-matrix.org][Native acceptance matrix]]. Original scenario inventory, failing controls, and exact matrix receipts.
+- [[file:graph-index-export/actor-scheduling.org][Actor scheduling]]. Native mailbox, SCC readiness, completion ownership, and timing receipts.

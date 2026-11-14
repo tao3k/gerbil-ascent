@@ -164,7 +164,7 @@
             ;; count publication avoids constructing discarded frontier views.
             (set! source-materialized-count
               (gerbil-ascent-storage-initialize-uf! (vector-ref storage-states index)
-                rows check-source! source-materialized-count output-limit))
+                rows check-source! source-materialized-count output-limit (= width 2)))
             (gerbil-ascent-storage-admit-state! (vector-ref storage-states index)))
            (native-view?
             (source-admission-loop callbacks rows

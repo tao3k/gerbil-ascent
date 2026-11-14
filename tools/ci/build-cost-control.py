@@ -423,7 +423,7 @@ def main():
                'workbench/tests/test_compiler_cost.py',
                'workbench/tests/test_reference_cache.py',
                'workbench/tests/test_study_profile.py',
-               'workbench/tests/fixtures/allocation-stack.scm',
+               'workbench/tests/fixtures/allocation-stack.ss',
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',
                'packages/proofs/quint/PreparationWork.qnt',

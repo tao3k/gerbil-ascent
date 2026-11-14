@@ -28,7 +28,7 @@
               (path-expand "static/clan__poo__support__base.scm" (car (load-path))))
             (check-equal? (file-exists? staged) #t))
           (def (run action)
-            (call-with-static-link-inputs root '("entry.ss")
+            (call-with-static-link-inputs (path-expand "entry.ss" root)
               '(ascent-static-fixture/entry) action))
           (check-equal? (run (lambda () (input!) 'linked)) 'linked)
           (check-equal? (eq? paths (load-path)) #t)

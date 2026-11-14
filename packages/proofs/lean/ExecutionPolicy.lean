@@ -620,7 +620,6 @@ def renderedSource (name : String) : IO String := do
   | "quint" => pure Ascent.ExecutionPolicy.quintSource
   | "preparation-python" => pure Ascent.PreparationPolicy.pythonSource
   | "preparation-quint" => pure Ascent.PreparationPolicy.quintSource
-  | "preparation-selection" => pure Ascent.PreparationWork.selectionSchemeSource
   | "preparation-interface-quint" => pure Ascent.PreparationWork.interfacesQuintSource
   | "preparation-interfaces" => pure Ascent.PreparationWork.interfacesSchemeSource
   | "proof-authority-rust" => pure Ascent.LookupCost.proofAuthorityRustSource
@@ -687,7 +686,7 @@ def renderedSource (name : String) : IO String := do
   | "preparation-groups" => pure Ascent.PreparationWork.groupsSchemeSource
   | "preparation-heap" => pure Ascent.PreparationWork.heapRecipeSource
   | "preparation-runner" => pure Ascent.PreparationWork.runnerRecipeSource
-  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-selection, preparation-import, preparation-source or preparation-runner")
+  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-import, preparation-source or preparation-runner")
 
 
 def main (args : List String) : IO Unit := do

@@ -3,9 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Build only. Upstream Gerbil owns test discovery and execution.
 (import (only-in :gerbil/compiler compile-exe execute-pending-compile-jobs!)
-        :gerbil/expander
         (only-in :std/make make)
-        (only-in :asp-gerbil-scheme/src/build-api/native-spec-support normalize-spec)
         :std/iter
         (only-in :std/list/list delete-duplicates/hash)
         (only-in :std/list/list-builder with-list-builder)
@@ -14,13 +12,12 @@
         (only-in :std/string/path path-default-extension)
         (only-in :clan/poo/object .call .get)
         (only-in :tao3k/yuanxu/module-system/building/source-package call-with-build-input-path)
-        (only-in :asp-gerbil-scheme/src/build-api/native-import-closure
-                 asp-gerbil-scheme-prepared-native-import-closure
-                 call-with-asp-gerbil-scheme-prepared-source-graph)
-        (only-in "artifact-admission.ss" artifact-support-cache artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-compiler-options-current? artifact-record-compiler-options!)
+        (only-in :tao3k/yuanxu/module-system/building/source-closure package-library-spec)
+        (only-in "artifact-admission.ss" artifact-support-cache artifact-support-projection artifact-record-support-cache! artifact-main artifact-sources artifact-matching-sources? artifact-directory! artifact-record-compiler-options!)
 ;; BEGIN GENERATED PREPARATION IMPORT
         (only-in "../../build.ss" gerbil-ascent-compiler-options
-                 gerbil-ascent-build-projection gerbil-ascent-library-modules)
+                 gerbil-ascent-build-projection gerbil-ascent-library-modules
+                 gerbil-ascent-compiler-target)
 ;; END GENERATED PREPARATION IMPORT
         (only-in :asp-gerbil-scheme/src/build-api/core-capacity initialize-native-build-core-capacity!))
 (def package-library (path-expand "lib" (gerbil-path)))
@@ -40,7 +37,7 @@
 ;; Previously compiled fixtures remain build inputs. A producer or SDK update
 ;; must let compiled make refresh their imports, rather than leave stale private
 ;; call entry points in a warm package prefix. Cases still load through GxTest.
-(def (cached-support-modules (all-outputs? #f))
+(def (cached-support-modules)
   (with-list-builder (collect)
     (def (visit module)
       (def output (path-expand (string-append "gerbil-ascent/" module) package-library))
@@ -50,22 +47,11 @@
            (for (name (list-sort string<? (directory-files output)))
              (visit (string-append module "/" name))))
           ((and (string-suffix? ".ssi" module)
-                (or all-outputs?
-                    (and (not (string-suffix? "-test.ssi" module))
-                         (file-exists? (string-append (path-strip-extension module) ".ss")))))
+                (not (string-suffix? "-test.ssi" module))
+                (file-exists? (string-append (path-strip-extension module) ".ss")))
            (collect (path-strip-extension module))))))
-    (for (tree (if all-outputs? '("t" "bindings" "init.ssi")
-                   '("t/qualification" "t/performance")))
-      (visit tree))))
-
-;; BEGIN GENERATED PREPARATION SELECTION
-;; Generated from PreparationWork.lean; formal CI compares this region.
-(def (preparation-selected-dependencies tests entries)
-  (apply append
-    (map cdr
-      (filter (lambda (entry) (ormap (cut member <> tests) (car entry))) entries))))
-;; END GENERATED PREPARATION SELECTION
-
+    (visit "t/qualification")
+    (visit "t/performance")))
 
 (def (prepare-test-library! (tests []) (source-suites? #f) (source-consumers []))
   ;; Module DSL fragments are native compiler inputs owned by init, not
@@ -98,13 +84,11 @@
           (delete-duplicates/hash
             (append production
               (preparation-support-roots source-suites? test-library-base
-                (preparation-selected-dependencies tests test-library-dependencies)
+                []
                 (cached-support-modules))) from-end?: #t)))
-    ;; Every source Suite remains a projection root. Gerbil supplies its actual
-    ;; imports; unrelated oracle/CLI drivers are not an implicit fixture catalog.
-    ;; Retain cached fixtures so make refreshes their production ABI when stale.
-    ;; Source Suites remain source inputs to GxTest. Gerbil loads each root
-    ;; and ASP projects the same resident contexts for std/make.
+    ;; Yuanxu discovers fixture dependencies from the selected source roots.
+    ;; Cached fixtures also remain roots so Make can refresh their production
+    ;; imports. GxTest still loads the ordinary Suites from source.
     (let* ((phase (current-jiffy))
            (roots (preparation-projection-roots production
                     modules tests source-consumers #f)))
@@ -120,26 +104,20 @@
           (displayln "BUILD-TEST-LIBRARY projection-cache-hit=1")
           (displayln "BUILD-TEST-LIBRARY-PHASE source-context-reuse wall-seconds="
                      (build-elapsed reused)))
-        (let (loading (current-jiffy))
-          (for-each (lambda (root) (import-module (path-default-extension root ".ss") #f #f)) roots)
-          (displayln "BUILD-TEST-LIBRARY-PHASE source-context-load wall-seconds="
-                     (build-elapsed loading))
-          (let* ((projection-started (current-jiffy))
-                 (closure
-                  (call-with-asp-gerbil-scheme-prepared-source-graph
-                    (lambda ()
-                      (asp-gerbil-scheme-prepared-native-import-closure (current-directory) roots)))))
-            (set! modules
-              (delete-duplicates/hash
-                (append modules
-                  (map path-strip-extension
-                    (filter (lambda (source)
-                              (and (not (member source tests))
-                                   (preparation-retained-source? source source-suites? source-consumers)))
-                            closure)))
-                from-end?: #t))
-            (displayln "BUILD-TEST-LIBRARY-PHASE resident-context-projection wall-seconds="
-                       (build-elapsed projection-started)))))
+        (let* ((projection-started (current-jiffy))
+               (closure (package-library-spec (current-directory) 'gerbil-ascent
+                          (map (cut path-default-extension <> ".ss") roots))))
+          (set! modules
+            (delete-duplicates/hash
+              (append modules
+                (filter (lambda (module)
+                          (let (source (path-default-extension module ".ss"))
+                            (and (not (member source tests))
+                                 (preparation-retained-source? source source-suites? source-consumers))))
+                        closure))
+              from-end?: #t))
+          (displayln "BUILD-TEST-LIBRARY-PHASE resident-context-projection wall-seconds="
+                     (build-elapsed projection-started))))
       (displayln "BUILD-TEST-LIBRARY-PHASE dependency-projection wall-seconds="
                  (build-elapsed phase)))
     (call-with-output-file [path: module-file truncate: #t]
@@ -162,7 +140,7 @@
       ;; Only requested compiled consumers compile; ordinary semantic Suites are
       ;; discovered and loaded by the standard Gerbil test entry.
       (let (phase (current-jiffy))
-        (make (map (cut normalize-spec <> gerbil-ascent-compiler-options) all)
+        (make (map gerbil-ascent-compiler-target all)
               srcdir: (current-directory) libdir: library
               build-deps: (path-expand "build_deps" test-cache)
               optimize: optimize?)

@@ -22,35 +22,13 @@ def inventoryPackageDeclarations : InventorySource → Nat
   | .buildEntry => 1
 
 def inventoryImportSchemeSource : String :=
-  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options\n                 gerbil-ascent-build-projection gerbil-ascent-library-modules)\n"
+  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options\n                 gerbil-ascent-build-projection gerbil-ascent-library-modules\n                 gerbil-ascent-compiler-target)\n"
 
 theorem module_data_avoids_package_declaration :
     inventoryPackageDeclarations .moduleData = 0 ∧
     inventoryPackageDeclarations .buildEntry = 1 := by decide
 
-abbrev Dependency := List String × List String
-def requested (tests : List String) (entry : Dependency) : Bool :=
-  entry.1.any tests.contains
-def selected (tests : List String) (entries : List Dependency) : List String :=
-  (entries.filter (requested tests)).flatMap Prod.snd
-
--- A declared dependency has no cost effect in a lane that does not request it.
--- Ordinary source Suites are absent from prepare-test-library's
--- performance consumers. Deleting its bridge entry cannot explain that lane.
-theorem inactive_dependency_no_work (tests : List String)
-    (before after : List Dependency) (entry : Dependency)
-    (inactive : requested tests entry = false) :
-    selected tests (before ++ entry :: after) = selected tests (before ++ after) := by
-  simp [selected, List.filter_append, inactive]
-
-def selectionSchemeSource : String :=
-  ";; Generated from PreparationWork.lean; formal CI compares this region.\n" ++
-  "(def (preparation-selected-dependencies tests entries)\n" ++
-  "  (apply append\n" ++
-  "    (map cdr\n" ++
-  "      (filter (lambda (entry) (ormap (cut member <> tests) (car entry))) entries))))\n"
-
--- The native ASP/Gerbil graph supplies dependencies; this policy decides only
+-- The Yuanxu/Gerbil import graph supplies dependencies; this policy decides only
 -- which carriers are compiled. It never removes a source Suite from discovery.
 def retainedSource (sourceSuites : Bool) (sourceConsumers : List String) (path : String) : Bool :=
   !sourceConsumers.contains path && (!sourceSuites || !path.endsWith "-test.ss")
@@ -904,7 +882,6 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms missing_receipt_requires_work
 #print axioms bundle_requires_current_inputs
 #print axioms module_data_avoids_package_declaration
-#print axioms inactive_dependency_no_work
 #print axioms removed_two_observations
 #print axioms ordered_allocation_snapshots
 #print axioms nested_inclusive_double_counts

@@ -40,16 +40,17 @@
 ;; : (forall (v) (-> [[v]] [[v]]))
 ;; : (-> Rows DetachedRowSpines)
 (def (gerbil-ascent-index-row-snapshot rows)
-  (map (lambda (row) (map values row)) rows))
+  (map list-copy rows))
 
 ;;; Admit and detach the whole provider packet before membership or callbacks.
 ;;; The width bounds traversal even for cyclic/improper rows. Each copied
 ;;; suffix is admitted before its prefix is constructed; failed packets escape
 ;;; no row spines. Field values remain borrowed, including mutable values.
 ;; : (-> ProperRowPacket Nat DetachedRowSpines)
-(def (gerbil-ascent-index-row-snapshot/arity rows width)
-  (def (wrong-arity)
-    (error "ASCENT index provider returned wrong row arity" width))
+(def (gerbil-ascent-index-row-snapshot/arity rows width
+                                            (wrong-arity
+                                             (lambda ()
+                                               (error "ASCENT index provider returned wrong row arity" width))))
   (def (copy row left)
     (if (zero? left)
       (if (null? row) [] (wrong-arity))

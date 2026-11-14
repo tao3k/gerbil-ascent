@@ -35,7 +35,7 @@
       (gerbil-ascent-index-build rows columns))
     ;; Open receivers get their own header, never admitted column metadata.
     (gerbil-ascent-index-provider-build provider
-      (gerbil-ascent-index-row-snapshot rows) (map values columns))))
+      (gerbil-ascent-index-row-snapshot rows) (list-copy columns))))
 
 ;; : (-> IndexProvider Index Rows Columns Index)
 (def (gerbil-ascent-physical-index-extend! provider index rows columns)
@@ -44,7 +44,7 @@
       (extend-scalar-index! index rows (car columns))
       (gerbil-ascent-index-extend! index rows columns))
     (gerbil-ascent-index-provider-extend! provider index
-      (gerbil-ascent-index-row-snapshot rows) (map values columns))))
+      (gerbil-ascent-index-row-snapshot rows) (list-copy columns))))
 
 ;; : (-> IndexProvider Index Key Rows)
 (def (gerbil-ascent-physical-index-rows provider index key)
@@ -54,7 +54,7 @@
       (or (hash-get index key) []))
     ;; Keep the evaluated key intact for the caller's coverage witness even
     ;; when the receiver mutates or retains its argument header.
-    (let (matched (gerbil-ascent-index-provider-lookup provider index (map values key)))
+    (let (matched (gerbil-ascent-index-provider-lookup provider index (list-copy key)))
       (unless (list? matched)
         (error "ASCENT index provider returned non-list rows" matched))
       matched)))

@@ -8,7 +8,7 @@
   (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent))
 (import (only-in "init.ss" gerbil-ascent.init.exports std-make-spec)
         (only-in :clan/poo/object .call .get .o)
-        (only-in :gerbil/expander core-import-module import-module current-expander-compiling?)
+        (only-in :gerbil/expander core-import-module)
         (only-in :tao3k/yuanxu/module-system/building/artifacts
                  call-with-static-compiler-inputs)
         (only-in :tao3k/yuanxu/module-system/building/source-closure
@@ -56,23 +56,18 @@
   (gerbil-ascent-compiler-targets
     `((gxc: "interface/hybrid" "-ld-options" ,(gerbil-ascent-module-link-options)))))
 
-(def (gerbil-ascent-build-spec)
-  (def c-dir (path-expand "bindings/c" (path-directory (this-source-file))))
-  (def c-options (list "-cc-options" (string-append "-fPIC -I" c-dir)))
-  (def (with-c-inputs target)
-    ;; Yuanxu v0.1.0 accepts native option strings in Module Build values.
-    ;; STD Make also accepts this input plist, which tracks the C header.
-    (match target
-      ([gxc: "interface/runtime" . options]
-       `(gxc: "interface/runtime"
-              (extra-inputs: (,(path-expand "runtime.c" c-dir)
-                              ,(path-expand "ascent.h" c-dir)))
-              ,@c-options ,@options))
-      ([exe: "interface/entry" . options]
-       (append target c-options))
-      (else target)))
+;; The Module Build contract accepts Gambit flags. The C source dependencies
+;; use STD Make's target property list at the package boundary.
+(def (gerbil-ascent-build-spec spec)
   (gerbil-ascent-compiler-targets
-    (map with-c-inputs (append std-make-spec '("init")))))
+    (map (lambda (target)
+           (match target
+             ([gxc: "interface/runtime" . options]
+              `(gxc: "interface/runtime"
+                 (extra-inputs: ("bindings/c/runtime.c" "bindings/c/ascent.h"))
+                 ,@options))
+             (else target)))
+         spec)))
 
 ;; Gambit writes generated C beside borrowed static Scheme. Yuanxu owns the
 ;; writable extent and checks the original inputs across the link.
@@ -91,45 +86,31 @@
         gerbil-ascent-build-spec gerbil-ascent-rust-spec
         gerbil-ascent-compiler-options call-with-static-link-inputs main)
 
-(def (with-compiler-inputs spec action)
-  (def root (path-directory (this-source-file)))
-  (def entries
-    (filter-map (lambda (target)
-                  (and (eq? (car target) exe:)
-                       (string-append (cadr target) ".ss")))
-                spec))
-  (def owned
-    (map (lambda (name)
-           (string->symbol (string-append "gerbil-ascent/" name)))
-         (gerbil-ascent-library-modules spec)))
-  (.call (.get gerbil-ascent.init.exports build) .with-compiler-inputs
-    (lambda ()
-      (call-with-build-input-path (path-expand "lib" (gerbil-path))
-        (lambda ()
-          ;; The build script has already imported the source-only declaration.
-          ;; Use the compiler context for the public init product.
-          (parameterize ((current-expander-compiling? #t))
-            (import-module (path-expand "init.ss" root) #t))
-          (call-with-static-link-inputs root entries owned action))
-        make-source: root))))
-
 (def (main . args)
-  (def spec (gerbil-ascent-build-spec))
+  ;; Include the public init product in the same source projection as its roles.
+  (def projection (.call gerbil-ascent.init.exports .project-build '("init")))
+  (def spec (gerbil-ascent-build-spec (.get projection spec)))
   (def optimize? (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
   (def (dispatch targets)
     (defbuild-script targets optimize: optimize?)
     (apply main args))
-  ;; Gerbil handles the commands and flags. Only compilation borrows inputs.
+  ;; Both native links generate C for their common static inputs. Drain each
+  ;; link before starting the next while retaining STD Make's worker defaults.
   (if (or (null? args) (equal? (car args) "compile"))
-    (with-compiler-inputs spec
-      (lambda ()
-        (let-values (((links modules)
-                      (partition (lambda (target) (eq? (car target) exe:)) spec)))
-          ;; Gambit rewrites C beside the shared static inputs. Native Make
-          ;; drains each link's jobs before the next link can write there.
-          (match links
-            ([first . rest]
-             (dispatch (append modules [first]))
-             (for-each (lambda (link) (dispatch [link])) rest))
-            ([] (dispatch modules))))))
+    (let-values (((links modules) (partition (lambda (target) (eq? (car target) exe:)) spec)))
+      (def root (path-directory (this-source-file)))
+      (def entries (map (lambda (link) (string-append (cadr link) ".ss")) links))
+      (.call projection .prepare-compiler-contexts)
+      (.call projection .with-compiler-inputs
+        (lambda ()
+          (call-with-build-input-path (path-expand "lib" (gerbil-path))
+            (lambda ()
+              (call-with-static-link-inputs root entries (.get projection compiler-identities)
+                (lambda ()
+                  (match links
+                    ([first . rest]
+                     (dispatch (append modules [first]))
+                     (for-each (lambda (link) (dispatch [link])) rest))
+                    ([] (dispatch modules))))))
+            make-source: root))))
     (dispatch spec)))

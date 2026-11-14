@@ -8,9 +8,11 @@
 ;;; the evaluator preflights returned batches before committing its own rows.
 (import (only-in :gerbil-ascent/core/relation-view gerbil-ascent-row-count)
         (only-in :gerbil/runtime/gambit fx-)
-        (only-in :clan/poo/object .o .ref seal-object!)
+        (only-in :clan/poo/object .o .ref .call seal-object!)
+        (only-in "funs.ss" gerbil-ascent-index-row-snapshot
+                 gerbil-ascent-index-row-snapshot/arity)
         (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :tao3k/yuanxu/object-types/contracts
+        (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
         (only-in "eqrel.ss" gerbil-ascent-eqrel-state
@@ -60,7 +62,7 @@
 
 ;; : (-> StorageProvider StorageState)
 (def (gerbil-ascent-storage-make-state provider)
-  ((.ref provider '.make-state)))
+  (.call provider .make-state))
 
 ;;; Admit a newest-first source-log prefix against Set membership. On an
 ;;; empty Set, a unique whole log is already the correct row spine and can be
@@ -225,9 +227,6 @@
   (when (storage-state-owner? state)
     (storage-state-transition! state 'ready)))
 
-(def (owned-storage-rows rows)
-  (map (lambda (row) (map values row)) rows))
-
 ;;; One readiness protocol for mutable native and custom state. Native kernels
 ;;; still receive their raw state and borrowed rows; custom dispatch owns spines.
 (def (call-with-storage-state state invoke)
@@ -264,29 +263,19 @@
   (let (extend (.ref provider '.extend-rows))
     (if (memq provider +native-storage-providers+)
       extend
-      (lambda (state all pending row budget)
-        (call-with-storage-state
-         state
-         (lambda (raw-state)
-           (let* ((owned-all (owned-storage-rows all))
-                  (owned-pending (if (eq? all pending) owned-all
-                                   (owned-storage-rows pending)))
-                  (expanded (extend raw-state owned-all owned-pending
-                                    (map values row) budget)))
-             (unless (list? expanded)
-               (error "ASCENT storage provider returned non-list rows"))
-             ;; Bound row shape traversal before copying or field callbacks.
-             (for-each
-              (lambda (stored)
-                (let loop ((remaining stored) (left width))
-                  (if (= left 0)
-                    (unless (null? remaining)
-                      (error "invalid ASCENT storage provider row"))
-                    (if (pair? remaining)
-                      (loop (cdr remaining) (- left 1))
-                      (error "invalid ASCENT storage provider row")))))
-              expanded)
-             (owned-storage-rows expanded))))))))
+      (let (invalid-row (lambda () (error "invalid ASCENT storage provider row")))
+        (lambda (state all pending row budget)
+          (call-with-storage-state
+            state
+            (lambda (raw-state)
+              (let* ((owned-all (gerbil-ascent-index-row-snapshot all))
+                     (owned-pending (if (eq? all pending) owned-all
+                                      (gerbil-ascent-index-row-snapshot pending)))
+                     (expanded (extend raw-state owned-all owned-pending
+                                       (list-copy row) budget)))
+                (unless (list? expanded)
+                  (error "ASCENT storage provider returned non-list rows"))
+                (gerbil-ascent-index-row-snapshot/arity expanded width invalid-row)))))))))
 
 ;;; The schema selects engine dispatch separately from the raw graph API.
 ;;; Canonical Set has no mutable storage state. Other native kernels borrow

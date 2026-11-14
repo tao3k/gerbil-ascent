@@ -42,6 +42,7 @@ snapshot and program; source completeness remains a caller obligation.
 #+NAME: source-ledger
 | Feature | Source and durable link | Local note | Main design constraint |
 |-----+-------------------------+------------+------------------------|
+| finite-choice evaluation ideas | [[https://arxiv.org/html/2405.19040v3][Finite-Choice Logic Programming, POPL 2025]] | [[file:finite-choice-planning.org][DSL design transfer audit]] | Native matching costs, finite-choice semantics and prefix reuse |
 | rule planning | [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent paper]] | [[file:rule-planning.org][Ascent]] | Preserve rule and planner information |
 | Provider concretization | [[https://kmicinski.com/assets/byods.pdf][BYODS paper]] | [[file:provider-concretization.org][BYODS]] | Preserve concrete and delta meaning when a Provider adds facts |
 | monotone containers | [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types, ECOOP 2025]] | [[file:monotone-containers.org][mono types]] | First-class containers need monotone, order-independent reads and a distinct termination bound |

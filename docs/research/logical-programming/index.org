@@ -6,6 +6,7 @@ Application Evidence and model efficacy studies are owned by POO Flow; see
 
 | Library question | Reading | Native owner | Formal scope |
 |------------------+---------+--------------+--------------|
+| Closure before choice and branch-local reuse | [[file:finite-choice.org][Finite-choice logic programming / Dusa]] | checked choice grounding and branch-local Session cuts | Paper and upstream implementation reading |
 | Grounded support and alternatives | [[file:weighted-provenance.org][Weighted provenance]] | candidate/provenance.ss | ProofDag and DerivationCounts |
 | Bounded nonmembership | [[file:why-not-explanations.org][Why-not explanations]] | candidate/nonmembership.ss | PositiveNonmembership and CertificateMaterial |
 | Derivation height | [[file:proof-height.org][Proof height]] | candidate/support-height.ss | MinimumHeight |

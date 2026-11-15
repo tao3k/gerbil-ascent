@@ -20,7 +20,7 @@
  (inputShape . "256 vertices with two outgoing edges each, encoded as 512 bounded binary pairs")
  (expectedOutcome . "one- and two-hop relation projection has 1024 distinct pairs")
  (expectedRepair . "preserve the indexed bounded join and POO slot demand; keep source encoding and MRR admission separate")
- (baseline . "scalar-list sort-merge control with public input and final trie set admission")
+ (baseline . "scalar-list sort-merge with ordered Patricia construction and public trie admission")
  (candidate . "POO expression with private vector index, bounded byte-vector deduplication, and canonical list output")
  (measurementPhases baseline-projection candidate-projection assert-semantic-gate assert-time-gate assert-global-point-witness observe-runtime-memory)
  (tags poo ascent relation stdlib performance big-o))

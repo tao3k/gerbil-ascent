@@ -305,6 +305,38 @@ The production Session suite additionally alternates two same-sized
 16384-edge cuts whose target values differ at every key, checking the
 result of each replacement against the arithmetic oracle.
 
+* Two-hop table expression carrier costs
+
+#+begin_src sh
+timeout --signal=KILL 216s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/table-expression-test.ss
+#+end_src
+
+With the compiled test library available, run 1000 samples per arm on the
+same 512 source pairs used by the performance gate. The frozen generic
+constructor and the ordered Patricia constructor use the same public source
+fold, sort-merge join, and public result projection. The profiler records
+source/index, join, normalization, construction, and final projection CPU
+separately. Total wall and collector CPU include the ASP receipt work.
+Both arms must export the complete independently generated set of 1024 keys.
+The source and join emit 1536 occurrences before set admission. Only the
+ordered constructor consumes the 1024 distinct keys. Lean
+=PhysicalBuckets.SortMergeCarrier= proves preservation of key membership and
+that sorting keeps the normalized constructor input count. The native
+qualification also checks the global point witness and wide encoded keys.
+
+In the local arm64 comparison, construction CPU for 1000 samples fell
+from 48.94 to 1.06 seconds, with 0.27 seconds for key normalization.
+Public projection used 18.10 and 18.14 seconds, and still owns complete
+carrier validation. Total wall fell from 80.88 to 29.38 seconds. The
+unchanged full local gate completed all 17 Cases with the optimized
+benchmark control. Its table-expression candidate P95 was 11.549 ms
+against the control's 30.494 ms.
+
+The scenario keeps the 1000-sample candidate and relative P95 checks, the
+20 ms candidate ceiling, and the full 512-input/1024-output point witness.
+Both baseline paths keep the checked public projection of the carrier.
+
 * Gambit allocation calibration
 
 #+begin_src sh

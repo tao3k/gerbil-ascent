@@ -59,6 +59,9 @@
             (when (<= (length edges) 16)
               (check-equal? (ascent-table-expression-global-point-reference pairs radix) naive))))
         (list '(8) '(8 10 19 12 35 10) '(8 10 17)
+          (let (radix (arithmetic-shift 1 72))
+            ;; A diamond with two paths to the same wide encoded key.
+            (list radix (+ radix 2) (+ radix 3) (+ (* 2 radix) 4) (+ (* 3 radix) 4)))
           (cons 256 (let loop ((node 0) (edges []))
             (if (= node 256) edges
               (loop (+ node 1)

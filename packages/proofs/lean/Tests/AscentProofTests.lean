@@ -433,6 +433,8 @@ example (old next : Bool → Bool → Bool → Prop) (seed output : Bool) :
 #print axioms Ascent.PhysicalBuckets.refill_after_replacement_exact
 #print axioms Ascent.PhysicalBuckets.direct_source_build_preserves_order
 #print axioms Ascent.PhysicalBuckets.source_pair_allocation_exact
+#print axioms Ascent.PhysicalBuckets.SortMergeCarrier.ordered_keys_exact
+#print axioms Ascent.PhysicalBuckets.SortMergeCarrier.ordered_keys_write_count
 #print axioms Ascent.PhysicalBuckets.replacement_preserves_held_rows
 #print axioms Ascent.PhysicalBuckets.extend_newest_first_exact
 #print axioms Ascent.SourceUpdateFrame.borrowed_lane_is_initial_lane

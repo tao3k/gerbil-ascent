@@ -4,18 +4,21 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 ;;; Persistent-trie control based on POO PR #34, 4ee113d3.
-;;; Current public set insertion admits each complete root. Build the private
-;;; join stream first and use the official bulk constructor once; preserve all
-;;; final carrier/child checks. Point joins use source-local sets; the original
-;;; global point algorithm remains a separate diagnostic witness.
+;;; Build the private sort-merge stream, canonicalize its keys, and reuse the
+;;; ordered Patricia builder. Public projection admits the complete carrier.
+;;; Point joins use source-local sets; the original global point algorithm
+;;; remains a separate diagnostic witness.
 ;;; Benchmark evidence only; this is not a second runtime path.
 
 (import (only-in :clan/poo/object .ref .call)
         (only-in :clan/poo/number UInt)
-        (only-in :clan/poo/trie SimpleTrie UIntTrieSet))
+        (only-in :clan/poo/trie SimpleTrie UIntTrieSet)
+        (only-in :std/list/list delete-duplicates/hash)
+        (only-in :gerbil-ascent/core/ordered-pair-set gerbil-ascent-ordered-pair-set))
 
 (export ascent-table-expression-baseline ascent-table-expression-point-reference
-        ascent-table-expression-global-point-reference)
+        ascent-table-expression-global-point-reference
+        baseline-indexes baseline-compose baseline-ordered-keys)
 
 (def AdjacencyTable (SimpleTrie UInt UIntTrieSet))
 (def (baseline-index/point pairs radix)
@@ -106,8 +109,13 @@
     (.call UIntTrieSet .list<-
       (.call UIntTrieSet .<-list (append (.call UIntTrieSet .list<- pairs) rows)))))
 
+;; Both streams are private. The sort reuses the duplicate filter's fresh
+;; result spine, so non-unique join paths never create intermediate trie roots.
+(def (baseline-ordered-keys source-rows two-hop)
+  (list-sort! < (delete-duplicates/hash (append! source-rows two-hop))))
+
 (def (ascent-table-expression-baseline pairs radix)
   (let-values (((outgoing incoming source-rows) (baseline-indexes pairs radix)))
-    (let (two-hop (baseline-compose incoming outgoing radix))
-      (.call UIntTrieSet .list<-
-        (.call UIntTrieSet .<-list (append source-rows two-hop))))))
+    (let* ((two-hop (baseline-compose incoming outgoing radix))
+           (keys (baseline-ordered-keys source-rows two-hop)))
+      (.call UIntTrieSet .list<- (gerbil-ascent-ordered-pair-set keys)))))

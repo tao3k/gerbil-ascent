@@ -241,4 +241,23 @@ theorem source_pair_allocation_exact (row : Row) (before : Option (SourceBucket 
   | none => rfl
   | some bucket => cases bucket <;> simp [storedSourcePairs, allocatedSourcePairs, pushSourceBucket] <;> omega
 
+/-! The sort-merge control owns both streams before normalization. The
+Patricia constructor takes the normalized keys, and the public projection
+still validates the root. These laws account for the stream and its
+construction inputs; the native trie primitive owns representation checks. -/
+namespace SortMergeCarrier
+
+def orderedKeys (direct joined : List Nat) : List Nat :=
+  (direct ++ joined).eraseDups.mergeSort
+
+theorem ordered_keys_exact (direct joined : List Nat) (key : Nat) :
+    key ∈ orderedKeys direct joined ↔ key ∈ direct ∨ key ∈ joined := by
+  simp [orderedKeys, List.mem_eraseDups]
+
+theorem ordered_keys_write_count (direct joined : List Nat) :
+    (orderedKeys direct joined).length = (direct ++ joined).eraseDups.length := by
+  simp [orderedKeys]
+
+end SortMergeCarrier
+
 end Ascent.PhysicalBuckets

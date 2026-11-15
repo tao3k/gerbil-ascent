@@ -14,7 +14,7 @@
                    (gerbil-ascent-shared-index-rows old-shared-rows))
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes
                  row-indexes-rows row-indexes-old-rows row-indexes-publish-old-tail!
-                 row-indexes-advance! row-indexes-plan-atoms!)
+                 row-indexes-advance! row-indexes-plan-atoms! row-indexes-prefix-cut)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider gerbil-ascent-curried-index-provider)
         (only-in :std/test check-equal? check-exception test-case test-suite)
@@ -84,6 +84,28 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "prefix stamps are reused only within the owner and both versions"
+      (let ((all-versions (vector 1 0))
+            (delta-versions (vector 1 0)))
+        (def (make-owner)
+          (row-indexes-prefix-cut
+           (gerbil-ascent-make-row-indexes
+            (vector [] []) (vector [] []) (vector 0 0) (vector 0 0)
+            all-versions delta-versions
+            (vector gerbil-ascent-hash-index-provider gerbil-ascent-hash-index-provider))))
+        (let* ((cut (make-owner))
+               (sibling (make-owner))
+               (first (cut 0))
+               (other (cut 1)))
+          (check-equal? (eq? (cut 0) first) #t)
+          (check-equal? (eq? (sibling 0) first) #f)
+          (vector-set! delta-versions 0 2)
+          (let (second (cut 0))
+            (check-equal? (eq? second first) #f)
+            (check-equal? (eq? (cut 0) second) #t)
+            (vector-set! all-versions 0 2)
+            (check-equal? (eq? (cut 0) second) #f))
+          (check-equal? (eq? (cut 1) other) #t))))
     (test-case "an old suffix is owned by both versions and only borrowed by unkeyed unchecked reads"
       (let* ((padding (map (lambda (n) (list 8 n)) (iota 32)))
              (older (append '((0 1) (0 1) (2 3)) padding))

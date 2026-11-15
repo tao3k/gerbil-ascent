@@ -136,7 +136,7 @@
 ;;; A checked execution DAG is shared by plans inside one engine. Slot numbering
 ;;; is canonical by first occurrence; each plan is independently revalidated
 ;;; before its ordered prefix signatures are interned. No source-name equality.
-(defstruct prefix-node (id action prior fresh uses) final: #t)
+(defstruct prefix-node (id action reads fresh uses) final: #t)
 (defstruct prefix-lane (cut reader entries charged) final: #t)
 (defstruct positive-prefix-cut (owner versions) final: #t)
 (defstruct native-prefix-state (paths nodes lanes cut budget used) final: #t)
@@ -146,6 +146,25 @@
       (error "invalid prefix retention budget" value)) value)))
 (def (positive-prefix-state-used state) (native-prefix-state-used state))
 (def (positive-prefix-state-node-count state) (vector-length (native-prefix-state-nodes state)))
+
+;;; A later occurrence of a variable introduced by this atom reads the local
+;;; write. Only reads preceding a write to the same slot depend on the caller.
+(def (prefix-incoming-slots terms)
+  (match terms
+    ([] [])
+    ([[kind . slot] . rest]
+     (let (reads (prefix-incoming-slots rest))
+       (case kind
+         ((bound) (cons slot reads))
+         ((fresh) (filter (lambda (read) (not (= read slot))) reads))
+         (else reads))))))
+
+(def (prefix-key frame reads)
+  (match reads
+    ([] [])
+    ([slot] (vector-ref frame slot))
+    (else (map (lambda (slot) (vector-ref frame slot)) reads))))
+
 ;;; Intentional raw data record: engine-private native-prefix-state fields hold membership and path lookup tables; they do not implement a public object protocol.
 (def (make-positive-prefix-state plans cut budget)
   (unless (and (list? plans) (procedure? cut) (exact-integer? budget) (>= budget 0))
@@ -157,19 +176,20 @@
                     (map (lambda (head) (vector-ref head 0)) (vector-ref plan 0))
                     (map (lambda (action) (vector 'atom (vector-ref action 0))) (vector-ref plan 1)) plan))
         (error "prefix DAG requires an independently checked positive plan"))
-      (let ((parent -1) (prior 0) (depth 0) (path []))
+      (let ((parent -1) (depth 0) (path []))
         (for-each (lambda (action)
           (set! depth (+ depth 1))
           (let* ((atom (vector-ref action 0))
-                 (fresh (filter-map (lambda (term) (and (eq? (car term) 'fresh) (cdr term)))
-                                   (vector-ref action 1)))
-                 (key (list parent (vector-ref atom 0) (vector-ref action 1)
+                 (terms (vector-ref action 1))
+                 (key (list parent (vector-ref atom 0) terms
                             (vector-ref atom 2) (vector-ref action 2)))
                  (node (or (hash-get interned key)
-                           (let (node (make-prefix-node (length nodes) action prior fresh 0))
+                           (let* ((fresh (filter-map (lambda (term)
+                                                      (and (eq? (car term) 'fresh) (cdr term))) terms))
+                                  (node (make-prefix-node (length nodes) action
+                                          (prefix-incoming-slots terms) fresh 0)))
                              (hash-put! interned key node) (set! nodes (cons node nodes)) node))))
             (prefix-node-uses-set! node (+ (prefix-node-uses node) (- (vector-ref plan 4) depth)))
-            (set! prior (+ prior (length fresh)))
             (set! parent (prefix-node-id node)) (set! path (cons node path)))) (vector-ref plan 1))
         (hash-put! paths plan (list->vector (reverse path))))) plans)
     (let (ordered (list->vector (reverse nodes)))
@@ -273,19 +293,21 @@
         (if (and node (> (prefix-node-uses node) 1))
           (let* ((lane (vector-ref (native-prefix-state-lanes prefix-state) (prefix-node-id node)))
                  (cut ((native-prefix-state-cut prefix-state) (vector-ref (vector-ref action 0) 0)))
+                 (versions (and (positive-prefix-cut? cut) (positive-prefix-cut-versions cut)))
                  (slots (prefix-node-fresh node))
-                 (key (map (lambda (slot) (vector-ref frame slot)) (iota (prefix-node-prior node)))))
+                 (reads (prefix-node-reads node))
+                 (key (prefix-key frame reads)))
             (cost-add! cost 25)
-            (unless (and (positive-prefix-cut? cut)
-                         (pair? (positive-prefix-cut-versions cut))
-                         (andmap (lambda (n) (and (exact-integer? n) (>= n 0)))
-                                 (list (car (positive-prefix-cut-versions cut))
-                                       (cdr (positive-prefix-cut-versions cut)))))
+            (unless (and (pair? versions)
+                         (exact-integer? (car versions)) (>= (car versions) 0)
+                         (exact-integer? (cdr versions)) (>= (cdr versions) 0))
               (error "prefix DAG requires an owned index cut"))
-            (unless (and (prefix-lane-cut lane)
-                         (eq? (positive-prefix-cut-owner cut) (positive-prefix-cut-owner (prefix-lane-cut lane)))
-                         (equal? (positive-prefix-cut-versions cut) (positive-prefix-cut-versions (prefix-lane-cut lane)))
-                         (eq? old-rows-access (prefix-lane-reader lane)))
+            (unless (let (saved (prefix-lane-cut lane))
+                      (and saved
+                           (eq? old-rows-access (prefix-lane-reader lane))
+                           (or (eq? cut saved)
+                               (and (eq? (positive-prefix-cut-owner cut) (positive-prefix-cut-owner saved))
+                                    (equal? versions (positive-prefix-cut-versions saved))))))
               (prefix-release! prefix-state lane (prefix-lane-charged lane))
               (prefix-lane-entries-set! lane (make-hash-table))
               (prefix-lane-cut-set! lane cut) (prefix-lane-reader-set! lane old-rows-access))
@@ -299,7 +321,7 @@
                    ;; Incoming support is never cached or substituted. Replay
                    ;; appends this row to each caller's original support spine.
                    (accept #t (car record) action #t)) (cdr entry))
-                (let* ((base (+ 6 (length key))) (charged 0) (records [])
+                (let* ((base (+ 6 (length reads))) (charged 0) (records [])
                        (retaining? (prefix-reserve! prefix-state lane base)) (published? #f))
                   (when retaining? (set! charged base))
                   (try

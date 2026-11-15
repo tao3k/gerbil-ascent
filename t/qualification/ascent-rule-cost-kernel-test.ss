@@ -440,6 +440,42 @@
         (check-equal? (read-count reused 'prefix-build-input-rows) 3)
         (check-equal? (read-count reused 'prefix-slot-stores) 1)
         (check-equal? (read-count reused 'prefix-slot-restores) 1)))
+    (test-case "projected keys ignore unrelated slots and repeated local writes"
+      (let* ((x '(variable . x)) (y '(variable . y)) (z '(variable . z))
+             (plan (gerbil-ascent-compile-positive-plan
+                     (list (vector 4 (list x y z)))
+                     (map (lambda (relation terms)
+                            (vector 'atom (vector relation terms [] [] [])))
+                          '(0 1 2 3) (list (list x y) (list y z z) (list z) (list z)))))
+             (inputs (vector '((1 #f) (2 #f) (1 7) (3 #f))
+                             '((#f a a) (#f missed a) (7 b b))
+                             '((a) (b)) '((a) (b))))
+             (workspace (make-prefix-fixture plan (lambda () '(0 . 0))))
+             (expected '((1 #f a) (2 #f a) (1 7 b) (3 #f a))))
+        (def (old atom _frame _keys _checkpoint!)
+          (vector-ref inputs (vector-ref atom 0)))
+        (def (rows atom _frame _delta? _keys)
+          (vector-ref inputs (vector-ref atom 0)))
+        (def (observe state)
+          (let ((out []) (cost (make-positive-plan-cost #f #t)))
+            (call-with-positive-plan-cost cost
+              (lambda ()
+                (gerbil-ascent-run-positive-plan!
+                 plan (make-vector 3 'dirty) 3 rows
+                 (lambda (_head row) (set! out (cons row out)))
+                 #f #f old '(0 1 0) state)))
+            (check-equal? (reverse out) expected)
+            (check-equal? (read-count cost 'complete-witnesses) (length expected))
+            (values (filter (lambda (visit) (and (= (caddr visit) 3) (list-ref visit 3)))
+                            (positive-plan-cost-visits cost))
+                    (read-count cost 'prefix-build-input-rows))))
+        (let-values (((stream _stream-cost) (observe #f))
+                     ((retained build-inputs) (observe workspace)))
+          (check-equal? retained stream)
+          (check-equal? (length retained) (length expected))
+          ;; Four first-atom rows, plus three label candidates for each of
+          ;; the two distinct keys (#f and 7).
+          (check-equal? build-inputs 10))))
     (test-case "prefix owners isolate siblings and version both empty and nonempty revisions"
       ;; Deliberately stale version readers must fail the independent oracle.
       (check-equal? (prefix-property (list (vector 9 1) (vector 3 1)) 'source) #f)

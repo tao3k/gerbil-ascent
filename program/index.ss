@@ -28,6 +28,7 @@
 (export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-publish-old-tail! row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut)
 
 (defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut publish-old-tail!))
+(defstruct prefix-cut-entry (all-version delta-version cut) final: #t)
 
 ;;; Public metadata adapters feed one synchronous, owner-controlled collector.
 ;;; Physical state admission precedes traversal; unused metadata stays borrowed.
@@ -276,7 +277,7 @@
         (sharing? (for/fold (found? #f) (provider (in-vector index-providers))
                     (or found? (gerbil-ascent-curried-index-provider? provider))))
         (ordered-all #f) (ordered-delta #f)
-        (prefix-owner (list 'ascent-prefix-index-owner))
+        (prefix-owner (list 'ascent-prefix-index-owner)) (prefix-cuts #f)
         (delta-members #f) (old-tails #f) (exact-small? #f) (reuse-empty? #f))
       ;; One empty bucket certificate per existing entry, never a prefix-failure
       ;; table. Entry ownership separates all/delta lanes and column layouts.
@@ -303,6 +304,20 @@
                   (positive-plan-cost-index! 'empty-store)
                   (empty-bucket-entry-empty-version-set! entry version))
                 rows)))))
+      ;; Readers on the same two versions share the immutable stamp. A version
+      ;; change publishes a new stamp without mutating the one held by a lane.
+      (def (prefix-cut index)
+        (unless prefix-cuts (set! prefix-cuts (make-vector (vector-length all) #f)))
+        (let ((total (vector-ref all-version index))
+              (fresh (vector-ref delta-version index))
+              (cached (vector-ref prefix-cuts index)))
+          (if (and cached
+                   (= (prefix-cut-entry-all-version cached) total)
+                   (= (prefix-cut-entry-delta-version cached) fresh))
+            (prefix-cut-entry-cut cached)
+            (let (cut (make-positive-prefix-cut prefix-owner (cons total fresh)))
+              (vector-set! prefix-cuts index (make-prefix-cut-entry total fresh cut))
+              cut))))
       ;; Only a scalar Set commit publishes this suffix. Its fresh rows were
       ;; absent from the previous all membership and were prepended to it.
       (def (publish-old-tail! index rows)
@@ -554,7 +569,4 @@
                      physical-index-entry-version-set!)))
                cache)))))
     (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
-      (lambda (relation)
-        (make-positive-prefix-cut prefix-owner
-          (cons (vector-ref all-version relation) (vector-ref delta-version relation))))
-      publish-old-tail!)))
+      prefix-cut publish-old-tail!)))

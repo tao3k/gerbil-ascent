@@ -6,7 +6,7 @@
 ;;; each engine owns its variable frames, including nested/concurrent solves.
 (import (only-in "positive-lowering.ss" gerbil-ascent-positive-plan
                  gerbil-ascent-compile-positive-plan gerbil-ascent-positive-plan-with-outputs
-                 gerbil-ascent-pure-positive-plan? match-row! match-parts! term-value)
+                 gerbil-ascent-pure-positive-plan? match-row! match-vector-row! vector-match-width match-parts! term-value)
         (only-in "ordered-call.ss" dispatch-ordered-call)
         (only-in "positive-certificate.ss" gerbil-ascent-positive-certificate?)
         (only-in "execution-policy.ss" gerbil-ascent-old-lane gerbil-ascent-delta-lane)
@@ -17,6 +17,7 @@
         (only-in "rule-bindings.ss" gerbil-ascent-expression-value gerbil-ascent-head-row gerbil-ascent-call-with-bindings))
 (export gerbil-ascent-prepare-rule-activations gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan gerbil-ascent-run-positive-plan!
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
+        make-compiled-provider-packet
         make-positive-prefix-state make-positive-prefix-cut current-positive-prefix-budget
         positive-prefix-state-used positive-prefix-state-node-count
         gerbil-ascent-index-key gerbil-ascent-index-key/terms
@@ -29,6 +30,10 @@
 ;;; rules. Never share this mutable collector between engines or revisions.
 ;;; Prefix observations count repeated successful visits, not avoidable work:
 ;;; a new suffix can legitimately revisit an unchanged prefix.
+;;; The index owner has admitted the complete detached packet before it reaches
+;;; this consumer. Packed rows are never published as provider or result rows.
+(defstruct compiled-provider-packet (rows) final: #t)
+
 (defstruct native-plan-cost (counts prefixes started? visits) final: #t)
 (def (make-positive-plan-cost (record-prefixes? #t) (record-visits? #f))
   (make-native-plan-cost (make-vector 30 0)
@@ -336,6 +341,14 @@
                    (accept (match-row! (vector-ref action 1) (car remaining) frame)
                            (and cost (car remaining)) action #f)
                    (candidates (cdr remaining)))))
+              ((compiled-provider-packet? rows)
+               (let* ((terms (vector-ref action 1))
+                      (width (vector-match-width terms)))
+                 (for-each
+                  (lambda (fields)
+                    (accept (match-vector-row! terms fields frame width)
+                            (and cost (vector->list fields)) action #f))
+                  (compiled-provider-packet-rows rows))))
               ((gerbil-ascent-row-parts? rows)
                (gerbil-ascent-for-each-row-parts
                 (lambda (prefix left right)

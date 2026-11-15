@@ -199,6 +199,8 @@
       (def indexed-rows (row-indexes-rows indexes))
       (def (callback-rows atom environment use-delta? slot-terms)
         (indexed-rows atom environment use-delta? slot-terms #t))
+      (def (compiled-provider-rows atom environment use-delta? slot-terms)
+        (indexed-rows atom environment use-delta? slot-terms #t #t))
       (def (view-relation? index)
         (gerbil-ascent-view-relation? (vector-ref storage-providers index)
                                      (vector-ref index-providers index)))
@@ -716,7 +718,13 @@
                      (positive-plan (vector-ref rule 5))
                      (frame (vector-ref rule 6))
 )
-                 (let ((rows-access (if ordered-execution? callback-rows indexed-rows))
+                 (let ((rows-access (cond
+                                      ((not ordered-execution?) indexed-rows)
+                                      ((and (not session?) (not reuse) (= workers 1)
+                                            (not canceled?)
+                                            (gerbil-ascent-pure-positive-plan? positive-plan))
+                                       compiled-provider-rows)
+                                      (else callback-rows)))
                        (parts-access (and (not ordered-execution?) (row-indexes-visit-parts indexes)))
                        (old-access (and disjoint-sets? (row-indexes-old-rows indexes))))
                    ;; One inline dispatch preserves the callback path and its

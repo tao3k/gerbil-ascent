@@ -5,7 +5,7 @@
 ;;; One engine's physical indexes over live all/delta vectors. Metadata plans
 ;;; stay immutable; source admission and row/version publication stay in evaluate.
 (import (only-in :std/iter for for/fold in-vector in-range)
-        (only-in :std/list/list length<=n?)
+        (only-in :std/list/list length<=n? length>=n?)
         (only-in :std/list/list-builder with-list-builder)
         :gerbil-ascent/core/relation-view
         (only-in :gerbil-ascent/core/index-publication
@@ -14,14 +14,16 @@
                  gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
                  gerbil-ascent-shared-index-rows)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key
-                 gerbil-ascent-index-key/terms gerbil-ascent-index-value positive-plan-cost-index! make-positive-prefix-cut)
+                 gerbil-ascent-index-key/terms gerbil-ascent-index-value positive-plan-cost-index! make-positive-prefix-cut
+                 make-compiled-provider-packet)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
                  gerbil-ascent-physical-index-single-rows)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-curried-index-provider?)
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
-                           gerbil-ascent-index-row-snapshot/arity)
+                           gerbil-ascent-index-row-snapshot/arity
+                           gerbil-ascent-index-row-vector/arity)
                    (gerbil-ascent-index-key row-key)))
 (export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut)
 
@@ -73,13 +75,16 @@
 ;;; One value-keyed admission per equal row class; transient packet counts
 ;;; use this version-owned member identity instead of rehashing wide rows.
 (defstruct provider-row-member (ordinal key occurrences))
-(defstruct provider-row-witness (members counts single-column))
+(defstruct provider-row-witness (members counts single-column packed-width))
 
-(def (checked-provider-rows rows terms witness key)
+(def (checked-provider-rows rows terms witness key packed-consumer?)
   ;; Shape admission and spine detachment share one bounded traversal. The
   ;; entire packet still precedes membership, coverage and term callbacks.
   ;; The witness belongs to this physical entry's all/delta version.
-  (let* ((snapshot (gerbil-ascent-index-row-snapshot/arity rows (length terms)))
+  (let* ((packed-width (provider-row-witness-packed-width witness))
+         (snapshot (if packed-width
+                     (map (cut gerbil-ascent-index-row-vector/arity <> packed-width) rows)
+                     (gerbil-ascent-index-row-snapshot/arity rows (length terms))))
          ;; Ordinals are fixnum hash lengths from this witness version.
          ;; The specialized constructor costs more on small packets.
          (seen (if (length<=n? snapshot 32)
@@ -107,7 +112,10 @@
     ;; snapshot's key count. No second key-expression evaluation.
     (unless (= matched (or (hash-get (provider-row-witness-counts witness) key) 0))
       (error "ASCENT index provider omitted matching rows"))
-    snapshot))
+    (cond
+     ((not packed-width) snapshot)
+     (packed-consumer? (make-compiled-provider-packet snapshot))
+     (else (map vector->list snapshot)))))
 
 ;;; Extend the same value classes only after source admission. Their identity
 ;;; stays stable for the physical version; packet-local counters never escape.
@@ -115,27 +123,47 @@
 (def (extend-provider-row-witness! witness rows columns)
   (let ((members (provider-row-witness-members witness))
         (counts (provider-row-witness-counts witness))
-        (column (provider-row-witness-single-column witness)))
+        (column (provider-row-witness-single-column witness))
+        (packed-width (provider-row-witness-packed-width witness)))
     (for-each
      (lambda (row)
-       (let* ((member (or (hash-get members row)
+       (let* ((row-id (if packed-width (list->vector row) row))
+              (member (or (hash-get members row-id)
                          (let (fresh (make-provider-row-member
                                       (hash-length members)
                                       (if column (list-ref row column) (row-key row columns))
                                       0))
-                           (hash-put! members row fresh) fresh)))
+                           (hash-put! members row-id fresh) fresh)))
               (key (provider-row-member-key member)))
          (provider-row-member-occurrences-set! member
            (+ 1 (provider-row-member-occurrences member)))
          (hash-update! counts key 1+ 0))) rows))
   witness)
 
-;; : (-> Rows Columns ProviderRowWitness)
-(def (build-provider-row-witness rows columns)
-  (extend-provider-row-witness!
-   (make-provider-row-witness (make-hash-table) (make-hash-table)
-                              (and (null? (cdr columns)) (car columns)))
-   rows columns))
+;;; Pack only when the initial literal lookup must cover the entire source
+;;; cut. This bounds the extra witness vectors by the returned packet. A
+;;; selective lookup would pay to encode every source row for few results.
+(def (provider-packed-width rows columns atom)
+  (match (vector-ref atom 4)
+    ([['literal . key]]
+     (and (fixnum? key)
+          (let (terms (vector-ref atom 1))
+            (and (length>=n? terms 32)
+                 (let (column (car columns))
+                   (and (andmap (lambda (row) (eq? (list-ref row column) key)) rows)
+                        (length terms)))))))
+    (else #f)))
+
+;; : (-> Rows Columns (Maybe Nat) ProviderRowWitness)
+(def (build-provider-row-witness rows columns packed-width)
+  (let (members (if (and packed-width (length>=n? rows 4096))
+                  (make-hash-table size: 2048)
+                  (make-hash-table)))
+    (extend-provider-row-witness!
+     (make-provider-row-witness members (make-hash-table)
+                               (and (null? (cdr columns)) (car columns))
+                               packed-width)
+     rows columns)))
 
 ;;; Index ownership includes discovery of the logical lookup requirements.
 ;;; The three execution owners supply admitted metadata, never row snapshots
@@ -361,7 +389,8 @@
                   (gerbil-ascent-index-key (vector-ref atom 1) (vector-ref atom 2) environment slot-terms)
                   (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)) consume)
               #t))))
-      (def (indexed-rows atom environment use-delta? slot-terms (ordered? #f))
+      (def (indexed-rows atom environment use-delta? slot-terms
+                           (ordered? #f) (packed-consumer? #f))
         (let* ((index (vector-ref atom 0))
                (columns (vector-ref atom 2))
                (captured (vector-ref (if use-delta? delta all) index))
@@ -432,7 +461,8 @@
                        (gerbil-ascent-index-rebuild! entry version
                         (and (not permutation)
                              (not (gerbil-ascent-canonical-hash-index-provider? provider))
-                             (build-provider-row-witness rows columns))
+                             (build-provider-row-witness rows columns
+                               (and packed-consumer? (provider-packed-width rows columns atom))))
                         (if permutation
                             (gerbil-ascent-shared-index-build rows permutation)
                             (gerbil-ascent-physical-index-build provider rows columns))
@@ -470,7 +500,7 @@
                          (checked-provider-rows
                           (gerbil-ascent-physical-index-rows provider lookup key)
                           (vector-ref atom 1)
-                          (physical-index-entry-witness entry) key)))))))))))))
+                          (physical-index-entry-witness entry) key packed-consumer?)))))))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))

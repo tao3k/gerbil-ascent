@@ -80,4 +80,50 @@ theorem advances_bound (cap : Nat) (spine : Spine) : advances cap spine ≤ cap 
     | nil => simp [advances]
     | improper => simp [advances]
     | cons rest => have h := ih rest; simp only [advances]; omega
+/-! The provider still receives detached pair spines. A compiled reader
+receives a second snapshot whose private vectors copy field references in
+column order. Source witnesses use the same vector key encoding. The owner and
+provider never share either snapshot's storage. Mutable field values keep their
+existing identity in both representations. -/
+
+theorem providerVectorFields (row : List α) : row.toArray.toList = row := by simp
+
+theorem providerVectorKey (a b : List α) : a.toArray = b.toArray ↔ a = b := by
+  constructor
+  · intro h
+    simpa using congrArg Array.toList h
+  · exact congrArg List.toArray
+
+theorem providerVectorPacket (rows : List (List α)) :
+    (rows.map List.toArray).map Array.toList = rows := by
+  simp [List.map_map, Function.comp_def]
+
+-- Reference slots allocated beyond the first, still-detached provider copy.
+-- Each representation also allocates the same outer packet spine. The vector
+-- path also encodes each source row for the witness, including duplicates.
+-- Object headers and collector traffic are outside this model.
+def returnedPairSlots (rows width : Nat) : Nat := rows * (2 * width + 2)
+def packedPacketSlots (rows keyRows width : Nat) : Nat := rows * (width + 2) + keyRows * width
+
+theorem packedProviderSlots (rows keyRows width : Nat) (bound : keyRows ≤ rows) :
+    packedPacketSlots rows keyRows width ≤ returnedPairSlots rows width := by
+  have h : keyRows * width ≤ rows * width := Nat.mul_le_mul_right width bound
+  simp only [packedPacketSlots, returnedPairSlots, Nat.mul_add, Nat.two_mul]
+  omega
+
+-- A rectangular vector has a fixed header per row, while a wide pair spine
+-- has one header per field. With equal numbers of returned and source rows,
+-- the new allocation uses two row headers per row in place of width headers.
+theorem packedProviderHeaders (rows width : Nat) (wide : 2 ≤ width) :
+    rows * 2 ≤ rows * width := Nat.mul_le_mul_left rows wide
+-- Every row with the selected key must appear. A uniform literal cut
+-- therefore charges the witness encoding to a packet at least as large.
+theorem literalCoveragePaysForWitness (source packet : List α) (coverage : source.length ≤ packet.length)
+    (width : Nat) :
+    packedPacketSlots packet.length source.length width ≤ returnedPairSlots packet.length width :=
+  packedProviderSlots _ _ _ coverage
+
+theorem trailingWildcards (check : α → Bool) (terms : List α) (ignored : Nat) :
+    (terms.map check ++ List.replicate ignored true).all id = (terms.map check).all id := by
+  simp [List.all_append, List.all_replicate]
 end Ascent.BoundedSpine

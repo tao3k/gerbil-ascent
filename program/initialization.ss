@@ -23,6 +23,7 @@
 
 ;;; Callback traversal must read the next list node after materialization.
 ;;; A pure Set can use the native fold's functional occurrence count instead.
+;; source-admission-loop
 ;; : (forall (r) (-> AdmissionMode [r] (AdmissionBindings r) (-> r Void) (U Natural Void)))
 ;; : (-> AdmissionMode SourceRows AdmissionBindings MaterializationSyntax (U Natural Void))
 ;; | doc m%

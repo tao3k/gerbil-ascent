@@ -222,14 +222,25 @@ initializer with the exact owned source cut across 1000 paired samples.
 Check the borrowed spine by identity, the duplicate-preserving count, and the absence of a membership
 table for a relation with no writer. Report source spine and membership
 work separately from the cold bucket build and the warm probe. The
-operation counts come from the admitted row shape and native index
-counters. They do not estimate cumulative allocator bytes.
+operation counts come from the admitted edge-slot shape and native index
+counters. The final count pass uses the four-rule production fixture. It
+compares a cold appended cut, an exact append extension, and an unchanged
+read. Compare the emitted rows in order and report physical build and
+extension inputs. The allocation calibration addresses the runtime byte counters separately.
 
 The Actor borrows the newest-first lane for current canonical Program and
 relation declarations on scalar sources. Mixed source and derived relations
 retain membership for every initial row. Foreign POO getters still see the
 staged declaration. =SourceUpdateFrame.lean= relates the append fold,
 writer mask, budgets, and source-loop work to these branches.
+
+A single-worker Session can keep one physical index per read-only source
+slot shared across its components. Extend the native index only when the
+new cut has the exact prior suffix. Release the index on replacement.
+Drain the evaluation before discarding indexes from a canceled or failed
+cut. Held results retain row spines independently of bucket tables.
+=PhysicalBuckets.lean= proves the suffix scan and ordered extension,
+including duplicate occurrences.
 
 * Gambit allocation calibration
 

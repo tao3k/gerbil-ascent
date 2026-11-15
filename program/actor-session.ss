@@ -68,6 +68,7 @@
              (lambda ()
                (let ((pending initial) (committed initial) (published #f)
                      (snapshot-source #f) (snapshot-relations #f)
+                     (source-indexes (and (= workers 1) (make-vector (vector-length arities) #f)))
                      (generation 0) (running #f) (closing []))
                  (def (reply! channel value) (thread-send channel value))
                  (def (snapshot)
@@ -91,6 +92,10 @@
                  (def (update! replacements append?)
                    (when running (error "ASCENT actor Session source update while running"))
                    (let (next (gerbil-ascent-source-cut-update pending positions arities replacements append? input-limit))
+                     (when (and source-indexes (not append?))
+                       (for-each (lambda (entry)
+                                   (vector-set! source-indexes (- (hash-get positions (car entry)) 1) #f))
+                                 replacements))
                      (set! pending next)
                      (set! snapshot-source #f) (set! snapshot-relations #f)
                      (set! generation (+ generation 1)) (void)))
@@ -121,7 +126,7 @@
                                                                          (mutex-lock! (vector-ref token 0))
                                                                          (let (canceled (vector-ref token 1))
                                                                            (mutex-unlock! (vector-ref token 0)) canceled))
-                                                               #f sources owned?))))))))
+                                                               #f sources owned? (and owned? source-indexes)))))))))
                                    (monitor (spawn/name 'ascent-session-monitor
                                              (lambda ()
                                                (let (outcome (with-catch (lambda (failure) (vector #f failure))
@@ -143,6 +148,9 @@
                                  (reply! (vector-ref running 4) outcome))
                           (begin
                             (set! pending committed)
+                            ;; The joined worker may have extended a tentative
+                            ;; cut. Drop its indexes before restoring the old cut.
+                            (when source-indexes (vector-fill! source-indexes #f))
                             (set! snapshot-source #f) (set! snapshot-relations #f)
                             (reply! (vector-ref running 4)
                               (if (= epoch generation) outcome

@@ -117,10 +117,10 @@
                                 (schema-override #f) (measure-rule-times? #f)
                                 (plan-error #f) (reuse #f)
                                 (workers 1) (canceled? #f) (empty-bucket-reuse? #f)
-                                (actor-sources #f) (owned-actor-inputs? #f))
+                                (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f))
   (let (state (%make-engine program session? analysis-override schema-override
                             measure-rule-times? plan-error reuse workers canceled?
-                            empty-bucket-reuse? actor-sources owned-actor-inputs?))
+                            empty-bucket-reuse? actor-sources owned-actor-inputs? retained-source-indexes))
     (if session? (engine-state-public state) state)))
 
 ;;; Boundary: this closure owns one engine's mutable rows, indexes and counters.
@@ -129,7 +129,7 @@
 (def (%make-engine program session? (analysis-override #f)
                    (schema-override #f) (measure-rule-times? #f)
                    (plan-error #f) (reuse #f) (workers 1) (canceled? #f)
-                   (empty-bucket-reuse? #f) (actor-sources #f) (owned-actor-inputs? #f))
+                   (empty-bucket-reuse? #f) (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f))
   (unless (boolean? empty-bucket-reuse?) (error "invalid empty bucket reuse option"))
   (when (and empty-bucket-reuse? (or session? reuse (not (= workers 1)) canceled?))
     (error "empty bucket reuse requires a fresh serial scalar Set engine"))
@@ -649,7 +649,7 @@
                                                        (or canceled? (lambda () #f))
                                                        (and actor-sources (= workers 1)
                                                             (not (current-ascent-execution-control))
-                                                            (gerbil-ascent-source-cut-scalar? actor-sources)))
+                                                            (gerbil-ascent-source-cut-scalar? actor-sources)) retained-source-indexes)
             (if (and (or (> workers 1) canceled?)
                      (not ordered-execution?)
                      (gerbil-ascent-actor-round-eligible? active-rules storage-providers

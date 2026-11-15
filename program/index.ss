@@ -432,9 +432,8 @@
                   (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)) consume)
               #t))))
       (def (indexed-rows atom environment use-delta? slot-terms
-                           (ordered? #f) (packed-consumer? #f))
-        (let* ((index (vector-ref atom 0))
-               (columns (vector-ref atom 2))
+                           (ordered? #f) (packed-consumer? #f) (index (vector-ref atom 0)))
+        (let* ((columns (vector-ref atom 2))
                (captured (vector-ref (if use-delta? delta all) index))
                ;; Observable callbacks and aggregators use the legacy list/index
                ;; ordering. Pure plans retain the descriptor access path.

@@ -82,6 +82,22 @@ invocations start from fresh physical owners and use the same expected output.
 The counters show candidate rows, complete witnesses, physical probes and
 the rows charged to old-lane membership.
 
+The second Case drives the production evaluator through the Scheme DSL. It
+derives 128 or 4096 fresh edges after the first round on the same 16384-edge
+chain. It checks every two-hop answer against an arithmetic oracle. An untimed
+pass records whether the index owner reused the previous total spine and
+counts probes, witnesses, candidate rows and membership inputs. The timing
+pass reports CPU and collected cumulative allocation independently of the
+work counters. Forced collections bracket the allocation counter reads and
+are outside the CPU interval.
+
+For the unkeyed read at the published versions, the previous total spine
+already has exactly the order and occurrences produced by old-row filtering.
+=IndexedPositiveTraversal.lean= relates this equality to the scalar Set
+commit and counts the cold preparation work removed from the read. The
+keyed and checkpointed reads keep their existing filtering and checkpoint
+schedule. The subsequent join still has to traverse and probe its inputs.
+
 * Single VM Actor round phases
 
 #+begin_src sh

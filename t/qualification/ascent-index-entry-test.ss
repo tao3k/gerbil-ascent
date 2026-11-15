@@ -13,7 +13,8 @@
                    (gerbil-ascent-shared-index-extend! old-shared-extend!)
                    (gerbil-ascent-shared-index-rows old-shared-rows))
         (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes
-                 row-indexes-rows row-indexes-advance! row-indexes-plan-atoms!)
+                 row-indexes-rows row-indexes-old-rows row-indexes-publish-old-tail!
+                 row-indexes-advance! row-indexes-plan-atoms!)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider gerbil-ascent-curried-index-provider)
         (only-in :std/test check-equal? check-exception test-case test-suite)
@@ -83,6 +84,36 @@
 
 (def ascent-index-entry-test
   (test-suite "Engine-owned stable physical index entries"
+    (test-case "an old suffix is owned by both versions and only borrowed by unkeyed unchecked reads"
+      (let* ((padding (map (lambda (n) (list 8 n)) (iota 32)))
+             (older (append '((0 1) (0 1) (2 3)) padding))
+             (newer (list (list 0 2)))
+             (all (vector (append (reverse newer) older)))
+             (delta (vector newer))
+             (all-version (vector 1))
+             (delta-version (vector 2))
+             (indexes (gerbil-ascent-make-row-indexes
+                       all delta (vector 36) (vector 1) all-version delta-version
+                       (vector gerbil-ascent-hash-index-provider)))
+             (old-rows (row-indexes-old-rows indexes))
+             (unkeyed (index-entry-atom [] [] 2))
+             (keyed (index-entry-atom '(0) '(0) 2))
+             (checkpoints 0))
+        ((row-indexes-publish-old-tail! indexes) 0 older)
+        (check-equal? (eq? (old-rows unkeyed [] #f #f) older) #t)
+        (let (checked (old-rows unkeyed [] #f
+                        (lambda () (set! checkpoints (+ checkpoints 1)))))
+          (check-equal? checked older)
+          (check-equal? (eq? checked older) #f)
+          (check-equal? checkpoints 37))
+        (check-equal? (old-rows keyed [] #f #f) '((0 1) (0 1)))
+        (vector-set! all-version 0 3)
+        (vector-set! all 0 (append newer '((4 5) (4 5) (6 7)) padding))
+        (check-equal? (old-rows unkeyed [] #f #f) (append '((4 5) (4 5) (6 7)) padding))
+        ((row-indexes-publish-old-tail! indexes) 0 (cdr (vector-ref all 0)))
+        (vector-set! delta-version 0 4)
+        (vector-set! delta 0 '((6 7)))
+        (check-equal? (old-rows unkeyed [] #f #f) (append '((0 2) (4 5) (4 5)) padding))))
     (test-case "custom packets preserve counts under permutation and reject compensated omission"
       (let* ((mode 'good)
              ;; Cross the real index threshold in both lanes; smaller inputs scan.

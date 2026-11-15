@@ -25,9 +25,9 @@
                            gerbil-ascent-index-row-snapshot/arity
                            gerbil-ascent-index-row-vector/arity)
                    (gerbil-ascent-index-key row-key)))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut)
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-publish-old-tail! row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut)
 
-(defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut))
+(defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut publish-old-tail!))
 
 ;;; Public metadata adapters feed one synchronous, owner-controlled collector.
 ;;; Physical state admission precedes traversal; unused metadata stays borrowed.
@@ -237,11 +237,14 @@
      (error "ASCENT empty index owner has no lookup consumer"))
    (lambda (index rows (reverse-order? #f)) (void))
    (lambda (visit! (small-exact? #f) (empty-reuse? #f))
-     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f #f (lambda (_) (error "empty index owner has no prefix cut"))))
+     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements"))))
+   #f #f (lambda (_) (error "empty index owner has no prefix cut"))
+   (lambda (_index _rows) (error "empty index owner cannot publish an old tail"))))
 
 (defstruct physical-index-entry (version lookup shared? witness))
 (defstruct (empty-bucket-entry physical-index-entry) (empty-version empty-key) final: #t)
 (defstruct atom-index-view (entry permutation))
+(defstruct old-tail-cut (all-version delta-version rows) final: #t)
 
 ;; gerbil-ascent-make-row-indexes
 ;;   : (-> Rows Rows Sizes Sizes Versions Versions Providers RowIndexes)
@@ -274,7 +277,7 @@
                     (or found? (gerbil-ascent-curried-index-provider? provider))))
         (ordered-all #f) (ordered-delta #f)
         (prefix-owner (list 'ascent-prefix-index-owner))
-        (delta-members #f) (exact-small? #f) (reuse-empty? #f))
+        (delta-members #f) (old-tails #f) (exact-small? #f) (reuse-empty? #f))
       ;; One empty bucket certificate per existing entry, never a prefix-failure
       ;; table. Entry ownership separates all/delta lanes and column layouts.
       ;; The physical lookup has already rebuilt/extended to this version.
@@ -300,6 +303,27 @@
                   (positive-plan-cost-index! 'empty-store)
                   (empty-bucket-entry-empty-version-set! entry version))
                 rows)))))
+      ;; Only a scalar Set commit publishes this suffix. Its fresh rows were
+      ;; absent from the previous all membership and were prepended to it.
+      (def (publish-old-tail! index rows)
+        (unless old-tails (set! old-tails (make-vector (vector-length all) #f)))
+        (let ((total (vector-ref all-version index))
+              (fresh (vector-ref delta-version index)))
+          (cond
+           ((vector-ref old-tails index)
+            => (lambda (cut)
+                 (old-tail-cut-all-version-set! cut total)
+                 (old-tail-cut-delta-version-set! cut fresh)
+                 (old-tail-cut-rows-set! cut rows)))
+           (else
+            (vector-set! old-tails index (make-old-tail-cut total fresh rows))))))
+      (def (published-old-tail index)
+        (and old-tails
+             (let (cut (vector-ref old-tails index))
+               (and cut
+                    (= (old-tail-cut-all-version cut) (vector-ref all-version index))
+                    (= (old-tail-cut-delta-version cut) (vector-ref delta-version index))
+                    (old-tail-cut-rows cut)))))
       ;; Only admitted pure Set rules use this lane. The first fresh occurrence
       ;; owns a witness: prefix reads exclude delta, suffix reads remain total.
       ;; Cache exact membership by the owner's delta version, never by row count.
@@ -310,31 +334,34 @@
             ((zero? (vector-ref delta-size index))
              (indexed-rows atom environment #f slot-terms))
             ((= (vector-ref all-size index) (vector-ref delta-size index)) [])
+            ((and (not checkpoint!) (null? (vector-ref atom 2))
+                  (published-old-tail index))
+             => (lambda (rows) (positive-plan-cost-index! 'old-tail) rows))
             (else
-        (let* ((fresh (vector-ref delta index))
-               (version (vector-ref delta-version index))
-               (prior (and delta-members (vector-ref delta-members index)))
-               (present?
-                (cond
-                  ((relation-view? fresh) (lambda (row) (gerbil-ascent-view-contains? fresh row)))
-                  ((null? fresh) (lambda (_) #f))
-                  (else
-                   (let (members
-                         (if (and prior (= (car prior) version)) (cdr prior)
-                           (let (table (make-hash-table))
-                             (positive-plan-cost-index! 'membership fresh)
-                             (for-each (lambda (row)
-                                         (when checkpoint! (checkpoint!))
-                                         (hash-put! table row #t)) fresh)
-                             (unless delta-members (set! delta-members (make-vector (vector-length all) #f)))
-                             (vector-set! delta-members index (cons version table)) table)))
-                     (lambda (row) (hash-get members row)))))))
-          (with-list-builder (collect!)
-            (gerbil-ascent-for-each-row
-             (lambda (row)
-               (when checkpoint! (checkpoint!))
-               (unless (present? row) (collect! row)))
-             (indexed-rows atom environment #f slot-terms))))))))
+              (let* ((fresh (vector-ref delta index))
+                     (version (vector-ref delta-version index))
+                     (prior (and delta-members (vector-ref delta-members index)))
+                     (present?
+                      (cond
+                        ((relation-view? fresh) (lambda (row) (gerbil-ascent-view-contains? fresh row)))
+                        ((null? fresh) (lambda (_) #f))
+                        (else
+                         (let (members
+                               (if (and prior (= (car prior) version)) (cdr prior)
+                                 (let (table (make-hash-table))
+                                   (positive-plan-cost-index! 'membership fresh)
+                                   (for-each (lambda (row)
+                                               (when checkpoint! (checkpoint!))
+                                               (hash-put! table row #t)) fresh)
+                                   (unless delta-members (set! delta-members (make-vector (vector-length all) #f)))
+                                   (vector-set! delta-members index (cons version table)) table)))
+                           (lambda (row) (hash-get members row)))))))
+                (with-list-builder (collect!)
+                  (gerbil-ascent-for-each-row
+                   (lambda (row)
+                     (when checkpoint! (checkpoint!))
+                     (unless (present? row) (collect! row)))
+                   (indexed-rows atom environment #f slot-terms))))))))
       (def (ordered-cut captured index use-delta?)
         (let* ((cache (if use-delta?
                         (or ordered-delta (let (v (make-vector (vector-length all) #f))
@@ -529,4 +556,5 @@
     (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
       (lambda (relation)
         (make-positive-prefix-cut prefix-owner
-          (cons (vector-ref all-version relation) (vector-ref delta-version relation)))))))
+          (cons (vector-ref all-version relation) (vector-ref delta-version relation))))
+      publish-old-tail!)))

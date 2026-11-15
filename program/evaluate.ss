@@ -37,7 +37,7 @@
                  current-positive-plan-cost positive-plan-cost-admit! positive-plan-cost-begin!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "scheme-checked.ss" relational-scalar?)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut row-indexes-publish-old-tail!)
         (only-in "types.ss" gerbil-ascent-fact-limit?)
         (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
@@ -545,6 +545,11 @@
             (let ((active-rules (vector-ref active-by-stratum stratum))
                   (active? #t) (round (if resume-stratum resume-round 0)))
             (def (commit! index)
+                (def old-tail
+                  (and checked-scalar-fields? scalar-set-plans?
+                       (not (current-ascent-execution-control))
+                       (pair? (vector-ref pending index))
+                       (vector-ref all index)))
                 (ascent-execution-checkpoint!)
                 (if (view-relation? index)
                   (let (frontier (vector-ref pending index))
@@ -617,7 +622,8 @@
                   (vector-set! delta index (vector-ref pending index))
                   (vector-set! delta-size index batch-size)
                   (vector-set! delta-version index
-                    (+ 1 (vector-ref delta-version index))))
+                    (+ 1 (vector-ref delta-version index)))
+                  (when old-tail ((row-indexes-publish-old-tail! indexes) index old-tail)))
                 (when (pair? (vector-ref pending index))
                   (vector-set! pending index [])
                   (if (vector-ref lattice-joins index)

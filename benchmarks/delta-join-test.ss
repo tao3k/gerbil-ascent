@@ -3,6 +3,9 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import :std/test
+        (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/program/scheme-language relational-program)
+        (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-compile-positive-plan
                  gerbil-ascent-run-positive-plan! make-positive-plan-cost
                  call-with-positive-plan-cost positive-plan-cost-snapshot)
@@ -69,7 +72,58 @@
       (check (< (read-work disjoint 'complete-witnesses)
                 (read-work ordinary 'complete-witnesses)) => #t))))
 
+(def (published-chain count fresh)
+  (let* ((edges (map (lambda (id) (list id (+ id 1))) (iota count)))
+         (seeds (map (lambda (id) (list id (+ id 1))) (iota fresh count))))
+    (relational-program
+      (relation edge (from to) edges)
+      (relation seed (from to) seeds)
+      (relation answer (from to))
+      (rule (edge ?x ?y) (seed ?x ?y))
+      (rule (answer ?x ?z) (edge ?x ?y) (edge ?y ?z))
+      (limits 25000 30000 60000))))
+
+(def (check-chain-result result count fresh)
+  (let (actual ((.ref result 'rows-of) 'answer))
+    (check-equal? (.ref result 'finished) #t)
+    (check-equal? (list-sort < (map car actual)) (iota (- (+ count fresh) 1)))
+    (check-equal? (andmap (lambda (row) (= (cadr row) (+ 2 (car row)))) actual) #t)))
+
+(def (measure-published-join count fresh)
+  (let* ((program (published-chain count fresh))
+         (cost (make-positive-plan-cost #f #f)))
+    ;; Capture allocations over a collected window. CPU excludes both forced
+    ;; collections and the oracle. Diagnostic counters use an untimed solve.
+    (##gc)
+    (let* ((before (##process-statistics))
+           (started (cpu-time))
+           (result (gerbil-ascent-evaluate-program program))
+           (cpu-us (* 1000000. (- (cpu-time) started))))
+      (##gc)
+      (let* ((after (##process-statistics))
+             (bytes (- (f64vector-ref after 16) (f64vector-ref before 16)))
+             (counted (call-with-positive-plan-cost cost
+                        (cut gerbil-ascent-evaluate-program program)))
+             (work (positive-plan-cost-snapshot cost))
+             (old-tail-hits (assq 'old-tail-hits work)))
+        (check-chain-result result count fresh)
+        (check-chain-result counted count fresh)
+        (check-equal? ((.ref result 'rows-of) 'answer)
+                      ((.ref counted 'rows-of) 'answer))
+        (display "DELTA-PUBLISHED ")
+        (write (list (cons 'input-rows count) (cons 'delta-rows fresh)
+                     (cons 'cpu-us cpu-us)
+                     (cons 'allocation-window-bytes (and (>= bytes 0) bytes))
+                     (cons 'old-tail-hits (if old-tail-hits (cdr old-tail-hits) 0))
+                     (assq 'old-membership-input-rows work)
+                     (assq 'candidate-rows work)
+                     (assq 'physical-index-probes work)
+                     (assq 'complete-witnesses work)))
+        (newline)))))
+
 (def delta-join-test
   (test-suite "Indexed two-pivot delta joins"
     (test-case "fixed sparse medium and full deltas agree with an independent chain oracle"
-      (for-each (cut measure-join 16384 <>) '(128 4096 16384)))))
+      (for-each (cut measure-join 16384 <>) '(128 4096 16384)))
+    (test-case "committed sparse and medium deltas agree with the full chain oracle"
+      (for-each (cut measure-published-join 16384 <>) '(128 4096)))))

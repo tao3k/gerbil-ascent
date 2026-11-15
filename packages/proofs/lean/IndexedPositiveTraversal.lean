@@ -1077,4 +1077,61 @@ theorem release_bounded (used own budget : Nat) (bounded : used ≤ budget) :
 #print axioms provenance_projection
 end FactorizedDAG
 
+/-! A scalar Set commit in program/evaluate.ss conses the admitted
+fresh batch onto the old root and stamps the two resulting versions. The
+membership premise is supplied by admit-stored! against seen and pending.
+The suffix can be returned in its original order, including old duplicates. -/
+theorem committed_old_tail (fresh previous : List Value)
+    (absent : ∀ row ∈ previous, row ∉ fresh) :
+    (fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh)) = previous := by
+  rw [List.filter_append]
+  have removed : fresh.reverse.filter (fun row => decide (row ∉ fresh)) = [] := by
+    apply List.filter_eq_nil_iff.mpr
+    intro row member
+    have inFresh : row ∈ fresh := List.mem_reverse.mp member
+    simp [inFresh]
+  rw [removed, List.nil_append]
+  exact List.filter_eq_self.mpr (fun row member => by simp [absent row member])
+
+-- program/index.ss reads the saved spine only at the exact unkeyed cut.
+def readCommittedOld (totalVersion deltaVersion savedTotal savedDelta : Nat)
+    (unkeyed checkpoint : Bool) (savedRows fresh previous : List Value) : List Value :=
+  if unkeyed && !checkpoint &&
+      decide (totalVersion = savedTotal ∧ deltaVersion = savedDelta) then
+    savedRows
+  else
+    (fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh))
+
+theorem read_committed_old_exact (totalVersion deltaVersion savedTotal savedDelta : Nat)
+    (unkeyed checkpoint : Bool) (savedRows fresh previous : List Value)
+    (owns : totalVersion = savedTotal → deltaVersion = savedDelta → savedRows = previous)
+    (absent : ∀ row ∈ previous, row ∉ fresh) :
+    readCommittedOld totalVersion deltaVersion savedTotal savedDelta
+      unkeyed checkpoint savedRows fresh previous =
+    (fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh)) := by
+  unfold readCommittedOld
+  split
+  · rename_i eligible
+    have both : totalVersion = savedTotal ∧ deltaVersion = savedDelta := by
+      simpa using (Bool.and_eq_true_iff.mp eligible).2
+    rw [owns both.1 both.2, committed_old_tail fresh previous absent]
+  · rfl
+
+-- Counts work before the join traverses its old rows. A fresh membership
+-- table inserts one entry per delta row; the STD list builder then allocates
+-- one cons per retained row, plus an excluded constant sentinel.
+def coldOldPreparation (borrow : Bool) (fresh previous : List Value) : Nat × Nat × Nat :=
+  if borrow then (0, 0, 0) else
+    (fresh.length, (fresh.reverse ++ previous).length,
+      ((fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh))).length)
+
+theorem cold_old_preparation_cost (fresh previous : List Value)
+    (absent : ∀ row ∈ previous, row ∉ fresh) :
+    coldOldPreparation false fresh previous =
+      (fresh.length, fresh.length + previous.length, previous.length) ∧
+    coldOldPreparation true fresh previous = (0, 0, 0) := by
+  unfold coldOldPreparation
+  rw [if_neg Bool.false_ne_true, if_pos rfl, committed_old_tail fresh previous absent]
+  simp
+
 end Ascent.IndexedPositiveTraversal

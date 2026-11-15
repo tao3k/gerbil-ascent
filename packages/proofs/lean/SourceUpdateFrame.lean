@@ -246,4 +246,75 @@ theorem summary_frame {Key : Type} (adj : Key → Key → Prop)
     exact ⟨((same origin path).1).mpr (reusable origin path).1,
       ((same origin path).2).mpr (reusable origin path).2⟩
 
+namespace RetainedSetSeed
+
+def firstOccurrences {Row : Type} [DecidableEq Row] (seen : List Row) : List Row → List Row
+  | [] => []
+  | row :: rest =>
+      if seen.contains row then firstOccurrences seen rest
+      else row :: firstOccurrences (row :: seen) rest
+
+theorem first_occurrences_bound {Row : Type} [DecidableEq Row] (seen completed : List Row) :
+    (firstOccurrences seen completed).length ≤ completed.length := by
+  induction completed generalizing seen with
+  | nil => simp [firstOccurrences]
+  | cons row rest ih =>
+      simp only [firstOccurrences, List.length_cons]
+      split
+      · exact Nat.le_succ_of_le (ih seen)
+      · exact Nat.succ_le_succ (ih (row :: seen))
+
+/-- Source `present` and completed `present` have separate roles. The
+completed membership table suppresses repeated budget charges, while the
+source membership table determines whether each distinct row is derived. -/
+def derivedRows {Row : Type} [DecidableEq Row] (sourceContains : Row → Bool)
+    (completed : List Row) : List Row :=
+  (firstOccurrences [] completed).filter fun row => !sourceContains row
+
+theorem indexed_derived_rows {Row : Type} [DecidableEq Row]
+    (base completed : List Row) (lookup : Row → Bool)
+    (exactLookup : ∀ row, lookup row = base.contains row) :
+    derivedRows lookup completed = derivedRows base.contains completed := by
+  unfold derivedRows
+  apply List.filter_congr
+  intro row _
+  rw [exactLookup]
+
+theorem indexed_budgets {Row : Type} [DecidableEq Row] (base completed : List Row)
+    (lookup : Row → Bool) (exactLookup : ∀ row, lookup row = base.contains row)
+    (derivedBefore sourceCount deriveLimit outputLimit : Nat) :
+    (let derived := derivedBefore + (derivedRows lookup completed).length
+     derived ≤ deriveLimit ∧ sourceCount + derived ≤ outputLimit) ↔
+    (let derived := derivedBefore + (derivedRows base.contains completed).length
+     derived ≤ deriveLimit ∧ sourceCount + derived ≤ outputLimit) := by
+  rw [indexed_derived_rows _ _ _ exactLookup]
+
+/-- Work in the alternative source-list lookup. The accumulator and the
+returned row spine stay unchanged by the lookup choice. -/
+def comparisons {Row : Type} [DecidableEq Row] (row : Row) : List Row → Nat
+  | [] => 0
+  | first :: rest => 1 + if row = first then 0 else comparisons row rest
+
+theorem absent_comparisons {Row : Type} [DecidableEq Row]
+    (row : Row) (base : List Row) (absent : row ∉ base) :
+    comparisons row base = base.length := by
+  induction base with
+  | nil => rfl
+  | cons first rest ih =>
+      have different : row ≠ first := fun equal => absent (List.mem_cons.mpr (Or.inl equal))
+      have missing : row ∉ rest := fun member => absent (List.mem_cons.mpr (Or.inr member))
+      simp [comparisons, different, ih missing, Nat.add_comm]
+
+/-- Distinct completed rows are looked up once. Construction offers one
+insertion per source occurrence. These are engine operations, independent
+of the cost of structural hashing, collisions, and resizing. -/
+def indexedOperations {Row : Type} [DecidableEq Row] (base completed : List Row) : Nat :=
+  base.length + (firstOccurrences [] completed).length
+
+theorem indexed_operations_bound {Row : Type} [DecidableEq Row] (base completed : List Row) :
+    indexedOperations base completed ≤ base.length + completed.length :=
+  Nat.add_le_add_left (first_occurrences_bound [] completed) _
+
+end RetainedSetSeed
+
 end Ascent.SourceUpdateFrame

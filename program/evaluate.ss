@@ -6,7 +6,7 @@
 ;;; session; public declarations and returned snapshots are POO values.
 (import (only-in "engine-state.ss" make-engine-state engine-state-public engine-state-run)
         (only-in "round-workspace.ss" make-round-layout round-layout-source! make-round-work
-                 round-work-write! round-work-reset! round-work-commit-indices round-work-complete!
+                 round-work-write! round-reset-deltas! round-work-commit-indices round-work-complete!
                  round-layout-view-staging? round-layout-lattice-staging?)
         (only-in "execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
         :gerbil-ascent/core/relation-view
@@ -631,30 +631,9 @@
                     (hash-clear! (vector-ref pending-seen index))))
                 ))
                 )
-                (def (reset-delta! index)
-                  (vector-set! delta index
-                    (if (= (vector-ref strata index) stratum)
-                      (if (or first-run? (> stratum 0))
-                        (vector-ref all index)
-                        (vector-ref delta index))
-                      []))
-                  (vector-set! delta-size index
-                    (if (not round-work)
-                      (gerbil-ascent-row-count (vector-ref delta index))
-                      (if (= (vector-ref strata index) stratum)
-                        (if (or first-run? (> stratum 0))
-                          (vector-ref all-size index)
-                          (vector-ref delta-size index))
-                        0)))
-                  (vector-set! delta-version index (+ 1 (vector-ref delta-version index))))
-              (unless resume-stratum
-                (if round-work
-                  (round-work-reset! round-work stratum (or first-run? (> stratum 0))
-                                     all-size delta-size reset-delta!)
-                  (let reset ((index 0))
-                    (when (fx< index (vector-length delta))
-                      (reset-delta! index)
-                      (reset (fx+ index 1))))))
+            (unless resume-stratum
+              (round-reset-deltas! round-work stratum (or first-run? (> stratum 0))
+                strata all all-size delta delta-size delta-version))
           (until (not active?)
           (set! round (+ round 1))
           (set! pending-count 0)

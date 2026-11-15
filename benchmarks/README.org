@@ -67,6 +67,33 @@ The outbound copy also reports a collected cumulative allocation window.
 These observations guide optimization; the existing provider packet performance
 gates still run with their original fixtures and thresholds.
 
+* Retained Session publication
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/session-publication-test.ss
+#+end_src
+
+Run the same checked DSL at 4096 and 16384 archive rows. The archive has
+both source and derived rows. An independent replacement exercises completed
+closure reuse for the archive, while an append and a replacement update the
+small output relation. Record Session construction, first run, 1000 warm
+public calls, append staging, append solving, replacement, and the first and
+warm full exports. Hold earlier publications through both updates and check
+every archive row in its original order. No full archive export is demanded
+from the public result before measuring replacement.
+
+The replacement interval includes re-admission, seeding the archived rows,
+evaluation of the changed component and publication. The archived rows'
+derived-budget charge uses the current source membership in
+=program/reuse.ss=. Keep the number of hash operations separate from bucket
+comparison and allocation costs. =SourceUpdateFrame.lean= relates ordered
+first occurrences, source membership and the two budget checks.
+
+The counter delta is reported only across monotone windows without a natural
+collection. The live-byte field describes the most recent collection and can
+predate the measured phase.
+
 * Indexed two-pivot delta join
 
 #+begin_src sh

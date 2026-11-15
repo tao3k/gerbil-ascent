@@ -63,11 +63,17 @@
            (def (request! kind payload)
              (gerbil-ascent-send-round! owner kind key (current-thread) task payload)
              (unless (eq? (thread-receive) 'credit) (stop 'stopped)))
+           ;; Only emit! owns the fresh outer pairs. Relink that spine before
+           ;; handing it to the owner and drop the worker's reference.
+           (def (take-batch!)
+             (let (ready (reverse! batch))
+               (set! batch [])
+               ready))
            (def (flush!)
              (unless (zero? size)
-               (request! 'batch (reverse batch))
+               (request! 'batch (take-batch!))
                (set! ticks 0)
-               (set! batch []) (set! size 0)))
+               (set! size 0)))
            (def (emit! atom row)
              (set! batch (cons (cons atom row) batch))
              (set! size (+ size 1))
@@ -79,7 +85,7 @@
            (execute task emit! checkpoint!)
            ;; Execution has ended: transfer the bounded tail with completion.
            ;; The worker waits for its next assignment instead of another credit.
-           (cons 'finished (reverse batch))))))))
+           (cons 'finished (take-batch!))))))))
 
 ;; gerbil-ascent-run-actor-round!
 ;; : (forall (task atom row) (-> RoundKey (List task) PositiveInteger (Execute task atom row) (Merge atom row) Cancel (Ready task) (Completed task) Void))

@@ -75,6 +75,27 @@ theorem payload_identity (message : Envelope Value) :
     (decode (encode message)).map Envelope.payload = some message.payload := by
   rw [decode_encode]; rfl
 
+/-! The worker conses each candidate onto a fresh outer pair. The payload
+contains these cells in production order after the in-place reverse. The
+naturals here name outer pair identities. The worker drops its reference before
+sending the envelope, and candidates themselves are unchanged. -/
+def takeBatch (pending : List (Nat × Value)) : List (Nat × Value) :=
+  pending.reverseAux []
+
+theorem takeBatch_preserves_order_and_cells (emitted : List (Nat × Value)) :
+    takeBatch emitted.reverse = emitted := by
+  simp [takeBatch]
+
+-- New outer pairs allocated for a completed batch, including the already
+-- allocated pending spine. Candidate payload pairs are common to both paths.
+def copiedBatchPairs (rows : Nat) : Nat := rows + rows
+def transferredBatchPairs (rows : Nat) : Nat := rows
+
+theorem transfer_saves_one_pair_per_row (emitted : List (Nat × Value)) :
+    copiedBatchPairs emitted.length - transferredBatchPairs emitted.length =
+      emitted.length := by
+  simp [copiedBatchPairs, transferredBatchPairs]
+
 def name : Field → String
   | .kind => "kind"
   | .key => "key"

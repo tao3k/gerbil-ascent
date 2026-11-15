@@ -116,9 +116,11 @@
 (def (gerbil-ascent-make-engine program session? (analysis-override #f)
                                 (schema-override #f) (measure-rule-times? #f)
                                 (plan-error #f) (reuse #f)
-                                (workers 1) (canceled? #f) (empty-bucket-reuse? #f) (actor-sources #f))
+                                (workers 1) (canceled? #f) (empty-bucket-reuse? #f)
+                                (actor-sources #f) (owned-actor-inputs? #f))
   (let (state (%make-engine program session? analysis-override schema-override
-                            measure-rule-times? plan-error reuse workers canceled? empty-bucket-reuse? actor-sources))
+                            measure-rule-times? plan-error reuse workers canceled?
+                            empty-bucket-reuse? actor-sources owned-actor-inputs?))
     (if session? (engine-state-public state) state)))
 
 ;;; Boundary: this closure owns one engine's mutable rows, indexes and counters.
@@ -126,7 +128,8 @@
 ;;; Failed publication requires source replay; no partial result becomes success.
 (def (%make-engine program session? (analysis-override #f)
                    (schema-override #f) (measure-rule-times? #f)
-                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f) (empty-bucket-reuse? #f) (actor-sources #f))
+                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f)
+                   (empty-bucket-reuse? #f) (actor-sources #f) (owned-actor-inputs? #f))
   (unless (boolean? empty-bucket-reuse?) (error "invalid empty bucket reuse option"))
   (when (and empty-bucket-reuse? (or session? reuse (not (= workers 1)) canceled?))
     (error "empty bucket reuse requires a fresh serial scalar Set engine"))
@@ -225,7 +228,8 @@
          (gerbil-ascent-initialize-sources! relations schema
            (make-initial-source-state all delta all-size delta-size
                                       storage-states seen lattice-rows)
-           input-limit output-limit storage-readiness))
+           input-limit output-limit storage-readiness
+           (and owned-actor-inputs? actor-sources) analysis-override))
        (lambda (inputs materialized)
          (set! source-count inputs)
          (set! source-materialized-count materialized)))

@@ -117,6 +117,24 @@
     (newline)
     (when (vector-ref samples 3) (report-tail rows phase samples))))
 
+;;; Pair by request ordinal. Percentiles of staging and evaluation cannot
+;;; be added because their collections and other stalls need not coincide.
+(def (report-transaction rows rules phase staging evaluation)
+  (let* ((count (vector-ref staging 1))
+         (samples (latency-samples count))
+         (wall (vector-ref samples 0))
+         (stage-wall (vector-ref staging 0))
+         (eval-wall (vector-ref evaluation 0)))
+    (check-equal? (vector-ref evaluation 1) count)
+    (let next ((index 0))
+      (unless (= index count)
+        (f64vector-set! wall index (+ (f64vector-ref stage-wall index)
+                                     (f64vector-ref eval-wall index)))
+        (next (+ index 1))))
+    (vector-set! samples 1 count)
+    (vector-set! samples 2 (+ (vector-ref staging 2) (vector-ref evaluation 2)))
+    (report-phase rows phase samples rules)))
+
 (def (report-live rows rules before)
   (let (after (##process-statistics))
     (##gc)
@@ -155,6 +173,7 @@
          (input-limit (+ count 1 (if probes (length probes) 0)))
          (session (gerbil-ascent-open-actor-session
                    (declaration edges input-limit #f heads probes) workers: 1))
+         (first-run (latency-samples 1))
          (warm (latency-samples repetitions trace?))
          (append-request (latency-samples repetitions trace?))
          (append-run (latency-samples repetitions trace?))
@@ -168,7 +187,7 @@
     (try
       (##gc)
       (let* ((before (##process-statistics))
-             (first (run)))
+             (first (measure first-run run)))
         (check-chain first expected)
         (let loop ((index 0))
           (unless (= index repetitions)
@@ -185,8 +204,10 @@
         (check-chain first expected))
       (check-equal? (gerbil-ascent-session-state session) (list (+ 1 (* 5 repetitions)) 'idle))
       (for-each (lambda (phase samples) (report-phase count phase samples (length heads)))
-                '(unchanged-run append-request append-run replace-request replace-run export)
-                (list warm append-request append-run replace-request replace-run export))
+                '(first-run unchanged-run append-request append-run replace-request replace-run export)
+                (list first-run warm append-request append-run replace-request replace-run export))
+      (report-transaction count (length heads) 'append-transaction append-request append-run)
+      (report-transaction count (length heads) 'replace-transaction replace-request replace-run)
       (finally (gerbil-ascent-session-close! session)))))
 
 (def (cancel-session count repetitions)

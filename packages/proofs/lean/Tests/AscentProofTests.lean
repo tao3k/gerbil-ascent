@@ -425,6 +425,9 @@ example (old next : Bool → Bool → Bool → Prop) (seed output : Bool) :
 #print axioms Ascent.TransitiveComponents.insertion_least
 #print axioms Ascent.TransitiveComponents.quotient_exact
 #print axioms Ascent.SourceUpdateFrame.source_count_balance
+#print axioms Ascent.SourceUpdateFrame.borrowed_lane_is_initial_lane
+#print axioms Ascent.SourceUpdateFrame.writer_mask_covers_every_head
+#print axioms Ascent.SourceUpdateFrame.source_budget_batch_checks_all_prefixes
 #print axioms Ascent.SourceUpdateFrame.refused_source_budget
 #print axioms Ascent.SourceUpdateFrame.admitted_source_budget
 

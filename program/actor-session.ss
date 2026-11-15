@@ -7,7 +7,7 @@
                  gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update)
         (only-in :clan/poo/object .o .ref)
         (only-in :clan/poo/mop validate)
-        (only-in "types.ss" GerbilAscentSessionContract)
+        (only-in "types.ss" GerbilAscentSessionContract gerbil-ascent-canonical-actor-inputs?)
         (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-engine-state)
         (only-in "engine-state.ss" engine-state-schema engine-state-analysis)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
@@ -105,7 +105,9 @@
                            ((run)
                             (when (or running (pair? closing)) (error "ASCENT actor Session is busy"))
                             (set! generation (+ generation 1))
-                            (let* ((cut (snapshot)) (sources pending) (epoch generation)
+                            (let* ((owned? (gerbil-ascent-canonical-actor-inputs? program relations))
+                                   (cut (if owned? program (snapshot)))
+                                   (sources pending) (epoch generation)
                                    (token (vector (make-mutex) #f))
                                    (session-owner (current-thread))
                                    (worker (spawn/name 'ascent-session-evaluation
@@ -119,7 +121,7 @@
                                                                          (mutex-lock! (vector-ref token 0))
                                                                          (let (canceled (vector-ref token 1))
                                                                            (mutex-unlock! (vector-ref token 0)) canceled))
-                                                               #f sources))))))))
+                                                               #f sources owned?))))))))
                                    (monitor (spawn/name 'ascent-session-monitor
                                              (lambda ()
                                                (let (outcome (with-catch (lambda (failure) (vector #f failure))

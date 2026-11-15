@@ -143,6 +143,80 @@ theorem admitted_source_budget (before removed added limit count : Nat)
   dsimp only [prepareSourceCount] at accepted
   split at accepted <;> simp_all
 
+/-! Actor source admission uses the owned newest-first lane in
+`program/source-cut.ss` and marks writes from every compiled rule head in
+`program/initialization.ss`. The Actor supplies the exact owned cut only
+for current canonical Program and relation declarations. A slot must contain
+immutable scalar values, have no field callback, and use canonical Set
+storage before it can borrow. Every input occurrence survives. Membership
+writes are skipped for read-only slots. -/
+def prependSource (prior incoming : List Row) : List Row :=
+  incoming.foldl (fun before row => row :: before) prior
+
+theorem prepend_source_keeps_old_suffix (prior incoming : List Row) :
+    prependSource prior incoming = incoming.reverse ++ prior := by
+  induction incoming generalizing prior with
+  | nil => rfl
+  | cons row rest ih =>
+      change prependSource (row :: prior) rest = _
+      rw [ih]
+      simp [List.reverse_cons, List.append_assoc]
+
+theorem borrowed_lane_is_initial_lane (prior incoming : List Row) :
+    prependSource prior incoming = (prior.reverse ++ incoming).reverse := by
+  rw [prepend_source_keeps_old_suffix, List.reverse_append, List.reverse_reverse]
+
+theorem borrowed_lane_charges_duplicates (prior incoming : List Row) :
+    (prependSource prior incoming).length = prior.length + incoming.length := by
+  rw [prepend_source_keeps_old_suffix]
+  simp [Nat.add_comm]
+
+def markWriters [DecidableEq Key] (prior : Key → Bool) (heads : List Key) : Key → Bool :=
+  heads.foldl (fun mask head key => if key = head then true else mask key) prior
+
+theorem mark_writers_exact [DecidableEq Key] (prior : Key → Bool) (heads : List Key)
+    (key : Key) :
+    markWriters prior heads key = true ↔ prior key = true ∨ key ∈ heads := by
+  induction heads generalizing prior with
+  | nil => simp [markWriters]
+  | cons head rest ih =>
+      change markWriters (fun target => if target = head then true else prior target) rest key =
+        true ↔ _
+      rw [ih]
+      by_cases same : key = head
+      · simp [same]
+      · simp [same]
+
+theorem writer_mask_covers_every_head [DecidableEq Key] (heads : List (List Key))
+    (rule : List Key) (key : Key) (ruleKnown : rule ∈ heads) (headKnown : key ∈ rule) :
+    markWriters (fun _ => false) (heads.flatMap id) key = true := by
+  apply (mark_writers_exact _ _ _).mpr
+  exact Or.inr (List.mem_flatMap.mpr ⟨rule, ruleKnown, headKnown⟩)
+
+theorem source_budget_batch_checks_all_prefixes (used size limit : Nat) :
+    used + size ≤ limit ↔ ∀ count ≤ size, used + count ≤ limit := by
+  constructor
+  · intro total count inside
+    omega
+  · intro every
+    exact every size (Nat.le_refl size)
+
+/-- Source-loop costs only. The previous admission conses one outer pair and
+writes one membership entry per occurrence, even on a read-only relation.
+An exact owned lane reuses the headers and omits the read-only writes. This
+counts operations in the admission loop, not provider buckets or heap bytes. -/
+def sourceAdmissionWork (rows : Nat) (borrowed writer : Bool) : Nat × Nat :=
+  (if borrowed then 0 else rows, if borrowed && !writer then 0 else rows)
+
+theorem read_only_admission_work (rows : Nat) :
+    sourceAdmissionWork rows false false = (rows, rows) ∧
+    sourceAdmissionWork rows true false = (0, 0) := by
+  simp [sourceAdmissionWork]
+
+theorem writable_admission_retains_membership (rows : Nat) :
+    sourceAdmissionWork rows true true = (0, rows) := by
+  simp [sourceAdmissionWork]
+
 /-! The update benchmark times ten complete transactions per observation.
 Its native path checks eligibility, compares ordered source logs, and closes
 the dependency mask before creating the engine. Running and observing the

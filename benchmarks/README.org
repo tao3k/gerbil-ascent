@@ -190,9 +190,11 @@ through its public interface. It runs 1000 cycles on 128 edges, 64 cycles on
 4096 edges, and 1000 cycles with four independent rules probing the same
 16384-edge relation. The timing brackets only each public operation. Check
 every complete output against the chain oracle after its timer stops. Report
-P50, P95, maximum, CPU and throughput for each operation. The workload also
-reports natural collections and live bytes with the first and last results
-held. The separate 256-cycle trace samples the VM collection count and
+the first solve, P50, P95, maximum, CPU and throughput for each operation.
+Also report the append and replacement transactions by adding staging and
+evaluation times at the same request ordinal before computing percentiles.
+The workload reports natural collections and live bytes with the first and
+last results held. The separate 256-cycle trace samples the VM collection count and
 collector wall and CPU clocks around each operation. It reports how many
 requests of at least 20 ms overlap a collection and how many spend over half
 their measured interval in one. The overlap lower bound subtracts all time
@@ -206,6 +208,28 @@ index and credit observations in the native SCC qualification suite, and the
 =FrozenIndex= theorems in =ActorEnvelope.lean=, relate that path to the
 assignment-local reference. Application-visible exports of relations with
 input facts detach their list and row spines.
+
+* Actor source admission and physical index
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-source-test.ss
+#+end_src
+
+Append one edge to the 16384-edge chain and observe the native admission
+buffers before building the canonical keyed index. Compare the ordinary
+initializer with the exact owned source cut across 1000 paired samples.
+Check the borrowed spine by identity, the duplicate-preserving count, and the absence of a membership
+table for a relation with no writer. Report source spine and membership
+work separately from the cold bucket build and the warm probe. The
+operation counts come from the admitted row shape and native index
+counters. They do not estimate cumulative allocator bytes.
+
+The Actor borrows the newest-first lane for current canonical Program and
+relation declarations on scalar sources. Mixed source and derived relations
+retain membership for every initial row. Foreign POO getters still see the
+staged declaration. =SourceUpdateFrame.lean= relates the append fold,
+writer mask, budgets, and source-loop work to these branches.
 
 * Gambit allocation calibration
 

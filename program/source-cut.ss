@@ -4,32 +4,21 @@
 
 ;;; Actor Session source transactions. Cuts own row list spines and dense slot
 ;;; headers. Published cuts are read-only; a failed preparation changes nothing.
-(import (only-in "source-log.ss" gerbil-ascent-source-log-rows)
-        (only-in "scheme-checked.ss" relational-scalar?))
+(import (only-in "scheme-checked.ss" relational-scalar?))
 (export gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
-        gerbil-ascent-source-cut-update gerbil-ascent-source-cut-scalar? gerbil-ascent-source-cut-export-mask)
-(defstruct source-slot (base additions rows count scalar?) final: #t)
+        gerbil-ascent-source-cut-update gerbil-ascent-source-cut-scalar?
+        gerbil-ascent-source-cut-export-mask gerbil-ascent-source-cut-initial-lane
+        source-slot-newest-first source-slot-count)
+(defstruct source-slot (newest-first rows count scalar?) final: #t)
 (defstruct source-change (position rows count) final: #t)
 (defstruct source-cut (slots count))
 
-;;; Published slots own row spines. Delay only header materialization, not
-;;; caller admission or copying. Atomic force shares one ordered result among
-;;; readers; the thunk captures log roots, never a previous cut or its cache.
-;; : (-> OwnedRows ReversedAdditions Natural Boolean SourceSlot)
-(def (published-source-slot base additions count scalar?)
-  (make-source-slot base additions
-    (if (null? additions) base
-      (delay-atomic (gerbil-ascent-source-log-rows base additions))) count scalar?))
-
-;;; Detached incoming rows extend only the reversed addition spine. Historical
-;;; row headers are shared read-only until the selected cut is observed.
-;; : (-> SourceSlot OwnedRows Natural Boolean SourceSlot)
-(def (append-source-slot previous rows count scalar?)
-  (if (null? rows) previous
-    (published-source-slot (source-slot-base previous)
-      (foldl cons (source-slot-additions previous) rows)
-      (+ (source-slot-count previous) count)
-      (and (source-slot-scalar? previous) scalar?))))
+;;; Newest-first is the evaluator's initial lane. Appends allocate one
+;;; detached outer pair per admitted occurrence and borrow the old suffix.
+;;; Force the chronological view only when the declaration needs it.
+;; : (-> OwnedRows Natural Boolean SourceSlot)
+(def (published-source-slot newest-first count scalar?)
+  (make-source-slot newest-first (delay-atomic (reverse newest-first)) count scalar?))
 
 (def (source-position positions name)
   (let (slot (hash-get positions name))
@@ -44,15 +33,18 @@
 
 ;; Classify the owned copy without changing which host values are admitted.
 ;; The classification describes the same atoms just copied, never the caller.
-(def (copy-source-rows rows)
-  (let (scalar? #t)
-    (let (copy (map (lambda (row)
-                     (map (lambda (value)
-                            (when (and scalar? (not (relational-scalar? value)))
-                              (set! scalar? #f))
-                            value) row))
-                   rows))
-      (values copy scalar?))))
+(def (copy-source-rows rows tail scalar?)
+  (let (count 0)
+    (let (reversed
+          (foldl
+           (lambda (row prior)
+             (set! count (+ count 1))
+             (cons (map (lambda (value)
+                          (when (and scalar? (not (relational-scalar? value)))
+                            (set! scalar? #f))
+                          value) row) prior))
+           tail rows))
+      (values reversed count scalar?))))
 
 ;; : (-> NamePositions Arities [(Name . Rows)] SourceCut)
 (def (gerbil-ascent-make-source-cut positions arities sources)
@@ -61,10 +53,9 @@
      (lambda (entry)
        (let ((position (source-position positions (car entry))) (input (cdr entry)))
          (source-check-rows! arities position (car entry) input)
-         (let-values (((rows scalar?) (copy-source-rows input)))
-           (let (size (length rows))
-             (vector-set! slots position (published-source-slot rows [] size scalar?))
-             (set! count (+ count size)))))) sources)
+         (let-values (((rows size scalar?) (copy-source-rows input [] #t)))
+           (vector-set! slots position (published-source-slot rows size scalar?))
+           (set! count (+ count size))))) sources)
     (make-source-cut slots count)))
 
 ;; : (-> SourceCut Natural Rows)
@@ -77,6 +68,13 @@
     (let check ((index 0))
       (or (= index (vector-length slots))
           (and (source-slot-scalar? (vector-ref slots index)) (check (+ index 1)))))))
+
+;;; Borrow the owner lane through the exact admitted Actor input cut.
+;;; Mutable atom keys remain on the ordinary admission path.
+;; : (-> SourceCut Natural (Maybe SourceSlot))
+(def (gerbil-ascent-source-cut-initial-lane (cut :- source-cut) position)
+  (using (slot (vector-ref cut.slots position) :- source-slot)
+    (and slot.scalar? slot)))
 
 ;;; Only slots containing input rows can expose source-cut row pairs.
 ;; : (-> SourceCut (Vector Boolean))
@@ -129,9 +127,12 @@
        (lambda (entry)
          (let* ((position (source-change-position entry))
                 (previous (vector-ref old-slots position)))
-           (let-values (((rows scalar?) (copy-source-rows (source-change-rows entry))))
-             (vector-set! slots position
-               (if append?
-                 (append-source-slot previous rows (source-change-count entry) scalar?)
-                 (published-source-slot rows [] (source-change-count entry) scalar?)))))) prepared)
+           (unless (and append? (zero? (source-change-count entry)))
+             (let-values (((rows added scalar?)
+                           (copy-source-rows (source-change-rows entry)
+                             (if append? (source-slot-newest-first previous) [])
+                             (or (not append?) (source-slot-scalar? previous)))))
+               (vector-set! slots position
+                 (published-source-slot rows
+                   (+ added (if append? (source-slot-count previous) 0)) scalar?)))))) prepared)
       (make-source-cut slots count))))

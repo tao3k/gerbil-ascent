@@ -8,6 +8,8 @@
         (only-in "lattice-frontier.ss" make-lattice-frontier lattice-frontier-stage!
                  lattice-frontier-rows)
         (only-in "admission.ss" gerbil-ascent-initialize-source-row!)
+        (only-in "source-cut.ss" gerbil-ascent-source-cut-initial-lane gerbil-ascent-source-cut-rows
+                 source-slot-newest-first source-slot-count)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value gerbil-ascent-joined-row)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-state
@@ -71,12 +73,14 @@
   (all delta all-size delta-size storage-states seen lattice-rows) final: #t)
 
 ;; gerbil-ascent-initialize-sources!
-;; : (forall (r s b q) (-> [r] s b Natural Natural (Optional q) (Values Natural Natural)))
-;; : (-> [Relation] Schema InitialSourceState Natural Natural (Optional StorageReadiness) (Values Natural Natural))
+;; : (forall (r s b q c a) (-> [r] s b Natural Natural (Optional q) (Optional c) (Optional a) (Values Natural Natural)))
+;; : (-> [Relation] Schema InitialSourceState Natural Natural (Optional StorageReadiness) (Optional SourceCut) (Optional Analysis) (Values Natural Natural))
 ;; | doc m%
 ;;     Admit source rows in declaration order into fresh engine-owned buffers.
 ;;     Preserve field checks, input/output limits, final lattice update order
 ;;     and complete native storage admission. Return input/materialized counts.
+;;     Actor admission can borrow a validated cut while retaining membership for
+;;     any relation a compiled head may extend.
 ;;
 ;;     # Examples
 ;;
@@ -86,7 +90,7 @@
 ;;     ```
 ;;   %
 (def (gerbil-ascent-initialize-sources! relations schema buffers input-limit output-limit
-                                      (readiness #f))
+                                      (readiness #f) (sources #f) (analysis #f))
   (using (buffers :- initial-source-state)
    (let ((names (vector-ref schema 1)) (arity (vector-ref schema 2))
         (field-checkers (vector-ref schema 3))
@@ -100,18 +104,32 @@
         (storage-states buffers.storage-states)
         (seen buffers.seen)
         (lattice-rows buffers.lattice-rows)
-        (source-count 0) (source-materialized-count 0))
+        (source-count 0) (source-materialized-count 0)
+        (writers (and sources analysis (make-vector (vector-length buffers.all) #f))))
+    ;; Only heads can query or extend the engine membership. Inspect all
+    ;; declared heads, including multi-head rules, before any source borrow.
+    (when writers
+      (for-each
+       (lambda (rule)
+         (for-each (lambda (head) (vector-set! writers (vector-ref head 0) #t))
+                   (vector-ref rule 0)))
+       (vector-ref analysis 2)))
     (let (index 0)
       (for-each
        (lambda (relation)
         (let* ((name (vector-ref names index))
                (width (vector-ref arity index))
-               (rows (.ref relation 'rows))
+               (declared (and (not sources) (.ref relation 'rows)))
                (kind (vector-ref kinds index))
                (check (vector-ref field-checkers index))
                (provider (vector-ref storage-providers index))
                (set-storage? (gerbil-ascent-canonical-set-storage-provider? provider))
                (native-set? (and (eq? kind 'relation) set-storage? (not check)))
+               (owned (and writers native-set? (gerbil-ascent-source-cut-initial-lane sources index)))
+               (rows (cond (owned (source-slot-newest-first owned))
+                           (sources (gerbil-ascent-source-cut-rows sources index))
+                           (else declared)))
+               (present (and (or (not owned) (vector-ref writers index)) (make-hash-table)))
                ;; Allocate this effectful checker only for callback paths.
                (check-source!
                 (and (not native-set?)
@@ -126,9 +144,8 @@
                 (and (gerbil-ascent-canonical-view-storage-provider? provider)
                      (gerbil-ascent-canonical-hash-index-provider?
                       (vector-ref (vector-ref schema 5) index))))
-               (present (make-hash-table))
                (frontier #f))
-          (unless (list? rows)
+          (unless (or owned (list? rows))
             (error "invalid ASCENT relation rows" name rows))
           (when (eq? kind 'lattice)
             (vector-set! lattice-rows index (make-hash-table)))
@@ -137,6 +154,18 @@
               (gerbil-ascent-storage-engine-state
                (vector-ref storage-providers index) readiness)))
           (cond
+           (owned
+            ;; The cut already checked the row shapes. Source and output
+            ;; budgets still charge every occurrence, including duplicates.
+            (let (size (source-slot-count owned))
+              (set! source-count (+ source-count size))
+              (set! source-materialized-count (+ source-materialized-count size))
+              (when (or (> source-count input-limit) (> source-count output-limit)
+                        (> source-materialized-count output-limit))
+                (error "ASCENT source fact budget exceeded")))
+            (when present
+              (for-each (lambda (row) (hash-put! present row #t)) rows))
+            (vector-set! all index rows))
            ((eq? kind 'lattice)
             (source-admission-loop callbacks rows
               (row check-source!)
@@ -224,7 +253,9 @@
             (vector-set! all index (if frontier (lattice-frontier-rows frontier) [])))
           (vector-set! seen index present)
           (vector-set! delta index (vector-ref all index))
-          (vector-set! all-size index (gerbil-ascent-row-count (vector-ref all index)))
+          (vector-set! all-size index
+            (if owned (source-slot-count owned)
+              (gerbil-ascent-row-count (vector-ref all index))))
           (vector-set! delta-size index
             (vector-ref all-size index))
           (set! index (+ index 1)))) relations))

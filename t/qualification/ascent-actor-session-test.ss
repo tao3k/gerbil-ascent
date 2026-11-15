@@ -5,8 +5,9 @@
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :gerbil-ascent/program/source-cut
                  gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
-                 gerbil-ascent-source-cut-update gerbil-ascent-source-cut-scalar?)
-        (only-in :clan/poo/object .ref)
+                 gerbil-ascent-source-cut-update gerbil-ascent-source-cut-scalar?
+                 gerbil-ascent-source-cut-initial-lane source-slot-newest-first source-slot-count)
+        (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         :gerbil-ascent/program/func
         :gerbil-ascent/program/session
@@ -87,6 +88,84 @@
             (check-equal? (eq? (gerbil-ascent-source-cut-rows empty 0)
                              (gerbil-ascent-source-cut-rows replaced 0)) #t)
             (check-equal? (gerbil-ascent-source-cut-rows last 0) '((0) (1) (1) (2) (3)))))))
+    (test-case "append prepends only new occurrences to the borrowed evaluator lane"
+      (let ((positions (make-hash-table-eq)) (arities '#(1)))
+        (hash-put! positions 'edge 1)
+        (let* ((first (gerbil-ascent-make-source-cut positions arities '((edge (0) (1) (1)))))
+               (next (gerbil-ascent-source-cut-update first positions arities
+                       '((edge (1) (2))) #t 10))
+               (replacement (gerbil-ascent-source-cut-update next positions arities
+                              '((edge (0) (9) (1))) #f 10)))
+          (let* ((old (gerbil-ascent-source-cut-initial-lane first 0))
+                 (appended (gerbil-ascent-source-cut-initial-lane next 0))
+                 (replaced (gerbil-ascent-source-cut-initial-lane replacement 0)))
+            (check-equal? (source-slot-newest-first old) '((1) (1) (0)))
+            (check-equal? (source-slot-count old) 3)
+            (check-equal? (source-slot-newest-first appended) '((2) (1) (1) (1) (0)))
+            (check-equal? (source-slot-count appended) 5)
+            (check-equal? (eq? (cddr (source-slot-newest-first appended))
+                               (source-slot-newest-first old)) #t)
+            (check-equal? (source-slot-newest-first replaced) '((1) (9) (0)))
+            (check-equal? (source-slot-count replaced) 3)))))
+    (test-case "mixed source and multi-head writers retain exact source multiplicity"
+      (let* ((x (gerbil-ascent-variable 'x))
+             (program (gerbil-ascent-program
+                       (list (gerbil-ascent-relation 'edge 1 '((1) (1) (2)))
+                             (gerbil-ascent-relation 'mirror 1 [])
+                             (gerbil-ascent-relation 'mixed 1 '((1) (1))))
+                       (list (gerbil-ascent-rule
+                              (list (gerbil-ascent-atom 'mirror (list x))
+                                    (gerbil-ascent-atom 'mixed (list x)))
+                              (list (gerbil-ascent-atom 'edge (list x)))))
+                       100 100 100))
+             (session (gerbil-ascent-open-actor-session program workers: 1)))
+        (def (sorted result name)
+          (list-sort < (map car ((.ref result 'rows-of) name))))
+        (try
+         (let (before (gerbil-ascent-session-run session))
+           (check-equal? ((.ref before 'rows-of) 'edge) '((1) (1) (2)))
+           (check-equal? (sorted before 'mirror) '(1 2))
+           (check-equal? (sorted before 'mixed) '(1 1 2))
+           (gerbil-ascent-session-append-source! session 'edge '(3))
+           (let (after (gerbil-ascent-session-run session))
+             (check-equal? ((.ref after 'rows-of) 'edge) '((1) (1) (2) (3)))
+             (check-equal? (sorted after 'mirror) '(1 2 3))
+             (check-equal? (sorted after 'mixed) '(1 1 2 3))
+             (check-equal? (sorted before 'mixed) '(1 1 2))))
+         (finally (gerbil-ascent-session-close! session)))))
+    (test-case "foreign Program getters keep the staged source receiver"
+      (let* ((base (program '((0 1))))
+             (foreign (.o (:: @ base)
+                        (max-output-facts
+                         (let (sources (.ref @ 'relations))
+                           (if (= (length (.ref (car sources) 'rows)) 1) 100 2)))))
+             (session (gerbil-ascent-open-actor-session foreign workers: 1)))
+        (try
+         (let (first (gerbil-ascent-session-run session))
+           (check-equal? (rows first) '((0 1)))
+           (gerbil-ascent-session-append-source! session 'edge '(1 2))
+           (check-equal? (outcome (lambda () (gerbil-ascent-session-run session))) 'rejected)
+           (check-equal? (eq? first (gerbil-ascent-session-last-completed session)) #t)
+           (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1))))
+         (finally (gerbil-ascent-session-close! session)))))
+    (test-case "foreign relation metadata reads the staged rows"
+      (let* ((observed [])
+             (base (program '((0 1))))
+             (relations (.ref base 'relations))
+             (edge (.o (:: @ (car relations))
+                     (field-predicates
+                      (begin
+                        (set! observed (cons (length (.ref @ 'rows)) observed))
+                        []))))
+             (declaration (gerbil-ascent-program
+                           (cons edge (cdr relations)) (.ref base 'rules) 100 100 100))
+             (session (gerbil-ascent-open-actor-session declaration workers: 1)))
+        (try
+         (gerbil-ascent-session-append-source! session 'edge '(1 2))
+         (set! observed [])
+         (check-equal? (length (rows (gerbil-ascent-session-run session))) 3)
+         (check-equal? (and (memv 2 observed) #t) #t)
+         (finally (gerbil-ascent-session-close! session)))))
     (test-case "source budget refusal preserves validation order and source rows"
       (let* ((positions (make-hash-table-eq)) (arities '#(2 1)))
         (hash-put! positions 'edge 1) (hash-put! positions 'other 2)

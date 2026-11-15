@@ -105,7 +105,7 @@
                            ((run)
                             (when (or running (pair? closing)) (error "ASCENT actor Session is busy"))
                             (set! generation (+ generation 1))
-                            (let* ((cut (snapshot)) (epoch generation)
+                            (let* ((cut (snapshot)) (sources pending) (epoch generation)
                                    (token (vector (make-mutex) #f))
                                    (session-owner (current-thread))
                                    (worker (spawn/name 'ascent-session-evaluation
@@ -118,7 +118,8 @@
                                                                (lambda ()
                                                                          (mutex-lock! (vector-ref token 0))
                                                                          (let (canceled (vector-ref token 1))
-                                                                           (mutex-unlock! (vector-ref token 0)) canceled))))))))))
+                                                                           (mutex-unlock! (vector-ref token 0)) canceled))
+                                                               #f sources))))))))
                                    (monitor (spawn/name 'ascent-session-monitor
                                              (lambda ()
                                                (let (outcome (with-catch (lambda (failure) (vector #f failure))

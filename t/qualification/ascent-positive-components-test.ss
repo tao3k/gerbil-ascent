@@ -7,6 +7,8 @@
         :gerbil-ascent/program/func
         :gerbil-ascent/program/actor-round
         :gerbil-ascent/program/positive-components
+        (only-in :gerbil-ascent/core/positive-plan make-positive-plan-cost
+                 call-with-positive-plan-cost positive-plan-cost-snapshot)
         (only-in :gerbil-ascent/program/component-worker make-component-snapshot gerbil-ascent-run-positive-component!)
         (only-in :gerbil-ascent/t/performance/component-scope/fixture
                  component-scope-program component-scope-request component-scope-plan
@@ -31,6 +33,44 @@
              ((.ref result 'rows-of) name)))
 (def ascent-positive-components-test
   (test-suite "Ready positive SCCs and projected heads"
+    (test-case "single worker shares only source index builds and keeps credit polls"
+      (let* ((key (gerbil-ascent-variable 'key))
+             (value (gerbil-ascent-variable 'value))
+             (source (cons '(0 0) (map (lambda (id) (list 0 id)) (iota 64))))
+             (goals '(left right))
+             (p (gerbil-ascent-program
+                 (list (gerbil-ascent-relation 'source 2 source)
+                       (gerbil-ascent-relation 'probe 1 '((0)))
+                       (gerbil-ascent-relation 'left 1 [])
+                       (gerbil-ascent-relation 'right 1 []))
+                 (map (lambda (name)
+                        (gerbil-ascent-rule (list (gerbil-ascent-atom name (list value)))
+                          (list (gerbil-ascent-atom 'probe (list key))
+                                (gerbil-ascent-atom 'source (list key value)))))
+                      goals)
+                 200 200 200))
+             (request (component-scope-request p))
+             (initial (vector-ref request 2)))
+        (def (observe borrow?)
+          (let ((emitted []) (polls 0) (cost (make-positive-plan-cost #f #f)))
+            (call-with-positive-plan-cost cost
+              (lambda ()
+                (gerbil-ascent-run-positive-components!
+                  (vector-ref request 0) (vector-ref request 1) initial 1
+                  (lambda (atom row)
+                    (set! emitted (cons (cons (vector-ref atom 0) row) emitted)))
+                  (lambda () (set! polls (+ polls 1)) #f)
+                  borrow?)))
+            (let (work (positive-plan-cost-snapshot cost))
+              (vector emitted polls (cdr (assq 'index-build-input-rows work))
+                      (cdr (assq 'physical-index-probes work))))))
+        (let ((private (observe #f)) (borrowed (observe #t)))
+          (check-equal? (vector-ref borrowed 0) (vector-ref private 0))
+          (check-equal? (length (vector-ref borrowed 0)) 128)
+          (check-equal? (vector-ref borrowed 1) (vector-ref private 1))
+          (check-equal? (vector-ref borrowed 2) 65)
+          (check-equal? (vector-ref private 2) 130)
+          (check-equal? (vector-ref borrowed 3) (vector-ref private 3)))))
     (test-case "output membership preserves seeded rows and leaves source-only roots intact"
       (let* ((x (gerbil-ascent-variable 'x))
              (p (gerbil-ascent-program

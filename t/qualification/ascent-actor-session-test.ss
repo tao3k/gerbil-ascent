@@ -5,7 +5,7 @@
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :gerbil-ascent/program/source-cut
                  gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
-                 gerbil-ascent-source-cut-update)
+                 gerbil-ascent-source-cut-update gerbil-ascent-source-cut-scalar?)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         :gerbil-ascent/program/func
@@ -34,6 +34,35 @@
       (thread-yield!) (loop (+ attempts 1)))))
 (def ascent-actor-session-test
   (test-suite "Session actor generation and completed publication"
+    (test-case "scalar cuts certify owned values across appends and replacements"
+      (let* ((positions (make-hash-table-eq))
+             (arity '#(1))
+             (value (list 'mutable)))
+        (hash-put! positions 'edge 1)
+        (let* ((first (gerbil-ascent-make-source-cut positions arity '((edge (0)))))
+               (mixed (gerbil-ascent-source-cut-update first positions arity
+                        (list (list 'edge (list value))) #t 4))
+               (again (gerbil-ascent-source-cut-update mixed positions arity
+                        '((edge (1))) #f 4)))
+          (check-equal? (gerbil-ascent-source-cut-scalar? first) #t)
+          (check-equal? (gerbil-ascent-source-cut-scalar? mixed) #f)
+          (check-equal? (gerbil-ascent-source-cut-scalar? again) #t)
+          (check-equal? (gerbil-ascent-source-cut-rows first 0) '((0))))))
+    (test-case "mutating an exported Actor row cannot change the next solve"
+      (let* ((source '((0 1) (1 2)))
+             (expected (rows (gerbil-ascent-evaluate-program (program source))))
+             (session (gerbil-ascent-open-actor-session (program source) workers: 1)))
+        (try
+          (let* ((first (gerbil-ascent-session-run session))
+                 (first-answers (rows first))
+                 (exposed ((.ref first 'rows-of) 'edge)))
+            (check-equal? (length first-answers) (length expected))
+            (check-equal? (andmap (lambda (row) (if (member row first-answers) #t #f)) expected) #t)
+            (set-car! (car exposed) 99)
+            (set-cdr! exposed [])
+            (check-equal? ((.ref first 'rows-of) 'edge) source)
+            (check-equal? (rows (gerbil-ascent-session-run session)) first-answers))
+          (finally (gerbil-ascent-session-close! session)))))
     (test-case "persistent source appends detach batches and share atomic ordered publication"
       (let ((positions (make-hash-table-eq)) (arities '#(1 1)))
         (hash-put! positions 'edge 1) (hash-put! positions 'other 2)

@@ -171,6 +171,30 @@ The cancellation case requests stop while merging the first admitted batch.
 The worker resumes on the existing credit, loses the next credit, unwinds its
 cleanup, and the round completes the drain before returning the cancellation.
 
+* Single VM Actor production Session
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-session-test.ss
+#+end_src
+
+The Session receives unchanged runs, appends, replacements, and exports
+through its public interface. It runs 1000 cycles on 128 edges, 64 cycles on
+4096 edges, and 32 cycles with four independent rules probing the same
+16384-edge relation. The timing brackets only each public operation. Check
+every complete output against the chain oracle after its timer stops. Report
+P50, P95, maximum, CPU and throughput for each operation. The workload also
+reports natural collections and live bytes with the first and last results
+held. Allocator snapshots remain diagnostic.
+
+An independent recursive case cancels 32 active solves and verifies the prior
+completed result and rolled-back input after worker drain. Source-only total
+indexes may be shared by one SCC worker for owned scalar inputs. The physical
+index and credit observations in the native SCC qualification suite, and the
+=FrozenIndex= theorems in =ActorEnvelope.lean=, relate that path to the
+assignment-local reference. Application-visible exports of relations with
+input facts detach their list and row spines.
+
 The round cases report CPU, wall time, collections, and raw direct and
 collected allocation deltas. A backward collected counter is marked invalid.
 The separate batch spine case compares the exact native reversal operations

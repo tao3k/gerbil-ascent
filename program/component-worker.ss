@@ -90,15 +90,16 @@
 ;;     ;; => completes the assigned SCC before reporting terminal task completion
 ;;     ```
 ;;   %
-(def (gerbil-ascent-run-positive-component! component schema snapshot emit! checkpoint!)
+(def (gerbil-ascent-run-positive-component! component schema snapshot emit! checkpoint!
+                                             (source-read #f))
   (if (compact-component-snapshot? snapshot)
-    (run-component-workspace! schema snapshot emit! checkpoint!)
+    (run-component-workspace! schema snapshot emit! checkpoint! source-read)
     (let (compact (gerbil-ascent-component-snapshot component (component-snapshot-rows snapshot)
                     (component-snapshot-sizes snapshot)))
       ;; Full transferred snapshots retain their existing committed-output contract.
       ;; Unwind returns only owned output slots; external source roots stay untouched.
       (dynamic-wind void
-        (lambda () (run-component-workspace! schema compact emit! checkpoint!))
+        (lambda () (run-component-workspace! schema compact emit! checkpoint! #f))
         (lambda ()
           (using (layout (compact-component-snapshot-layout compact) :- component-layout)
             (for-each
@@ -112,7 +113,7 @@
 ;;; All mutable vectors and physical indexes use the assignment's dense namespace.
 ;;; Global descriptors return only through emission; predecessor inputs remain borrowed.
 ;; : (-> ProgramSchema CompactComponentSnapshot Emit Checkpoint Void)
-(def (run-component-workspace! schema (snapshot :- compact-component-snapshot) emit! checkpoint!)
+(def (run-component-workspace! schema (snapshot :- compact-component-snapshot) emit! checkpoint! source-read)
   (using (layout snapshot.layout :- component-layout)
   (let* ((all snapshot.rows)
          (all-size snapshot.sizes)
@@ -121,7 +122,7 @@
          (all-version (make-vector count 0)) (delta-version (make-vector count 0))
          (indexes (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version
                                                   (vector-map (cut vector-ref (vector-ref schema 5) <>) layout.slots)))
-         (rows-access (row-indexes-rows indexes))
+         (local-rows (row-indexes-rows indexes))
          (advance! (row-indexes-advance! indexes))
          (seen (make-vector count #f))
          (pending (make-vector count []))
@@ -129,7 +130,14 @@
          (rules (map (lambda (rule)
                        (vector (vector-ref rule 0) (vector-ref rule 1)
                                (make-vector (vector-ref (vector-ref rule 0) 2) #f)))
-                     layout.rules)))
+                     layout.rules))
+         (rows-access
+          (if source-read
+            (lambda (atom frame delta? terms)
+              (or (and (not delta?) (pair? (vector-ref atom 2))
+                       (source-read (hash-ref layout.originals atom) frame terms))
+                  (local-rows atom frame delta? terms)))
+            local-rows)))
     (row-indexes-plan-positive-rules! indexes rules)
     (for-each
      (lambda (index)

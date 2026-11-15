@@ -17,6 +17,7 @@
         (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
         (only-in "source-snapshot.ss" source-snapshot-program)
+        (only-in "source-cut.ss" gerbil-ascent-source-cut-scalar? gerbil-ascent-source-cut-export-mask)
         (only-in "source-state.ss" gerbil-ascent-source-state
                  source-state-originals source-state-additions source-state-overrides
                  gerbil-ascent-source-state-rows gerbil-ascent-prepare-source-replacement
@@ -115,9 +116,9 @@
 (def (gerbil-ascent-make-engine program session? (analysis-override #f)
                                 (schema-override #f) (measure-rule-times? #f)
                                 (plan-error #f) (reuse #f)
-                                (workers 1) (canceled? #f) (empty-bucket-reuse? #f))
+                                (workers 1) (canceled? #f) (empty-bucket-reuse? #f) (actor-sources #f))
   (let (state (%make-engine program session? analysis-override schema-override
-                            measure-rule-times? plan-error reuse workers canceled? empty-bucket-reuse?))
+                            measure-rule-times? plan-error reuse workers canceled? empty-bucket-reuse? actor-sources))
     (if session? (engine-state-public state) state)))
 
 ;;; Boundary: this closure owns one engine's mutable rows, indexes and counters.
@@ -125,7 +126,7 @@
 ;;; Failed publication requires source replay; no partial result becomes success.
 (def (%make-engine program session? (analysis-override #f)
                    (schema-override #f) (measure-rule-times? #f)
-                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f) (empty-bucket-reuse? #f))
+                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f) (empty-bucket-reuse? #f) (actor-sources #f))
   (unless (boolean? empty-bucket-reuse?) (error "invalid empty bucket reuse option"))
   (when (and empty-bucket-reuse? (or session? reuse (not (= workers 1)) canceled?))
     (error "empty bucket reuse requires a fresh serial scalar Set engine"))
@@ -641,7 +642,10 @@
             ;; Custom index/storage and lattice semantics remain on the serial path.
             (if component-mode?
               (gerbil-ascent-run-positive-components! analysis schema all workers emit-row!
-                                                       (or canceled? (lambda () #f)))
+                                                       (or canceled? (lambda () #f))
+                                                       (and actor-sources (= workers 1)
+                                                            (not (current-ascent-execution-control))
+                                                            (gerbil-ascent-source-cut-scalar? actor-sources)))
             (if (and (or (> workers 1) canceled?)
                      (not ordered-execution?)
                      (gerbil-ascent-actor-round-eligible? active-rules storage-providers
@@ -775,7 +779,8 @@
                   (and reuse (session-reuse-affected reuse)) names active-by-stratum rule-ticks)))
            (let-values (((result publication)
                          (gerbil-ascent-publish-execution! execution-publication
-                           names arity all all-size deadline observation position-of complete? session?)))
+                           names arity all all-size deadline observation position-of complete? session?
+                           (or session? (and actor-sources (gerbil-ascent-source-cut-export-mask actor-sources))))))
              (set! owned-publication publication)
              (set! last-result result))))
          (when (and reuse complete?)

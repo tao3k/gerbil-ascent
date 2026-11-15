@@ -36,13 +36,13 @@
                 (gerbil-ascent-snapshot-rows
                  (vector-ref publication.snapshots (publication.position-of name))))))))
 
-;; : (forall (n a r s o p e) (-> n a r s o o p Boolean Boolean (Values e (Maybe (OwnedPublication e r)))))
+;; : (forall (n a r s o p e) (-> n a r s o o p Boolean Boolean (Or Boolean (Vector Boolean)) (Values e (Maybe (OwnedPublication e r)))))
 ;; : (-> Names Arities SnapshotVector Sizes Representations Observation
-;;        NameResolver Boolean Boolean (Values EvaluationResult (Maybe OwnedPublication)))
+;;        NameResolver Boolean Boolean (Or Boolean (Vector Boolean)) (Values EvaluationResult (Maybe OwnedPublication)))
 (def (gerbil-ascent-make-owned-result names arity snapshots sizes representations observation
-                                    position-of complete? session?)
+                                    position-of complete? session? (detach session?))
   (let (result (gerbil-ascent-make-published-result names arity snapshots sizes
-                 representations observation position-of complete? session?))
+                 representations observation position-of complete? detach))
     (values result (and session? (make-owned-publication result snapshots sizes position-of)))))
 
 ;; gerbil-ascent-publication-cache
@@ -99,11 +99,11 @@
   (cond ((relation-view? rows) (gerbil-ascent-view-rows rows))
         ((promise? rows) (force rows)) (else rows)))
 
-;; Session results can seed later replacements. Public list and row spines
-;; must not alias those retained roots; immutable scalar values remain shared.
-(def (gerbil-ascent-public-snapshot-rows snapshot session?)
+;; Retained engine and Actor source-cut roots are read-only. Public snapshots
+;; detach the row and list spines when their ownership requires it.
+(def (gerbil-ascent-public-snapshot-rows snapshot detach?)
   (let (stored (gerbil-ascent-snapshot-rows snapshot))
-    (if (and session? (not (relation-view? snapshot)))
+    (if (and detach? (not (relation-view? snapshot)))
       (map (lambda (row) (map identity row)) stored) stored)))
 
 ;; gerbil-ascent-snapshot-sizes
@@ -173,7 +173,7 @@
 ;;        NameResolver Boolean Boolean EvaluationResult)
 (def (gerbil-ascent-make-published-result names arity snapshots sizes
                                          representations observation position-of
-                                         complete? session?)
+                                         complete? detach)
   (.o (relation-names (vector->list names))
       (finished complete?)
       (evaluation-path (vector-ref observation 0))
@@ -192,5 +192,6 @@
           (gerbil-ascent-visit-snapshot! (vector-ref snapshots index)
             (vector-ref arity index) columns key consume))))
       (rows-of (lambda (name)
-        (gerbil-ascent-public-snapshot-rows
-         (vector-ref snapshots (position-of name)) session?)))))
+        (let (index (position-of name))
+          (gerbil-ascent-public-snapshot-rows (vector-ref snapshots index)
+            (if (vector? detach) (vector-ref detach index) detach)))))))

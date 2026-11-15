@@ -96,6 +96,58 @@ theorem transfer_saves_one_pair_per_row (emitted : List (Nat × Value)) :
       emitted.length := by
   simp [copiedBatchPairs, transferredBatchPairs]
 
+namespace FrozenIndex
+
+/-! `program/positive-components.ss` only lends keyed total reads of
+source-only slots. Its merge callback writes rule-owned relation slots.
+Assignment-local indexes continue to handle other totals and both frontier
+lanes in `program/component-worker.ss`. -/
+structure Entry (Row : Type) where
+  version : Nat
+  bucket : List Row
+
+def read {Row : Type} (matchesRow : Row → Bool) (frozen : List Row) (version : Nat)
+    (cached : Entry Row) : List Row :=
+  if cached.version = version then cached.bucket else frozen.filter matchesRow
+
+theorem frozen_read_exact {Row : Type} (matchesRow : Row → Bool)
+    (frozen : List Row) (version : Nat) (entry : Entry Row)
+    (valid : entry.version = version → entry.bucket = frozen.filter matchesRow) :
+    read matchesRow frozen version entry = frozen.filter matchesRow := by
+  by_cases same : entry.version = version
+  · simp [read, same, valid same]
+  · simp [read, same]
+
+def merge {Row : Type} (roots : Nat → List Row) (output : Nat × Row) (slot : Nat) : List Row :=
+  if slot = output.1 then output.2 :: roots slot else roots slot
+
+theorem source_root_stable {Row : Type} (roots : Nat → List Row) (sourceSlot : Nat)
+    (outputs : List (Nat × Row)) (notWritten : ∀ output ∈ outputs, sourceSlot ≠ output.1) :
+    (outputs.foldl merge roots) sourceSlot = roots sourceSlot := by
+  induction outputs generalizing roots with
+  | nil => rfl
+  | cons output rest ih =>
+      change (rest.foldl merge (merge roots output)) sourceSlot = roots sourceSlot
+      rw [ih (merge roots output) (fun other member => notWritten other (by simp [member]))]
+      simp [merge, notWritten output (by simp)]
+
+theorem shared_source_matches_assignment {Row : Type} (roots : Nat → List Row)
+    (sourceSlot : Nat) (outputs : List (Nat × Row))
+    (notWritten : ∀ output ∈ outputs, sourceSlot ≠ output.1) (matchesRow : Row → Bool) :
+    read matchesRow (roots sourceSlot) 0 ⟨0, (roots sourceSlot).filter matchesRow⟩ =
+      ((outputs.foldl merge roots) sourceSlot).filter matchesRow := by
+  rw [source_root_stable roots sourceSlot outputs notWritten]
+  simp [read]
+
+/-- For nonempty consumers of the same bucket family and cut, count only
+the input occurrences offered to physical builds. Probes and checkpoints
+still belong to each task. -/
+theorem same_cut_builds_saved (rows otherConsumers : Nat) :
+    (otherConsumers + 1) * rows - rows = otherConsumers * rows := by
+  simp [Nat.add_mul]
+
+end FrozenIndex
+
 def name : Field → String
   | .kind => "kind"
   | .key => "key"

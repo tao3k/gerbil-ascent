@@ -7,6 +7,7 @@
 (import "component-plan.ss"
         (only-in :gerbil-ascent/core/execution-policy gerbil-ascent-component-ready)
         (only-in :std/iter for/fold in-list)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows)
         (only-in "component-worker.ss" gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round!))
 (export gerbil-ascent-positive-components gerbil-ascent-compile-positive-components
@@ -14,13 +15,14 @@
         positive-component-id positive-component-members positive-component-rules positive-component-predecessors)
 
 ;; gerbil-ascent-run-positive-components!
-;; : (-> Analysis ProgramSchema Rows Workers Merge Canceled Void)
+;; : (-> Analysis ProgramSchema Rows Workers Merge Canceled Boolean Void)
 ;; | doc m%
 ;;     Coordinate projected SCCs against a private tentative frontier. Each ready
 ;;     assignment receives its own root/size vectors, with persistent row roots.
 ;;     Only the owner charges global unique rows and admits successors after
-;;     terminal task completion and all predecessor merge credits. Worker state is never
-;;     shared with that owner or with another assignment.
+;;     terminal task completion and all predecessor merge credits. A single
+;;     worker may retain keyed reads of owned scalar source-only relations for
+;;     the whole run. Each assignment still owns its writable relation indexes.
 ;;
 ;;     # Examples
 ;;
@@ -29,7 +31,8 @@
 ;;     ;; => closes required SCCs or drains workers before raising failure
 ;;     ```
 ;;   %
-(def (gerbil-ascent-run-positive-components! analysis schema initial workers merge canceled?)
+(def (gerbil-ascent-run-positive-components! analysis schema initial workers merge canceled?
+                                               (scalar-source-owner? #f))
   (let* ((components (gerbil-ascent-positive-components analysis))
          (frontier (vector-copy initial))
          (sizes (vector-map length frontier))
@@ -38,7 +41,19 @@
          (known (make-vector (vector-length initial) #f))
          (by-id (list->vector components))
          (remaining (make-vector (length components) 0))
-         (snapshots (make-vector (length components) #f)))
+         (snapshots (make-vector (length components) #f))
+         (assigned (filter (lambda (component) (pair? (positive-component-rules component))) components))
+         (source-indexes
+          (and scalar-source-owner? (= workers 1) (pair? assigned) (pair? (cdr assigned))
+               (let* ((width (vector-length initial)) (zeros (make-vector width 0)))
+                 (row-indexes-rows
+                  (gerbil-ascent-make-row-indexes initial (make-vector width []) sizes zeros
+                    zeros zeros (vector-ref schema 5)))))))
+    ;; The envelope admits one reader at a time. Source-only slots have no
+    ;; writer, so their initial total cut stays exact until the pool joins.
+    (def (read-source atom frame terms)
+      (and (not (vector-ref known (vector-ref atom 0)))
+           (source-indexes atom frame #f terms)))
     (for-each (lambda (component)
                 (if (null? (positive-component-rules component))
                   (void)
@@ -55,13 +70,14 @@
                     (+ blocked (if (pair? (positive-component-rules (vector-ref by-id id))) 1 0))))) components)
     (gerbil-ascent-run-actor-round!
      (vector analysis initial 'components)
-     (filter (lambda (component) (pair? (positive-component-rules component))) components) workers
+     assigned workers
      (lambda (component emit! checkpoint!)
        (let* ((id (positive-component-id component)) (snapshot (vector-ref snapshots id)))
          ;; Ready admission transfers the fresh vectors to exactly one worker.
          ;; The owner retains only this opaque reference and never reads or
          ;; mutates either vector after admission.
-         (gerbil-ascent-run-positive-component! component schema snapshot emit! checkpoint!)))
+         (gerbil-ascent-run-positive-component! component schema snapshot emit! checkpoint!
+           (and source-indexes read-source))))
      (lambda (atom row)
        (let* ((index (vector-ref atom 0)) (table (vector-ref known index)))
          (unless (hash-get table row)

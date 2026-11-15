@@ -1,0 +1,182 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import :std/test
+        (only-in :std/time/precise current-time-precise PreciseTime-seconds PreciseTime-nseconds)
+        (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation
+                 gerbil-ascent-variable gerbil-ascent-rule gerbil-ascent-atom)
+        (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
+                 gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!)
+        (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-actor-session
+                 gerbil-ascent-session-state gerbil-ascent-session-last-completed
+                 gerbil-ascent-session-cancel! gerbil-ascent-session-close!))
+(export actor-session-test)
+
+(def (nanoseconds)
+  (let (time (current-time-precise))
+    (+ (* (PreciseTime-seconds time) 1000000000) (PreciseTime-nseconds time))))
+
+(def (chain count)
+  (map (lambda (id) (list id (+ id 1))) (iota count)))
+
+(def (declaration edges input-limit recursive? (heads '(answer)) (probes #f))
+  (let* ((x (gerbil-ascent-variable 'x))
+         (y (gerbil-ascent-variable 'y))
+         (z (gerbil-ascent-variable 'z))
+         (head (gerbil-ascent-atom 'answer (list x z)))
+         (hop (gerbil-ascent-atom 'edge (list y z)))
+         (rules
+          (map (lambda (name)
+                 (gerbil-ascent-rule
+                   (list (gerbil-ascent-atom name (list x z)))
+                   (list (gerbil-ascent-atom
+                          (cond (recursive? 'answer) (probes 'probe) (else 'edge))
+                          (list x y)) hop)))
+               heads)))
+    (gerbil-ascent-program
+      (cons (gerbil-ascent-relation 'edge 2 edges)
+            (append (if probes (list (gerbil-ascent-relation 'probe 2 probes)) [])
+                    (map (lambda (name) (gerbil-ascent-relation name 2 [])) heads)))
+      (if recursive?
+        (cons (gerbil-ascent-rule (list head) (list (gerbil-ascent-atom 'edge (list x z)))) rules)
+        rules)
+      input-limit 150000 160000)))
+
+(def (latency-samples count)
+  (vector (make-f64vector count 0.) 0 0.))
+
+(def (measure samples operation)
+  (let* ((begin-cpu (cpu-time))
+         (begin-wall (nanoseconds))
+         (answer (operation))
+         (elapsed (- (nanoseconds) begin-wall))
+         (cpu (- (cpu-time) begin-cpu))
+         (index (vector-ref samples 1)))
+    (f64vector-set! (vector-ref samples 0) index (exact->inexact elapsed))
+    (vector-set! samples 1 (+ index 1))
+    (vector-set! samples 2 (+ (vector-ref samples 2) cpu))
+    answer))
+
+(def (report-phase rows phase samples (rules 1))
+  (let* ((count (vector-ref samples 1))
+         (ordered (list-sort < (f64vector->list (vector-ref samples 0))))
+         (elapsed (apply + ordered)))
+    (display "ACTOR-PRODUCTION ")
+    (write (list (cons 'input-edges rows) (cons 'consumers rules) (cons 'phase phase)
+                 (cons 'requests count) (cons 'cpu-us (* 1000000. (vector-ref samples 2)))
+                 (cons 'requests-per-second (/ (* count 1000000000.) elapsed))
+                 (cons 'p50-ns (list-ref ordered (- (quotient (+ count 1) 2) 1)))
+                 (cons 'p95-ns (list-ref ordered (- (quotient (+ (* count 95) 99) 100) 1)))
+                 (cons 'max-ns (list-ref ordered (- count 1)))))
+    (newline)))
+
+(def (report-live rows rules before)
+  (let (after (##process-statistics))
+    (##gc)
+    (let* ((collected (##process-statistics))
+           (collections (- (f64vector-ref after 6) (f64vector-ref before 6)))
+           (bytes (- (f64vector-ref after 7) (f64vector-ref before 7))))
+      (display "ACTOR-LIVE ")
+      (write (list (cons 'input-edges rows) (cons 'consumers rules)
+                   (cons 'natural-collections collections)
+                   (cons 'allocation-counter-delta (and (zero? collections) (>= bytes 0) bytes))
+                   (cons 'live-before (f64vector-ref before 17))
+                   (cons 'live-after (f64vector-ref collected 17))))
+      (newline))))
+
+(def (answer-rows result (name 'answer))
+  (unless (.ref result 'finished) (error "actor closure did not finish"))
+  ((.ref result 'rows-of) name))
+
+(def (two-hop-oracle count)
+  (map (lambda (id) (list id (+ id 2))) (iota (- count 1))))
+
+(def (check-export rows expected)
+  (unless (equal? expected (list-sort (lambda (a b) (< (car a) (car b))) rows))
+    (error "actor result differs from chain oracle")))
+
+(def (sustained-session count repetitions (heads '(answer)))
+  (check-equal? (##current-vm-processor-count) 1)
+  (let* ((edges (chain count))
+         (probes (and (pair? (cdr heads))
+                      (append (take edges 16) (list (list (- count 1) count)))))
+         (selected? (lambda (row) (or (not probes) (< (car row) 16) (= (car row) (- count 1)))))
+         (expected (filter selected? (two-hop-oracle count)))
+         (extended (filter selected? (two-hop-oracle (+ count 1))))
+         (input-limit (+ count 1 (if probes (length probes) 0)))
+         (session (gerbil-ascent-open-actor-session
+                   (declaration edges input-limit #f heads probes) workers: 1))
+         (warm (latency-samples repetitions))
+         (append-request (latency-samples repetitions))
+         (append-run (latency-samples repetitions))
+         (replace-request (latency-samples repetitions))
+         (replace-run (latency-samples repetitions))
+         (export (latency-samples repetitions))
+         (close-cut (list count (+ count 1))))
+    (def (run) (gerbil-ascent-session-run session))
+    (def (check-chain result expected)
+      (for-each (lambda (name) (check-export (answer-rows result name) expected)) heads))
+    (try
+      (##gc)
+      (let* ((before (##process-statistics))
+             (first (run)))
+        (check-chain first expected)
+        (let loop ((index 0))
+          (unless (= index repetitions)
+            (check-chain (measure warm run) expected)
+            (measure append-request (cut gerbil-ascent-session-append-source! session 'edge close-cut))
+            (check-chain (measure append-run run) extended)
+            (measure replace-request (cut gerbil-ascent-session-replace-source! session 'edge edges))
+            (let* ((replaced (measure replace-run run))
+                   (rows (measure export (cut answer-rows replaced))))
+              (check-export rows expected)
+              (for-each (lambda (name) (check-export (answer-rows replaced name) expected)) (cdr heads)))
+            (loop (+ index 1))))
+        (report-live count (length heads) before)
+        (check-chain first expected))
+      (check-equal? (gerbil-ascent-session-state session) (list (+ 1 (* 5 repetitions)) 'idle))
+      (for-each (lambda (phase samples) (report-phase count phase samples (length heads)))
+                '(unchanged-run append-request append-run replace-request replace-run export)
+                (list warm append-request append-run replace-request replace-run export))
+      (finally (gerbil-ascent-session-close! session)))))
+
+(def (cancel-session count repetitions)
+  (let* ((edges (chain count))
+         (session (gerbil-ascent-open-actor-session
+                   (declaration '((0 1)) count #t) workers: 1))
+         (drain (latency-samples repetitions)))
+    (try
+      (let (prior (gerbil-ascent-session-run session))
+        (for-each (lambda (_)
+          (gerbil-ascent-session-replace-source! session 'edge edges)
+          (let (caller (spawn (lambda ()
+                         (with-catch (lambda (_) 'rejected)
+                           (cut gerbil-ascent-session-run session)))))
+            (let wait-running ((polls 0))
+              (unless (eq? (cadr (gerbil-ascent-session-state session)) 'running)
+                (when (= polls 1000) (error "long closure did not start"))
+                (thread-yield!)
+                (wait-running (+ polls 1))))
+            (check-equal? (measure drain
+                           (lambda ()
+                             (unless (eq? 'draining (gerbil-ascent-session-cancel! session))
+                               (error "cancel missed the active publication"))
+                             (thread-join! caller))) 'rejected)
+            (check-equal? (eq? prior (gerbil-ascent-session-last-completed session)) #t)))
+          (iota repetitions))
+        (check-equal? (answer-rows (gerbil-ascent-session-run session)) '((0 1)))
+        (report-phase count 'cancel-and-drain drain))
+      (finally (gerbil-ascent-session-close! session)))))
+
+(def actor-session-test
+  (test-suite "Single VM Actor production Session"
+    (test-case "1000 cycles of production runs and mutations"
+      (sustained-session 128 1000))
+    (test-case "larger production cuts through the same Session"
+      (sustained-session 4096 64))
+    (test-case "four rule consumers reuse the same physical key"
+      (sustained-session 16384 32 '(answer second third fourth)))
+    (test-case "cancellation drains without changing the previous completed result"
+      (cancel-session 448 32))))

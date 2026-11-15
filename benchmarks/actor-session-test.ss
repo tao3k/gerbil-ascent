@@ -109,7 +109,8 @@
          (elapsed (apply + ordered)))
     (display "ACTOR-PRODUCTION ")
     (write (list (cons 'input-edges rows) (cons 'consumers rules) (cons 'phase phase)
-                 (cons 'requests count) (cons 'cpu-us (* 1000000. (vector-ref samples 2)))
+                 (cons 'requests count) (cons 'gc-traced (and (vector-ref samples 3) #t))
+                 (cons 'cpu-us (* 1000000. (vector-ref samples 2)))
                  (cons 'requests-per-second (/ (* count 1000000000.) elapsed))
                  (cons 'p50-ns (list-ref ordered (- (quotient (+ count 1) 2) 1)))
                  (cons 'p95-ns (list-ref ordered (- (quotient (+ (* count 95) 99) 100) 1)))
@@ -121,7 +122,10 @@
 ;;; be added because their collections and other stalls need not coincide.
 (def (report-transaction rows rules phase staging evaluation)
   (let* ((count (vector-ref staging 1))
-         (samples (latency-samples count))
+         (stage-gc (vector-ref staging 3))
+         (eval-gc (vector-ref evaluation 3))
+         (samples (latency-samples count (and stage-gc eval-gc)))
+         (trace (vector-ref samples 3))
          (wall (vector-ref samples 0))
          (stage-wall (vector-ref staging 0))
          (eval-wall (vector-ref evaluation 0)))
@@ -130,6 +134,15 @@
       (unless (= index count)
         (f64vector-set! wall index (+ (f64vector-ref stage-wall index)
                                      (f64vector-ref eval-wall index)))
+        ;; Each GC statistic covers only its own bracket around an operation.
+        ;; Summing the disjoint brackets preserves the overlap lower bound.
+        (when trace
+          (for-each
+           (lambda (field)
+             (f64vector-set! (field trace) index
+               (+ (f64vector-ref (field stage-gc) index)
+                  (f64vector-ref (field eval-gc) index))))
+           (list gc-samples-wall gc-samples-cpu gc-samples-collections gc-samples-bracket)))
         (next (+ index 1))))
     (vector-set! samples 1 count)
     (vector-set! samples 2 (+ (vector-ref staging 2) (vector-ref evaluation 2)))
@@ -281,6 +294,6 @@
     (test-case "1000 large replacements change all edge values"
       (changed-replacements 16384 1000))
     (test-case "large Actor requests record overlapping GC pauses"
-      (sustained-session 16384 256 '(answer second third fourth) #t))
+      (sustained-session 16384 1000 '(answer second third fourth) #t))
     (test-case "cancellation drains without changing the previous completed result"
       (cancel-session 448 32))))

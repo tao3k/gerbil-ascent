@@ -145,7 +145,7 @@ theorem occupied_copy_exact (keys : List Key) (table : Buckets Key Row)
   by_cases present : wanted ∈ keys
   · simp [copyOccupied, present]
   · cases bucket : table wanted with
-    | nil => simp [copyOccupied, present, bucket]
+    | nil => simp [copyOccupied, present]
     | cons head tail =>
         exact False.elim (present (coverage wanted (by simp [bucket])))
 
@@ -177,4 +177,68 @@ theorem replacement_preserves_held_rows (old : Buckets Key Row)
       (old wanted, rows.filter (fun row => decide (wanted = key row))) := by
   rw [observed]
   exact congrArg (fun fresh => (old wanted, fresh)) (scheme_build_exact key rows wanted)
+/-! A direct scalar row occupies the first entry for its key. The native
+layout distinguishes the scalar at its head from a row pair at the head
+of a multi-row bucket. This sum type states that representation invariant
+without relying on the runtime's tagging scheme. -/
+inductive SourceBucket (Row : Type) where
+  | direct : Row → SourceBucket Row
+  | multiple : Row → Row → List Row → SourceBucket Row
+
+def decodeSourceBucket : Option (SourceBucket Row) → List Row
+  | none => []
+  | some (.direct row) => [row]
+  | some (.multiple first second rest) => first :: second :: rest
+
+def pushSourceBucket (row : Row) : Option (SourceBucket Row) → Option (SourceBucket Row)
+  | none => some (.direct row)
+  | some (.direct prior) => some (.multiple row prior [])
+  | some (.multiple first second rest) => some (.multiple row first (second :: rest))
+
+theorem push_source_bucket_exact (row : Row) (prior : Option (SourceBucket Row)) :
+    decodeSourceBucket (pushSourceBucket row prior) = row :: decodeSourceBucket prior := by
+  cases prior with
+  | none => rfl
+  | some bucket => cases bucket <;> rfl
+
+def addSourceRow (key : Row → Key) (before : Key → Option (SourceBucket Row))
+    (row : Row) (wanted : Key) : Option (SourceBucket Row) :=
+  if wanted = key row then pushSourceBucket row (before wanted) else before wanted
+
+theorem source_bucket_fold_exact (key : Row → Key) (rows : List Row)
+    (before : Key → Option (SourceBucket Row)) (wanted : Key) :
+    decodeSourceBucket (rows.foldl (addSourceRow key) before wanted) =
+      extend (prepend key) (fun k => decodeSourceBucket (before k)) rows wanted := by
+  induction rows generalizing before with
+  | nil => rfl
+  | cons row rest ih =>
+      change decodeSourceBucket (rest.foldl (addSourceRow key) (addSourceRow key before row) wanted) =
+        extend (prepend key) (prepend key (fun k => decodeSourceBucket (before k)) row) rest wanted
+      rw [ih]
+      congr 2
+      funext k
+      by_cases same : k = key row <;> simp [addSourceRow, prepend, same, push_source_bucket_exact]
+
+theorem direct_source_build_preserves_order (key : Row → Key) (rows : List Row) (wanted : Key) :
+    (decodeSourceBucket (rows.foldl (addSourceRow key) (fun _ => none) wanted)).reverse =
+      rows.filter (fun row => decide (wanted = key row)) := by
+  rw [source_bucket_fold_exact]
+  exact scheme_build_exact key rows wanted
+
+def storedSourcePairs : Option (SourceBucket Row) → Nat
+  | some (.multiple _ _ rest) => rest.length + 2
+  | _ => 0
+
+def allocatedSourcePairs : Option (SourceBucket Row) → Nat
+  | none => 0
+  | some (.direct _) => 2
+  | some (.multiple _ _ _) => 1
+
+theorem source_pair_allocation_exact (row : Row) (before : Option (SourceBucket Row)) :
+    storedSourcePairs (pushSourceBucket row before) =
+      storedSourcePairs before + allocatedSourcePairs before := by
+  cases before with
+  | none => rfl
+  | some bucket => cases bucket <;> simp [storedSourcePairs, allocatedSourcePairs, pushSourceBucket] <;> omega
+
 end Ascent.PhysicalBuckets

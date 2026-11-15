@@ -18,7 +18,8 @@
                  make-compiled-provider-packet)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
-                 gerbil-ascent-physical-index-single-rows gerbil-ascent-refill-cleared-index!)
+                 gerbil-ascent-physical-index-single-rows gerbil-ascent-refill-cleared-index!
+                 gerbil-ascent-source-scalar-index-write! gerbil-ascent-source-scalar-index-rows)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-curried-index-provider?)
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
@@ -305,7 +306,9 @@
       (def (single-rows entry lookup value version)
         (def (probe)
           (positive-plan-cost-index! 'probe)
-          (gerbil-ascent-physical-index-single-rows lookup value))
+          (if (and recycle-source? (source-index-entry? entry))
+            (gerbil-ascent-source-scalar-index-rows lookup value)
+            (gerbil-ascent-physical-index-single-rows lookup value)))
         (if (not reuse-empty?) (probe)
           (begin
             (positive-plan-cost-index! 'empty-test)
@@ -528,14 +531,20 @@
                                (and packed-consumer? (provider-packed-width rows columns atom))))
                         (cond
                          (permutation (gerbil-ascent-shared-index-build rows permutation))
-                         ((and recycle-source? (source-index-entry? entry)
-                               (source-index-entry-prior-keys entry))
-                          => (lambda (prior-keys)
-                               (let (refilled
-                                     (gerbil-ascent-refill-cleared-index!
-                                      (physical-index-entry-lookup entry) rows columns prior-keys))
-                                 (source-index-entry-prior-keys-set! entry #f)
-                                 refilled)))
+                         ((and recycle-source? (source-index-entry? entry))
+                          (let* ((prior-keys (source-index-entry-prior-keys entry))
+                                 (built
+                                  (cond
+                                   ((null? (cdr columns))
+                                    (gerbil-ascent-source-scalar-index-write!
+                                     (if prior-keys (physical-index-entry-lookup entry) (make-hash-table))
+                                     rows (car columns) #t prior-keys))
+                                   (prior-keys
+                                    (gerbil-ascent-refill-cleared-index!
+                                     (physical-index-entry-lookup entry) rows columns prior-keys))
+                                   (else (gerbil-ascent-physical-index-build provider rows columns)))))
+                            (source-index-entry-prior-keys-set! entry #f)
+                            built))
                          (else (gerbil-ascent-physical-index-build provider rows columns)))
                         ;; Publish the current version after success. Recycled
                         ;; source entries have already revoked their old version.
@@ -587,10 +596,15 @@
                    ;; from still-committed rows on the next read.
                    (positive-plan-cost-index! 'extend rows)
                    (gerbil-ascent-index-extend! entry (+ version 1)
-                     (if (physical-index-entry-shared? entry)
-                         (gerbil-ascent-shared-index-extend! (physical-index-entry-lookup entry) rows)
-                         (gerbil-ascent-physical-index-extend!
-                          provider (physical-index-entry-lookup entry) rows columns))
+                     (cond
+                      ((physical-index-entry-shared? entry)
+                       (gerbil-ascent-shared-index-extend! (physical-index-entry-lookup entry) rows))
+                      ((and recycle-source? (source-index-entry? entry) (null? (cdr columns)))
+                       (gerbil-ascent-source-scalar-index-write!
+                        (physical-index-entry-lookup entry) rows (car columns)))
+                      (else
+                       (gerbil-ascent-physical-index-extend!
+                        provider (physical-index-entry-lookup entry) rows columns)))
                      (when (physical-index-entry-witness entry)
                        (extend-provider-row-witness!
                         (physical-index-entry-witness entry) rows columns))

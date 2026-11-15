@@ -194,11 +194,13 @@ the first solve, P50, P95, maximum, CPU and throughput for each operation.
 Also report the append and replacement transactions by adding staging and
 evaluation times at the same request ordinal before computing percentiles.
 The workload reports natural collections and live bytes with the first and
-last results held. The separate 256-cycle trace samples the VM collection count and
-collector wall and CPU clocks around each operation. It reports how many
+last results held. The separate 1000-cycle trace repeats the large workload
+with VM collection counts and collector wall and CPU clocks around each operation. It reports how many
 requests of at least 20 ms overlap a collection and how many spend over half
-their measured interval in one. The overlap lower bound subtracts all time
-in the observer bracket outside the request.
+their measured interval in one. Add both observed brackets for a staged
+transaction, pairing by ordinal. The overlap lower bound subtracts all
+observer time outside the measured operations. The traced run and the
+regular timing run are reported separately.
 
 An independent recursive case cancels 32 active solves and verifies the prior
 completed result and rolled-back input after worker drain. Source-only total
@@ -254,15 +256,20 @@ timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
 Time the production one-column insertion and ordering operations on a
 16384-row chain and a 32-key distribution of the same size. Collect 1000
 samples per arm for default capacity, capacity hinted by row count, and
-clearing and refilling a retained native table. Report the CPU intervals
-for table preparation, bucket insertion and order restoration separately.
-The column sum is a separate traversal control. Compare every bucket
-against independently collected row occurrences and verify their identity.
+clearing and refilling a retained native table. Compare full buckets with
+direct singleton rows in the retained table. Report preparation,
+insertion and ordering intervals, plus dense probe batches through both
+compiled accessors. The column sum is a separate traversal control.
+Compare every bucket against independently collected row occurrences and
+verify their identity.
 
 The untimed counter observes each backing vector identity change in the
 pinned runtime. Report the cumulative number of vector slots allocated
-for table storage and the number of newly constructed bucket pairs. The
-allocation calibration below covers the remaining runtime accounting.
+for table storage and the number of newly constructed bucket pairs.
+The Actor's canonical, single-column source index stores the owned row
+at a singleton key and constructs the traversal list on a hit. Repeated
+keys occupy normal ordered buckets. The allocation calibration below
+covers the remaining runtime accounting.
 The production Session suite additionally alternates two same-sized
 16384-edge cuts whose target values differ at every key, checking the
 result of each replacement against the arithmetic oracle.

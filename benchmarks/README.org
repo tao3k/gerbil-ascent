@@ -34,3 +34,50 @@ The accumulated individual request times were 120.487 ms for reply Actors and
 occurred in the paired loop. The study kept the existing reply Actor. These are historical measurements
 from the isolated experiment. The native Suite above measures the installed
 current Session on the same request shape.
+
+* Provider index and Session phases
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/provider-index-test.ss
+#+end_src
+
+Use the installed production library. The Suite compares 4096 wide rows,
+16384 narrow rows, and a 4096-row wide relation with a 16-row exact match.
+It records the intervals between the physical owner and actual provider
+callbacks, including cold creation, warm lookup and returned-packet admission.
+The cold interval before the build callback includes index-owner setup, witness
+construction and outbound copying. A separate call prices the same outbound
+copy primitive and checks the exact number of fresh pairs. Keep that interval
+separate from the inclusive cold interval.
+
+The structural hash diagnostic counts native structural hashes and equality
+calls during member-table construction and lookup of equal copied rows. It
+compares the same native table operations at the default initial capacity and
+with an explicit size hint. Counter wrappers are excluded from CPU comparison.
+The Session case records provider build, extension and lookup counts around
+the one-shot solve, first and repeated Session reads, append and replacement.
+Every result is checked against its expected complete ordered ID set outside
+the measured interval. The first publication is checked again after updates.
+
+Each phase reports CPU, wall time, collections, the live bytes observed at the
+most recent GC, and an allocation-counter delta. The delta can include the
+observation overhead and a false value denotes a backward counter reading.
+The outbound copy also reports a collected cumulative allocation window.
+These observations guide optimization; the existing provider packet performance
+gates still run with their original fixtures and thresholds.
+
+* Indexed two-pivot delta join
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/delta-join-test.ss
+#+end_src
+
+Run the same compiled join on a 16384-edge chain with sparse, medium and full
+delta cuts. Compare overlapping pivots with the existing first-fresh pivot
+restriction. The arithmetic oracle checks the answer and the multiplicity of
+each witness before any deduplication. The CPU and native work-counter
+invocations start from fresh physical owners and use the same expected output.
+The counters show candidate rows, complete witnesses, physical probes and
+the rows charged to old-lane membership.

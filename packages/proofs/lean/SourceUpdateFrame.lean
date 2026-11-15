@@ -143,6 +143,65 @@ theorem admitted_source_budget (before removed added limit count : Nat)
   dsimp only [prepareSourceCount] at accepted
   split at accepted <;> simp_all
 
+/-! The native preflight checks the outer proper list once, then counts
+occurrences in the same loop that validates each width. A row observation
+describes its pair prefix and whether it ends at the empty list. A cycle
+has a pair at the requested end and therefore fails the bounded check. -/
+def sourceTupleValid (closedTail : Bool) : Nat → List Row → Bool
+  | 0, [] => closedTail
+  | width + 1, _ :: rest => sourceTupleValid closedTail width rest
+  | _, _ => false
+
+theorem source_tuple_valid_exact (closedTail : Bool) (width : Nat) (row : List Row) :
+    sourceTupleValid closedTail width row = true ↔ closedTail = true ∧ row.length = width := by
+  induction row generalizing width with
+  | nil => cases width <;> simp [sourceTupleValid]
+  | cons value rest ih =>
+      cases width with
+      | zero => simp [sourceTupleValid]
+      | succ width => simpa [sourceTupleValid] using ih width
+
+def checkedSourceCount (width : Nat) : List (List Row × Bool) → Nat → Option Nat
+  | [], count => some count
+  | (row, closedTail) :: rest, count =>
+      if sourceTupleValid closedTail width row then checkedSourceCount width rest (count + 1) else none
+
+theorem checked_source_count_exact (width : Nat) (rows : List (List Row × Bool)) (prior count : Nat) :
+    checkedSourceCount width rows prior = some count ↔
+      (∀ row ∈ rows, row.2 = true ∧ row.1.length = width) ∧ count = prior + rows.length := by
+  induction rows generalizing prior with
+  | nil =>
+      simpa [checkedSourceCount] using (eq_comm : prior = count ↔ count = prior)
+  | cons row rest ih =>
+      obtain ⟨row, tail⟩ := row
+      simp only [checkedSourceCount, List.length_cons]
+      split
+      · rename_i accepted
+        have shape := (source_tuple_valid_exact tail width row).mp accepted
+        rw [ih]
+        simp [shape, Nat.add_left_comm, Nat.add_comm]
+      · rename_i rejected
+        constructor
+        · intro impossible
+          cases impossible
+        · intro accepted
+          exact (rejected ((source_tuple_valid_exact tail width row).mpr
+            (accepted.1 _ List.mem_cons_self))).elim
+
+def detachedSourcePairs (rows : List (List Row)) : Nat :=
+  rows.foldr (fun row rest => row.length + 1 + rest) 0
+
+theorem detached_source_pairs_exact (width : Nat) (rows : List (List Row))
+    (arity : ∀ row ∈ rows, row.length = width) :
+    detachedSourcePairs rows = rows.length * (width + 1) := by
+  induction rows with
+  | nil => simp [detachedSourcePairs]
+  | cons row rest ih =>
+      have head := arity row (List.mem_cons_self)
+      have tail := ih fun other member => arity other (List.mem_cons_of_mem _ member)
+      change row.length + 1 + detachedSourcePairs rest = (rest.length + 1) * (width + 1)
+      simp [head, tail, Nat.add_mul, Nat.add_comm]
+
 /-! Actor source admission uses the owned newest-first lane in
 `program/source-cut.ss` and marks writes from every compiled rule head in
 `program/initialization.ss`. The Actor supplies the exact owned cut only

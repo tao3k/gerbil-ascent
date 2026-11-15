@@ -4,7 +4,8 @@
 
 ;;; Actor Session source transactions. Cuts own row list spines and dense slot
 ;;; headers. Published cuts are read-only; a failed preparation changes nothing.
-(import (only-in "scheme-checked.ss" relational-scalar?))
+(import (only-in :std/iter for/fold in-list)
+        (only-in "scheme-checked.ss" relational-scalar?))
 (export gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
         gerbil-ascent-source-cut-update gerbil-ascent-source-cut-scalar?
         gerbil-ascent-source-cut-export-mask gerbil-ascent-source-cut-initial-lane
@@ -25,11 +26,19 @@
     (unless slot (error "unknown ASCENT relation" name))
     (- slot 1)))
 
-(def (source-check-rows! arities position name rows)
+;; A declared width bounds tuple validation even for an improper or cyclic
+;; row. Count the already validated occurrences before budget preflight.
+(def (source-row-count! arities position name rows)
+  (def (invalid) (error "invalid ASCENT actor Session source rows" name rows))
+  (def (tuple? row remaining)
+    (if (zero? remaining)
+      (null? row)
+      (and (pair? row) (tuple? (cdr row) (- remaining 1)))))
   (let (width (vector-ref arities position))
-    (unless (and (list? rows)
-                 (andmap (lambda (row) (and (list? row) (= (length row) width))) rows))
-      (error "invalid ASCENT actor Session source rows" name rows))))
+    (unless (list? rows) (invalid))
+    (for/fold (total 0) (row (in-list rows))
+      (unless (tuple? row width) (invalid))
+      (+ total 1))))
 
 ;; Classify the owned copy without changing which host values are admitted.
 ;; The classification describes the same atoms just copied, never the caller.
@@ -52,7 +61,7 @@
     (for-each
      (lambda (entry)
        (let ((position (source-position positions (car entry))) (input (cdr entry)))
-         (source-check-rows! arities position (car entry) input)
+         (source-row-count! arities position (car entry) input)
          (let-values (((rows size scalar?) (copy-source-rows input [] #t)))
            (vector-set! slots position (published-source-slot rows size scalar?))
            (set! count (+ count size))))) sources)
@@ -102,8 +111,8 @@
                               (rows (cdr entry)))
                          ;; Validate the entire batch before duplicates/budget,
                          ;; but retain no copied row spines on rejected work.
-                         (source-check-rows! arities position (car entry) rows)
-                         (make-source-change position rows (length rows)))) replacements))
+                         (make-source-change position rows
+                           (source-row-count! arities position (car entry) rows)))) replacements))
          ;; Empty/single replacements cannot duplicate a position. Do not build
          ;; a transaction membership table for the common single-source update.
          (seen (and (pair? prepared) (pair? (cdr prepared)) (make-hash-table-eq)))

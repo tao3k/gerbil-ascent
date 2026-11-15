@@ -218,6 +218,37 @@ timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
   benchmarks/actor-source-test.ss
 #+end_src
 
+The preparation case calls =gerbil-ascent-source-cut-update= directly
+for one-row append, whole-cut restoration after append, and whole-cut
+replacement with every input target changed. Each arm uses 1000
+samples. The retained result must have the incoming values in newest-first
+order, detach each incoming tuple, and share the old suffix only on append.
+Report CPU, collections, the collector charge endpoints and live heap.
+For 16384 two-column rows, the owned snapshot makes 16384 outer pairs and
+32768 tuple pairs. The source count in =program/source-cut.ss= now shares
+the width validation traversal and checks for an empty tail at exactly the
+declared arity. The proper-list check still rejects cyclic outer spines
+and all validation still precedes duplicate and budget checks.
+=SourceUpdateFrame.lean= gives the exact row-count and snapshot-pair laws.
+
+Two native repetitions of each implementation bracketed the candidate.
+The separate whole-cut restoration phase averaged 1.259 s before and
+0.879 s after per 1000 calls. Changed whole-cut preparation averaged
+1.292 s before and 0.894 s after. Each measured whole-cut preparation
+arm had 13 natural collections. In the public Session, mixed replacement
+averaged 3.241 s before and 2.746 s after. Full change averaged 3.168 s
+before and 2.781 s after. CPU improved in both pairs for both replacement
+workloads. Mixed-replacement wall P95 varied from 3.722 to 39.143 ms
+across the two reference repetitions and from 2.911 to 3.217 ms across
+the two candidate repetitions. The separate traced repetitions had
+44 replacement transactions dominated by GC in each implementation
+across 2000 requests. Append latency remains open.
+
+A separate direct-singleton consumption candidate eliminated the
+temporary lookup pair but increased the CPU of the fully changed
+replacement transaction from 2.329 s to 2.531 s. The ordered bucket
+traversal remains in production.
+
 Append one edge to the 16384-edge chain and observe the native admission
 buffers before building the canonical keyed index. Compare the ordinary
 initializer with the exact owned source cut across 1000 paired samples.

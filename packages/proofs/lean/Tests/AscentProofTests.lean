@@ -426,6 +426,9 @@ example (old next : Bool → Bool → Bool → Prop) (seed output : Bool) :
 #print axioms Ascent.TransitiveComponents.insertion_least
 #print axioms Ascent.TransitiveComponents.quotient_exact
 #print axioms Ascent.SourceUpdateFrame.source_count_balance
+#print axioms Ascent.SourceUpdateFrame.source_tuple_valid_exact
+#print axioms Ascent.SourceUpdateFrame.checked_source_count_exact
+#print axioms Ascent.SourceUpdateFrame.detached_source_pairs_exact
 #print axioms Ascent.PhysicalBuckets.actor_append_physical_writes
 #print axioms Ascent.PhysicalBuckets.refill_after_replacement_exact
 #print axioms Ascent.PhysicalBuckets.direct_source_build_preserves_order

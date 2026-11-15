@@ -204,6 +204,24 @@
             (check-equal? (gerbil-ascent-source-cut-rows next 0) '((4 5)))
             (check-equal? (gerbil-ascent-source-cut-rows next 1) '((7)))
             (check-equal? (gerbil-ascent-source-cut-rows cut 0) '((0 1)))))))
+    (test-case "source preflight requires proper tuples and a finite outer list"
+      (let* ((positions (make-hash-table-eq))
+             (arities '#(2))
+             (cyclic-row (list 1 2))
+             (cyclic-rows (list '(1 2))))
+        (hash-put! positions 'edge 1)
+        (set-cdr! (cdr cyclic-row) cyclic-row)
+        (set-cdr! cyclic-rows cyclic-rows)
+        (let (cut (gerbil-ascent-make-source-cut positions arities '((edge (0 1)))))
+          (for-each
+           (lambda (invalid)
+             (check-equal?
+              (outcome (lambda ()
+                (gerbil-ascent-source-cut-update cut positions arities
+                  (list (cons 'edge invalid)) #f 2)))
+              'rejected))
+           (list '((1 2 . 3)) (list cyclic-row) cyclic-rows))
+          (check-equal? (gerbil-ascent-source-cut-rows cut 0) '((0 1))))))
     (test-case "VM capacity default runs and invalid explicit capacities reject"
       (let (session (gerbil-ascent-open-actor-session (program '((0 1)))))
         (try

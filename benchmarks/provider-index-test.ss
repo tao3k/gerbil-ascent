@@ -128,13 +128,13 @@
            (detached (gerbil-ascent-index-row-snapshot rows))
            (finish (recorded-mark)))
       (##gc)
-      (let* ((after (##process-statistics))
-             (bytes (- (f64vector-ref after 16) (f64vector-ref before 16))))
+      (let (after (##process-statistics))
         (check-equal? detached rows)
         (check-equal? (eq? (car detached) (car rows)) #f)
         (phase 'outbound-copy start finish
                (cons* (cons 'fresh-pairs (* size (+ width 1)))
-                      (cons 'allocation-window-bytes (and (>= bytes 0) bytes))
+                      (cons 'gc-charge-before (f64vector-ref before 16))
+                      (cons 'gc-charge-after (f64vector-ref after 16))
                       fields))))))
 
 ;;; Wrap equal?-hash and equal? only to count their work. This is the same

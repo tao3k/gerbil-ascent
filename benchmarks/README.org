@@ -63,7 +63,7 @@ the measured interval. The first publication is checked again after updates.
 Each phase reports CPU, wall time, collections, the live bytes observed at the
 most recent GC, and an allocation-counter delta. The delta can include the
 observation overhead and a false value denotes a backward counter reading.
-The outbound copy also reports a collected cumulative allocation window.
+The outbound copy also reports the two raw endpoints of the collector charge.
 These observations guide optimization; the existing provider packet performance
 gates still run with their original fixtures and thresholds.
 
@@ -114,10 +114,10 @@ derives 128 or 4096 fresh edges after the first round on the same 16384-edge
 chain. It checks every two-hop answer against an arithmetic oracle. An untimed
 pass records whether the index owner reused the previous total spine and
 counts probes, witnesses, candidate rows and membership inputs. The timing
-pass reports CPU and Gambit's allocation-counter delta independently of the
+pass reports CPU and the two collector charge endpoints independently of the
 work counters. Forced collections bracket the counter reads and are outside
 the CPU interval. The source proof counts the actual list nodes, while this
-runtime counter can also reflect nonmovable occupancy changes.
+runtime observations do not cover all allocations.
 
 For the unkeyed read at the published versions, the previous total spine
 already has exactly the order and occurrences produced by old-row filtering.
@@ -171,6 +171,13 @@ The cancellation case requests stop while merging the first admitted batch.
 The worker resumes on the existing credit, loses the next credit, unwinds its
 cleanup, and the round completes the drain before returning the cancellation.
 
+The round cases report CPU, wall time, collections, the raw occupancy delta,
+and the collector charge before and after the operation. The separate batch
+spine case compares the native reversal operations on 4096 full batch and
+tail pairs without Actor stack switches. It measures the effect of
+transferring a fresh outer spine and checks identical payload order. GC
+preconditioning is outside the CPU intervals.
+
 * Single VM Actor production Session
 
 #+begin_src sh
@@ -180,24 +187,39 @@ timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
 
 The Session receives unchanged runs, appends, replacements, and exports
 through its public interface. It runs 1000 cycles on 128 edges, 64 cycles on
-4096 edges, and 32 cycles with four independent rules probing the same
+4096 edges, and 1000 cycles with four independent rules probing the same
 16384-edge relation. The timing brackets only each public operation. Check
 every complete output against the chain oracle after its timer stops. Report
 P50, P95, maximum, CPU and throughput for each operation. The workload also
 reports natural collections and live bytes with the first and last results
-held. Allocator snapshots remain diagnostic.
+held. The separate 256-cycle trace samples the VM collection count and
+collector wall and CPU clocks around each operation. It reports how many
+requests of at least 20 ms overlap a collection and how many spend over half
+their measured interval in one. The overlap lower bound subtracts all time
+in the observer bracket outside the request.
 
 An independent recursive case cancels 32 active solves and verifies the prior
 completed result and rolled-back input after worker drain. Source-only total
-indexes may be shared by one SCC worker for owned scalar inputs. The physical
+indexes can be shared by one SCC worker for owned scalar inputs during a
+single run. The physical
 index and credit observations in the native SCC qualification suite, and the
 =FrozenIndex= theorems in =ActorEnvelope.lean=, relate that path to the
 assignment-local reference. Application-visible exports of relations with
 input facts detach their list and row spines.
 
-The round cases report CPU, wall time, collections, and raw direct and
-collected allocation deltas. A backward collected counter is marked invalid.
-The separate batch spine case compares the exact native reversal operations
-on 4096 full batch and tail pairs without Actor stack switches. It prices the
-allocation effect of transferring a fresh outer spine and checks identical
-payload order. GC preconditioning is outside the CPU intervals.
+* Gambit allocation calibration
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/runtime-allocation-test.ss
+#+end_src
+
+The empty control and the two pair counts price the observer and the slope of
+the allocation charge. The 1 MiB still-copy controls allocate the same
+payload, holding or releasing it before the second forced collection.
+Report the raw Gambit counter, the charge at the last collection, and the
+movable and still portions of the live heap. The pinned collector sums
+processor accounting for the charge and separately recomputes still
+occupancy. The controls expose which allocations each observation captures.
+Keep the charge, actual cumulative allocation, and retained live heap
+separate when interpreting the Session trace.

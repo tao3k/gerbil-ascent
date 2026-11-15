@@ -92,7 +92,7 @@
 (def (measure-published-join count fresh)
   (let* ((program (published-chain count fresh))
          (cost (make-positive-plan-cost #f #f)))
-    ;; Capture allocations over a collected window. CPU excludes both forced
+    ;; Capture the collector charge endpoints. CPU excludes both forced
     ;; collections and the oracle. Diagnostic counters use an untimed solve.
     (##gc)
     (let* ((before (##process-statistics))
@@ -101,7 +101,6 @@
            (cpu-us (* 1000000. (- (cpu-time) started))))
       (##gc)
       (let* ((after (##process-statistics))
-             (bytes (- (f64vector-ref after 16) (f64vector-ref before 16)))
              (counted (call-with-positive-plan-cost cost
                         (cut gerbil-ascent-evaluate-program program)))
              (work (positive-plan-cost-snapshot cost))
@@ -113,7 +112,8 @@
         (display "DELTA-PUBLISHED ")
         (write (list (cons 'input-rows count) (cons 'delta-rows fresh)
                      (cons 'cpu-us cpu-us)
-                     (cons 'allocation-window-bytes (and (>= bytes 0) bytes))
+                     (cons 'gc-charge-before (f64vector-ref before 16))
+                     (cons 'gc-charge-after (f64vector-ref after 16))
                      (cons 'old-tail-hits (if old-tail-hits (cdr old-tail-hits) 0))
                      (assq 'old-membership-input-rows work)
                      (assq 'candidate-rows work)

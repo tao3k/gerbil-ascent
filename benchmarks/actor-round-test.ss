@@ -52,8 +52,7 @@
       (let* ((end (current-jiffy))
              (after (##process-statistics)))
         (##gc)
-        (let* ((collected (##process-statistics))
-               (bytes (- (f64vector-ref collected 16) (f64vector-ref before 16))))
+        (let (collected (##process-statistics))
           (check-equal? finished tasks)
           (display-round name
             (list (cons 'tasks tasks) (cons 'workers jobs)
@@ -66,10 +65,10 @@
                   (cons 'collections (- (f64vector-ref after 6) (f64vector-ref before 6)))
                   (cons 'batch-messages (* tasks (quotient rows 32)))
                   (cons 'checkpoint-messages (* tasks (quotient checks 64)))
-                  (cons 'collected-allocation-delta bytes)
-                  (cons 'direct-allocation-delta
+                  (cons 'gc-charge-before (f64vector-ref before 16))
+                  (cons 'gc-charge-after (f64vector-ref collected 16))
+                  (cons 'occupancy-delta
                     (- (f64vector-ref counter 1) (f64vector-ref counter 0)))
-                  (cons 'valid-collected-allocation? (>= bytes 0))
                   (cons 'last-gc-live-bytes (f64vector-ref collected 17)))))))))
 
 (def (measure-cancel)
@@ -131,7 +130,6 @@
         (##get-bytes-allocated! counter 1)
         (##gc)
         (let* ((after (##process-statistics))
-               (collected (- (f64vector-ref after 16) (f64vector-ref before 16)))
                (direct (- (f64vector-ref counter 1) (f64vector-ref counter 0)))
                (expected (iota 32)))
           (check-equal? (andmap (cut equal? <> expected) returned) #t)
@@ -139,9 +137,9 @@
           (display-round 'batch-spine
             (list (cons 'transfer? (eq? transfer! reverse!))
                   (cons 'rows (* repeats 33))
-                  (cons 'direct-allocation-delta direct)
-                  (cons 'collected-allocation-delta collected)
-                  (cons 'valid-collected-allocation? (>= collected 0)))))))))
+                  (cons 'occupancy-delta direct)
+                  (cons 'gc-charge-before (f64vector-ref before 16))
+                  (cons 'gc-charge-after (f64vector-ref after 16)))))))))
 
 (def actor-batch-spine-test
   (test-suite "Owned batch spine reversal"

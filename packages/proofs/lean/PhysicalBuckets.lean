@@ -132,4 +132,49 @@ theorem actor_append_physical_writes [DecidableEq Row] (prior rows added : List 
   obtain ⟨head, size, cut, ordered⟩ := (append_scan_exact prior rows [] count added).mp accepted
   simp [ordered, cut, size]
 
+/-! Replacing an owned source keeps the native table storage only after every
+table entry is vacant. Bucket spines already held by a completed consumer are
+separate list values. Compaction copies only occupied table entries, keeping
+their freshly built bucket spines intact. -/
+def copyOccupied (keys : List Key) (table : Buckets Key Row) : Buckets Key Row :=
+  fun wanted => if wanted ∈ keys then table wanted else []
+
+theorem occupied_copy_exact (keys : List Key) (table : Buckets Key Row)
+    (coverage : ∀ wanted, table wanted ≠ [] → wanted ∈ keys) (wanted : Key) :
+    copyOccupied keys table wanted = table wanted := by
+  by_cases present : wanted ∈ keys
+  · simp [copyOccupied, present]
+  · cases bucket : table wanted with
+    | nil => simp [copyOccupied, present, bucket]
+    | cons head tail =>
+        exact False.elim (present (coverage wanted (by simp [bucket])))
+
+def rebuildCleared (key : Row → Key) (rows : List Row) (keys : List Key)
+    (compact : Bool) : Buckets Key Row :=
+  let filled : Buckets Key Row := extend (prepend key) (fun _ => []) rows
+  let published := if compact then copyOccupied keys filled else filled
+  fun wanted => (published wanted).reverse
+
+theorem refill_after_replacement_exact (key : Row → Key) (rows : List Row)
+    (keys : List Key) (compact : Bool) (wanted : Key)
+    (coverage : ∀ value, (extend (prepend key) (fun _ => []) rows value) ≠ [] →
+      value ∈ keys) :
+    rebuildCleared key rows keys compact wanted =
+      rows.filter (fun row => decide (wanted = key row)) := by
+  cases compact
+  · simpa [rebuildCleared] using scheme_build_exact key rows wanted
+  · change (copyOccupied keys (extend (prepend key) (fun _ => []) rows) wanted).reverse = _
+    rw [occupied_copy_exact keys _ coverage]
+    exact scheme_build_exact key rows wanted
+
+/-- Clearing the table and refilling its new buckets cannot change the old
+immutable list a previous reader held. These two results name different
+owners, even when the native backing vector is reused. -/
+theorem replacement_preserves_held_rows (old : Buckets Key Row)
+    (key : Row → Key) (rows : List Row) (wanted : Key)
+    (held : List Row) (observed : held = old wanted) :
+    (held, rebuildCleared key rows [] false wanted) =
+      (old wanted, rows.filter (fun row => decide (wanted = key row))) := by
+  rw [observed]
+  exact congrArg (fun fresh => (old wanted, fresh)) (scheme_build_exact key rows wanted)
 end Ascent.PhysicalBuckets

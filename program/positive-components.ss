@@ -7,7 +7,8 @@
 (import "component-plan.ss"
         (only-in :gerbil-ascent/core/execution-policy gerbil-ascent-component-ready)
         (only-in :std/iter for/fold in-list)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!
+                 gerbil-ascent-make-source-row-indexes row-indexes-recycle-source!)
         (only-in "component-worker.ss" gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round!))
 (export gerbil-ascent-positive-components gerbil-ascent-compile-positive-components
@@ -35,25 +36,28 @@
   (let (current (vector-ref retained position))
     (if (and current (eq? rows (vector-ref (actor-source-index-rows current) 0)))
       current
-      (let (added (and current
-                       (actor-source-additions rows
-                         (- size (vector-ref (actor-source-index-sizes current) 0))
-                         (vector-ref (actor-source-index-rows current) 0))))
-        ;; Revoke before mutating. A partially extended index cannot survive
-        ;; an exception, and replacement releases the obsolete index first.
+      (let* ((prior-size (and current (vector-ref (actor-source-index-sizes current) 0)))
+             (added (and current
+                         (actor-source-additions rows (- size prior-size)
+                           (vector-ref (actor-source-index-rows current) 0))))
+             ;; A replacement of comparable size may reuse native table
+             ;; capacity. A much smaller cut drops the former workspace.
+             (recycle? (and prior-size (<= prior-size (* 2 size)) (<= size (* 2 prior-size)))))
+        ;; Revoke the retained slot before extending or recycling its tables.
         (vector-set! retained position #f)
         (let (next
-              (if added
+              (if (or added recycle?)
                 (using (entry current :- actor-source-index)
-                  ((row-indexes-advance! entry.indexes) 0 added)
+                  (if added
+                    ((row-indexes-advance! entry.indexes) 0 added)
+                    ((row-indexes-recycle-source! entry.indexes)))
                   (vector-set! entry.rows 0 rows)
                   (vector-set! entry.sizes 0 size)
                   (vector-set! entry.versions 0 (+ 1 (vector-ref entry.versions 0)))
                   entry)
                 (let ((total (vector rows)) (sizes (vector size)) (version (vector 0)))
                   (make-actor-source-index total sizes version
-                    (gerbil-ascent-make-row-indexes total (vector []) sizes
-                      '#(0) version '#(0) (vector provider))))))
+                    (gerbil-ascent-make-source-row-indexes total sizes version provider)))))
           (vector-set! retained position next)
           next)))))
 
@@ -167,4 +171,15 @@
          (vector-set! snapshots id #f)
          (for-each (lambda (successor)
                      (vector-set! remaining successor (- (vector-ref remaining successor) 1)))
-                   (positive-component-successors component)))))))
+                   (positive-component-successors component)))))
+    ;; A changed source can go unprobed after replacement or an empty join
+    ;; prefix. Once the round joins, release every obsolete root it skipped.
+    (when retained-source-indexes
+      (let prune ((position 0))
+        (unless (= position (vector-length initial))
+          (let (entry (vector-ref retained-source-indexes position))
+            (when (and entry
+                       (not (eq? (vector-ref initial position)
+                                 (vector-ref (actor-source-index-rows entry) 0))))
+              (vector-set! retained-source-indexes position #f)))
+          (prune (+ position 1)))))))

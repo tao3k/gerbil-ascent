@@ -18,16 +18,17 @@
                  make-compiled-provider-packet)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
-                 gerbil-ascent-physical-index-single-rows)
+                 gerbil-ascent-physical-index-single-rows gerbil-ascent-refill-cleared-index!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-curried-index-provider?)
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
                            gerbil-ascent-index-row-snapshot/arity
                            gerbil-ascent-index-row-vector/arity)
                    (gerbil-ascent-index-key row-key)))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-publish-old-tail! row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut)
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-publish-old-tail! row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut
+        gerbil-ascent-make-source-row-indexes row-indexes-recycle-source!)
 
-(defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut publish-old-tail!))
+(defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut publish-old-tail! recycle-source!))
 (defstruct prefix-cut-entry (all-version delta-version cut) final: #t)
 
 ;;; Public metadata adapters feed one synchronous, owner-controlled collector.
@@ -240,9 +241,10 @@
    (lambda (visit! (small-exact? #f) (empty-reuse? #f))
      (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements"))))
    #f #f (lambda (_) (error "empty index owner has no prefix cut"))
-   (lambda (_index _rows) (error "empty index owner cannot publish an old tail"))))
+   (lambda (_index _rows) (error "empty index owner cannot publish an old tail")) #f))
 
 (defstruct physical-index-entry (version lookup shared? witness))
+(defstruct (source-index-entry physical-index-entry) (prior-keys) final: #t)
 (defstruct (empty-bucket-entry physical-index-entry) (empty-version empty-key) final: #t)
 (defstruct atom-index-view (entry permutation))
 (defstruct old-tail-cut (all-version delta-version rows) final: #t)
@@ -262,12 +264,30 @@
 ;;     %
 (def (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version index-providers (required? #t))
   (if required?
-    (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
+    (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers #f)
     empty-row-indexes))
+
+;; gerbil-ascent-make-source-row-indexes
+;; : (forall (r p) (-> (Vector [r]) (Vector Natural) (Vector Natural) p RowIndexes))
+;; : (-> SourceRowsVector SourceSizes SourceVersions NativeIndexProvider RowIndexes)
+;; | doc m%
+;;     Own exactly one total lane for a single-worker Session. The owner may
+;;     recycle its private canonical table storage after all workers join.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-make-source-row-indexes total sizes versions provider)
+;;     ;; => a native indexed reader with a cleared-table replay operation
+;;     ```
+;;   %
+(def (gerbil-ascent-make-source-row-indexes total sizes version provider)
+  (make-required-row-indexes total (vector []) sizes '#(0) version '#(0)
+    (vector provider) #t))
 
 ;;; Boundary: Each engine owns the mutable cache cells created here.
 ;;; Invariant: Failed publication revokes versions before another reader can reuse an entry.
-(def (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
+(def (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers recycle-source?)
   ;; Allocate a physical lane only on demand. The ordinary route retains its
   ;; scan threshold; qualified pure plans may reuse exact bound-key indexes
   ;; below that threshold, through the same versioned entries.
@@ -481,11 +501,13 @@
                                (shared (hash-get cache physical-columns))
                                (resolved
                                 (or shared
-                                    (let (fresh (if reuse-empty?
-                                                  (begin
-                                                    (positive-plan-cost-index! 'empty-entry)
-                                                    (make-empty-bucket-entry #f #f (and permutation #t) #f #f #f))
-                                                  (make-physical-index-entry #f #f (and permutation #t) #f)))
+                                    (let (fresh (cond
+                                                  (reuse-empty?
+                                                   (positive-plan-cost-index! 'empty-entry)
+                                                   (make-empty-bucket-entry #f #f (and permutation #t) #f #f #f))
+                                                  ((and recycle-source? (not use-delta?))
+                                                   (make-source-index-entry #f #f #f #f #f))
+                                                  (else (make-physical-index-entry #f #f (and permutation #t) #f))))
                                       (hash-put! cache physical-columns fresh) fresh))))
                           (let (view (make-atom-index-view resolved permutation))
                             (hash-put! identities atom view)
@@ -504,11 +526,19 @@
                              (not (gerbil-ascent-canonical-hash-index-provider? provider))
                              (build-provider-row-witness rows columns
                                (and packed-consumer? (provider-packed-width rows columns atom))))
-                        (if permutation
-                            (gerbil-ascent-shared-index-build rows permutation)
-                            (gerbil-ascent-physical-index-build provider rows columns))
-                        ;; Failed builds keep the old version and lookup. Publish
-                        ;; both only after the provider has returned successfully.
+                        (cond
+                         (permutation (gerbil-ascent-shared-index-build rows permutation))
+                         ((and recycle-source? (source-index-entry? entry)
+                               (source-index-entry-prior-keys entry))
+                          => (lambda (prior-keys)
+                               (let (refilled
+                                     (gerbil-ascent-refill-cleared-index!
+                                      (physical-index-entry-lookup entry) rows columns prior-keys))
+                                 (source-index-entry-prior-keys-set! entry #f)
+                                 refilled)))
+                         (else (gerbil-ascent-physical-index-build provider rows columns)))
+                        ;; Publish the current version after success. Recycled
+                        ;; source entries have already revoked their old version.
                         physical-index-entry-lookup-set!
                         physical-index-entry-witness-set!
                         physical-index-entry-version-set!)))))
@@ -567,5 +597,22 @@
                      physical-index-entry-lookup-set!
                      physical-index-entry-version-set!)))
                cache)))))
+    ;; This owner has exactly one source lane. Revoke all physical columns
+    ;; before clearing; a column that the new traversal skips drops its rows too.
+    (def (recycle-source!)
+      (let (cache (and all-indexes (vector-ref all-indexes 0)))
+        (when cache
+          (hash-for-each
+           (lambda (_columns entry)
+             (if (physical-index-entry-version entry)
+               (let (lookup (physical-index-entry-lookup entry))
+                 (physical-index-entry-version-set! entry #f)
+                 (source-index-entry-prior-keys-set! entry (hash-length lookup))
+                 (hash-clear! lookup))
+               ;; Release an empty table already skipped by the previous cut.
+               (begin
+                 (source-index-entry-prior-keys-set! entry #f)
+                 (physical-index-entry-lookup-set! entry #f))))
+           cache))))
     (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
-      prefix-cut publish-old-tail!)))
+      prefix-cut publish-old-tail! (and recycle-source? recycle-source!))))

@@ -238,6 +238,38 @@
         (report-phase count 'cancel-and-drain drain))
       (finally (gerbil-ascent-session-close! session)))))
 
+(def (changed-replacements count repetitions)
+  (let* ((prior (chain count))
+         (shift (+ count 1))
+         (next (map (lambda (row) (list (car row) (+ (cadr row) shift))) prior))
+         (probes (take prior 17))
+         (heads '(answer second third fourth))
+         (session (gerbil-ascent-open-actor-session
+                   (declaration prior (+ count (length probes)) #f heads probes) workers: 1))
+         (staging (latency-samples repetitions))
+         (evaluation (latency-samples repetitions))
+         (expected (take (two-hop-oracle count) (length probes)))
+         (shifted (map (lambda (row) (list (car row) (+ (cadr row) shift))) expected)))
+    (try
+      (##gc)
+      (let* ((before (##process-statistics))
+             (first (gerbil-ascent-session-run session)))
+        (for-each
+         (lambda (ordinal)
+           (let ((changed? (even? ordinal)))
+             (measure staging (lambda ()
+               (gerbil-ascent-session-replace-source! session 'edge (if changed? next prior))))
+             (let (result (measure evaluation (cut gerbil-ascent-session-run session)))
+               (for-each
+                (lambda (head)
+                  (check-export (answer-rows result head) (if changed? shifted expected)))
+                heads))))
+         (iota repetitions))
+        (report-live count (length heads) before)
+        (check-export (answer-rows first) expected))
+      (report-transaction count (length heads) 'changed-replace-transaction staging evaluation)
+      (finally (gerbil-ascent-session-close! session)))))
+
 (def actor-session-test
   (test-suite "Single VM Actor production Session"
     (test-case "1000 cycles of production runs and mutations"
@@ -246,6 +278,8 @@
       (sustained-session 4096 64))
     (test-case "1000 large cycles with four consumers of the same physical key"
       (sustained-session 16384 1000 '(answer second third fourth)))
+    (test-case "1000 large replacements change all edge values"
+      (changed-replacements 16384 1000))
     (test-case "large Actor requests record overlapping GC pauses"
       (sustained-session 16384 256 '(answer second third fourth) #t))
     (test-case "cancellation drains without changing the previous completed result"

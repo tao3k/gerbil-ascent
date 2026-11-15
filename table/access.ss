@@ -11,7 +11,8 @@
                  gerbil-ascent-index-provider-build gerbil-ascent-index-provider-extend!
                  gerbil-ascent-index-provider-lookup))
 (export gerbil-ascent-physical-index-build gerbil-ascent-physical-index-extend!
-        gerbil-ascent-physical-index-rows gerbil-ascent-physical-index-single-rows)
+        gerbil-ascent-physical-index-rows gerbil-ascent-physical-index-single-rows
+        gerbil-ascent-refill-cleared-index!)
 
 ;;; Planner columns and lookup-key widths are admitted before physical access.
 ;;; A one-column index uses raw scalar keys in a native equal? table. Public
@@ -36,6 +37,33 @@
     ;; Open receivers get their own header, never admitted column metadata.
     (gerbil-ascent-index-provider-build provider
       (gerbil-ascent-index-row-snapshot rows) (list-copy columns))))
+
+;; gerbil-ascent-refill-cleared-index!
+;; : (forall (i r c) (-> i [r] [c] Natural i))
+;; : (-> ClearedNativeIndex Rows Columns Natural Index)
+;; | doc m%
+;;     Refill a cleared, exclusively owned native index in source order.
+;;     Compact when fewer than half the former keys remain. Fresh buckets
+;;     belong to the new cut and are safe to reorder in place.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-refill-cleared-index! index '((0 a) (0 b)) '(0) 64)
+;;     ;; => a compact native index with both rows in the key 0 bucket
+;;     ```
+;;   %
+(def (gerbil-ascent-refill-cleared-index! index rows columns prior-keys)
+  (if (and (pair? columns) (null? (cdr columns)))
+    (extend-scalar-index! index rows (car columns))
+    (gerbil-ascent-index-extend! index rows columns))
+  (let (keys (hash-length index))
+    (gerbil-ascent-index-order!
+     (if (< (* 2 keys) prior-keys)
+       (let (compact (make-hash-table size: (max 1 (- keys 1))))
+         (hash-for-each (lambda (key bucket) (hash-put! compact key bucket)) index)
+         compact)
+       index))))
 
 ;; : (-> IndexProvider Index Rows Columns Index)
 (def (gerbil-ascent-physical-index-extend! provider index rows columns)

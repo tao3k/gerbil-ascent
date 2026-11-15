@@ -236,11 +236,36 @@ writer mask, budgets, and source-loop work to these branches.
 
 A single-worker Session can keep one physical index per read-only source
 slot shared across its components. Extend the native index only when the
-new cut has the exact prior suffix. Release the index on replacement.
-Drain the evaluation before discarding indexes from a canceled or failed
-cut. Held results retain row spines independently of bucket tables.
-=PhysicalBuckets.lean= proves the suffix scan and ordered extension,
-including duplicate occurrences.
+new cut has the exact prior suffix. For comparably sized replacements,
+revoke the old version and clear its native table before refilling it.
+Release storage on large size changes. Compact a refilled table when its
+key count falls below half the former count. Drain the evaluation before
+discarding indexes from a canceled or failed cut. Held results retain row
+spines independently of bucket tables. =PhysicalBuckets.lean= proves the
+suffix scan, ordered extension, refill and copy of occupied buckets.
+
+* Cold replacement index storage
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-index-build-test.ss
+#+end_src
+
+Time the production one-column insertion and ordering operations on a
+16384-row chain and a 32-key distribution of the same size. Collect 1000
+samples per arm for default capacity, capacity hinted by row count, and
+clearing and refilling a retained native table. Report the CPU intervals
+for table preparation, bucket insertion and order restoration separately.
+The column sum is a separate traversal control. Compare every bucket
+against independently collected row occurrences and verify their identity.
+
+The untimed counter observes each backing vector identity change in the
+pinned runtime. Report the cumulative number of vector slots allocated
+for table storage and the number of newly constructed bucket pairs. The
+allocation calibration below covers the remaining runtime accounting.
+The production Session suite additionally alternates two same-sized
+16384-edge cuts whose target values differ at every key, checking the
+result of each replacement against the arithmetic oracle.
 
 * Gambit allocation calibration
 

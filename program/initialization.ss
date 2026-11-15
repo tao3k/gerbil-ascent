@@ -19,7 +19,7 @@
                  gerbil-ascent-storage-view-extension! gerbil-ascent-storage-freeze-view
                  gerbil-ascent-canonical-uf-storage-provider? gerbil-ascent-storage-initialize-uf!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
-(export make-initial-source-state gerbil-ascent-initialize-sources!)
+(export make-initial-source-state gerbil-ascent-initialize-sources! source-admission-loop)
 
 ;;; Callback traversal must read the next list node after materialization.
 ;;; A pure Set can use the native fold's functional occurrence count instead.

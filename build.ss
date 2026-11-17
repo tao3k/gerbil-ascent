@@ -1,67 +1,12 @@
 #!/usr/bin/env gxi
-;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
-;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-
-(import (for-syntax (only-in :std/source this-source-file)
-                    (only-in :tao3k/yuanxu/module-system/building/source-package register-module-build-source!)))
-(begin-syntax
-  (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent))
-(import (only-in "init.ss" gerbil-ascent.init.exports)
-        (only-in :clan/poo/object .call .get)
-        (only-in :tao3k/yuanxu/module-system/building/source-package
-                 call-with-build-input-path)
+(import (only-in :clan/poo/object .get)
+        (only-in :std/source this-source-file)
         (only-in :std/build-script defbuild-script)
-        (only-in :std/list/list filter-map)
-        (only-in :std/source this-source-file))
+        (only-in :tao3k/yuanxu/module-system/building/build-script defmodule-build-script)
+        "./package-spec.ss")
+(export (import: "./package-spec.ss"))
 
-;; BEGIN GENERATED PREPARATION COMPILER
-;; Existing Gambit header policy; this limits C function size, not VM concurrency.
-(def gerbil-ascent-compiler-options '("-cc-options" "-D___SINGLE_HOST_LIMIT=512"))
-;; END GENERATED PREPARATION COMPILER
-
-(def (gerbil-ascent-compiler-target target)
-  (append (if (string? target) [gxc: target] target)
-          gerbil-ascent-compiler-options))
-
-(def (gerbil-ascent-build-projection)
-  (.call gerbil-ascent.init.exports .yuanxu-init '("init")))
-
-(def (gerbil-ascent-library-modules (projection (gerbil-ascent-build-projection)))
-  ;; Scheme-only preparation uses the same targets as the package build,
-  ;; excluding the executables and their C ABI inputs.
-  (filter-map
-    (lambda (target)
-      (match target
-        ([exe: . _] #f)
-        ([gxc: (or "interface/c-api" "interface/runtime") . _] #f)
-        ((? string?) target)
-        (else (cadr target))))
-    (.get projection std-make-spec)))
-
-;; Cargo supplies its bridge SDK separately from the published Library.
-(def (gerbil-ascent-rust-spec)
-  [(gerbil-ascent-compiler-target
-     [gxc: "interface/hybrid" "-ld-options"
-      (cond-expand (darwin "-Wl,-undefined,dynamic_lookup") (else ""))])])
-
-(export gerbil-ascent-build-projection gerbil-ascent-library-modules
-        gerbil-ascent-rust-spec
-        gerbil-ascent-compiler-options gerbil-ascent-compiler-target main)
-
-(def (main . args)
-  (def projection (gerbil-ascent-build-projection))
-  (defbuild-script
-    (map gerbil-ascent-compiler-target (.get projection std-make-spec))
+(defmodule-build-script
+  (defbuild-script (.get gerbil-ascent.package.exports std-make-spec)
     optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
-  (if (or (null? args) (equal? (car args) "compile"))
-    (begin
-      (.call projection .prepare-compiler-contexts)
-      (.call projection .with-compiler-inputs
-        (lambda ()
-          (.call projection .with-static-inputs
-            (lambda ()
-              ;; Check the compiler path before static staging restores it.
-              (call-with-build-input-path (path-expand "lib" (gerbil-path))
-                (cut apply main args)
-                make-source: (path-directory (this-source-file))))))))
-    (apply main args)))
+  (.get gerbil-ascent.package.exports build-actions))

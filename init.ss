@@ -4,7 +4,6 @@
 (import (only-in :tao3k/yuanxu/module-system/selection/init-syntax yuanxu!))
 ;; Production capabilities own native roots; Core derives their source closure.
 (yuanxu!
-  :test-dir "./t"
   :load-modules "."
   mode: explicit
   rename: Library

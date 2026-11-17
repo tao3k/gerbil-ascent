@@ -3,13 +3,13 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-replace-contract-slot!)
         (only-in :clan/poo/type validate)
         (only-in :gerbil-ascent/program/operator-analysis
                  capture-operator-transform operator-snapshot-transform operator-snapshot-checked-rows
                  analyze-operator-graph operator-analysis-checked-rows)
         :gerbil-ascent/program/operator
         :gerbil-ascent/program/operator-change)
+(include "fixtures/contract-slot-edit.ss")
 (export ascent-delta-admission-test)
 
 (def (reject-change transform)

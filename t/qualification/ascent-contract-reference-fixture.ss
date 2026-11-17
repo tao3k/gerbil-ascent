@@ -5,7 +5,7 @@
 ;;; Union predicates frozen from 74f0046: failed native branches still
 ;;; construct their rejection receipts. Use the SAME prototype descriptors
 ;;; as the candidate, so validation differences concern union dispatch only.
-(import (only-in :clan/poo/object .cc .ref .slot? .putslot! $constant-slot-spec)
+(import (only-in :clan/poo/object .cc .ref)
         (only-in :clan/poo/type element?)
         (only-in :tao3k/yuanxu/types/contracts yuanxu-predicate-contract)
         (only-in :gerbil-ascent/program/types
@@ -14,8 +14,7 @@
                  GerbilAscentNegationContract GerbilAscentAggregateContract
                  GerbilAscentRelationContract GerbilAscentLatticeContract
                  GerbilAscentRuleContract GerbilAscentProgramContract))
-(export ascent-reference-rule-contract ascent-reference-program-contract
-        ascent-replace-contract-slot!)
+(export ascent-reference-rule-contract ascent-reference-program-contract)
 
 (def (slot-contract identity predicate)
   (yuanxu-predicate-contract identity predicate (lambda (_value _context) [])))
@@ -62,15 +61,3 @@
        'responsibilities
        (.cc (.ref GerbilAscentProgramContract 'responsibilities)
             'relations +relations+ 'rules +rules+)))
-
-;; Keep the nominal prototype and field descriptors stable while replacing a
-;; protocol method. A supported slot edit invalidates their materialized values.
-(def (ascent-replace-contract-slot! contract slot value)
-  (let (declarations
-        (filter-map (lambda (name)
-                      (and (.slot? contract name) (cons name (.ref contract name))))
-                    '(proto responsibilities)))
-    (for-each (lambda (entry)
-                (.putslot! contract (car entry) ($constant-slot-spec (cdr entry))))
-              declarations)
-    (.putslot! contract slot ($constant-slot-spec value))))

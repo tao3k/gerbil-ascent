@@ -9,7 +9,6 @@
                  relational-admission-report-diagnostic relational-diagnostic-code
                  relational-solve relational-query-name))
 (import (only-in :clan/poo/object .o .ref .putslot! uninstantiate-object! $constant-slot-spec $thunk-slot-spec)
-        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-replace-contract-slot!)
         (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-literal)
         (only-in :gerbil-ascent/program/scheme-checked relational-source)
@@ -20,6 +19,7 @@
         (only-in :gerbil-ascent/t/performance/operator-publication/fixture publication-shape)
         (only-in :gerbil-ascent/t/qualification/fixtures/semi-naive/oracle
                  graph-input naive-positive naive-rules canonical-rows))
+(include "fixtures/contract-slot-edit.ss")
 (export scheme-closure-contract-test)
 
 (def (successor-program bounded?)

@@ -2,7 +2,6 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :clan/poo/object .o .ref .all-slots .put!)
-        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-replace-contract-slot!)
         (only-in :clan/poo/type validate)
         :gerbil-ascent/program/operator
         (prefix-in :gerbil-ascent/t/performance/operator-publication/reference old-)
@@ -12,6 +11,7 @@
                  gerbil-ascent-construct-inert-program gerbil-ascent-construct-inert-fragment)
         (only-in :gerbil-ascent/program/types GerbilAscentProgramContract GerbilAscentFragmentContract)
         :gerbil-ascent/t/performance/operator-publication/fixture)
+(include "fixtures/contract-slot-edit.ss")
 (export ascent-operator-publication-test)
 (def (immediate-check!)
   (check-exception (gerbil-ascent-variable 99) true)

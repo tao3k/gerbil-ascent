@@ -10,7 +10,8 @@
                  GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentGuardContract
                  GerbilAscentGeneratorContract GerbilAscentBindingContract
                  GerbilAscentNegationContract GerbilAscentAggregateContract GerbilAscentRuleContract GerbilAscentProgramContract)
-        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-reference-rule-contract ascent-reference-program-contract ascent-replace-contract-slot!))
+        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-reference-rule-contract ascent-reference-program-contract))
+(include "fixtures/contract-slot-edit.ss")
 (export ascent-aggregate-admission-test)
 
 (def (make-mean term)

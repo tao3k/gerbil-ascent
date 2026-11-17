@@ -3,7 +3,6 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
         (only-in :clan/poo/object .o .cc .ref .ref/cached .putslot! uninstantiate-object! object-instance $constant-slot-spec $thunk-slot-spec)
-        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-replace-contract-slot!)
         (only-in :clan/poo/type element? validate)
         (only-in :tao3k/yuanxu/types/contracts yuanxu-contract-admit yuanxu-validation-evidence-accepted?
                  yuanxu-classification-evidence)
@@ -15,6 +14,7 @@
         (only-in :gerbil-ascent/program/types canonical-value-check-current? GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract GerbilAscentGuardContract
                  GerbilAscentSessionContract gerbil-ascent-make-session-value
                  GerbilAscentRelationContract GerbilAscentProgramContract gerbil-ascent-make-relation-value gerbil-ascent-make-rule-value gerbil-ascent-make-atom-value))
+(include "fixtures/contract-slot-edit.ss")
 (export ascent-value-membership-test)
 
 (def (nested-term? term)

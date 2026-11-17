@@ -114,7 +114,6 @@
 (def (run-suites args)
   (let* ((entries
           (list
-                (cons "t/qualification/scheme-closure-contract-test.ss" scheme-closure-contract-test)
                 (cons "t/qualification/scheme-artifact-test.ss" scheme-artifact-test)
                 (cons "t/qualification/scheme-provenance-graph-test.ss" scheme-provenance-graph-test)
                 (cons "t/qualification/scheme-higher-order-test.ss" scheme-higher-order-test)
@@ -128,7 +127,10 @@
                 (cons "t/qualification/scheme-library-contract-test.ss" scheme-library-contract-test)
                 (cons "t/qualification/scheme-operator-retained-test.ss" scheme-operator-retained-test)
                 (cons "t/qualification/ascent-finite-evidence-test.ss" ascent-finite-evidence-test)
-                (cons "t/qualification/ascent-positive-nonmembership-test.ss" ascent-positive-nonmembership-test)))
+                (cons "t/qualification/ascent-positive-nonmembership-test.ss" ascent-positive-nonmembership-test)
+                ;; Editing a shared Contract can revoke its initial protocol
+                ;; even after restoring its classifier. Test revocation last.
+                (cons "t/qualification/scheme-closure-contract-test.ss" scheme-closure-contract-test)))
          (selected (match args
                      ([] entries)
                      ([name]

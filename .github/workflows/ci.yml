@@ -411,6 +411,11 @@ jobs:
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: |
+          # The explicit worker and wheel must embed the same native program archive.
+          gerbil env cargo build --release --locked --manifest-path rust/Cargo.toml \
+            -p ascent-scheme -p ascent-python --no-default-features \
+            --features ascent-python/scheme-runtime,ascent-python/rayon,ascent-python/extension-module \
+            --lib --bin ascent-scheme-worker
           (cd python && gerbil env ../.cache/ascent/python-runtime/bin/maturin build --release --locked --no-default-features --features scheme-runtime,rayon,extension-module --auditwheel repair --out ../.cache/ascent/scheme-wheels)
           python3 -m venv .cache/ascent/python-scheme-runtime
           .cache/ascent/python-scheme-runtime/bin/pip install --no-deps .cache/ascent/scheme-wheels/*.whl
@@ -418,7 +423,7 @@ jobs:
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
-          ASCENT_SCHEME_WORKER: ${{ github.workspace }}/rust/target/debug/ascent-scheme-worker
+          ASCENT_SCHEME_WORKER: ${{ github.workspace }}/rust/target/release/ascent-scheme-worker
         run: |
           set -o pipefail
           test -x "$ASCENT_SCHEME_WORKER"

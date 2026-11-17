@@ -2,7 +2,8 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
-        (only-in :clan/poo/object .ref object-instance)
+        (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-replace-contract-slot!)
         (only-in :clan/poo/type validate)
         (only-in :gerbil-ascent/program/operator-analysis
                  capture-operator-transform operator-snapshot-transform operator-snapshot-checked-rows
@@ -112,15 +113,15 @@
              (validator (.ref root '.validate)) (calls 0)
              (transform (relational-op-function 1 (lambda (p) (relational-op-project p '(0))))))
         (try
-          (hash-put! (object-instance root) '.validate
+          (ascent-replace-contract-slot! root '.validate
             (lambda (candidate) (set! calls (+ calls 1)) (validator candidate)))
           (let (plan (relational-op-prepare-change transform))
             (check-equal? calls 1)
             (check-equal? (eq? (validate root plan) plan) #t)
             (check-equal? calls 2))
-          (hash-put! (object-instance root) '.validate (lambda (_) 'normalized-owner))
+          (ascent-replace-contract-slot! root '.validate (lambda (_) 'normalized-owner))
           (check-equal? (relational-op-prepare-change transform) 'normalized-owner)
-          (finally (hash-put! (object-instance root) '.validate validator)))))
+          (finally (ascent-replace-contract-slot! root '.validate validator)))))
     (test-case "prepared owners preserve field admission exceptions and root obligations"
       (let* ((root GerbilAscentChangePlanContract)
              (field (.ref (.ref root 'responsibilities) '.change))
@@ -129,29 +130,29 @@
              (transform (relational-op-function 1 (lambda (p) (relational-op-project p '(0)))))
              (seen []))
         (try
-          (hash-put! (object-instance field) '.admit
+          (ascent-replace-contract-slot! field '.admit
             (lambda args (set! seen (cons 'field seen)) (raise 'field-admission)))
           (check-equal? (with-catch (lambda (failure) failure)
             (lambda () (relational-op-prepare-change transform))) 'field-admission)
           (check-equal? seen '(field))
-          (hash-put! (object-instance field) '.admit admit)
+          (ascent-replace-contract-slot! field '.admit admit)
           (set! seen [])
-          (hash-put! (object-instance field) '.classify
+          (ascent-replace-contract-slot! field '.classify
             (lambda args (set! seen (cons 'classifier seen)) (raise 'field-classification)))
           (check-equal? (with-catch (lambda (failure) failure)
             (lambda () (relational-op-prepare-change transform))) 'field-classification)
           (check-equal? seen '(classifier))
-          (hash-put! (object-instance field) '.classify classifier)
+          (ascent-replace-contract-slot! field '.classify classifier)
           (set! seen [])
-          (hash-put! (object-instance root) '.obligations
+          (ascent-replace-contract-slot! root '.obligations
             (lambda args (set! seen (cons 'root seen)) (raise 'root-obligation)))
           (check-equal? (with-catch (lambda (failure) failure)
             (lambda () (relational-op-prepare-change transform))) 'root-obligation)
           (check-equal? seen '(root))
           (finally
-            (hash-put! (object-instance field) '.admit admit)
-            (hash-put! (object-instance field) '.classify classifier)
-            (hash-put! (object-instance root) '.obligations obligations)))))
+            (ascent-replace-contract-slot! field '.admit admit)
+            (ascent-replace-contract-slot! field '.classify classifier)
+            (ascent-replace-contract-slot! root '.obligations obligations)))))
     (test-case "captured mapping indexes retain bucket order and isolate failed requests"
       (let* ((transform (relational-op-function 1 (lambda (p)
                           (relational-op-flatmap p 1

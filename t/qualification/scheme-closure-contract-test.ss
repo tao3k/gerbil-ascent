@@ -8,7 +8,8 @@
                  relational-compose relational-admit relational-admit/report
                  relational-admission-report-diagnostic relational-diagnostic-code
                  relational-solve relational-query-name))
-(import (only-in :clan/poo/object .o .ref .putslot! uninstantiate-object! object-instance $constant-slot-spec $thunk-slot-spec)
+(import (only-in :clan/poo/object .o .ref .putslot! uninstantiate-object! $constant-slot-spec $thunk-slot-spec)
+        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-replace-contract-slot!)
         (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-rule
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-literal)
         (only-in :gerbil-ascent/program/scheme-checked relational-source)
@@ -117,15 +118,15 @@
           (let (checks 0)
             (try
               ;; Keep the descriptor's nominal proto and responsibility map.
-              ;; Invalidating the entire descriptor would construct a new proto.
-              (hash-put! (object-instance GerbilAscentTermContract) '.classify
+              ;; The test changes only the public classifier.
+              (ascent-replace-contract-slot! GerbilAscentTermContract '.classify
                 (lambda (candidate context)
                   (set! checks (+ checks 1))
                   (classifier candidate context)))
               (copier program)
               checks
               (finally
-                (hash-put! (object-instance GerbilAscentTermContract) '.classify classifier)))))
+                (ascent-replace-contract-slot! GerbilAscentTermContract '.classify classifier)))))
         (check-equal? (count-checks frozen-relational-snapshot-program) (* 5 14))
         (check-equal? (count-checks relational-snapshot-program) (* 2 14))
         (check-equal? (snapshot-checks-active?) #t)))

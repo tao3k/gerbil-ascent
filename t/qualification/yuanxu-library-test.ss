@@ -69,7 +69,7 @@
               (string-prefix? "evidence/" entry))) modules) #f)))
     (test-case "Interface owns its ABI targets in the Yuanxu Make projection"
       (let* ((projection (gerbil-ascent-build-projection))
-             (spec (.get projection spec))
+             (spec (.get projection std-make-spec))
              (library (gerbil-ascent-library-modules projection)))
         (for-each
           (lambda (expected)

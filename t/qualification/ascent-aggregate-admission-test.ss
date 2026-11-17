@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
-        (only-in :clan/poo/object .o .cc .ref object-instance)
+        (only-in :clan/poo/object .o .cc .ref .put!)
         (only-in :clan/poo/type element? validate)
         (only-in :gerbil-ascent/program/func
                  gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-aggregate gerbil-ascent-rule)
@@ -10,7 +10,7 @@
                  GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentGuardContract
                  GerbilAscentGeneratorContract GerbilAscentBindingContract
                  GerbilAscentNegationContract GerbilAscentAggregateContract GerbilAscentRuleContract GerbilAscentProgramContract)
-        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-reference-rule-contract ascent-reference-program-contract))
+        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-reference-rule-contract ascent-reference-program-contract ascent-replace-contract-slot!))
 (export ascent-aggregate-admission-test)
 
 (def (make-mean term)
@@ -32,16 +32,16 @@
         (for-each (lambda (slot invalid)
           (let (previous (.ref aggregate slot))
             (try
-              (hash-put! (object-instance aggregate) slot invalid)
+              (.put! aggregate slot invalid)
               (compare-rule value #f)
-              (finally (hash-put! (object-instance aggregate) slot previous)))))
+              (finally (.put! aggregate slot previous)))))
           '(ascent-clause-kind variable relation terms variables aggregate checked-operator output-pattern .plan)
           '(wrong #f #f (#f) (1) #f 42 42 #f))
         (let (kind (.ref term 'kind))
           (try
-            (hash-put! (object-instance term) 'kind 'wrong)
+            (.put! term 'kind 'wrong)
             (compare-rule value #f)
-            (finally (hash-put! (object-instance term) 'kind kind))))
+            (finally (.put! term 'kind kind))))
         (compare-rule value #t)))
     (test-case "tuple output and foreign getters retain public admission and exception traces"
       (let* ((x (gerbil-ascent-variable 'x))
@@ -66,10 +66,10 @@
         (for-each (lambda (contract)
           (let (admit (.ref contract '.admit))
             (try
-              (hash-put! (object-instance contract) '.admit (lambda args (raise 'public-clause-hook)))
+              (ascent-replace-contract-slot! contract '.admit (lambda args (raise 'public-clause-hook)))
               (check-equal? (observe (lambda () (element? reference value))) 'public-clause-hook)
               (check-equal? (observe (lambda () (element? candidate value))) 'public-clause-hook)
-              (finally (hash-put! (object-instance contract) '.admit admit)))))
+              (finally (ascent-replace-contract-slot! contract '.admit admit)))))
           (list GerbilAscentAtomContract GerbilAscentGuardContract GerbilAscentGeneratorContract
                 GerbilAscentBindingContract GerbilAscentNegationContract GerbilAscentAggregateContract))))
     (test-case "owned aggregates retain foreign term getter and exception order"
@@ -97,10 +97,10 @@
              (field (.ref (.ref GerbilAscentAggregateContract 'responsibilities) 'variable))
              (classifier (.ref field '.classify)))
         (try
-          (hash-put! (object-instance field) '.classify (lambda args (raise 'aggregate-slot-hook)))
+          (ascent-replace-contract-slot! field '.classify (lambda args (raise 'aggregate-slot-hook)))
           (check-equal? (observe (lambda () (element? reference value))) 'aggregate-slot-hook)
           (check-equal? (observe (lambda () (element? candidate value))) 'aggregate-slot-hook)
-          (finally (hash-put! (object-instance field) '.classify classifier)))))
+          (finally (ascent-replace-contract-slot! field '.classify classifier)))))
     (test-case "factory Rules with aggregates preserve public rule and predecessor hooks"
       (let* ((aggregate (make-mean (gerbil-ascent-variable 'x)))
              (rule (gerbil-ascent-rule (list (gerbil-ascent-atom 'out [])) (list aggregate)))
@@ -111,18 +111,18 @@
         (for-each (lambda (contract)
           (let (admit (.ref contract '.admit))
             (try
-              (hash-put! (object-instance contract) '.admit (lambda args (raise 'nested-rule-hook)))
+              (ascent-replace-contract-slot! contract '.admit (lambda args (raise 'nested-rule-hook)))
               (check-equal? (observe (lambda () (element? reference (list rule)))) 'nested-rule-hook)
               (check-equal? (observe (lambda () (element? candidate (list rule)))) 'nested-rule-hook)
-              (finally (hash-put! (object-instance contract) '.admit admit)))))
+              (finally (ascent-replace-contract-slot! contract '.admit admit)))))
           (list GerbilAscentAtomContract GerbilAscentGuardContract GerbilAscentGeneratorContract
                 GerbilAscentBindingContract GerbilAscentNegationContract GerbilAscentAggregateContract))
         (let (terms (.ref aggregate 'terms))
           (try
-            (hash-put! (object-instance aggregate) 'terms '(#f))
+            (.put! aggregate 'terms '(#f))
             (check-equal? (element? reference (list rule)) #f)
             (check-equal? (element? candidate (list rule)) #f)
-            (finally (hash-put! (object-instance aggregate) 'terms terms))))))
+            (finally (.put! aggregate 'terms terms))))))
     (test-case "nested factory Rules preserve their own public admission override"
       (let* ((aggregate (make-mean (gerbil-ascent-variable 'x)))
              (heads (list (gerbil-ascent-atom 'out [])))
@@ -130,32 +130,32 @@
              (candidate (.ref (.ref GerbilAscentProgramContract 'responsibilities) 'rules))
              (admit (.ref GerbilAscentRuleContract '.admit)))
         (try
-          (hash-put! (object-instance GerbilAscentRuleContract) '.admit (lambda args (raise 'public-rule-hook)))
+          (ascent-replace-contract-slot! GerbilAscentRuleContract '.admit (lambda args (raise 'public-rule-hook)))
           (check-equal? (observe (lambda () (element? GerbilAscentRuleContract rule))) 'public-rule-hook)
           (check-equal? (observe (lambda () (element? candidate (list rule)))) 'public-rule-hook)
           (check-equal? (observe (lambda () (gerbil-ascent-rule heads (list aggregate)))) 'public-rule-hook)
-          (finally (hash-put! (object-instance GerbilAscentRuleContract) '.admit admit)))))
+          (finally (ascent-replace-contract-slot! GerbilAscentRuleContract '.admit admit)))))
     (test-case "constructor normalization and late child-induced obligations remain observable"
       (let* ((term (gerbil-ascent-variable 'x))
              (validator (.ref GerbilAscentAggregateContract '.validate)))
         (try
-          (hash-put! (object-instance GerbilAscentAggregateContract) '.validate (lambda (_) 'normalized-aggregate))
+          (ascent-replace-contract-slot! GerbilAscentAggregateContract '.validate (lambda (_) 'normalized-aggregate))
           (check-equal? (make-mean term) 'normalized-aggregate)
-          (finally (hash-put! (object-instance GerbilAscentAggregateContract) '.validate validator))))
+          (finally (ascent-replace-contract-slot! GerbilAscentAggregateContract '.validate validator))))
       (let ((term (gerbil-ascent-variable 'x))
             (admit (.ref GerbilAscentTermContract '.admit))
             (obligations (.ref GerbilAscentAggregateContract '.obligations))
             (seen []))
         (def (run construct)
           (set! seen [])
-          (hash-put! (object-instance GerbilAscentAggregateContract) '.obligations obligations)
+          (ascent-replace-contract-slot! GerbilAscentAggregateContract '.obligations obligations)
           (let (answer (observe construct)) (list answer (reverse seen))))
         (try
-          (hash-put! (object-instance GerbilAscentTermContract) '.admit
+          (ascent-replace-contract-slot! GerbilAscentTermContract '.admit
             (lambda (candidate context)
               (set! seen (cons 'term-admit seen))
               (let (evidence (admit candidate context))
-                (hash-put! (object-instance GerbilAscentAggregateContract) '.obligations
+                (ascent-replace-contract-slot! GerbilAscentAggregateContract '.obligations
                   (lambda args (set! seen (cons 'aggregate-obligation seen)) (raise 'late-aggregate-obligation)))
                 evidence)))
           (check-equal?
@@ -167,5 +167,5 @@
                     terms: (list term) variables: '(x) aggregate: length
                     output-pattern: #f checked-operator: #f .plan: void)))))
           (finally
-            (hash-put! (object-instance GerbilAscentTermContract) '.admit admit)
-            (hash-put! (object-instance GerbilAscentAggregateContract) '.obligations obligations)))))))
+            (ascent-replace-contract-slot! GerbilAscentTermContract '.admit admit)
+            (ascent-replace-contract-slot! GerbilAscentAggregateContract '.obligations obligations)))))))

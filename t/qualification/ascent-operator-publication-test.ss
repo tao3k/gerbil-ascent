@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test (only-in :clan/poo/object .o .ref .all-slots object-instance)
+(import :std/test (only-in :clan/poo/object .o .ref .all-slots .put!)
+        (only-in :gerbil-ascent/t/qualification/ascent-contract-reference-fixture ascent-replace-contract-slot!)
         (only-in :clan/poo/type validate)
         :gerbil-ascent/program/operator
         (prefix-in :gerbil-ascent/t/performance/operator-publication/reference old-)
@@ -39,7 +40,7 @@
         (let ((validator (.ref parent '.validate)) (prototype (.ref parent 'proto))
               (slots (.all-slots (.ref parent 'responsibilities))) (calls 0))
           (try
-            (hash-put! (object-instance parent) '.validate
+            (ascent-replace-contract-slot! parent '.validate
               (lambda (candidate)
                 (set! calls (+ calls 1))
                 (check-equal? (eq? (.ref parent 'proto) prototype) #t)
@@ -56,13 +57,13 @@
                         (list (gerbil-ascent-relation 'seed 1 '((0)))) [] '((answer . seed)) '(seed))))))
               (check-equal? calls 1)
               (check-equal? (eq? (validator value) value) #t))
-            (finally (hash-put! (object-instance parent) '.validate validator)))))
+            (finally (ascent-replace-contract-slot! parent '.validate validator)))))
         (list GerbilAscentProgramContract GerbilAscentFragmentContract)))
     (test-case "final inert publication retains the public rules classifier"
       (let* ((field (.ref (.ref GerbilAscentProgramContract 'responsibilities) 'rules))
              (classifier (.ref field '.classify)) (calls 0))
         (try
-          (hash-put! (object-instance field) '.classify
+          (ascent-replace-contract-slot! field '.classify
             (lambda args (set! calls (+ calls 1)) (raise 'public-rules-classifier)))
           (check-equal? (with-catch (lambda (failure) failure)
             (lambda () (gerbil-ascent-construct-inert-program
@@ -73,7 +74,7 @@
                   (list (gerbil-ascent-atom 'seed (list (gerbil-ascent-variable 'x)))))) 8 8 16)))))
             'public-rules-classifier)
           (check-equal? calls 1)
-          (finally (hash-put! (object-instance field) '.classify classifier)))))
+          (finally (ascent-replace-contract-slot! field '.classify classifier)))))
     (test-case "a new publication rechecks a previously published shared Term identity"
       (let (shared #f)
         (def (produce)
@@ -87,7 +88,7 @@
                 8 8 16))))
         (let (program (produce))
           (check-equal? (eq? (validate GerbilAscentProgramContract program) program) #t))
-        (hash-put! (object-instance shared) 'kind 'invalid-kind)
+        (.put! shared 'kind 'invalid-kind)
         (check-exception (produce) true)
         (immediate-check!)))
     (test-case "inert root admission rejects malformed Terms and retains nonatom contracts without callbacks"

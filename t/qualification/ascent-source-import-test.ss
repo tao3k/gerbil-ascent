@@ -6,7 +6,7 @@
         (only-in :gerbil/expander import-module)
         (only-in :std/list/list group-n-consecutive)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
         (only-in :gerbil-ascent/program/func gerbil-ascent-relation gerbil-ascent-program)
         (only-in :gerbil-ascent/t/qualification/ascent-result-reference-evaluate

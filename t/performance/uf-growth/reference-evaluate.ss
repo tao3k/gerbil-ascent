@@ -21,7 +21,7 @@
                  gerbil-ascent-source-state-rows gerbil-ascent-prepare-source-replacement
                  gerbil-ascent-commit-source-replacement!)
         (only-in :clan/poo/object .o .ref object?)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in :gerbil-ascent/t/performance/uf-dense/reference-initialization make-initial-source-state gerbil-ascent-initialize-sources!)
         (only-in :gerbil-ascent/program/lattice-frontier make-lattice-frontier lattice-frontier-ref

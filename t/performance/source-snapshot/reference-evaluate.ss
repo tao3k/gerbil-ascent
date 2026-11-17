@@ -13,7 +13,7 @@
         (only-in :gerbil-ascent/program/actor-round gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
         (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref object?)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in :gerbil-ascent/program/initialization make-initial-source-state gerbil-ascent-initialize-sources!)
         (only-in :gerbil-ascent/program/admission gerbil-ascent-admit-source-row!

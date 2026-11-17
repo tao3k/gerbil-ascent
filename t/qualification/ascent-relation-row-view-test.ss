@@ -7,7 +7,7 @@
                  GerbilAscentRelationContract GerbilAscentLatticeContract)
         (only-in :gerbil-ascent/interface/engine-api ascent-engine-program-wire)
         (only-in :clan/poo/object .o .ref object-revision object-slots object-slots-set!)
-        (only-in :clan/poo/mop validate))
+        (only-in :clan/poo/type validate))
 (export ascent-relation-row-view-test)
 
 ;;; Inspect the actual owner stamp in compiled code without adding a production

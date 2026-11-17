@@ -5,7 +5,7 @@
 
 ;;; Completed solutions and detached public queries. No engine is constructed here.
 (import (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in "types.ss" GerbilAscentFragmentContract))
 (export relational-export relational-prepare-query relational-prepare-queries relational-query relational-query-name relational-program-query
         make-relational-solution make-relational-program-solution

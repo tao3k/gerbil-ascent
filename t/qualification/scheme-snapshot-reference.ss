@@ -11,7 +11,7 @@
 (import :gerbil-ascent/program/func :gerbil-ascent/program/scheme-checked
         (only-in :gerbil-ascent/program/types GerbilAscentProgramContract)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate))
+        (only-in :clan/poo/type validate))
 (export relational-snapshot-program)
 
 ;;; Admission rebuilds only the checked relational grammar. This removes

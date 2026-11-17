@@ -8,7 +8,7 @@
 (import "func.ss" "scheme-checked.ss"
         (only-in "types.ss" GerbilAscentProgramContract)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate))
+        (only-in :clan/poo/type validate))
 (export relational-snapshot-program)
 
 ;;; Admission rebuilds only the checked relational grammar. This removes

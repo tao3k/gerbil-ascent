@@ -24,7 +24,7 @@
           gerbil-ascent-compiler-options))
 
 (def (gerbil-ascent-build-projection)
-  (.call gerbil-ascent.init.exports .project-build '("init")))
+  (.call gerbil-ascent.init.exports .yuanxu-init '("init")))
 
 (def (gerbil-ascent-library-modules (projection (gerbil-ascent-build-projection)))
   ;; Scheme-only preparation uses the same targets as the package build,
@@ -36,7 +36,7 @@
         ([gxc: (or "interface/c-api" "interface/runtime") . _] #f)
         ((? string?) target)
         (else (cadr target))))
-    (.get projection spec)))
+    (.get projection std-make-spec)))
 
 ;; Cargo supplies its bridge SDK separately from the published Library.
 (def (gerbil-ascent-rust-spec)
@@ -51,7 +51,7 @@
 (def (main . args)
   (def projection (gerbil-ascent-build-projection))
   (defbuild-script
-    (map gerbil-ascent-compiler-target (.get projection spec))
+    (map gerbil-ascent-compiler-target (.get projection std-make-spec))
     optimize: (not (equal? (getenv "GERBIL_BUILD_OPTIMIZE" "1") "0")))
   (if (or (null? args) (equal? (car args) "compile"))
     (begin

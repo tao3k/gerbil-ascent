@@ -4,7 +4,7 @@
 (import (only-in "../../build.ss" gerbil-ascent-build-projection gerbil-ascent-library-modules)
         :std/test
         (only-in :clan/poo/object .get .ref .all-slots object?)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         "../../init.ss")
 (export yuanxu-library-test)
 

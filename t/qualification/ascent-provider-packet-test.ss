@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
  (only-in :clan/poo/object .o .ref .putslot! $constant-slot-spec compute-precedence-list!)
- (only-in :clan/poo/mop validate)
+ (only-in :clan/poo/type validate)
  :gerbil-ascent/table/provider
  (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
  (only-in :gerbil-ascent/program/api gerbil-ascent-program gerbil-ascent-relation

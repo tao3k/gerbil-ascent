@@ -5,7 +5,7 @@
 ;;; Retained source snapshots, failure recovery, and timeout admission.
 (import (only-in :gerbil-ascent/program/source-log gerbil-ascent-source-log-rows)
         (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
         (only-in :gerbil-ascent/program/admission gerbil-ascent-check-replacement-rows!)
         (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-eligible?)

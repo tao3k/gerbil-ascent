@@ -6,7 +6,7 @@
         (only-in "source-cut.ss" gerbil-ascent-make-source-cut
                  gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update)
         (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in "types.ss" GerbilAscentSessionContract gerbil-ascent-canonical-actor-inputs?)
         (only-in "evaluate.ss" gerbil-ascent-make-engine gerbil-ascent-make-engine-state)
         (only-in "engine-state.ss" engine-state-schema engine-state-analysis)

@@ -13,7 +13,7 @@
                  gerbil-ascent-session-replace-sources! gerbil-ascent-session-run)
         (only-in "types.ss" GerbilAscentFragmentContract)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :std/list/list find))
 (export relational-open-session relational-open-program-session
         relational-session-append-source! relational-session-replace-source!

@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
         (only-in :clan/poo/object .ref object-instance)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :gerbil-ascent/program/operator-analysis
                  capture-operator-transform operator-snapshot-transform operator-snapshot-checked-rows
                  analyze-operator-graph operator-analysis-checked-rows)

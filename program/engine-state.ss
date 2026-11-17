@@ -4,7 +4,7 @@
 
 ;;; Evaluator-owned state and the complete public Session projection.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in "types.ss" GerbilAscentSessionContract))
 (export make-engine-state engine-state-public
         engine-state-append-source! engine-state-replace-source! engine-state-run

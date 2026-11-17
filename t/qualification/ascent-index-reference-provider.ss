@@ -5,7 +5,8 @@
 ;;; One receiver axis: a relation index Provider owns physical build and
 ;;; lookup. Rules remain independent of the provider's private index value.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop .defgeneric define-type validate)
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type define-type validate)
         (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)

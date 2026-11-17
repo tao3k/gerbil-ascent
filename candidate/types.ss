@@ -131,7 +131,7 @@
 ;;; Module publication contract; candidate data contracts above are unchanged.
 
 (import (only-in :clan/poo/object .cc)
-        (only-in :clan/poo/mop Type.)
+        (only-in :clan/poo/type Type.)
         (only-in :clan/poo/type Record))
 
 (export CandidateScopeContract)

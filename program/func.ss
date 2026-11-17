@@ -6,7 +6,8 @@
 ;;; in these objects; each evaluation owns its own relation storage.
 
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop .defgeneric validate)
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type validate)
         (only-in "../table/provider.ss"
                  gerbil-ascent-hash-index-provider)
         (only-in "../table/storage.ss"

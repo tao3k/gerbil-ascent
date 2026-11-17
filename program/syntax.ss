@@ -5,7 +5,7 @@
 ;;; Hygienic source forms lower to the existing POO contracts and evaluator.
 (import "func.ss"
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in "types.ss" GerbilAscentFragmentContract)
         (only-in :gerbil-ascent/table/provider
                  gerbil-ascent-hash-index-provider)

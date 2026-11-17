@@ -11,7 +11,8 @@
         (only-in :clan/poo/object .o .ref .call seal-object!)
         (only-in "funs.ss" gerbil-ascent-index-row-snapshot
                  gerbil-ascent-index-row-snapshot/arity)
-        (only-in :clan/poo/mop .defgeneric define-type validate)
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type define-type validate)
         (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)

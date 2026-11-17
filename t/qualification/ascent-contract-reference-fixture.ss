@@ -6,7 +6,7 @@
 ;;; construct their rejection receipts. Use the SAME prototype descriptors
 ;;; as the candidate, so validation differences concern union dispatch only.
 (import (only-in :clan/poo/object .cc .ref)
-        (only-in :clan/poo/mop element?)
+        (only-in :clan/poo/type element?)
         (only-in :tao3k/yuanxu/types/contracts yuanxu-predicate-contract)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentAtomContract GerbilAscentGuardContract

@@ -6,7 +6,8 @@
 ;;; Descriptor construction, graph admission and set interpretation have
 ;;; separate owners; only this invocation emits private relation handles.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop .defgeneric define-type validate)
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type define-type validate)
         (only-in :tao3k/yuanxu/types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
         :gerbil-ascent/program/operator-descriptor :gerbil-ascent/program/operator-measurement :gerbil-ascent/program/operator-reference
         (only-in :gerbil-ascent/program/operator-lowering lower-operator-graph)

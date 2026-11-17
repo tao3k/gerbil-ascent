@@ -5,7 +5,7 @@
 (import :gerbil/runtime/gambit
         (only-in :gerbil/expander core-resolve-library-module-path)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop element?)
+        (only-in :clan/poo/type element?)
         (only-in :tao3k/yuanxu/types/contracts yuanxu-predicate-contract)
         (only-in :gerbil-ascent/program/types GerbilAscentRelationContract)
         (only-in :gerbil-ascent/table/provider

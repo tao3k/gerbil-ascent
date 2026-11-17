@@ -4,7 +4,7 @@
 
 (import (only-in :std/test check-equal? check-exception test-suite test-case)
         (only-in :clan/poo/object .o .cc .ref uninstantiate-object!)
-        (only-in :clan/poo/mop element? validate)
+        (only-in :clan/poo/type element? validate)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentAtomContract GerbilAscentGuardContract
                  GerbilAscentRuleContract GerbilAscentProgramContract GerbilAscentSessionContract)

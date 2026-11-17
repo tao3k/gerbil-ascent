@@ -171,7 +171,7 @@ jobs:
         run: |
           xcrun --find ld-classic
           printf 'RUSTFLAGS=%s\nMACOSX_DEPLOYMENT_TARGET=%s\n' "$RUSTFLAGS" "$MACOSX_DEPLOYMENT_TARGET" > "$RUNNER_TEMP/process-build-recipe.txt"
-          cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme -p ascent-python --no-default-features --features "$ASCENT_OWNER_FEATURES" --lib --bin ascent-scheme-worker --bench process_throughput --bench provenance_load --test archive_build --message-format=json > "$RUNNER_TEMP/process-build.jsonl"
+          cargo build --release --locked --manifest-path rust/Cargo.toml -p ascent-scheme -p ascent-python --no-default-features --features "$ASCENT_OWNER_FEATURES" --lib --bin ascent-scheme-worker --bench process_throughput --bench provenance_load --message-format=json > "$RUNNER_TEMP/process-build.jsonl"
       - name: Qualify complete macOS process and instance semantics before measurement
         id: bindings
         if: ${{ inputs.process_throughput }}

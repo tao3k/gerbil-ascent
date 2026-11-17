@@ -1,4 +1,6 @@
 //! Semantic integration test harness for the original Scheme API and both runtimes.
+#[path = "integration/actor_sessions.rs"]
+mod actor_sessions;
 #[path = "integration/aggregate_constructors.rs"]
 mod aggregate_constructors;
 #[path = "integration/constructor_sessions.rs"]

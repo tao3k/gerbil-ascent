@@ -83,4 +83,20 @@ module CheckpointTransport {
   val NoLostRegisteredWake = not(q.noticeRead and q.waitBlocked and q.noticePhase == 1) or q.noticeSent
   val NoticeTypeOK = Set(0,1).contains(q.noticePhase)
   val NoExtraWake = (if (Mutation == "double-wake" and q.noticeSent) 2 else wake_hint(q.noticeSent)) <= 1
+
+  // The child transport drops its connection borrow before the pending read
+  // or write yields to Gerbil. Only the active runtime call owns a lease.
+  pure def residentWait(phase: str, wouldBlock: bool): bool =
+    wouldBlock and (phase != "invoke" or Mutation == "wait-with-authority")
+  val ResidentWaitOutsideAuthority = q.waitChecks == 0 or
+    Set("receive", "entered", "invoke", "reply").forall(phase =>
+      Set(false, true).forall(blocked => residentWait(phase, blocked) implies phase != "invoke"))
+
+  // A retry may follow partial header, body or reply bytes. A native wakeup
+  // reports readiness, so only the subsequent successful syscall adds bytes.
+  pure def cursorAfterWaiting(cursor: int, wakeups: int): int =
+    if (Mutation == "consume-on-wake") cursor + wakeups else cursor
+  val WaitPreservesCursor = q.waitChecks == 0 or
+    Set(0, 1, 7, 8, 128).forall(cursor =>
+      Set(0, 1, 2).forall(wakes => cursorAfterWaiting(cursor, wakes) == cursor))
 }

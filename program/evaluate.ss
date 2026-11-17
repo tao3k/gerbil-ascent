@@ -4,7 +4,8 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "engine-state.ss" make-engine-state engine-state-public engine-state-run)
+(import (only-in "engine-state.ss" make-engine-state engine-state-public engine-state-run
+                 gerbil-ascent-admit-engine)
         (only-in "round-workspace.ss" make-round-layout round-layout-source! make-round-work
                  round-work-write! round-reset-deltas! round-work-commit-indices round-work-complete!
                  round-layout-view-staging? round-layout-lattice-staging?)
@@ -22,7 +23,7 @@
                  source-state-originals source-state-additions source-state-overrides
                  gerbil-ascent-source-state-rows gerbil-ascent-prepare-source-replacement
                  gerbil-ascent-commit-source-replacement!)
-        (only-in :clan/poo/object .o .ref object?)
+        (only-in :clan/poo/object .ref)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in "initialization.ss" make-initial-source-state gerbil-ascent-initialize-sources!)
         (only-in "lattice-frontier.ss" make-lattice-frontier lattice-frontier-ref
@@ -35,11 +36,10 @@
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  make-positive-prefix-state current-positive-prefix-budget
                  gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?
-                 current-positive-plan-cost positive-plan-cost-admit! positive-plan-cost-begin!)
+                 current-positive-plan-cost positive-plan-cost-admit!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "scheme-checked.ss" relational-scalar?)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut row-indexes-publish-old-tail!)
-        (only-in "types.ss" gerbil-ascent-fact-limit?)
         (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
                  gerbil-ascent-seed-session-reuse! make-closure-seed-state session-reuse-affected)
@@ -117,10 +117,12 @@
                                 (schema-override #f) (measure-rule-times? #f)
                                 (plan-error #f) (reuse #f)
                                 (workers 1) (canceled? #f) (empty-bucket-reuse? #f)
-                                (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f))
+                                (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f)
+                                (retain-actor-output? #f))
   (let (state (%make-engine program session? analysis-override schema-override
                             measure-rule-times? plan-error reuse workers canceled?
-                            empty-bucket-reuse? actor-sources owned-actor-inputs? retained-source-indexes))
+                            empty-bucket-reuse? actor-sources owned-actor-inputs? retained-source-indexes
+                            retain-actor-output?))
     (if session? (engine-state-public state) state)))
 
 ;;; Boundary: this closure owns one engine's mutable rows, indexes and counters.
@@ -129,36 +131,11 @@
 (def (%make-engine program session? (analysis-override #f)
                    (schema-override #f) (measure-rule-times? #f)
                    (plan-error #f) (reuse #f) (workers 1) (canceled? #f)
-                   (empty-bucket-reuse? #f) (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f))
-  (unless (boolean? empty-bucket-reuse?) (error "invalid empty bucket reuse option"))
-  (when (and empty-bucket-reuse? (or session? reuse (not (= workers 1)) canceled?))
-    (error "empty bucket reuse requires a fresh serial scalar Set engine"))
-  (when (and (current-positive-plan-cost)
-             (or session? reuse (not (= workers 1)) canceled?))
-    (error "native plan cost supports one fresh serial solve only"))
-  (positive-plan-cost-begin! (current-positive-plan-cost))
-  (unless (or (not canceled?) (procedure? canceled?))
-    (error "invalid ASCENT cancellation predicate" canceled?))
-  (when (and canceled? (or session? reuse measure-rule-times?))
-    (error "ASCENT cancellation requires a fresh untimed evaluator"))
-  (unless (and (exact-integer? workers) (> workers 0)
-               (or (= workers 1) (and (not session?) (not reuse) (not measure-rule-times?))))
-    (error "invalid ASCENT parallel evaluation option" workers))
-  ;; The declaration constructor validates the full Core contract.
-  ;; Evaluation checks mutable rows and clause bindings for this snapshot.
-  (unless (object? program)
-    (error "invalid ASCENT program" program))
-  (let* ((relations (.ref program 'relations))
-         (rules (.ref program 'rules))
-         (input-limit (.ref program 'max-input-facts))
-         (derived-limit (.ref program 'max-derived-facts))
-         (output-limit (.ref program 'max-output-facts)))
-    (unless (and (list? relations) (list? rules)
-                 (gerbil-ascent-fact-limit? input-limit)
-                 (gerbil-ascent-fact-limit? derived-limit)
-                 (gerbil-ascent-fact-limit? output-limit)
-                 (boolean? measure-rule-times?))
-      (error "invalid ASCENT program bounds"))
+                   (empty-bucket-reuse? #f) (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f)
+                   (retain-actor-output? #f))
+  (let-values (((relations rules input-limit derived-limit output-limit)
+                (gerbil-ascent-admit-engine program session? measure-rule-times? reuse workers canceled?
+                  empty-bucket-reuse? actor-sources owned-actor-inputs? retain-actor-output?)))
     (let* ((count (length relations))
            (schema (or schema-override
                        (gerbil-ascent-program-schema program relations)))
@@ -432,6 +409,20 @@
                         (not materialized-dirty?)
                         (not accepted-any?))
                (set! dirty? #f)))))
+        (def (publish-result! complete? deadline)
+          (let ((observation
+                  (gerbil-ascent-result-observation
+                   (and reuse (session-reuse-affected reuse)) names active-by-stratum rule-ticks)))
+            (let-values (((result publication)
+                          (gerbil-ascent-publish-execution! execution-publication
+                            names arity all all-size deadline observation position-of complete? session?
+                            (or retain-actor-output? session?
+                                (and actor-sources (gerbil-ascent-source-cut-export-mask actor-sources))))))
+              (set! owned-publication publication)
+              (set! last-result result))))
+        (def (deadline-jiffy duration)
+          (+ (current-jiffy)
+             (quotient (* duration (jiffies-per-second)) 1000000000)))
         (def (run-retained! (deadline #f))
          (ascent-execution-checkpoint!)
          (gerbil-ascent-storage-check-readiness! storage-readiness)
@@ -440,29 +431,40 @@
          (when dirty? (flush-staged-set-rows!))
          ;; One invocation owns the complete round workspace. Clearing slots
          ;; after commit releases pending state while delta keeps its row spine.
-         (let (complete? #t)
+         (let ((complete? #t) (clean? (not dirty?)))
          (when dirty?
          ;; Completed selected updates instantiate full frames only for later
          ;; dirty work. Clean calls and duplicate-only appends keep cached results;
          ;; partial timeout resumes retain their original selected frames.
          (unless active-by-stratum
            (set! active-by-stratum (gerbil-ascent-activate-rules analysis)))
-         (let ((pending (make-vector count []))
-               (pending-seen (make-vector count #f))
-               (pending-injections (and (round-layout-view-staging? round-layout) (make-vector count [])))
-               (pending-lattices (and (round-layout-lattice-staging? round-layout) (make-vector count #f)))
-               (round-work (make-round-work round-layout))
-               (pending-count 0)
-               (component-mode? (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
+         (let* ((pending (make-vector count []))
+                (pending-seen (make-vector count #f))
+                (pending-injections (and (round-layout-view-staging? round-layout) (make-vector count [])))
+                (pending-lattices (and (round-layout-lattice-staging? round-layout) (make-vector count #f)))
+                (round-work (make-round-work round-layout))
+                (pending-count 0)
+                ;; Whole-component closure has no intermediate delta barrier.
+                ;; Keep a suspended evaluator in round mode even on untimed resume.
+                (component-mode? (and (not deadline) (not resume-stratum)
+                                      (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
+                (scalar-actor-cut? (and component-mode? actor-sources (= workers 1)
+                                        (gerbil-ascent-source-cut-scalar? actor-sources)))
+                (use-scalar-source-indexes? (and scalar-actor-cut?
+                                                 (not (current-ascent-execution-control))))
+                (use-worker-membership? (and scalar-actor-cut? retain-actor-output?)))
             (def (admit-stored! index pending-table stored)
               (unless (and (list? stored)
                            (= (length stored) (vector-ref arity index)))
                 (error "invalid ASCENT storage provider row" stored))
               (let (check (vector-ref field-checkers index))
                 (when check (check stored)))
-              (unless (or (hash-get (vector-ref seen index) stored)
-                          (hash-get pending-table stored))
-                (hash-put! pending-table stored #t)
+              ;; Only the credited immutable Actor path supplies no table.
+              ;; Its sole SCC worker already checked the same seen and pending rows.
+              (unless (and pending-table
+                           (or (hash-get (vector-ref seen index) stored)
+                               (hash-get pending-table stored)))
+                (when pending-table (hash-put! pending-table stored #t))
                 ;; Counts admission into this round, not completed publication.
                 ;; A refused run keeps its partial counters and no success claim.
                 (positive-plan-cost-admit! (current-positive-plan-cost))
@@ -475,12 +477,13 @@
               (ascent-execution-checkpoint! 1 0)
               (let* ((index (vector-ref atom 0))
                      (pending-table
-                      (and (not (vector-ref lattice-joins index))
+                      (and (not use-worker-membership?)
+                           (not (vector-ref lattice-joins index))
                            (not (view-relation? index))
-                      (or (vector-ref pending-seen index)
-                          (let (fresh (make-hash-table))
-                            (vector-set! pending-seen index fresh)
-                          fresh)))))
+                           (or (vector-ref pending-seen index)
+                               (let (fresh (make-hash-table))
+                                 (vector-set! pending-seen index fresh)
+                                 fresh)))))
                 (let (check (vector-ref field-checkers index))
                   (when check (check row)))
                 (cond
@@ -633,7 +636,8 @@
                   (vector-set! pending index [])
                   (if (vector-ref lattice-joins index)
                     (lattice-frontier-clear! (vector-ref pending-lattices index))
-                    (hash-clear! (vector-ref pending-seen index))))
+                    (let (table (vector-ref pending-seen index))
+                      (when table (hash-clear! table)))))
                 ))
                 )
             (unless resume-stratum
@@ -647,9 +651,8 @@
             (if component-mode?
               (gerbil-ascent-run-positive-components! analysis schema all workers emit-row!
                                                        (or canceled? (lambda () #f))
-                                                       (and actor-sources (= workers 1)
-                                                            (not (current-ascent-execution-control))
-                                                            (gerbil-ascent-source-cut-scalar? actor-sources)) retained-source-indexes)
+                                                       use-scalar-source-indexes? retained-source-indexes
+                                                       use-worker-membership?)
             (if (and (or (> workers 1) canceled?)
                      (not ordered-execution?)
                      (gerbil-ascent-actor-round-eligible? active-rules storage-providers
@@ -778,23 +781,18 @@
            (set! first-run? #f)
            (set! dirty? #f)
            (set! materialized-dirty? #f))
-         (let ((observation
-                 (gerbil-ascent-result-observation
-                  (and reuse (session-reuse-affected reuse)) names active-by-stratum rule-ticks)))
-           (let-values (((result publication)
-                         (gerbil-ascent-publish-execution! execution-publication
-                           names arity all all-size deadline observation position-of complete? session?
-                           (or session? (and actor-sources (gerbil-ascent-source-cut-export-mask actor-sources))))))
-             (set! owned-publication publication)
-             (set! last-result result))))
+         (publish-result! complete? deadline))
+         ;; A retained Actor closure must not return a caller-editable Result.
+         ;; Clean ordinary Sessions keep their established result identity.
+         (when (and retain-actor-output? clean?) (publish-result! #t deadline))
          (when (and reuse complete?)
            (set! active-by-stratum #f)
            (set! reuse #f))
          last-result))
-        (def (run!)
+        (def (run! (duration #f))
           (if recompute-from-source?
             last-result
-            (run-retained!)))
+            (run-retained! (and duration (deadline-jiffy duration)))))
         (if session?
           (let (published (gerbil-ascent-publication-cache count))
             (def (replay-source! mode index rows)
@@ -976,10 +974,7 @@
               (if recompute-from-source?
                 last-result
                 (begin
-                  (vector-set! published 0
-                    (+ (current-jiffy)
-                       (quotient (* duration-nanoseconds (jiffies-per-second))
-                                 1000000000)))
+                  (vector-set! published 0 (deadline-jiffy duration-nanoseconds))
                   (run-retained! published))))
           (make-engine-state
            (if single-set-source? append-single-set-source! append-source!)

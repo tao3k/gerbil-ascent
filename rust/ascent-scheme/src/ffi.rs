@@ -6,4 +6,5 @@ unsafe extern "C" {
     ) -> *mut sys::GerbilModuleOrLink;
     pub(crate) fn ascent_hybrid_set_checkpoint(callback: extern "C" fn(i64, i64, i64) -> i32);
     pub(crate) fn ascent_hybrid_call(request: i64) -> i64;
+    pub(crate) fn ascent_hybrid_process_wait(descriptor: i64) -> i64;
 }

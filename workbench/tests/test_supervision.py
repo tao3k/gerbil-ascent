@@ -10,7 +10,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from ascent_workbench.supervision import proc_group_cpu, darwin_process_cpu, signal_group
+from ascent_workbench.supervision import darwin_process_cpu, group_cpu, proc_group_cpu, signal_group
 
 
 class BuildActivity(unittest.TestCase):
@@ -82,6 +82,20 @@ class BuildActivity(unittest.TestCase):
         elapsed = time.process_time() - started
         measured = darwin_process_cpu(os.getpid()) - before
         self.assertAlmostEqual(measured, elapsed, delta=.02)
+
+    @unittest.skipUnless(sys.platform == 'darwin', 'Darwin native process groups')
+    def test_darwin_sampling_reads_only_the_requested_group_without_ps(self):
+        with subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(3)'],
+                              start_new_session=True) as child:
+            try:
+                with patch('ascent_workbench.supervision.subprocess.check_output',
+                           side_effect=AssertionError('CPU sampling must not spawn ps')):
+                    sample = group_cpu(child.pid)
+                self.assertIn(child.pid, sample)
+                self.assertNotIn(os.getpid(), sample)
+                self.assertGreaterEqual(sample[child.pid], 0)
+            finally:
+                child.terminate()
 
     def test_linux_cpu_includes_reaped_children_and_tick_precision(self):
         with tempfile.TemporaryDirectory() as directory:

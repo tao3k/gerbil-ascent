@@ -1,7 +1,8 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import :std/test :std/encoding/json :gerbil-ascent/interface/engine-api)
+(import :std/test :std/encoding/json :gerbil-ascent/interface/engine-api
+        (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control))
 (export ascent-engine-interface-test)
 (def (request value)
   (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
@@ -27,8 +28,134 @@
 (def (rows result name) (hash-ref (hash-ref result "relations") name))
 (def (same? actual expected)
   (and (= (length actual) (length expected)) (andmap (lambda (row) (and (member row actual) #t)) expected)))
+
+(def (open-reachability edges bound)
+  (let (source
+         (object->string
+          `(ascent
+            (relation edge (from to) (quote ,edges))
+            (relation reach (from to))
+            ((reach x y) <-- (edge x y))
+            ((reach x z) <-- (reach x y) (edge y z))
+            (bounds 32 ,bound 128))))
+    (hash-ref
+     (ascent-engine-call (hash ("operation" "open-sources") ("sources" (list source))))
+     "handle")))
+
+(def (source-run handle duration (packed-rows? #f))
+  (ascent-engine-call
+   (hash ("operation" "source-run") ("handle" handle)
+         ("timeoutNanoseconds" duration) ("queries" '("reach")))
+   packed-rows?))
+
+(def (proof-scope handle result)
+  (ascent-engine-call
+   (hash ("operation" "owned-result") ("handle" handle)
+         ("result" (hash-ref result "resultHandle"))
+         ("action" "proof-scope") ("relation" "reach"))))
+
+(def (replace-edges! handle edges (packed-rows? #f))
+  (ascent-engine-call
+   (hash ("operation" "source-replace") ("handle" handle)
+         ("sources" (list (hash ("relation" "edge") ("rows" edges)))))
+   packed-rows?))
+
 (def ascent-engine-interface-test
   (test-suite "Public inert engine contract for C ABI consumers"
+    (test-case "private integer inputs preserve source updates and rejection precedence"
+      (let (handle (open-reachability [] 4))
+        (dynamic-wind
+          void
+          (lambda ()
+            (let (initial (source-run handle 1000000000))
+              (check-exception
+               (replace-edges! handle '#s64(1 2 0 1)) true)
+              (check-equal?
+               (with-catch error-message
+                 (lambda () (replace-edges! handle '#s64(33 3) #t)))
+               "ASCENT source fact budget exceeded")
+              (check-equal?
+               (with-catch error-message
+                 (lambda () (replace-edges! handle '#s64(2 1 1 2) #t)))
+               "scheme row arity")
+              (check-equal?
+               (with-catch error-message
+                 (lambda () (replace-edges! handle '#s64(2 2 0 1 2) #t)))
+               "invalid native source row packet")
+              (check-equal? (hash-ref (proof-scope handle initial) "sourceGeneration") 0)
+              (check-equal?
+               (hash-ref (replace-edges! handle '#s64(3 2 2 3 1 2 1 2) #t)
+                         "sourceGeneration")
+               1)
+              (check-equal? (same? (rows (source-run handle 1000000000) "reach")
+                                   '((2 3) (1 2) (1 3))) #t)
+              (check-exception (proof-scope handle initial) true)))
+          (lambda ()
+            (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
+    (test-case "complete Actor integer rows preserve order and signed bounds"
+      (let (handle (open-reachability [] 4))
+        (try
+          (begin
+            (check-equal? (rows (source-run handle 1000000000 #t) "reach") [])
+            (replace-edges! handle '((-9223372036854775808 0) (0 9223372036854775807)))
+            (let* ((ordinary (rows (source-run handle 1000000000) "reach"))
+                   (packed (source-run handle 1000000000 #t))
+                   (packet (rows packed "reach")))
+              (check-equal? (s64vector? packet) #t)
+              (check-equal? (s64vector->list packet)
+                            (append (list (length ordinary) 2) (apply append ordinary)))
+              (check-equal? (hash-ref packed "scalarProjection") "supported")
+              (check-equal? (hash-ref (proof-scope handle packed) "sourceGeneration") 1))
+            (replace-edges! handle '((0 9223372036854775808)))
+            (check-equal? (rows (source-run handle 1000000000 #t) "reach")
+                          '((0 9223372036854775808)))
+            (replace-edges! handle '((#f 7)))
+            (check-equal? (rows (source-run handle 1000000000 #t) "reach") '((#f 7))))
+          (finally
+           (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
+    (test-case "typed source-run resumes a resident Actor and confines partial proof scope"
+      (let ((handle (open-reachability '((0 1) (1 2) (2 3) (3 4)) 32))
+            (used-worker? #f))
+        (try
+          (let (partial
+                 (parameterize
+                     ((current-ascent-execution-control
+                       (lambda (_work _facts)
+                         (when (eq? (thread-name (current-thread)) 'ascent-session-evaluation)
+                           (set! used-worker? #t)))))
+                   (source-run handle 0 #t)))
+            (check-equal? used-worker? #t)
+            (check-equal? (hash-ref partial "complete") #f)
+            (check-equal? (list? (rows partial "reach")) #t)
+            (check-exception (proof-scope handle partial) true)
+            (let (complete (source-run handle 1000000000))
+              (check-equal? (hash-ref complete "complete") #t)
+              (check-equal? (length (rows complete "reach")) 10)
+              (check-equal? (hash-ref (proof-scope handle complete) "sourceGeneration") 0)
+              (check-exception (proof-scope handle partial) true)
+              (check-equal? (hash-ref (source-run handle 0) "nativeResultReused") #t)))
+          (finally
+           (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))
+        (check-exception (source-run handle 0) true)))
+    (test-case "typed Actor replacement publishes complete cuts and revokes only older scopes"
+      (let ((handle (open-reachability [] 3)) (used-worker? #f))
+        (try
+          (let (initial (source-run handle 1000000000))
+            (parameterize
+                ((current-ascent-execution-control
+                  (lambda (_work _facts)
+                    (when (eq? (thread-name (current-thread)) 'ascent-session-evaluation)
+                      (set! used-worker? #t)))))
+              (check-equal? (hash-ref (replace-edges! handle '((0 1) (1 2))) "sourceGeneration") 1))
+            (check-equal? used-worker? #t)
+            (check-exception (proof-scope handle initial) true)
+            (let (complete (source-run handle 0))
+              (check-equal? (hash-ref complete "complete") #t)
+              (check-equal? (same? (rows complete "reach") '((0 1) (1 2) (0 2))) #t)
+              (check-exception (replace-edges! handle '((0 1) (1 2) (2 3))) true)
+              (check-equal? (hash-ref (proof-scope handle complete) "sourceGeneration") 1)))
+          (finally
+           (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
     (test-case "retained recursion negation replacement and detached answers"
       (let* ((handle (hash-ref (request (hash ("operation" "open") ("program" (program)))) "handle"))
              (first (run handle)))

@@ -52,8 +52,14 @@
             (set! members (map slot! (positive-component-members component)))
             (set! rules
               (map (lambda (rule)
-                     (vector (project-component-plan (vector-ref rule 0) project)
-                             (vector-ref rule 1))) (positive-component-rules component)))))
+                     (let* ((plan (project-component-plan (vector-ref rule 0) project))
+                            (actions (list->vector (vector-ref plan 1)))
+                            (pivots (map (lambda (ordinal)
+                                           (let* ((action (vector-ref actions ordinal))
+                                                  (atom (vector-ref action 0)))
+                                             (cons ordinal (vector-ref atom 0))))
+                                         (vector-ref rule 1))))
+                       (vector plan pivots))) (positive-component-rules component)))))
       (make-component-layout (list->vector slots) members rules originals))))
 
 ;;; Native locked primitive operations protect publication; compilation runs
@@ -91,15 +97,15 @@
 ;;     ```
 ;;   %
 (def (gerbil-ascent-run-positive-component! component schema snapshot emit! checkpoint!
-                                             (source-read #f))
+                                             (source-read #f) (stable-membership? #f))
   (if (compact-component-snapshot? snapshot)
-    (run-component-workspace! schema snapshot emit! checkpoint! source-read)
+    (run-component-workspace! schema snapshot emit! checkpoint! source-read stable-membership?)
     (let (compact (gerbil-ascent-component-snapshot component (component-snapshot-rows snapshot)
                     (component-snapshot-sizes snapshot)))
       ;; Full transferred snapshots retain their existing committed-output contract.
       ;; Unwind returns only owned output slots; external source roots stay untouched.
       (dynamic-wind void
-        (lambda () (run-component-workspace! schema compact emit! checkpoint! #f))
+        (lambda () (run-component-workspace! schema compact emit! checkpoint! #f #f))
         (lambda ()
           (using (layout (compact-component-snapshot-layout compact) :- component-layout)
             (for-each
@@ -112,8 +118,9 @@
 
 ;;; All mutable vectors and physical indexes use the assignment's dense namespace.
 ;;; Global descriptors return only through emission; predecessor inputs remain borrowed.
-;; : (-> ProgramSchema CompactComponentSnapshot Emit Checkpoint Void)
-(def (run-component-workspace! schema (snapshot :- compact-component-snapshot) emit! checkpoint! source-read)
+;; : (-> ProgramSchema CompactComponentSnapshot Emit Checkpoint SourceRead Boolean Void)
+(def (run-component-workspace! schema (snapshot :- compact-component-snapshot) emit! checkpoint!
+                               source-read stable-membership?)
   (using (layout snapshot.layout :- component-layout)
   (let* ((all snapshot.rows)
          (all-size snapshot.sizes)
@@ -125,6 +132,7 @@
          (local-rows (row-indexes-rows indexes))
          (advance! (row-indexes-advance! indexes))
          (seen (make-vector count #f))
+         (previously-present? #f)
          (pending (make-vector count []))
          (members layout.members)
          (rules (map (lambda (rule)
@@ -138,6 +146,11 @@
                        (source-read (hash-ref layout.originals atom) frame terms))
                   (local-rows atom frame delta? terms)))
             local-rows)))
+    ;; The table callback only records the prior bit. Publish outside the
+    ;; update, where the normal checkpoint and merge-credit protocol applies.
+    (def (remember-membership present?)
+      (set! previously-present? present?)
+      #t)
     (row-indexes-plan-positive-rules! indexes rules)
     (for-each
      (lambda (index)
@@ -147,9 +160,15 @@
     (let rounds ((first? #t))
       (let (new? #f)
         (def (candidate! atom row)
-          (let* ((index (vector-ref atom 0)) (table (vector-ref seen index)))
-            (unless (hash-get table row)
-              (hash-put! table row #t)
+          (let* ((index (vector-ref atom 0))
+                 (table (vector-ref seen index))
+                 (present? (if stable-membership?
+                             (begin
+                               (hash-update! table row remember-membership #f)
+                               previously-present?)
+                             (hash-get table row))))
+            (unless present?
+              (unless stable-membership? (hash-put! table row #t))
               (vector-set! pending index (cons row (vector-ref pending index)))
               (set! new? #t)
               (emit! (hash-ref layout.originals atom) row))))
@@ -158,8 +177,14 @@
            (let ((plan (vector-ref rule 0)) (pivots (vector-ref rule 1)) (frame (vector-ref rule 2)))
              (if first?
                (gerbil-ascent-run-positive-plan! plan frame -1 rows-access candidate! checkpoint!)
-               (for-each (lambda (pivot)
-                           (gerbil-ascent-run-positive-plan! plan frame pivot rows-access candidate! checkpoint! #f (row-indexes-old-rows indexes))) pivots)))) rules)
+               (for-each
+                (lambda (pivot)
+                  ;; The assignment owns this exact delta count. Empty selected
+                  ;; lanes admit no witness, even when their prefix is nonempty.
+                  (unless (zero? (vector-ref delta-size (cdr pivot)))
+                    (gerbil-ascent-run-positive-plan! plan frame (car pivot) rows-access
+                      candidate! checkpoint! #f (row-indexes-old-rows indexes))))
+                pivots)))) rules)
         (for-each
          (lambda (index)
            (let* ((batch (vector-ref pending index)) (size (length batch)))

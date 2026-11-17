@@ -4,7 +4,7 @@ use crate::{
     values,
 };
 use gerbil_ascent::{Data, Error, Result};
-use gerbil_scheme::{GerbilRuntime, LinkedGerbilProgram};
+use gerbil_scheme::{CollectionKind, GerbilRuntime, LinkedGerbilProgram, RootedSchemeCollection};
 /// One native Scheme VM owned and checked by the upstream runtime.
 /// Neither this owner nor its values can cross a thread boundary.
 pub struct Runtime {
@@ -52,14 +52,35 @@ impl Runtime {
         self.invoke_rooted(&Data::Map(payload))
     }
     fn invoke_rooted(&self, request: &Data) -> Result<Data> {
-        let _usage = crate::diagnostics::Request::start(&self.runtime, request);
-        let request = values::encode(&self.runtime, request)?;
+        let mut usage = crate::diagnostics::Request::start(&self.runtime, request);
+        let operation = request.get("operation").and_then(|v| v.text().ok());
+        let packed_input = operation == Some("source-replace");
+        let packed_output = operation == Some("source-run");
+        let request = if packed_input {
+            values::encode_source_request(&self.runtime, request)?
+        } else {
+            values::encode(&self.runtime, request)?
+        };
+        let request = if packed_input || packed_output {
+            self.runtime
+                .collection_from_objects(CollectionKind::Vector, &[&request])
+                .map(RootedSchemeCollection::into_object)
+                .map_err(scheme_error)?
+        } else {
+            request
+        };
+        if let Some(usage) = &mut usage {
+            usage.after_encoding();
+        }
         // SAFETY: this linked export borrows a strong input and transfers one
         // fresh upstream root; gerbil-rs-rooted-call contains every exception.
         let export =
             unsafe { self.runtime.bind_object_export(ascent_hybrid_call) }.map_err(scheme_error)?;
         let response = export.call(&request).into_result().map_err(scheme_error)?;
-        let response = values::decode(response, 0)?;
+        if let Some(usage) = &mut usage {
+            usage.after_call();
+        }
+        let response = values::decode(response, packed_output)?;
         decode_response(response)
     }
 }

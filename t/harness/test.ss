@@ -7,7 +7,7 @@
 ;;; ASP capacity/profile projection run independent source or compiled modules.
 ;;; Source directories select the same flat *-test.ss boundary as compiled GxTest;
 ;;; GxTest still owns export/Suite/Case discovery and verdicts in each child.
-;;; The caller's unchanged deadline covers dispatch, startup and all workers.
+;;; The caller supervises dispatch, startup and progress across all workers.
 (import (only-in :clan/poo/object .cc)
         (only-in :std/list/list partition group-n-consecutive)
         (only-in :std/string/misc string-contains)

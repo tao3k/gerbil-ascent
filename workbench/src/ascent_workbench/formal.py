@@ -438,6 +438,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "instance-package-resource", "rust/ascent-scheme/src/instances/package.rs"),
                 ("ExecutionPolicy.lean", "instance-package-lifecycle", "rust/ascent-scheme/src/instances/lifecycle.rs"),
                 ("ExecutionPolicy.lean", "owner-hybrid-scheme", "interface/hybrid.ss"),
+                ("ExecutionPolicy.lean", "actor-integer-rows", "interface/engine-api.ss"),
+                ("ExecutionPolicy.lean", "integer-source-packet", "interface/engine-api.ss"),
                 ("ExecutionPolicy.lean", "owner-source-scheme", "rules/source.ss"),
                 ("ExecutionPolicy.lean", "owner-control-rust", "rust/ascent-scheme/src/control_state.rs"),
                 ("ExecutionPolicy.lean", "projection-object-reuse", "interface/projection-cache.ss"),
@@ -464,6 +466,9 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "dsl-select", "program/scheme-language.ss"),
                 ("ExecutionPolicy.lean", "dsl-root", "program/func.ss"),
                 ("ExecutionPolicy.lean", "dsl-owned", "program/scheme-language.ss"),
+                ("ExecutionPolicy.lean", "dsl-closed-rules", "program/scheme-language.ss"),
+                ("ExecutionPolicy.lean", "dsl-rule-extent", "program/func.ss"),
+                ("ExecutionPolicy.lean", "dsl-rule-protocol", "program/types.ss"),
                 ("ExecutionPolicy.lean", "dsl-workload", "t/qualification/ascent-semi-naive-test.ss"),
                 ("ExecutionPolicy.lean", "preparation-roots", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-support", "packages/proofs/quint/PreparationSupport.qnt"),
@@ -490,7 +495,14 @@ def main() -> int:
                         ["lake", "env", "lean", "--run", script, language],
                         Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
-                if language == "row-view-scheme":
+                if language in ("actor-integer-rows", "integer-source-packet"):
+                    region = language.replace("-", " ").upper()
+                    begin = f";; BEGIN GENERATED {region}\n"
+                    end = f";; END GENERATED {region}\n"
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError(f"missing or duplicate {language} source region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "row-view-scheme":
                     begin, end = ';; BEGIN GENERATED OWNED ROW VIEW\n', ';; END GENERATED OWNED ROW VIEW\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate owned row view source region")

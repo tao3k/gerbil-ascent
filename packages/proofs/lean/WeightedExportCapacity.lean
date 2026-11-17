@@ -3180,6 +3180,22 @@ theorem unpack_flatten (width : Nat) (rows : List (List Int))
     simp only [List.length_cons, List.flatten_cons, unpack, enough, ↓reduceIte,
       List.take_left' size, List.drop_left' size, ih tail, Option.map_some]
 
+theorem unpack_has_exact_size (width count : Nat) (cells : List Int) (rows : List (List Int))
+    (accepted : unpack width count cells = some rows) :
+    cells.length = count * width := by
+  induction count generalizing cells rows with
+  | zero => cases cells <;> simp_all [unpack]
+  | succ count ih =>
+    by_cases enough : width ≤ cells.length
+    · cases tail : unpack width count (cells.drop width) with
+      | none => simp [unpack, enough, tail] at accepted
+      | some rest =>
+        have exactTail := ih (cells.drop width) rest tail
+        rw [List.length_drop] at exactTail
+        rw [Nat.succ_mul]
+        omega
+    · simp [unpack, enough] at accepted
+
 theorem flattened_size (width : Nat) (rows : List (List Int))
     (rectangular : ∀ row ∈ rows, row.length = width) :
     rows.flatten.length = rows.length * width := by
@@ -3197,6 +3213,58 @@ theorem flattened_size (width : Nat) (rows : List (List Int))
 def lower : Int := -9223372036854775808
 def upper : Int := 9223372036854775807
 def fits (value : Int) : Prop := lower ≤ value ∧ value ≤ upper
+
+def sourcePacketSchemeSource : String :=
+  "(def (unpack-integer-source-rows packet width limit)\n" ++
+  "  (let (size (s64vector-length packet))\n" ++
+  "    (unless (>= size 2) (error \"invalid native source row packet\"))\n" ++
+  "    (let ((count (s64vector-ref packet 0)) (columns (s64vector-ref packet 1)))\n" ++
+  "      (unless (and (fixnum? count) (> count 0)\n" ++
+  "                   (fixnum? columns) (> columns 0))\n" ++
+  "        (error \"invalid native source row packet\"))\n" ++
+  "      (when (> count limit) (error \"ASCENT source fact budget exceeded\"))\n" ++
+  "      (unless (= columns width) (error \"scheme row arity\"))\n" ++
+  "      (unless (= size (+ 2 (* count columns)))\n" ++
+  "        (error \"invalid native source row packet\"))\n" ++
+  "      (let read-rows ((end size) (rows []))\n" ++
+  "        (if (= end 2)\n" ++
+  "          rows\n" ++
+  "          (let (start (fx- end columns))\n" ++
+  "            (let read-cells ((cursor end) (cells []))\n" ++
+  "              (if (= cursor start)\n" ++
+  "                (read-rows start (cons cells rows))\n" ++
+  "                (let (index (fx- cursor 1))\n" ++
+  "                  (read-cells index (cons (s64vector-ref packet index) cells)))))))))))\n" ++
+  "\n"
+
+def actorSchemeSource : String :=
+  ";; : (-> Rows (Or False S64Vector))\n" ++
+  "(def (pack-integer-rows rows)\n" ++
+  "  (and (pair? rows) (pair? (car rows))\n" ++
+  "       (let* ((width (length (car rows)))\n" ++
+  "              (count (length rows))\n" ++
+  "              (size (+ 2 (* count width))))\n" ++
+  "         (and (fixnum? size) (<= size " ++ toString upper ++ ")\n" ++
+  "              (andmap (lambda (row)\n" ++
+  "                        (and (= (length row) width)\n" ++
+  "                             (andmap (lambda (value)\n" ++
+  "                                       (and (exact-integer? value)\n" ++
+  "                                            (<= " ++ toString lower ++ " value " ++ toString upper ++ ")))\n" ++
+  "                                     row)))\n" ++
+  "                      rows)\n" ++
+  "              (let (packet (make-s64vector size))\n" ++
+  "                (s64vector-set! packet 0 count)\n" ++
+  "                (s64vector-set! packet 1 width)\n" ++
+  "                (let write-rows ((pending rows) (offset 2))\n" ++
+  "                  (if (null? pending)\n" ++
+  "                    packet\n" ++
+  "                    (let write-cells ((cells (car pending)) (offset offset))\n" ++
+  "                      (if (null? cells)\n" ++
+  "                        (write-rows (cdr pending) offset)\n" ++
+  "                        (begin\n" ++
+  "                          (s64vector-set! packet offset (car cells))\n" ++
+  "                          (write-cells (cdr cells) (fx+ offset 1))))))))))))\n" ++
+  "\n"
 
 theorem rectangle_cells_size (left right : List Int) :
     (rectangleCells left right).length = 2 * (left.length * right.length) := by
@@ -3246,6 +3314,101 @@ theorem packed_cells_retain_range (rows : List (List Int))
   intro value member
   obtain ⟨row, present, inside⟩ := List.mem_flatten.mp member
   exact admitted row present value inside
+
+inductive IntegerSourceError where
+  | factBudget | arity | malformedPacket
+  deriving DecidableEq
+
+/-- Model the list admission of exact integers against integer/scalar columns.
+    Other column kinds and compound input graphs use the general validator. -/
+def admitIntegerSourceRows (limit width : Nat) (rows : List (List Int)) :
+    Except IntegerSourceError (List (List Int)) :=
+  if limit < rows.length then .error .factBudget
+  else if rows.all (fun row => row.length == width) then .ok rows
+  else .error .arity
+
+/-- Reading the physical payload from its end allows Scheme to cons both spines
+    in their final order without a temporary row list or a final reversal. -/
+def unpackFromEnd (width count : Nat) (cells : List Int) : Option (List (List Int)) :=
+  (unpack width count cells.reverse).map (fun rows => rows.reverse.map List.reverse)
+
+theorem unpackFromEnd_flatten (width : Nat) (rows : List (List Int))
+    (rectangular : ∀ row ∈ rows, row.length = width) :
+    unpackFromEnd width rows.length rows.flatten = some rows := by
+  let backward := (rows.map List.reverse).reverse
+  have size : backward.length = rows.length := by simp [backward]
+  have contents : rows.flatten.reverse = backward.flatten := List.reverse_flatten
+  have widths : ∀ row ∈ backward, row.length = width := by
+    intro row member
+    have inMap : row ∈ rows.map List.reverse := List.mem_reverse.mp member
+    obtain ⟨original, present, rfl⟩ := List.mem_map.mp inMap
+    simpa using rectangular original present
+  unfold unpackFromEnd
+  rw [← size, contents, unpack_flatten _ _ widths]
+  simp [backward, List.map_map, Function.comp_def]
+
+/-- The packet header is inspected before materializing rows. The original
+    fact budget has precedence over the declared arity at this boundary. -/
+def admitIntegerSourcePacket (limit expectedWidth count width : Nat)
+    (cells : List Int) : Except IntegerSourceError (List (List Int)) :=
+  if limit < count then .error .factBudget
+  else if width ≠ expectedWidth then .error .arity
+  else
+    match unpackFromEnd width count cells with
+    | some rows => .ok rows
+    | none => .error .malformedPacket
+
+theorem source_packet_preserves_admission (limit expectedWidth width : Nat)
+    {first : List Int} {rest : List (List Int)}
+    (rectangular : ∀ row ∈ first :: rest, row.length = width) :
+    admitIntegerSourcePacket limit expectedWidth (first :: rest).length width
+        (first :: rest).flatten =
+      admitIntegerSourceRows limit expectedWidth (first :: rest) := by
+  unfold admitIntegerSourcePacket admitIntegerSourceRows
+  split
+  · rfl
+  · by_cases arity : width = expectedWidth
+    · subst width
+      have all : (first :: rest).all (fun row => row.length == expectedWidth) = true := by
+        rw [List.all_eq_true]
+        intro row member
+        simp [rectangular row member]
+      rw [ite_eq_right (by simp), ite_eq_left all, unpackFromEnd_flatten _ _ rectangular]
+    · have firstArity := rectangular first (by simp)
+      simp [arity, firstArity, List.all_cons]
+
+theorem source_packet_requires_full_payload (limit expectedWidth count width : Nat)
+    {cells : List Int} {rows : List (List Int)}
+    (accepted : admitIntegerSourcePacket limit expectedWidth count width cells = .ok rows) :
+    count ≤ limit ∧ width = expectedWidth ∧ cells.length = count * width := by
+  unfold admitIntegerSourcePacket at accepted
+  split at accepted
+  · contradiction
+  · rename_i within
+    split at accepted
+    · contradiction
+    · rename_i arity
+      split at accepted
+      · rename_i unpacked decoded
+        have size : cells.length = count * width := by
+          unfold unpackFromEnd at decoded
+          cases unpacked : unpack width count cells.reverse with
+          | none => simp [unpacked] at decoded
+          | some original =>
+            simpa using unpack_has_exact_size width count cells.reverse original unpacked
+        exact ⟨Nat.le_of_not_gt within, by omega, size⟩
+      · contradiction
+
+/-- The suffix reader subtracts one row, then one slot at a time. Every
+    accessed slot is past the header and below the checked vector length. -/
+theorem source_packet_suffix_bounds (width remaining length cursor : Nat)
+    (inside : 2 + (remaining + 1) * width ≤ length)
+    (inRow : 2 + remaining * width < cursor)
+    (atMostEnd : cursor ≤ 2 + (remaining + 1) * width) :
+    (2 + (remaining + 1) * width) - width = 2 + remaining * width ∧
+      2 + remaining * width ≤ cursor - 1 ∧ cursor - 1 < length := by
+  simp only [Nat.add_mul, Nat.one_mul] at inside atMostEnd ⊢
+  omega
 
 -- Reference word-row charge: inspect/promote/reinspect/length/snapshot,
 -- two root releases and kind+scalar per cell. This excludes fixed envelope

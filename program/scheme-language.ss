@@ -356,6 +356,18 @@
 
 ;; END GENERATED DSL-OWNED
 
+;; BEGIN GENERATED DSL-CLOSED-RULES
+(defsyntax (relational-closed-rules-program stx)
+  (syntax-case stx ()
+    ((_ relations rules input derived output handles)
+     (syntax (let* ((relation-values relations)
+                    (rule-values (gerbil-ascent-construct-inert-rules
+                                  (lambda () rules))))
+               (gerbil-ascent-program relation-values rule-values
+                                     input derived output handles))))))
+
+;; END GENERATED DSL-CLOSED-RULES
+
 ;; relational-program
 ;; : (forall (s) (-> s s))
 ;; : (-> ProgramSyntax ProgramConstructionSyntax)
@@ -375,8 +387,9 @@
 ;;; Invariant: opaque source expressions stay lexical and are evaluated once.
 ;; BEGIN GENERATED DSL-SELECT
 (defsyntax (relational-program stx)
-  (def (closed-positive? clauses)
+  (def (closed-constructor clauses)
     (def has-rule? #f)
+    (def stratified? #f)
     (def names
       (let (index (make-hash-table-eq))
         (for-each (lambda (form)
@@ -407,6 +420,40 @@
            (and (hash-get names name) (not (memq name '(where compute not reduce)))
                 (andmap term? (syntax->list (syntax (term ...)))))))
         (_ #f)))
+    (def (variable? form)
+      (and (identifier? form) (term? form)
+           (not (eq? (syntax->datum form) '?_))))
+    (def (closed-inputs? inputs)
+      (andmap (lambda (input)
+                (if (identifier? input) (variable? input) (term? input)))
+              inputs))
+    (def (closed-operation? operation inputs signatures)
+      (let (signature (assq (syntax->datum operation) signatures))
+        (and (identifier? operation) signature
+             (= (length inputs) (cdr signature))
+             (closed-inputs? inputs))))
+    (def (nonpositive? form)
+      (syntax-case form (not where compute reduce)
+        ((not atom)
+         (atom? (syntax atom)))
+        ((where (operation input ...))
+         (closed-operation? (syntax operation) (syntax->list (syntax (input ...)))
+                            '((even? . 1) (< . 2))))
+        ((compute output (operation input ...))
+         (and (variable? (syntax output))
+              (closed-operation? (syntax operation) (syntax->list (syntax (input ...)))
+                                 '((+ . 2) (identity . 1)))))
+        ((reduce output (mode input ...) atom)
+         (let* ((inputs (syntax->list (syntax (input ...))))
+                (signature (assq (syntax->datum (syntax mode))
+                                 '((count . 0) (sum . 1) (min . 1) (max . 1)))))
+           (and (variable? (syntax output)) (identifier? (syntax mode)) signature
+                (= (length inputs) (cdr signature)) (andmap variable? inputs)
+                (atom? (syntax atom)))))
+        (_ #f)))
+    (def (body-clause? form)
+      (or (atom? form)
+          (and (nonpositive? form) (begin (set! stratified? #t) #t))))
     (and has-rule?
       (andmap (lambda (form)
         (syntax-case form (relation rule limits)
@@ -417,13 +464,16 @@
            (and (identifier? (syntax name))
                 (andmap identifier? (syntax->list (syntax (column ...))))))
           ((limits input derived output) #t)
-          ((rule head body ...) (andmap atom? (syntax->list (syntax (head body ...)))))
-          (_ #f))) clauses)))
+          ((rule head body ...)
+           (and (atom? (syntax head)) (andmap body-clause? (syntax->list (syntax (body ...))))))
+          (_ #f))) clauses)
+      (if stratified? 'stratified 'positive)))
   (syntax-case stx ()
     ((_ clause ...)
-     (if (closed-positive? (syntax->list (syntax (clause ...))))
-       (syntax (relational-collect relational-owned-program () () clause ...))
-       (syntax (relational-collect gerbil-ascent-program () () clause ...))))))
+     (case (closed-constructor (syntax->list (syntax (clause ...))))
+       ((positive) (syntax (relational-collect relational-owned-program () () clause ...)))
+       ((stratified) (syntax (relational-collect relational-closed-rules-program () () clause ...)))
+       (else (syntax (relational-collect gerbil-ascent-program () () clause ...)))))))
 ;; END GENERATED DSL-SELECT
 
 ;; Choice declarations are source-owned within one search. Deterministic

@@ -20,7 +20,51 @@ itself. These component measurements exclude Rust/Scheme value conversion,
 process IPC, rule evaluation and full relation export; their throughput units
 must not be substituted for those production operations.
 
-* Rejected reply-channel candidate
+* Concurrent native requesters
+
+The current single-VM Suite also exercises 1, 3 and 12 native calling Actors
+against the same one-worker Session. Each profile completes exactly 1,200,000
+independently checked state requests. This is mailbox/Session-state admission,
+not a relation-query or Rust transport result. All calling Actors join before
+Session retirement, including failure paths. The original 100 ms P95 check
+still applies to every client and the complete profile.
+
+* Resident production Session phases
+
+Run exported Suites directly with native selection, for example:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-session-4096-test$' benchmarks/actor-session-test.ss
+#+end_src
+
+The same file exports the 128-row, 4096-row diagnostic, 16384-row shared,
+changed-replacement, GC-traced and cancellation Suites. The 4096-row diagnostic
+retains its original 64 cycles; the sustained Suite requires 1000. First-run
+timing is a single cold observation, separate from repeated-request admission.
+Every phase checks complete sample counts and nonnegative intervals. Phases
+with at least 1000 samples enforce P95 strictly below 100 ms; smaller profiles
+remain diagnostics. The existing tighter relation performance gates remain.
+Phase reports include CPU, P50/P95/P99/max and an isolated reciprocal service
+rate. =ACTOR-WINDOW= reports verified cycles per second across six public API
+calls and client oracle checks; do not substitute a phase reciprocal for this
+sustained throughput. Full export includes detached public row materialization.
+Source entry requires no benchmark executable or preliminary benchmark build.
+
+* Typed source Session
+
+The same file exports =actor-session-wire-4096-test= and
+=actor-session-wire-16384-test=. Each Suite uses the typed production
+operations =open-sources=, =source-replace=, =source-run=, =owned-result= and
+=close=. A checkpoint on the first query confirms evaluation on the resident
+Actor. Both Suites alternate two disjoint source cuts for 1000 cycles and
+verify every exported tuple against the two-hop oracle. Reported cycle
+throughput includes result verification and release. Opening and the initial
+empty query have separate timings. The steady-state phases measure eager
+replacement, complete typed export, and the paired transaction. The normal
+2 GiB heap, 90-second supervision and 100 ms sustained P95 gate apply.
+
+* Rejected reply-channel candidate (historical experiment)
 
 The original implementation creates a private reply Actor for each synchronous
 Session request, preserving the caller's mailbox. A candidate replaced that
@@ -178,6 +222,18 @@ tail pairs without Actor stack switches. It measures the effect of
 transferring a fresh outer spine and checks identical payload order. GC
 preconditioning is outside the CPU intervals.
 
+* Performance contract admission
+
+=just test-performance-contracts= runs ten isolated test modules under a
+120-second startup and inactivity budget.
+Each child retains its 2 GiB heap and each Case retains its runtime assertion.
+Admission requires natural exit, every module verdict, and the harness
+completion marker. The CI job retains its outer time budget.
+
+The previous aggregate exit 124 remains a failed integration observation.
+Report compilation and source loading separately from the complete
+production Session samples below.
+
 * Single VM Actor production Session
 
 #+begin_src sh
@@ -193,8 +249,10 @@ every complete output against the chain oracle after its timer stops. Report
 the first solve, P50, P95, maximum, CPU and throughput for each operation.
 Also report the append and replacement transactions by adding staging and
 evaluation times at the same request ordinal before computing percentiles.
-The workload reports natural collections and live bytes with the first and
-last results held. The separate 1000-cycle trace repeats the large workload
+The workload reports natural collection counts and clocks, the raw allocation
+counter reading, and live bytes with the first and last results held. The
+allocation estimate is unavailable when a collection overlaps the window or
+the counter decreases. The separate 1000-cycle trace repeats the large workload
 with VM collection counts and collector wall and CPU clocks around each operation. It reports how many
 requests of at least 20 ms overlap a collection and how many spend over half
 their measured interval in one. Add both observed brackets for a staged

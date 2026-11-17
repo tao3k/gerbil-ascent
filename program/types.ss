@@ -30,6 +30,7 @@
   gerbil-ascent-make-rule-value
   gerbil-ascent-make-located-rule-value
   gerbil-ascent-check-owned-rule-value
+  gerbil-ascent-closed-rule-contracts-current?
   gerbil-ascent-make-aggregate-value
   gerbil-ascent-check-owned-aggregate-value
   gerbil-ascent-make-relation-value
@@ -454,6 +455,27 @@
                         (andmap rule-value? value)))))
 
 ;; END GENERATED OWNED DECLARATION VALUES
+
+;; BEGIN GENERATED DSL-RULE-PROTOCOL
+;; A closed rule still passes the complete Program root. Reuse the same
+;; protocol guards as the canonical clause views before borrowing the
+;; private construction extent.
+(def gerbil-ascent-closed-rule-contracts-current?
+  (let* ((contracts (list GerbilAscentTermContract GerbilAscentAtomContract
+                          GerbilAscentGuardContract GerbilAscentGeneratorContract
+                          GerbilAscentBindingContract GerbilAscentNegationContract
+                          GerbilAscentAggregateContract GerbilAscentRuleContract))
+         (prototypes (map (cut .ref <> 'proto) contracts))
+         (revisions (map object-revision prototypes)))
+    (lambda ()
+      (and (andmap (lambda (contract prototype revision)
+                     (and (= (object-revision prototype) revision)
+                          (eq? (.ref/cached contract 'proto) prototype)))
+                   contracts prototypes revisions)
+           (term-value-current?) (rule-value-current?)
+           (aggregate-predecessors-current?) (aggregate-value-current?)))))
+
+;; END GENERATED DSL-RULE-PROTOCOL
 
 ;;; A fragment publishes an export resolver rather than a mutable mapping.
 ;;; The constructor copies and checks labels before closing over them.

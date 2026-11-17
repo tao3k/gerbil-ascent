@@ -129,6 +129,35 @@ theorem snapshot_intermediate_checks_removed (terms : Nat) :
 theorem snapshot_state_invariant_not_weakened (cost : Prop) (attempts : Int) :
     (cost ∧ 0 ≤ attempts) → cost := And.left
 
+/-! The ordered rule-construction boundary allows intermediate canonical
+validations to be omitted only when those validations succeed and are pure.
+The receiver still runs in the ordinary context. It owns limits, source
+handles and root validation, including errors and any caller callbacks. -/
+def checkRuleIntermediates {E : Type} : List (Except E Unit) → Except E Unit
+  | [] => .ok ()
+  | check :: remaining => check.bind (fun () => checkRuleIntermediates remaining)
+
+theorem canonical_rule_intermediates_succeed {E : Type}
+    (checks : List (Except E Unit))
+    (guaranteed : ∀ check ∈ checks, check = .ok ()) :
+    checkRuleIntermediates checks = .ok () := by
+  induction checks with
+  | nil => rfl
+  | cons first rest ih =>
+    have firstOk := guaranteed first (by simp)
+    have restOk : ∀ check ∈ rest, check = .ok () :=
+      fun check present => guaranteed check (by simp [present])
+    rw [checkRuleIntermediates, firstOk]
+    exact ih restOk
+
+theorem closed_rule_constructor_preserves_receiver {E R P : Type}
+    (checks : List (Except E Unit)) (built : R) (receive : R → Except E P)
+    (canonical : ∀ check ∈ checks, check = .ok ()) :
+    (checkRuleIntermediates checks).bind (fun () => receive built) =
+      receive built := by
+  rw [canonical_rule_intermediates_succeed checks canonical]
+  rfl
+
 -- Canonical construction is pure after captures. Capture failure propagates
 -- before construction, and complete root rejection cannot publish a value.
 def admittedConstruction {E C P : Type} (capture : Except E C)
@@ -142,10 +171,27 @@ def admittedConstruction {E C P : Type} (capture : Except E C)
     (rejected : check (construct captured) = .error failure) :
     admittedConstruction (.ok captured) construct check = .error failure := rejected
 
+def whereSignatures : List (String × Nat) := [("even?", 1), ("<", 2)]
+def computeSignatures : List (String × Nat) := [("+", 2), ("identity", 1)]
+def reduceSignatures : List (String × Nat) := [("count", 0), ("sum", 1), ("min", 1), ("max", 1)]
+
+def matchesSignature (signatures : List (String × Nat)) (name : String) (arity : Nat) : Bool :=
+  signatures.contains (name, arity)
+
+theorem matching_signature_is_declared (signatures : List (String × Nat)) (name : String)
+    (arity : Nat) (matched : matchesSignature signatures name arity = true) :
+    (name, arity) ∈ signatures := by
+  simpa [matchesSignature] using matched
+
+def schemeSignatures (signatures : List (String × Nat)) : String :=
+  "'(" ++ String.intercalate " " (signatures.map fun (name, arity) =>
+    "(" ++ name ++ " . " ++ toString arity ++ ")") ++ ")"
+
 def selectorSchemeSource : String :=
   "(defsyntax (relational-program stx)\n" ++
-  "  (def (closed-positive? clauses)\n" ++
+  "  (def (closed-constructor clauses)\n" ++
   "    (def has-rule? #f)\n" ++
+  "    (def stratified? #f)\n" ++
   "    (def names\n" ++
   "      (let (index (make-hash-table-eq))\n" ++
   "        (for-each (lambda (form)\n" ++
@@ -176,6 +222,40 @@ def selectorSchemeSource : String :=
   "           (and (hash-get names name) (not (memq name '(where compute not reduce)))\n" ++
   "                (andmap term? (syntax->list (syntax (term ...)))))))\n" ++
   "        (_ #f)))\n" ++
+  "    (def (variable? form)\n" ++
+  "      (and (identifier? form) (term? form)\n" ++
+  "           (not (eq? (syntax->datum form) '?_))))\n" ++
+  "    (def (closed-inputs? inputs)\n" ++
+  "      (andmap (lambda (input)\n" ++
+  "                (if (identifier? input) (variable? input) (term? input)))\n" ++
+  "              inputs))\n" ++
+  "    (def (closed-operation? operation inputs signatures)\n" ++
+  "      (let (signature (assq (syntax->datum operation) signatures))\n" ++
+  "        (and (identifier? operation) signature\n" ++
+  "             (= (length inputs) (cdr signature))\n" ++
+  "             (closed-inputs? inputs))))\n" ++
+  "    (def (nonpositive? form)\n" ++
+  "      (syntax-case form (not where compute reduce)\n" ++
+  "        ((not atom)\n" ++
+  "         (atom? (syntax atom)))\n" ++
+  "        ((where (operation input ...))\n" ++
+  "         (closed-operation? (syntax operation) (syntax->list (syntax (input ...)))\n" ++
+  "                            " ++ schemeSignatures whereSignatures ++ "))\n" ++
+  "        ((compute output (operation input ...))\n" ++
+  "         (and (variable? (syntax output))\n" ++
+  "              (closed-operation? (syntax operation) (syntax->list (syntax (input ...)))\n" ++
+  "                                 " ++ schemeSignatures computeSignatures ++ ")))\n" ++
+  "        ((reduce output (mode input ...) atom)\n" ++
+  "         (let* ((inputs (syntax->list (syntax (input ...))))\n" ++
+  "                (signature (assq (syntax->datum (syntax mode))\n" ++
+  "                                 " ++ schemeSignatures reduceSignatures ++ ")))\n" ++
+  "           (and (variable? (syntax output)) (identifier? (syntax mode)) signature\n" ++
+  "                (= (length inputs) (cdr signature)) (andmap variable? inputs)\n" ++
+  "                (atom? (syntax atom)))))\n" ++
+  "        (_ #f)))\n" ++
+  "    (def (body-clause? form)\n" ++
+  "      (or (atom? form)\n" ++
+  "          (and (nonpositive? form) (begin (set! stratified? #t) #t))))\n" ++
   "    (and has-rule?\n" ++
   "      (andmap (lambda (form)\n" ++
   "        (syntax-case form (relation rule limits)\n" ++
@@ -186,13 +266,60 @@ def selectorSchemeSource : String :=
   "           (and (identifier? (syntax name))\n" ++
   "                (andmap identifier? (syntax->list (syntax (column ...))))))\n" ++
   "          ((limits input derived output) #t)\n" ++
-  "          ((rule head body ...) (andmap atom? (syntax->list (syntax (head body ...)))))\n" ++
-  "          (_ #f))) clauses)))\n" ++
+  "          ((rule head body ...)\n" ++
+  "           (and (atom? (syntax head)) (andmap body-clause? (syntax->list (syntax (body ...))))))\n" ++
+  "          (_ #f))) clauses)\n" ++
+  "      (if stratified? 'stratified 'positive)))\n" ++
   "  (syntax-case stx ()\n" ++
   "    ((_ clause ...)\n" ++
-  "     (if (closed-positive? (syntax->list (syntax (clause ...))))\n" ++
-  "       (syntax (relational-collect relational-owned-program () () clause ...))\n" ++
-  "       (syntax (relational-collect gerbil-ascent-program () () clause ...))))))\n"
+  "     (case (closed-constructor (syntax->list (syntax (clause ...))))\n" ++
+  "       ((positive) (syntax (relational-collect relational-owned-program () () clause ...)))\n" ++
+  "       ((stratified) (syntax (relational-collect relational-closed-rules-program () () clause ...)))\n" ++
+  "       (else (syntax (relational-collect gerbil-ascent-program () () clause ...)))))))\n"
+
+def closedRulesMacroSchemeSource : String :=
+  "(defsyntax (relational-closed-rules-program stx)\n" ++
+  "  (syntax-case stx ()\n" ++
+  "    ((_ relations rules input derived output handles)\n" ++
+  "     (syntax (let* ((relation-values relations)\n" ++
+  "                    (rule-values (gerbil-ascent-construct-inert-rules\n" ++
+  "                                  (lambda () rules))))\n" ++
+  "               (gerbil-ascent-program relation-values rule-values\n" ++
+  "                                     input derived output handles))))))\n" ++
+  "\n"
+
+def ruleExtentSchemeSource : String :=
+  ";; The macro supplies only closed rule constructors. Its receiver evaluates\n" ++
+  ";; all later declaration arguments with ordinary validation restored.\n" ++
+  "(def (gerbil-ascent-construct-inert-rules construct)\n" ++
+  "  (if (and (eq? (current-declaration-check) validate)\n" ++
+  "           (gerbil-ascent-closed-rule-contracts-current?))\n" ++
+  "    (let (rules (receive-inert-declarations construct values))\n" ++
+  "      ;; A different green thread can edit a descriptor. Only the ordinary\n" ++
+  "      ;; constructor may publish rules after its protocol has changed.\n" ++
+  "      (if (gerbil-ascent-closed-rule-contracts-current?) rules (construct)))\n" ++
+  "    (construct)))\n" ++
+  "\n"
+
+def ruleProtocolSchemeSource : String :=
+  ";; A closed rule still passes the complete Program root. Reuse the same\n" ++
+  ";; protocol guards as the canonical clause views before borrowing the\n" ++
+  ";; private construction extent.\n" ++
+  "(def gerbil-ascent-closed-rule-contracts-current?\n" ++
+  "  (let* ((contracts (list GerbilAscentTermContract GerbilAscentAtomContract\n" ++
+  "                          GerbilAscentGuardContract GerbilAscentGeneratorContract\n" ++
+  "                          GerbilAscentBindingContract GerbilAscentNegationContract\n" ++
+  "                          GerbilAscentAggregateContract GerbilAscentRuleContract))\n" ++
+  "         (prototypes (map (cut .ref <> 'proto) contracts))\n" ++
+  "         (revisions (map object-revision prototypes)))\n" ++
+  "    (lambda ()\n" ++
+  "      (and (andmap (lambda (contract prototype revision)\n" ++
+  "                     (and (= (object-revision prototype) revision)\n" ++
+  "                          (eq? (.ref/cached contract 'proto) prototype)))\n" ++
+  "                   contracts prototypes revisions)\n" ++
+  "           (term-value-current?) (rule-value-current?)\n" ++
+  "           (aggregate-predecessors-current?) (aggregate-value-current?)))))\n" ++
+  "\n"
 
 def rootSchemeSource : String :=
   "(def (receive-inert-declarations construct receive)\n  (call-with-values\n   (lambda ()\n     (parameterize ((current-declaration-check (lambda (_contract value) value)))\n       (construct)))\n   receive))\n\n;;; Publish through the public root descriptor once, after restoring ordinary\n;;; constructor checks. No responsibility override or Term result cache escapes.\n;; : (forall (p a) (-> (-> (Values p a)) (Values p a)))\n;; : (-> InertProgramConstructor (Values ValidatedProgram OutputHandle))\n(def (gerbil-ascent-construct-inert-program construct)\n  (receive-inert-declarations construct\n   (case-lambda\n     ((program) (validate GerbilAscentProgramContract program))\n     ((program output)\n      (let (checked (validate GerbilAscentProgramContract program))\n        (values checked output))))))\n\n"
@@ -250,7 +377,7 @@ def snapshotSchemeSource : String :=
   "(import \"func.ss\" \"scheme-checked.ss\"\n" ++
   "        (only-in \"types.ss\" GerbilAscentProgramContract)\n" ++
   "        (only-in :clan/poo/object .ref)\n" ++
-  "        (only-in :clan/poo/mop validate))\n" ++
+  "        (only-in :clan/poo/type validate))\n" ++
   "(export relational-snapshot-program)\n" ++
   "\n" ++
   ";;; Admission rebuilds only the checked relational grammar. This removes\n" ++

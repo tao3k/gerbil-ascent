@@ -124,7 +124,7 @@ prepare-test-library:
 prepare-semantic-library:
     {{ build_supervisor }} {{ gxi_command }} {{ preparation_runtime_options }} t/harness/build.ss semantics t/qualification/*-test.ss
 
-# Scheme performance Suites use the declared Gerbil testing isolation profile.
+# Isolated Suites keep their runtime assertions under the aggregate supervisor.
 test-performance-contracts: prepare-test-library
     #!/usr/bin/env bash
     set -euo pipefail
@@ -135,7 +135,9 @@ test-performance-contracts: prepare-test-library
     for name in ascent-withdrawal-support-performance ascent-uf-plan-performance ascent-change-plan-performance ascent-source-cut-allocation ascent-component-index-performance ascent-actor-credit-performance ascent-trrel-uf-performance ascent-steensgaard-performance ascent-relation-view-performance scheme-library-lifecycle-performance; do
         modules+=("$library/$name-test.ssi")
     done
-    {{ test_library_environment }} timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" {{ gxi_command }} -:max-heap=2G,debug=q t/harness/test.ss isolated 2G "${modules[@]}" 2>&1 | tee "$output"
+    inactivity="${ASCENT_GXTEST_TIMEOUT:-120s}"
+    inactivity="${inactivity%s}"
+    {{ test_library_environment }} {{ test_supervisor }} --startup-seconds "$inactivity" --idle-seconds "$inactivity" -- {{ gxi_command }} -:max-heap=2G,debug=q t/harness/test.ss isolated 2G "${modules[@]}" 2>&1 | tee "$output"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output" >/dev/null; then exit 1; fi
     awk -f t/harness/assert-cases.awk "$output"
     test "$(grep -c '^MODULE-OK ' "$output")" -eq "${#modules[@]}"

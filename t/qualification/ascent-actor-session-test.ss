@@ -9,6 +9,7 @@
                  gerbil-ascent-source-cut-initial-lane source-slot-newest-first source-slot-count)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
+        (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
         :gerbil-ascent/program/func
         :gerbil-ascent/program/session
         :gerbil-ascent/program/actor-session)
@@ -35,6 +36,134 @@
       (thread-yield!) (loop (+ attempts 1)))))
 (def ascent-actor-session-test
   (test-suite "Session actor generation and completed publication"
+    (test-case "unchanged scalar cuts reuse private closure and refresh publication"
+      (let ((session (gerbil-ascent-open-actor-session (program '((0 1) (1 2))) workers: 1))
+            (work 0))
+        (def (run)
+          (set! work 0)
+          (parameterize ((current-ascent-execution-control
+                          (lambda (units facts) (when (> units 0) (set! work (+ work units))))))
+            (gerbil-ascent-session-run session)))
+        (try
+          (let* ((first (run)) (expected (rows first)))
+            (check-equal? (> work 0) #t)
+            (let (again (run))
+              (check-equal? work 0)
+              (check-equal? (eq? first again) #f)
+              (check-equal? (rows again) expected))
+            ;; Neither a derived row pair nor an exported outer pair can reach
+            ;; the retained engine. Each public read owns its row spines.
+            (let (exposed (rows first))
+              (set-car! (car exposed) 999)
+              (set-cdr! exposed []))
+            (check-equal? (rows (run)) expected)
+            (check-equal? work 0)
+            (gerbil-ascent-session-append-source! session 'edge '(2 3))
+            (let (changed (run))
+              (check-equal? (> work 0) #t)
+              (check-equal? (length (rows changed)) 6))
+            (check-equal? (length (rows (run))) 6)
+            (check-equal? work 0))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "a refused reused publication retires its private engine"
+      (let ((session (gerbil-ascent-open-actor-session (program '((0 1))) workers: 1))
+            (work 0))
+        (try
+          (let (first (gerbil-ascent-session-run session))
+            (check-equal?
+             (outcome (lambda ()
+               (parameterize ((current-ascent-execution-control
+                               (lambda (units facts)
+                                 (when (= units -1) (error "refuse cached publication")))))
+                 (gerbil-ascent-session-run session)))) 'rejected)
+            (check-equal? (eq? first (gerbil-ascent-session-last-completed session)) #t)
+            (parameterize ((current-ascent-execution-control
+                            (lambda (units facts) (when (> units 0) (set! work (+ work units))))))
+              (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1))))
+            (check-equal? (> work 0) #t))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "mutable literal keys cannot enter completed closure reuse"
+      (let* ((key (list 'mutable))
+             (x (gerbil-ascent-variable 'x))
+             (declaration
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'edge 1 (list (list key)))
+                     (gerbil-ascent-relation 'reach 1 []))
+               (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'reach (list x)))
+                       (list (gerbil-ascent-atom 'edge (list x))))) 10 10 20))
+             (session (gerbil-ascent-open-actor-session declaration workers: 1)))
+        (try
+          (gerbil-ascent-session-run session)
+          (set-car! key 'changed)
+          (let (work 0)
+            (parameterize ((current-ascent-execution-control
+                            (lambda (units facts) (when (> units 0) (set! work (+ work units))))))
+              (check-equal? (rows (gerbil-ascent-session-run session)) '(((changed)))))
+            (check-equal? (> work 0) #t))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "a reentrant acceptance checker refuses without waiting on itself"
+      (let ((session (gerbil-ascent-open-actor-session (program '((0 1))) workers: 1))
+            (reentered? #f))
+        (try
+          (check-equal?
+           (outcome (lambda ()
+             (parameterize ((current-ascent-execution-control
+                             (lambda (units facts)
+                               (when (= units -1)
+                                 (set! reentered? #t)
+                                 (gerbil-ascent-session-state session)))))
+               (gerbil-ascent-session-run session)))) 'rejected)
+          (check-equal? reentered? #t)
+          (check-equal? (gerbil-ascent-session-last-completed session) #f)
+          (check-equal? (cadr (gerbil-ascent-session-state session)) 'idle)
+          (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "each run uses its caller execution authority before publishing"
+      (let ((session (gerbil-ascent-open-actor-session (program '((0 1))) workers: 1))
+            (checked? #f))
+        (try
+          (check-equal?
+           (outcome
+            (lambda ()
+              (parameterize ((current-ascent-execution-control
+                              (lambda (work facts)
+                                (set! checked? #t)
+                                (error "caller execution authority refused"))))
+                (gerbil-ascent-session-run session))))
+           'rejected)
+          (check-equal? checked? #t)
+          (check-equal? (gerbil-ascent-session-last-completed session) #f)
+          (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "retired creation authority is not retained by a later run"
+      (let* ((retired? #f)
+             (session
+              (parameterize ((current-ascent-execution-control
+                              (lambda (work facts)
+                                (when retired? (error "creation authority retired")))))
+                (gerbil-ascent-open-actor-session (program '((0 1))) workers: 1))))
+        (set! retired? #t)
+        (try
+          (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "refused final acceptance leaves the last completed cut untouched"
+      (let ((session (gerbil-ascent-open-actor-session (program '((0 1))) workers: 1))
+            (accepted? #f))
+        (try
+          (check-equal?
+           (outcome
+            (lambda ()
+              (parameterize ((current-ascent-execution-control
+                              (lambda (work facts)
+                                (when (= work -1)
+                                  (set! accepted? #t)
+                                  (error "final acceptance refused")))))
+                (gerbil-ascent-session-run session))))
+           'rejected)
+          (check-equal? accepted? #t)
+          (check-equal? (gerbil-ascent-session-last-completed session) #f)
+          (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
+          (finally (gerbil-ascent-session-close! session)))))
     (test-case "scalar cuts certify owned values across appends and replacements"
       (let* ((positions (make-hash-table-eq))
              (arity '#(1))
@@ -267,15 +396,166 @@
              (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
              (check-equal? (> (car (gerbil-ascent-session-state session)) 2) #t)))
          (finally (gerbil-ascent-session-close! session)))))
-    (test-case "failed computation cannot publish tentative candidates"
-      (let (session (gerbil-ascent-open-actor-session (program '((0 1)) 2)))
+    (test-case "duplicate derivations fit the exact budget and overflow cannot publish"
+      (let* ((diamond '((0 1) (0 2) (1 3) (2 3)))
+             (session (gerbil-ascent-open-actor-session (program diamond 5) workers: 1)))
         (try
-         (let (first (gerbil-ascent-session-run session))
-           (gerbil-ascent-session-append-source! session 'edge '(1 2))
+         (let* ((first (gerbil-ascent-session-run session))
+                (completed (rows first)))
+           (check-equal? (length completed) 5)
+           (for-each
+            (lambda (row) (check-equal? (and (member row completed) #t) #t))
+            (cons '(0 3) diamond))
+           (gerbil-ascent-session-append-source! session 'edge '(3 4))
            (check-equal? (outcome (lambda () (gerbil-ascent-session-run session))) 'rejected)
            (check-equal? (eq? first (gerbil-ascent-session-last-completed session)) #t)
-           (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1))))
+           (check-equal? (rows (gerbil-ascent-session-run session)) completed))
          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "hosted merge charges unique rows before one authorized publication"
+      (let* ((diamond '((0 1) (0 2) (1 3) (2 3)))
+             (session (gerbil-ascent-open-actor-session (program diamond 5) workers: 1))
+             (charged 0)
+             (publications 0))
+        (def (run ceiling)
+          (set! charged 0)
+          (set! publications 0)
+          (parameterize
+              ((current-ascent-execution-control
+                (lambda (work _facts)
+                  (cond
+                   ((= work -1) (set! publications (+ publications 1)))
+                   ((positive? work)
+                    (set! charged (+ charged work))
+                    (when (> charged ceiling) (error "host work ceiling")))))))
+            (gerbil-ascent-session-run session)))
+        (try
+          (let ((first (run 5))
+                (replacement '((4 5) (4 6) (5 7) (6 7))))
+            (check-equal? (length (rows first)) 5)
+            (check-equal? (list charged publications) '(5 1))
+            (gerbil-ascent-session-replace-source! session 'edge replacement)
+            (check-equal? (outcome (lambda () (run 4))) 'rejected)
+            (check-equal? (list charged publications) '(5 0))
+            (check-equal? (eq? (gerbil-ascent-session-last-completed session) first) #t)
+            (check-equal? (rows (run 5)) (rows first))
+            (check-equal? (list charged publications) '(5 1)))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "timed Actor returns and resumes the same private rounds as Session"
+      (let* ((edges '((0 1) (1 2) (2 3) (3 4) (4 5)))
+             (session (gerbil-ascent-open-actor-session (program '((90 91))) workers: 1))
+             (reference (gerbil-ascent-open-session (program edges)))
+             (prior-authority-live? #t)
+             (complete-authorizations 0))
+        (def (ordered result)
+          (list-sort (lambda (left right)
+                       (or (< (car left) (car right))
+                           (and (= (car left) (car right)) (< (cadr left) (cadr right)))))
+                     (rows result)))
+        (try
+          (let (prior (gerbil-ascent-session-run session))
+            (gerbil-ascent-session-replace-source! session 'edge edges)
+            (check-equal?
+             (outcome (lambda () (gerbil-ascent-session-run-timeout session -1))) 'rejected)
+            (let* ((first
+                    (parameterize
+                        ((current-ascent-execution-control
+                          (lambda (work _facts)
+                            (unless prior-authority-live? (error "expired partial authority"))
+                            (when (= work -1)
+                              (set! complete-authorizations (+ complete-authorizations 1))))))
+                      (gerbil-ascent-session-run-timeout session 0)))
+                   (other (gerbil-ascent-session-run-timeout reference 0)))
+              (check-equal? (.ref first 'finished) #f)
+              (check-equal? (ordered first) (ordered other))
+              (check-equal? complete-authorizations 0)
+              (check-equal? (eq? (gerbil-ascent-session-last-completed session) prior) #t)
+              (set! prior-authority-live? #f)
+              (let ((second (gerbil-ascent-session-run-timeout session 0))
+                    (other (gerbil-ascent-session-run-timeout reference 0)))
+                (check-equal? (.ref second 'finished) #f)
+                (check-equal? (> (length (rows second)) (length (rows first))) #t)
+                (check-equal? (ordered second) (ordered other)))
+              (let ((final (gerbil-ascent-session-run session))
+                    (other (gerbil-ascent-session-run reference)))
+                (check-equal? (.ref final 'finished) #t)
+                (check-equal? (ordered final) (ordered other))
+                (check-equal? (length (rows final)) 15))))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "a source edit retires the unfinished Actor workspace"
+      (let (session
+             (gerbil-ascent-open-actor-session
+              (program '((0 1) (1 2) (2 3) (3 4))) workers: 1))
+        (try
+          (check-equal? (.ref (gerbil-ascent-session-run-timeout session 0) 'finished) #f)
+          (check-equal? (gerbil-ascent-session-last-completed session) #f)
+          (gerbil-ascent-session-replace-source! session 'edge '((80 81)))
+          (check-equal? (rows (gerbil-ascent-session-run session)) '((80 81)))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "caller cancellation at partial delivery rolls back the Actor cut"
+      (let ((session (gerbil-ascent-open-actor-session (program '((90 91))) workers: 1))
+            (finished-worker? #f))
+        (try
+          (let (prior (gerbil-ascent-session-run session))
+            (gerbil-ascent-session-replace-source! session 'edge
+              '((0 1) (1 2) (2 3) (3 4)))
+            (check-equal?
+             (outcome (lambda ()
+               (parameterize
+                   ((current-ascent-execution-control
+                     (lambda (work _facts)
+                       (when (positive? work) (set! finished-worker? #t))
+                       (when (and finished-worker?
+                                  (eq? (thread-name (current-thread)) 'ascent-session-owner))
+                         (error "host canceled partial delivery")))))
+                 (gerbil-ascent-session-run-timeout session 0))))
+             'rejected)
+            (check-equal? finished-worker? #t)
+            (check-equal? (eq? (gerbil-ascent-session-last-completed session) prior) #t)
+            (check-equal? (rows (gerbil-ascent-session-run session)) '((90 91))))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "eager Actor replacement checks the complete candidate before adoption"
+      (let* ((session (gerbil-ascent-open-actor-session (program '((90 91)) 3) workers: 1))
+             (candidate '((edge (0 1) (1 2))))
+             (acceptances 0))
+        (def (accept? result)
+          (set! acceptances (+ acceptances 1))
+          (check-equal? (.ref result 'finished) #t)
+          (check-equal? (length (rows result)) 3)
+          (check-equal? (and (member '(0 2) (rows result)) #t) #t)
+          #t)
+        (try
+          (let (prior (gerbil-ascent-session-run session))
+            (check-equal?
+             (outcome (lambda ()
+               (gerbil-ascent-session-replace-sources! session candidate
+                 (lambda (value) (accept? value) #f))))
+             'rejected)
+            (check-equal? acceptances 1)
+            (check-equal? (eq? (gerbil-ascent-session-last-completed session) prior) #t)
+            (check-equal?
+             (outcome (lambda ()
+               (gerbil-ascent-session-replace-sources! session
+                 '((edge (0 1) (1 2) (2 3))) accept?)))
+             'rejected)
+            (check-equal? acceptances 1)
+            (check-equal? (eq? (gerbil-ascent-session-last-completed session) prior) #t)
+            (check-equal?
+             (outcome (lambda ()
+               (parameterize
+                   ((current-ascent-execution-control
+                     (lambda (work _facts)
+                       (when (= work -1) (error "reject eager publication")))))
+                 (gerbil-ascent-session-replace-sources! session candidate accept?))))
+             'rejected)
+            (check-equal? acceptances 2)
+            (check-equal? (eq? (gerbil-ascent-session-last-completed session) prior) #t)
+            (let (result (gerbil-ascent-session-replace-sources! session candidate accept?))
+              (check-equal? acceptances 3)
+              (check-equal? (eq? (gerbil-ascent-session-last-completed session) result) #t)
+              (let (readback (gerbil-ascent-session-run-timeout session 0))
+                (check-equal? (.ref readback 'finished) #t)
+                (check-equal? (rows readback) (rows result)))))
+          (finally (gerbil-ascent-session-close! session)))))
     (test-case "a failed indexed append drops tentative buckets before rollback"
       (let* ((key (gerbil-ascent-variable 'key))
              (value (gerbil-ascent-variable 'value))

@@ -8,8 +8,9 @@
         :gerbil-ascent/program/actor-round
         :gerbil-ascent/program/positive-components
         (only-in :gerbil-ascent/core/positive-plan make-positive-plan-cost
-                 call-with-positive-plan-cost positive-plan-cost-snapshot)
-        (only-in :gerbil-ascent/program/component-worker make-component-snapshot gerbil-ascent-run-positive-component!)
+                 call-with-positive-plan-cost positive-plan-cost-snapshot positive-plan-cost-visits)
+        (only-in :gerbil-ascent/program/component-worker make-component-snapshot
+                 gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!)
         (only-in :gerbil-ascent/t/performance/component-scope/fixture
                  component-scope-program component-scope-request component-scope-plan
                  component-scope-normalize component-scope-run)
@@ -33,6 +34,27 @@
              ((.ref result 'rows-of) name)))
 (def ascent-positive-components-test
   (test-suite "Ready positive SCCs and projected heads"
+    (test-case "a recursive SCC skips its borrowed input's empty delta"
+      (let* ((input '((0 1) (1 2) (2 3) (3 4)))
+             (expected '((0 1) (0 2) (0 3) (0 4) (1 2) (1 3) (1 4) (2 3) (2 4) (3 4)))
+             (request (component-scope-request (program input)))
+             (components (gerbil-ascent-positive-components (vector-ref request 0)))
+             (component (car (filter (lambda (item) (memv 1 (positive-component-members item)))
+                                     components)))
+             (frontier (vector-copy (vector-ref request 2)))
+             (cost (make-positive-plan-cost #f #t))
+             (rows []))
+        (call-with-positive-plan-cost cost
+          (lambda ()
+            (gerbil-ascent-run-positive-component! component (vector-ref request 1)
+             (make-component-snapshot frontier (vector-map length frontier))
+             (lambda (_ row) (set! rows (cons row rows)))
+             void)))
+        (check-equal? (length rows) (length expected))
+        (check-equal? (andmap (lambda (row) (and (member row rows) #t)) expected) #t)
+        (let (visits (positive-plan-cost-visits cost))
+          (check-equal? (and (ormap (lambda (visit) (= (cadr visit) 0)) visits) #t) #t)
+          (check-equal? (ormap (lambda (visit) (= (cadr visit) 1)) visits) #f))))
     (test-case "single worker shares only source index builds and keeps credit polls"
       (let* ((key (gerbil-ascent-variable 'key))
              (value (gerbil-ascent-variable 'value))
@@ -129,17 +151,21 @@
                                            (list (gerbil-ascent-atom 'source (list x))))) 64 64 64))
              (request (component-scope-request p))
              (initial (vector-ref request 2)) (before (vector-copy initial)))
-        (for-each
-         (lambda (jobs)
-           (let (emitted [])
-             (gerbil-ascent-run-positive-components!
-              (vector-ref request 0) (vector-ref request 1) initial jobs
-              (lambda (atom row) (set! emitted (cons (cons (vector-ref atom 0) row) emitted)))
-              (lambda () #f))
-             (check-equal? emitted '((1 1)))
-             (check-equal? initial before)
-             (for-each (lambda (i) (check-equal? (eq? (vector-ref initial i) (vector-ref before i)) #t)) (iota 3))))
-         '(1 2 4))))
+        (def (check-merge jobs scalar-worker?)
+          (let (emitted [])
+            (gerbil-ascent-run-positive-components!
+             (vector-ref request 0) (vector-ref request 1) initial jobs
+             (lambda (atom row)
+               (set! emitted (cons (cons (vector-ref atom 0) row) emitted)))
+             (lambda () #f) scalar-worker? #f scalar-worker?)
+            (check-equal? emitted '((1 1)))
+            (check-equal? initial before)
+            (for-each
+             (lambda (index)
+               (check-equal? (eq? (vector-ref initial index) (vector-ref before index)) #t))
+             (iota 3))))
+        (for-each (lambda (jobs) (check-merge jobs #f)) '(1 2 4))
+        (check-merge 1 #t)))
     (test-case "successor runs while an independent component remains assigned"
       (let ((peers (make-hash-table-eq)) (lock (make-mutex)) (done []) (merged []))
         (gerbil-ascent-run-actor-round! (vector 'dag) '(a b c) 2
@@ -413,6 +439,27 @@
            (when (zero? (modulo (+ bits 1) 16))
              (displayln "WORKER-TRACES-CHECKED " (+ bits 1) "/512") (force-output))))
        (iota 512))))
+    (test-case "scalar membership updates keep the ordered emissions and checkpoints"
+      (let* ((request (component-scope-request
+                       (program '((0 1) (0 2) (1 3) (2 3) (3 0)))))
+             (analysis (vector-ref request 0))
+             (schema (vector-ref request 1))
+             (frontier (vector-ref request 2))
+             (sizes (vector-map length frontier)))
+        (def (observe component stable?)
+          (let (events [])
+            (gerbil-ascent-run-positive-component! component schema
+              (gerbil-ascent-component-snapshot component frontier sizes)
+              (lambda (atom row)
+                (set! events (cons (cons (vector-ref atom 0) row) events)))
+              (lambda () (set! events (cons 'checkpoint events)))
+              #f stable?)
+            (reverse events)))
+        (for-each
+         (lambda (component)
+           (check-equal? (observe component #t) (observe component #f)))
+         (filter (lambda (component) (pair? (positive-component-rules component)))
+                 (gerbil-ascent-compile-positive-components analysis)))))
     (test-case "merge failure and credited cancellation drain without completion"
       (for-each
        (lambda (mode)

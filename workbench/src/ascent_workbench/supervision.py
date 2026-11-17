@@ -43,6 +43,8 @@ def group_cpu(group: int) -> dict[int, float]:
     """Count live and reaped compiler CPU, with native Linux tick precision."""
     if Path('/proc/self/stat').exists():
         return proc_group_cpu(Path('/proc'), group, os.sysconf('SC_CLK_TCK'))
+    if sys.platform == 'darwin':
+        return darwin_group_cpu(group)
     listing = subprocess.check_output(
         ["ps", "-axo", "pid=,pgid=,time="], text=True, timeout=5
     )
@@ -51,18 +53,47 @@ def group_cpu(group: int) -> dict[int, float]:
         pid, pgid, elapsed = line.split()
         if int(pgid) != group:
             continue
-        if sys.platform == 'darwin':
-            try:
-                result[int(pid)] = darwin_process_cpu(int(pid))
-            except ProcessLookupError:
-                pass
-            continue
         days, separator, elapsed_time = elapsed.rpartition("-")
         parts = [float(part) for part in elapsed_time.split(":")]
         seconds = 0.0
         for part in parts:
             seconds = seconds * 60 + part
         result[int(pid)] = seconds + (int(days) * 86400 if separator else 0)
+    return result
+
+
+@cache
+def darwin_group_pids():
+    library = ctypes.CDLL('/usr/lib/libproc.dylib', use_errno=True)
+    read = library.proc_listpgrppids
+    read.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_int]
+    read.restype = ctypes.c_int
+    return read
+
+
+def darwin_group_cpu(group: int) -> dict[int, float]:
+    read = darwin_group_pids()
+    capacity = read(group, None, 0)
+    if capacity <= 0:
+        code = ctypes.get_errno()
+        raise OSError(code, os.strerror(code), str(group))
+    while True:
+        buffer = (ctypes.c_int * capacity)()
+        ctypes.set_errno(0)
+        count = read(group, buffer, ctypes.sizeof(buffer))
+        code = ctypes.get_errno()
+        if count < 0 or (count == 0 and code):
+            raise OSError(code, os.strerror(code), str(group))
+        if count < capacity:
+            break
+        # Forks between sizing and reading can fill the snapshot.
+        capacity *= 2
+    result = {}
+    for pid in buffer[:count]:
+        try:
+            result[pid] = darwin_process_cpu(pid)
+        except ProcessLookupError:
+            pass  # A compiler can exit between enumeration and accounting.
     return result
 
 

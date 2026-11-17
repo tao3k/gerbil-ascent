@@ -396,6 +396,21 @@ theorem frontier_to_rows (body : List (Atom Value)) (input output : Env Value)
 def rawTransition (atom : PositiveTraversal.Atom Value) (input output : Env Value) : Prop :=
   ∃ row ∈ atom.rows, AtomicBinding.bind atom.terms row input = some output
 
+/-- A selected occurrence with an exact zero delta count has no witness,
+regardless of the prefix, including repeated occurrences of a relation. -/
+theorem empty_delta_pivot_no_derivation (prior rest : List (Atom Value))
+    (atom : Atom Value) (count depth : Nat) (exactCount : atom.deltaRows.length = count)
+    (empty : count = 0) (input output : Env Value) :
+    ¬ ProviderFrontier.body rawTransition
+      (rawBody (prior ++ atom :: rest) (some (depth + prior.length)) depth) input output := by
+  have noRows : atom.deltaRows = [] := List.length_eq_zero_iff.mp (exactCount.trans empty)
+  induction prior generalizing depth input with
+  | nil => simp [rawBody, lane, noRows, ProviderFrontier.body, rawTransition]
+  | cons before prior ih =>
+      simp only [List.cons_append, rawBody, ProviderFrontier.body, List.length_cons]
+      rintro ⟨middle, _, tail⟩
+      exact ih (depth + 1) middle (by simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using tail)
+
 theorem raw_all (body : List (Atom Value)) (depth : Nat) (input output : Env Value) :
     ProviderFrontier.body rawTransition (rawBody body none depth) input output ↔
       ProviderFrontier.body (transition Atom.allRows) body input output := by
@@ -1304,5 +1319,90 @@ theorem compiled_key_agrees (terms : List (Term Value)) (columns names : List Na
           simp [lower, found, actionValue, key_agrees _ _ _ same index reads]
 
 end PrefixCacheKey
+
+namespace BinaryListMatch
+
+/-- Direct binding for the two binary layouts used by the recursive chain.
+    A bound mismatch must leave the frame untouched. -/
+def bind (firstBound : Bool) (a b : Nat)
+    (left right : Value) (frame : Frame Value) : Bool × Frame Value :=
+  if firstBound then
+    if frame a = left then (true, write frame b right) else (false, frame)
+  else (true, write (write frame a left) b right)
+
+theorem full_match (firstBound : Bool) (a b : Nat)
+    (left right : Value) (frame : Frame Value) :
+    bind firstBound a b left right frame =
+      run [if firstBound then .bound a else .fresh a, .fresh b] [left, right] frame := by
+  cases firstBound <;> simp [bind, run]
+
+end BinaryListMatch
+
+namespace LinearClosureCost
+
+/-- Sum of the frontier cardinalities of one directed chain, beginning
+with its seed edges and ending with the last nonempty path distance. -/
+def frontierRows : Nat → Nat
+  | 0 => 0
+  | n + 1 => n + 1 + frontierRows n
+
+/-- All rounds probe the static edge index once per prefix. A chain's
+successful suffix candidates are one fewer than its prefixes in each round. -/
+def suffixRows (edges : Nat) : Nat := frontierRows (edges - 1)
+
+def witnesses (edges : Nat) : Nat := edges + suffixRows edges
+
+def liveCandidateRows (edges : Nat) : Nat := edges + frontierRows edges + suffixRows edges
+
+theorem frontier_rows_triangular (edges : Nat) :
+    2 * frontierRows edges = edges * (edges + 1) := by
+  induction edges with
+  | zero => rfl
+  | succ edges ih =>
+      change 2 * ((edges + 1) + frontierRows edges) = (edges + 1) * ((edges + 1) + 1)
+      rw [Nat.mul_add 2, ih, Nat.mul_add (edges + 1) (edges + 1) 1,
+        Nat.add_mul edges 1 (edges + 1), Nat.one_mul, Nat.mul_one]
+      omega
+
+theorem frontier_rows_equal_witnesses (edges : Nat) :
+    frontierRows edges = witnesses edges := by
+  cases edges <;> simp [frontierRows, witnesses, suffixRows]
+
+theorem live_candidates_double_witnesses (edges : Nat) :
+    liveCandidateRows edges = 2 * witnesses edges := by
+  unfold liveCandidateRows
+  rw [frontier_rows_equal_witnesses]
+  unfold witnesses
+  omega
+
+/-- A generic two-column candidate dispatches on both term tags when it
+    matches. The two binary layouts dispatch once at preparation instead.
+    The actual slot writes and bound comparison still execute. -/
+def matchedTermDispatches (edges : Nat) : Nat := 2 * liveCandidateRows edges
+
+example : 256 * matchedTermDispatches 15 = 122880 := by decide
+
+/-- Before skipping the empty Edge pivot, that pivot also visited every
+already-committed row in the Reach prefix. The committed rows exclude the
+current frontier and are increased only at a completed round. -/
+def emptyEdgePivotRows : Nat → Nat → Nat
+  | 0, _ => 0
+  | n + 1, old => old + emptyEdgePivotRows n (old + (n + 1))
+
+theorem extra_old_rows_are_visited_each_round (edges old extra : Nat) :
+    emptyEdgePivotRows edges (old + extra) =
+      emptyEdgePivotRows edges old + edges * extra := by
+  induction edges generalizing old with
+  | zero => simp [emptyEdgePivotRows]
+  | succ n ih =>
+      simp only [emptyEdgePivotRows, Nat.succ_mul]
+      rw [show old + extra + (n + 1) = (old + (n + 1)) + extra by omega, ih]
+      omega
+
+example : (256 * liveCandidateRows 15, 256 * witnesses 15,
+    256 * (liveCandidateRows 15 + emptyEdgePivotRows 15 0)) =
+    (61440, 30720, 348160) := by decide
+
+end LinearClosureCost
 
 end Ascent.IndexedPositiveTraversal

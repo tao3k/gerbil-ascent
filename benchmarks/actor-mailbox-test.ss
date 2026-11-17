@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Single-VM components, not a Rust bridge or rule-evaluation benchmark.
 (import :std/test
+        (only-in :gerbil/runtime/thread spawn)
         (only-in :std/time/precise current-time-precise PreciseTime-seconds PreciseTime-nseconds)
         (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation)
         (only-in :gerbil-ascent/program/actor-session
@@ -13,6 +14,71 @@
 (def (nanoseconds)
   (let (time (current-time-precise))
     (+ (* (PreciseTime-seconds time) 1000000000) (PreciseTime-nseconds time))))
+
+;; Same total work; only the number of native caller Actors changes.
+;; No second VM, Rust thread pool, custom mailbox or per-request logger.
+(def (concurrent-session-state clients)
+  (check (##current-vm-processor-count) => 1)
+  (let* ((total 1200000) (per-client (quotient total clients))
+         (program (gerbil-ascent-program
+                    (list (gerbil-ascent-relation 'edge 1 [])) [] 1000 1000 1000))
+         (session (gerbil-ascent-open-actor-session program workers: 1))
+         (samples (make-vector clients))
+         (actors []))
+    (try
+      (for-each
+       (lambda (client)
+         (let (times (make-f64vector per-client 0.))
+           (vector-set! samples client times)
+           (set! actors
+             (cons
+              (spawn
+               (lambda ()
+                 (with-catch (lambda (failure) (cons #f failure))
+                   (lambda ()
+                     (unless (eq? (thread-receive) 'start) (error "invalid client start"))
+                     (thread-send (current-thread) 'client-mailbox-marker)
+                     (let loop ((index 0))
+                       (unless (= index per-client)
+                         (let* ((start (nanoseconds))
+                                (result (gerbil-ascent-session-state session))
+                                (elapsed (- (nanoseconds) start)))
+                           (unless (equal? result '(0 idle)) (error "concurrent Session state differs"))
+                           (f64vector-set! times index (exact->inexact elapsed)))
+                         (loop (+ index 1))))
+                     (unless (eq? (thread-receive) 'client-mailbox-marker)
+                       (error "client mailbox traffic was consumed"))
+                     #t)))) actors))))
+       (iota clients))
+      (let ((start (nanoseconds)) (cpu (cpu-time)))
+        (for-each (cut thread-send <> 'start) actors)
+        ;; Join every client before checking any error or retiring the Session.
+        (let* ((outcomes (map thread-join! actors))
+               (elapsed (- (nanoseconds) start))
+               (cpu-elapsed (- (cpu-time) cpu))
+               (per-client-ordered (map (lambda (times) (list-sort < (f64vector->list times)))
+                                        (vector->list samples)))
+               (client-p95 (map (lambda (times)
+                                 (list-ref times (- (quotient (+ (* per-client 95) 99) 100) 1)))
+                               per-client-ordered))
+               (ordered (list-sort < (apply append per-client-ordered)))
+               (p95 (list-ref ordered (- (quotient (+ (* total 95) 99) 100) 1))))
+          (for-each (lambda (outcome) (unless (eq? outcome #t) (raise (cdr outcome)))) outcomes)
+          (check (length ordered) => total)
+          (display "ACTOR-CLIENTS ")
+          (write (list (cons 'unit 'public-session-state-request-reply)
+                       (cons 'vm-processors 1) (cons 'clients clients)
+                       (cons 'verified-completions total) (cons 'samples-per-client per-client)
+                       (cons 'elapsed-ns elapsed) (cons 'cpu-seconds cpu-elapsed)
+                       (cons 'verified-requests-per-second (/ (* total 1000000000.) elapsed))
+                       (cons 'p50-ns (list-ref ordered (- (quotient total 2) 1)))
+                       (cons 'p95-ns p95) (cons 'client-p95-ns client-p95)
+                       (cons 'p99-ns (list-ref ordered (- (quotient (+ (* total 99) 99) 100) 1)))
+                       (cons 'max-ns (car (last-pair ordered)))))
+          (newline)
+          (check (< p95 100000000) => #t)
+          (for-each (lambda (tail) (check (< tail 100000000) => #t)) client-p95)))
+      (finally (gerbil-ascent-session-close! session)))))
 
 (def actor-mailbox-test
   (test-suite "Single VM Actor components"
@@ -80,4 +146,6 @@
                            (cons 'collections (- (f64vector-ref after 6) (f64vector-ref before 6)))))
               (newline)
               (check (< p95 100000000) => #t)))
-          (finally (gerbil-ascent-session-close! session)))))))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "same 1.2 million requests through one three and twelve caller Actors"
+      (for-each concurrent-session-state '(1 3 12)))))

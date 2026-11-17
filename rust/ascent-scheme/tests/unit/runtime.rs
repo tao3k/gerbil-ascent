@@ -19,7 +19,7 @@ fn original_scheme_dsl_values_calls_and_failure_recovery() {
     for packet in packets {
         eprintln!("NATIVE packet {packet:?}");
         let root = values::encode(&runtime.runtime, &packet).unwrap();
-        assert_eq!(values::decode(root, 0).unwrap(), packet);
+        assert_eq!(values::decode(root, false).unwrap(), packet);
     }
     check_integer_edges(&runtime);
     #[cfg(all(feature = "instances", target_os = "macos"))]
@@ -125,9 +125,49 @@ fn check_integer_edges(runtime: &Runtime) {
         num_bigint::BigInt::from(1) << 4096usize,
         -(num_bigint::BigInt::from(1) << 4096usize),
     ];
-    let packet = Data::List(integers.into_iter().map(Data::Integer).collect());
+    let packet = Data::object([
+        (
+            "integers",
+            Data::List(integers.into_iter().map(Data::Integer).collect()),
+        ),
+        (
+            "nested",
+            Data::List(vec![Data::object([
+                ("enabled", Data::Bool(false)),
+                ("label", Data::from("nested")),
+                ("coordinate", Data::Real((-0.0_f64).to_bits())),
+            ])]),
+        ),
+    ]);
     let root = values::encode(&runtime.runtime, &packet).unwrap();
-    assert_eq!(values::decode(root, 0).unwrap(), packet);
+    assert_eq!(values::decode(root, false).unwrap(), packet);
+}
+
+#[test]
+fn integer_row_packets_require_an_exact_positive_rectangle() {
+    for malformed in [
+        &[][..],
+        &[1],
+        &[0, 1],
+        &[1, 0],
+        &[-1, 1, 0],
+        &[1, -1, 0],
+        &[i64::MAX, i64::MAX, 0],
+        &[1, 2, 0],
+        &[1, 1, 0, 1],
+    ] {
+        assert!(values::decode_integer_rows(malformed).is_err());
+    }
+    assert_eq!(
+        values::decode_integer_rows(&[2, 2, i64::MIN, 0, -7, i64::MAX]).unwrap(),
+        Data::List(vec![
+            Data::List(vec![Data::Integer(i64::MIN.into()), 0usize.into()]),
+            Data::List(vec![
+                Data::Integer((-7_i64).into()),
+                Data::Integer(i64::MAX.into())
+            ]),
+        ]),
+    );
 }
 
 #[cfg(all(feature = "instances", target_os = "macos"))]
@@ -140,7 +180,9 @@ fn bind_source_library(runtime: &Runtime) {
         "/instance_inventory.json"
     )))
     .unwrap();
-    let package = manifest.verify(env!("ASCENT_INSTANCE_PACKAGE")).unwrap();
+    let package = manifest
+        .verify(std::path::Path::new(env!("ASCENT_INSTANCE_PACKAGE")))
+        .unwrap();
     let paths = package
         .load_paths()
         .iter()

@@ -27,9 +27,11 @@
                            gerbil-ascent-index-row-vector/arity)
                    (gerbil-ascent-index-key row-key)))
 (export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-publish-old-tail! row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut
-        gerbil-ascent-make-source-row-indexes row-indexes-recycle-source!)
+        gerbil-ascent-make-source-row-indexes row-indexes-recycle-source!
+        source-row-indexes-bind!)
 
 (defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut publish-old-tail! recycle-source!))
+(defstruct (source-row-indexes row-indexes) (bind!) final: #t)
 (defstruct prefix-cut-entry (all-version delta-version cut) final: #t)
 
 ;;; Public metadata adapters feed one synchronous, owner-controlled collector.
@@ -454,27 +456,13 @@
                   (gerbil-ascent-index-key (vector-ref atom 1) (vector-ref atom 2) environment slot-terms)
                   (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)) consume)
               #t))))
-      (def (indexed-rows atom environment use-delta? slot-terms
-                           (ordered? #f) (packed-consumer? #f) (index (vector-ref atom 0)))
-        (let* ((columns (vector-ref atom 2))
-               (captured (vector-ref (if use-delta? delta all) index))
-               ;; Observable callbacks and aggregators use the legacy list/index
-               ;; ordering. Pure plans retain the descriptor access path.
-               (rows (if (and ordered? (relation-view? captured))
-                       (ordered-cut captured index use-delta?) captured)))
-          (if (relation-view? rows)
-            (gerbil-ascent-view-select rows columns
-              (if slot-terms
-                (gerbil-ascent-index-key (vector-ref atom 1) columns environment slot-terms)
-                (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)))
-          (if (or (null? columns)
-                  (zero? (vector-ref (if use-delta? delta-size all-size) index))
-                  (and (not exact-small?)
-                       (< (vector-ref (if use-delta? delta-size all-size) index) 32)))
-            rows
-            (begin
-              (ensure-layouts!)
-            (let* ((identities
+      ;; Keep physical admission shared with ordinary indexed reads. The
+      ;; retained source path resolves this only on the atom's first probe.
+      (defrule (with-index (entry lookup provider permutation version)
+                          atom rows index columns use-delta? packed-consumer? body ...)
+        (begin
+          (ensure-layouts!)
+          (let* ((identities
                     (if use-delta?
                       (or delta-atoms
                           (let (fresh (make-hash-table-eq))
@@ -551,6 +539,42 @@
                         physical-index-entry-lookup-set!
                         physical-index-entry-witness-set!
                         physical-index-entry-version-set!)))))
+            body ...)))
+      (def (bind-source! atom)
+        (let ((columns (vector-ref atom 2)) (rows (vector-ref all 0)))
+          (and (pair? columns) (null? (cdr columns))
+               (not (relation-view? rows))
+               (>= (vector-ref all-size 0) 32)
+               (gerbil-ascent-canonical-hash-index-provider? (vector-ref index-providers 0))
+               (with-index (entry lookup _provider _permutation version)
+                 atom rows 0 columns #f #f
+                 ;; Terms and frames come from the current action. Only
+                 ;; the immutable key descriptor and physical lane are held.
+                 (let (term (car (vector-ref atom 4)))
+                   (lambda (frame terms)
+                     (single-rows entry lookup
+                       (gerbil-ascent-index-value term frame (and terms (car terms)))
+                       version)))))))
+      (def (indexed-rows atom environment use-delta? slot-terms
+                           (ordered? #f) (packed-consumer? #f) (index (vector-ref atom 0)))
+        (let* ((columns (vector-ref atom 2))
+               (captured (vector-ref (if use-delta? delta all) index))
+               ;; Observable callbacks and aggregators use the legacy list/index
+               ;; ordering. Pure plans retain the descriptor access path.
+               (rows (if (and ordered? (relation-view? captured))
+                       (ordered-cut captured index use-delta?) captured)))
+          (if (relation-view? rows)
+            (gerbil-ascent-view-select rows columns
+              (if slot-terms
+                (gerbil-ascent-index-key (vector-ref atom 1) columns environment slot-terms)
+                (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)))
+          (if (or (null? columns)
+                  (zero? (vector-ref (if use-delta? delta-size all-size) index))
+                  (and (not exact-small?)
+                       (< (vector-ref (if use-delta? delta-size all-size) index) 32)))
+            rows
+            (with-index (entry lookup provider permutation version)
+              atom rows index columns use-delta? packed-consumer?
               ;; Only this trusted representation consumes a scalar. Custom
               ;; receivers retain list keys, callbacks and their lookup order.
               (if (and (not permutation) (gerbil-ascent-canonical-hash-index-provider? provider)
@@ -580,7 +604,7 @@
                          (checked-provider-rows
                           (gerbil-ascent-physical-index-rows provider lookup key)
                           (vector-ref atom 1)
-                          (physical-index-entry-witness entry) key packed-consumer?)))))))))))))
+                          (physical-index-entry-witness entry) key packed-consumer?))))))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))
@@ -628,5 +652,8 @@
                  (source-index-entry-prior-keys-set! entry #f)
                  (physical-index-entry-lookup-set! entry #f))))
            cache))))
-    (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
-      prefix-cut publish-old-tail! (and recycle-source? recycle-source!))))
+    (if recycle-source?
+      (make-source-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
+        prefix-cut publish-old-tail! recycle-source! bind-source!)
+      (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
+        prefix-cut publish-old-tail! #f))))

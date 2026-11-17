@@ -241,6 +241,28 @@ theorem source_pair_allocation_exact (row : Row) (before : Option (SourceBucket 
   | none => rfl
   | some bucket => cases bucket <;> simp [storedSourcePairs, allocatedSourcePairs, pushSourceBucket] <;> omega
 
+/-! A bound reader borrows one admitted source version. Frames are supplied
+at each probe, so a resolved physical reader does not freeze a logical key.
+The Scheme owner must end the reader's lifetime before recycling a table. -/
+theorem bound_source_reader_exact {Frame : Type}
+    (index : Nat → Buckets Key Row) (readKey : Frame → Key)
+    (admittedVersion : Nat) (reads : List (Nat × Frame))
+    (stable : ∀ read ∈ reads, read.1 = admittedVersion) :
+    reads.map (fun read => index admittedVersion (readKey read.2)) =
+      reads.map (fun read => index read.1 (readKey read.2)) := by
+  apply List.map_congr_left
+  intro read member
+  rw [stable read member]
+
+-- Unit: selection of the physical reader, independently of the number of
+-- hash probes, matcher calls, and checkpoint events.
+def boundSourceSelections (probes : Nat) : Nat := min probes 1
+
+theorem bound_source_selection_work (laterProbes : Nat) :
+    boundSourceSelections (laterProbes + 1) + laterProbes = laterProbes + 1 := by
+  simp [boundSourceSelections, Nat.min_eq_right]
+  omega
+
 /-! The sort-merge control owns both streams before normalization. The
 Patricia constructor takes the normalized keys, and the public projection
 still validates the root. These laws account for the stream and its

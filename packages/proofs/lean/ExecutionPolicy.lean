@@ -10,6 +10,7 @@ import ClosedDslLowering
 import FiniteOperators
 import DslDeclarations
 import FiniteChoice
+import WeightedExportCapacity
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -649,6 +650,8 @@ def renderedSource (name : String) : IO String := do
   | "instance-package-resource" => pure Ascent.OwnerAdmission.packageRustSource
   | "instance-package-lifecycle" => pure Ascent.OwnerAdmission.packageLifecycleRustSource
   | "owner-hybrid-scheme" => pure Ascent.OwnerAdmission.ownerHybridSchemeSource
+  | "actor-integer-rows" => pure Ascent.WeightedCapacity.IntegerRowTransfer.actorSchemeSource
+  | "integer-source-packet" => pure Ascent.WeightedCapacity.IntegerRowTransfer.sourcePacketSchemeSource
   | "owner-source-scheme" => pure Ascent.OwnerAdmission.ownerSourceSchemeSource
   | "owner-control-rust" => pure Ascent.OwnerAdmission.controlRustSource
   | "projection-object-reuse" => pure Ascent.OwnerAdmission.projectionSchemeSource
@@ -680,6 +683,9 @@ def renderedSource (name : String) : IO String := do
   | "dsl-select" => pure Ascent.ClosedDslLowering.selectorSchemeSource
   | "dsl-root" => pure Ascent.ClosedDslLowering.rootSchemeSource
   | "dsl-owned" => pure Ascent.ClosedDslLowering.ownedMacroSchemeSource
+  | "dsl-closed-rules" => pure Ascent.ClosedDslLowering.closedRulesMacroSchemeSource
+  | "dsl-rule-extent" => pure Ascent.ClosedDslLowering.ruleExtentSchemeSource
+  | "dsl-rule-protocol" => pure Ascent.ClosedDslLowering.ruleProtocolSchemeSource
   | "dsl-workload" => pure Ascent.ClosedDslLowering.workloadSchemeSource
   | "preparation-groups" => pure Ascent.PreparationWork.groupsSchemeSource
   | "preparation-heap" => pure Ascent.PreparationWork.heapRecipeSource

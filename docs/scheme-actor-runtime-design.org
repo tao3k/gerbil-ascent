@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+TITLE: Scheme actor runtime: ownership, round merge, cancellation and publication
 #+DATE: 2026-10-05
+
+The current runtime and acceptance direction is specified in
+[[file:development/single-vm-runtime.org][Single-VM resident Actor runtime]]. Test-carrier proposals below are historical;
+they do not prescribe the current native test entry or production VM count.
 #+STATUS: native carrier, cancelable Session actor and ready positive Set SCC scheduling implemented; performance/reuse/provider gates remain
 
 * Architecture decision

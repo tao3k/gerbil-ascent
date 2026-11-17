@@ -2,14 +2,40 @@
 use crate::{failure, scheme_error};
 use gerbil_ascent::{Data, Result};
 use gerbil_scheme::{
-    BigIntegerBuffer, BinaryInteger, CollectionKind, GerbilRuntime, NativeError, ObjectKind,
-    RootedObjectBatch, RootedSchemeObject, SchemeObjectRef, SchemeScalar, TableEquality,
+    BigIntegerBuffer, BinaryInteger, CollectionKind, GerbilRuntime, NativeError, NumericBuffer,
+    ObjectKind, RootedObjectBatch, RootedSchemeObject, SchemeObjectRef, SchemeScalar,
+    TableEquality,
 };
 use num_bigint::{BigInt, Sign};
 use std::collections::BTreeMap;
 
 pub(super) type Root<'r> = RootedSchemeObject<'r>;
+
 pub(super) fn encode<'r>(runtime: &'r GerbilRuntime, value: &Data) -> Result<Root<'r>> {
+    encode_shaped(runtime, value, InputShape::Ordinary)
+}
+
+pub(super) fn encode_source_request<'r>(
+    runtime: &'r GerbilRuntime,
+    value: &Data,
+) -> Result<Root<'r>> {
+    encode_shaped(runtime, value, InputShape::SourceRequest)
+}
+
+#[derive(Clone, Copy)]
+enum InputShape {
+    Ordinary,
+    SourceRequest,
+    SourceGroups,
+    SourceUpdate,
+    SourceRows,
+}
+
+fn encode_shaped<'r>(
+    runtime: &'r GerbilRuntime,
+    value: &Data,
+    shape: InputShape,
+) -> Result<Root<'r>> {
     match value {
         Data::Null => runtime.void_object().map_err(scheme_error),
         Data::Bool(value) => runtime
@@ -43,9 +69,18 @@ pub(super) fn encode<'r>(runtime: &'r GerbilRuntime, value: &Data) -> Result<Roo
             .map(gerbil_scheme::RootedSchemeString::into_object)
             .map_err(scheme_error),
         Data::List(values) => {
+            if let InputShape::SourceRows = shape
+                && let Some(packet) = integer_source_packet(values)
+            {
+                return runtime.numeric_vector(&packet).map_err(scheme_error);
+            }
+            let child = match shape {
+                InputShape::SourceGroups => InputShape::SourceUpdate,
+                _ => InputShape::Ordinary,
+            };
             let values = values
                 .iter()
-                .map(|value| encode(runtime, value))
+                .map(|value| encode_shaped(runtime, value, child))
                 .collect::<Result<Vec<_>>>()?;
             runtime
                 .collection_from_objects(CollectionKind::List, &values.iter().collect::<Vec<_>>())
@@ -61,7 +96,15 @@ pub(super) fn encode<'r>(runtime: &'r GerbilRuntime, value: &Data) -> Result<Roo
                             .string_from_utf8(key)
                             .map_err(scheme_error)?
                             .into_object(),
-                        encode(runtime, value)?,
+                        encode_shaped(
+                            runtime,
+                            value,
+                            match (shape, key.as_str()) {
+                                (InputShape::SourceRequest, "sources") => InputShape::SourceGroups,
+                                (InputShape::SourceUpdate, "rows") => InputShape::SourceRows,
+                                _ => InputShape::Ordinary,
+                            },
+                        )?,
                     ))
                 })
                 .collect::<Result<Vec<_>>>()?;
@@ -77,14 +120,58 @@ pub(super) fn encode<'r>(runtime: &'r GerbilRuntime, value: &Data) -> Result<Roo
         }
     }
 }
-pub(super) fn decode(value: Root<'_>, depth: usize) -> Result<Data> {
-    if depth > 256 {
-        return Err(failure("native result nesting bound"));
+fn integer_source_packet(rows: &[Data]) -> Option<Vec<i64>> {
+    let width = rows.first()?.list().ok()?.len();
+    if width == 0 {
+        return None;
     }
+    let size = rows.len().checked_mul(width)?.checked_add(2)?;
+    let mut packet = Vec::new();
+    packet.try_reserve_exact(size).ok()?;
+    packet.extend([i64::try_from(rows.len()).ok()?, i64::try_from(width).ok()?]);
+    for row in rows {
+        let cells = row.list().ok()?;
+        if cells.len() != width {
+            return None;
+        }
+        for cell in cells {
+            let Data::Integer(value) = cell else {
+                return None;
+            };
+            packet.push(i64::try_from(value).ok()?);
+        }
+    }
+    Some(packet)
+}
+
+#[derive(Clone, Copy)]
+enum ReplyShape {
+    Ordinary,
+    SourceEnvelope,
+    SourceResult,
+    Relations,
+    RowSet,
+}
+
+pub(super) fn decode(value: Root<'_>, packed_rows: bool) -> Result<Data> {
+    let shape = if packed_rows {
+        ReplyShape::SourceEnvelope
+    } else {
+        ReplyShape::Ordinary
+    };
     let kind = value.as_ref().kind().map_err(scheme_error)?;
-    if let Some(decoded) = decode_leaf(value.as_ref(), kind)? {
+    if let Some(decoded) = decode_leaf(value.as_ref(), kind, shape)? {
         return Ok(decoded);
     }
+    decode_object(value, kind, 0, shape)
+}
+
+fn decode_object(
+    value: Root<'_>,
+    kind: ObjectKind,
+    depth: usize,
+    shape: ReplyShape,
+) -> Result<Data> {
     match kind {
         ObjectKind::String => value
             .into_string()
@@ -103,7 +190,13 @@ pub(super) fn decode(value: Root<'_>, depth: usize) -> Result<Data> {
             let mut snapshot = RootedObjectBatch::default();
             collection.copy_into(&mut snapshot).map_err(scheme_error)?;
             let values = (0..snapshot.len())
-                .map(|index| decode_element(&snapshot, index, depth + 1))
+                .map(|index| {
+                    let child = match (shape, index) {
+                        (ReplyShape::SourceEnvelope, 1) => ReplyShape::SourceResult,
+                        _ => ReplyShape::Ordinary,
+                    };
+                    decode_element(&snapshot, index, depth + 1, child)
+                })
                 .collect::<Result<Vec<_>>>()?;
             Ok(Data::List(values))
         }
@@ -114,8 +207,15 @@ pub(super) fn decode(value: Root<'_>, depth: usize) -> Result<Data> {
                 .map_err(scheme_error)?;
             let mut values = BTreeMap::new();
             for index in (0..snapshot.len()).step_by(2) {
-                let key = decode_element(&snapshot, index, depth + 1)?;
-                let item = decode_element(&snapshot, index + 1, depth + 1)?;
+                let key = decode_element(&snapshot, index, depth + 1, ReplyShape::Ordinary)?;
+                let child = match shape {
+                    ReplyShape::SourceResult if key.text().ok() == Some("relations") => {
+                        ReplyShape::Relations
+                    }
+                    ReplyShape::Relations => ReplyShape::RowSet,
+                    _ => ReplyShape::Ordinary,
+                };
+                let item = decode_element(&snapshot, index + 1, depth + 1, child)?;
                 values.insert(key.text()?.into(), item);
             }
             Ok(Data::Map(values))
@@ -124,7 +224,11 @@ pub(super) fn decode(value: Root<'_>, depth: usize) -> Result<Data> {
     }
 }
 
-fn decode_leaf(value: SchemeObjectRef<'_>, kind: ObjectKind) -> Result<Option<Data>> {
+fn decode_leaf(
+    value: SchemeObjectRef<'_>,
+    kind: ObjectKind,
+    shape: ReplyShape,
+) -> Result<Option<Data>> {
     let decoded = match kind {
         ObjectKind::Void => Ok(Data::Null),
         ObjectKind::Nil => Ok(Data::List(Vec::new())),
@@ -133,24 +237,65 @@ fn decode_leaf(value: SchemeObjectRef<'_>, kind: ObjectKind) -> Result<Option<Da
             SchemeScalar::Flonum(value) => Ok(Data::Real(value.to_bits())),
             _ => Err(failure("native scalar projection")),
         },
-        ObjectKind::ExactInteger => {
-            let mut output = BigIntegerBuffer::default();
-            value.copy_big_integer(&mut output).map_err(scheme_error)?;
-            Ok(Data::Integer(BigInt::from_bytes_le(
-                if output.value().is_negative() {
-                    Sign::Minus
-                } else {
-                    Sign::Plus
-                },
-                output.value().magnitude(),
-            )))
+        ObjectKind::ExactInteger => decode_integer(value),
+        ObjectKind::Other if matches!(shape, ReplyShape::RowSet) => {
+            let mut packet = NumericBuffer::<i64>::default();
+            value.copy_numeric(&mut packet).map_err(scheme_error)?;
+            decode_integer_rows(packet.as_slice())
         }
         _ => return Ok(None),
     }?;
     Ok(Some(decoded))
 }
 
-fn decode_element(snapshot: &RootedObjectBatch<'_>, index: usize, depth: usize) -> Result<Data> {
+pub(super) fn decode_integer_rows(packet: &[i64]) -> Result<Data> {
+    let invalid = || failure("invalid native integer rows");
+    let [count, width, cells @ ..] = packet else {
+        return Err(invalid());
+    };
+    let count = usize::try_from(*count).map_err(|_| invalid())?;
+    let width = usize::try_from(*width).map_err(|_| invalid())?;
+    if count == 0 || width == 0 || count.checked_mul(width) != Some(cells.len()) {
+        return Err(invalid());
+    }
+    Ok(Data::List(
+        cells
+            .chunks_exact(width)
+            .map(|row| Data::List(row.iter().map(|&cell| Data::Integer(cell.into())).collect()))
+            .collect(),
+    ))
+}
+
+fn decode_integer(value: SchemeObjectRef<'_>) -> Result<Data> {
+    match value.scalar() {
+        Ok(SchemeScalar::Fixnum(word)) => return Ok(Data::Integer(word.into())),
+        Err(NativeError::Status {
+            operation: "object scalar",
+            code,
+        }) if code == gerbil_scheme_sys::GerbilStatus::InvalidValue as i32 => {}
+        Err(error) => return Err(scheme_error(error)),
+        Ok(_) => return Err(failure("native exact integer projection")),
+    }
+    // Rooted exact integers outside the bridge's fixnum range retain the
+    // arbitrary-precision signed magnitude transfer.
+    let mut output = BigIntegerBuffer::default();
+    value.copy_big_integer(&mut output).map_err(scheme_error)?;
+    Ok(Data::Integer(BigInt::from_bytes_le(
+        if output.value().is_negative() {
+            Sign::Minus
+        } else {
+            Sign::Plus
+        },
+        output.value().magnitude(),
+    )))
+}
+
+fn decode_element(
+    snapshot: &RootedObjectBatch<'_>,
+    index: usize,
+    depth: usize,
+    shape: ReplyShape,
+) -> Result<Data> {
     if depth > 256 {
         return Err(failure("native result nesting bound"));
     }
@@ -158,10 +303,15 @@ fn decode_element(snapshot: &RootedObjectBatch<'_>, index: usize, depth: usize) 
         .get(index)
         .ok_or_else(|| failure("native snapshot index"))?;
     let kind = value.kind().map_err(scheme_error)?;
-    if let Some(value) = decode_leaf(value, kind)? {
+    if let Some(value) = decode_leaf(value, kind, shape)? {
         return Ok(value);
     }
-    // Complex children need their own recursive root; scalar children borrow
-    // the snapshot's existing root, exactly as the upstream API recommends.
-    decode(snapshot.root_element(index).map_err(scheme_error)?, depth)
+    // Promotion retains the same object. Reuse the kind observed on the
+    // snapshot slot and let the owned decoder manage the new root.
+    decode_object(
+        snapshot.root_element(index).map_err(scheme_error)?,
+        kind,
+        depth,
+        shape,
+    )
 }

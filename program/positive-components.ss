@@ -8,7 +8,8 @@
         (only-in :gerbil-ascent/core/execution-policy gerbil-ascent-component-ready)
         (only-in :std/iter for/fold in-list)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!
-                 gerbil-ascent-make-source-row-indexes row-indexes-recycle-source!)
+                 gerbil-ascent-make-source-row-indexes row-indexes-recycle-source!
+                 source-row-indexes-bind!)
         (only-in "component-worker.ss" gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round!))
 (export gerbil-ascent-positive-components gerbil-ascent-compile-positive-components
@@ -61,29 +62,40 @@
           (vector-set! retained position next)
           next)))))
 
-;; The per-run readers resolve each slot once. Each probe then uses the
-;; standard index's descriptor and version caches.
+;; The reader cache is local to this run and dies before source recycling.
+;; The last atom avoids a descriptor-table lookup in a repeated inner join.
 ;; : (forall (i r p a f t) (-> (Vector (Maybe i)) (Vector [r]) (Vector Natural) (Vector p) (-> a f t [r])))
 ;; : (-> RetainedSourceIndexes RowsVector Sizes IndexProviders (-> Atom Frame Terms Rows))
 (def (actor-source-reader retained initial sizes providers)
-  (let (readers (make-vector (vector-length initial) #f))
-    (lambda (atom frame terms)
-      (let* ((position (vector-ref atom 0)) (size (vector-ref sizes position)))
+  (let ((readers (make-hash-table-eq)) (last-atom #f) (last-reader #f))
+    (def (bind! atom)
+      (let* ((position (vector-ref atom 0))
+             (size (vector-ref sizes position))
+             (rows (vector-ref initial position)))
         (if (< size 32)
-          (begin (vector-set! retained position #f) (vector-ref initial position))
-          (let (lookup
-                (or (vector-ref readers position)
-                    (let* ((entry (prepare-actor-source-index! retained position
-                                    (vector-ref initial position) size
-                                    (vector-ref providers position)))
-                           (read (row-indexes-rows (actor-source-index-indexes entry))))
-                      (vector-set! readers position read)
-                      read)))
-            (lookup atom frame #f terms #f #f 0)))))))
+          (begin
+            (vector-set! retained position #f)
+            (lambda (_frame _terms) rows))
+          (let* ((entry (prepare-actor-source-index! retained position rows size
+                          (vector-ref providers position)))
+                 (indexes (actor-source-index-indexes entry)))
+            (or ((source-row-indexes-bind! indexes) atom)
+                (let (lookup (row-indexes-rows indexes))
+                  (lambda (frame terms) (lookup atom frame #f terms #f #f 0))))))))
+    (lambda (atom frame terms)
+      (if (eq? last-atom atom)
+        (last-reader frame terms)
+        (let (reader (or (hash-get readers atom)
+                         (let (fresh (bind! atom))
+                           (hash-put! readers atom fresh)
+                           fresh)))
+          (set! last-atom atom)
+          (set! last-reader reader)
+          (reader frame terms))))))
 
 ;; gerbil-ascent-run-positive-components!
-;; : (forall (a s r m c i) (-> a s r PositiveInteger m c Boolean (Maybe i) Void))
-;; : (-> Analysis ProgramSchema Rows Workers Merge Canceled Boolean (Maybe SourceIndexes) Void)
+;; : (forall (a s r m c i) (-> a s r PositiveInteger m c Boolean (Maybe i) Boolean Void))
+;; : (-> Analysis ProgramSchema Rows Workers Merge Canceled Boolean (Maybe SourceIndexes) Boolean Void)
 ;; | doc m%
 ;;     Coordinate projected SCCs against a private tentative frontier. Each ready
 ;;     assignment receives its own root/size vectors, with persistent row roots.
@@ -92,6 +104,8 @@
 ;;     worker may retain keyed reads of owned scalar source-only relations for
 ;;     the whole run. A Session may supply its private versioned source indexes.
 ;;     Each assignment still owns its writable relation indexes.
+;;     A caller with an admitted immutable scalar cut may use worker novelty
+;;     independently of source-index reuse. Owner merge checkpoints stay ordered.
 ;;
 ;;     # Examples
 ;;
@@ -101,19 +115,23 @@
 ;;     ```
 ;;   %
 (def (gerbil-ascent-run-positive-components! analysis schema initial workers merge canceled?
-                                               (scalar-source-owner? #f) (retained-source-indexes #f))
+                                               (scalar-source-owner? #f) (retained-source-indexes #f)
+                                               (worker-membership? #f))
   (let* ((components (gerbil-ascent-positive-components analysis))
          (frontier (vector-copy initial))
          (sizes (vector-map length frontier))
          ;; Only rule-owning SCC members can receive candidates. Source-only
          ;; relations keep their persistent roots without another membership table.
          (known (make-vector (vector-length initial) #f))
+         (use-worker-membership? (and (= workers 1) worker-membership?))
          (by-id (list->vector components))
          (remaining (make-vector (length components) 0))
          (snapshots (make-vector (length components) #f))
          (assigned (filter (lambda (component) (pair? (positive-component-rules component))) components))
          (source-indexes
-          (and scalar-source-owner? (= workers 1) (pair? assigned) (pair? (cdr assigned))
+          (and scalar-source-owner? (= workers 1) (pair? assigned)
+               ;; A retained index can amortize even one consumer across runs.
+               (or retained-source-indexes (pair? (cdr assigned)))
                (if retained-source-indexes
                  (actor-source-reader retained-source-indexes initial sizes (vector-ref schema 5))
                  (let* ((width (vector-length initial)) (zeros (make-vector width 0))
@@ -132,9 +150,14 @@
                   (void)
                   (for-each
                    (lambda (index)
-                     (let (table (make-hash-table))
-                       (for-each (lambda (row) (hash-put! table row #t)) (vector-ref frontier index))
-                       (vector-set! known index table)))
+                     (vector-set! known index
+                       (if use-worker-membership?
+                         ;; The sole assigned SCC owns every producer for
+                         ;; this slot and emits only novel immutable rows.
+                         #t
+                         (let (table (make-hash-table))
+                           (for-each (lambda (row) (hash-put! table row #t)) (vector-ref frontier index))
+                           table))))
                    (positive-component-members component)))
                 ;; Source-only predecessors are complete before task admission.
                 ;; Only the owner updates dependency counts after terminal merges.
@@ -150,12 +173,12 @@
          ;; The owner retains only this opaque reference and never reads or
          ;; mutates either vector after admission.
          (gerbil-ascent-run-positive-component! component schema snapshot emit! checkpoint!
-           (and source-indexes read-source))))
+           (and source-indexes read-source) use-worker-membership?)))
      (lambda (atom row)
        (let* ((index (vector-ref atom 0)) (table (vector-ref known index)))
-         (unless (hash-get table row)
+         (when (or (eq? table #t) (not (hash-get table row)))
            (merge atom row)
-           (hash-put! table row #t)
+           (unless (eq? table #t) (hash-put! table row #t))
            (vector-set! frontier index (cons row (vector-ref frontier index)))
            (vector-set! sizes index (+ 1 (vector-ref sizes index))))))
      canceled?

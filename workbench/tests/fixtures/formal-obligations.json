@@ -39,8 +39,8 @@
   "ActorSession": {
     "configuration": {
       "constants": "Cuts = {0,1}\nGenerationCutoff = $session_cutoff\nMutation = \"none\"",
-      "constraint": "Exploration",
-      "invariants": "ConsistentPublication NoStalePublication DrainedClose"
+      "invariants": "ConsistentPublication NoStalePublication DrainedClose AuthorityExact ReuseExact PartialPrivate ReplacementPrivate",
+      "constraint": "Exploration"
     },
     "faults": [
       [
@@ -51,6 +51,41 @@
       [
         "early",
         "DrainedClose",
+        12
+      ],
+      [
+        "creation-authority",
+        "AuthorityExact",
+        12
+      ],
+      [
+        "final-authority",
+        "AuthorityExact",
+        12
+      ],
+      [
+        "changed-reuse",
+        "ReuseExact",
+        12
+      ],
+      [
+        "opaque-reuse",
+        "ReuseExact",
+        12
+      ],
+      [
+        "partial-publication",
+        "PartialPrivate",
+        12
+      ],
+      [
+        "stale-partial",
+        "PartialPrivate",
+        12
+      ],
+      [
+        "eager-pending",
+        "ReplacementPrivate",
         12
       ]
     ]
@@ -620,7 +655,7 @@
   "ComponentIndex": {
     "configuration": {
       "constants": "Fault = \"none\"",
-      "invariants": "Consistent PrivateExtension HeldStable ViewConsistent",
+      "invariants": "Consistent PrivateExtension HeldStable ViewConsistent BorrowedCut",
       "main": "ComponentIndexFixture"
     },
     "faults": [
@@ -688,6 +723,11 @@
         "held-columns",
         "HeldStable",
         12
+      ],
+      [
+        "mutate-borrowed",
+        "BorrowedCut",
+        12
       ]
     ]
   },
@@ -743,6 +783,11 @@
       [
         "overlap",
         "UniqueWitness",
+        12
+      ],
+      [
+        "prune-live",
+        "Complete",
         12
       ]
     ]
@@ -831,7 +876,7 @@
     "configuration": {
       "constants": "GenerationCutoff = $cutoff\nInputLimit = 0\nMutation = \"none\"",
       "constraint": "ExplorationBound",
-      "invariants": "TypeOK CurrentResult IndependentExplanation FrozenObservation RejectionAtomic ClosedOwners"
+      "invariants": "TypeOK CurrentResult IndependentExplanation FrozenObservation RejectionAtomic ClosedOwners CompleteProofScope"
     },
     "faults": [
       [
@@ -857,6 +902,11 @@
       [
         "close",
         "ClosedOwners",
+        12
+      ],
+      [
+        "partial-scope",
+        "CompleteProofScope",
         12
       ]
     ]
@@ -2553,7 +2603,7 @@
   "CheckpointTransport": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll WaitTypeOK TransientRechecks FatalStaysFatal ChangedNeverBackoff RetryNoDecision NoLostRegisteredWake NoticeTypeOK NoExtraWake"
+      "invariants": "TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll WaitTypeOK TransientRechecks FatalStaysFatal ChangedNeverBackoff RetryNoDecision NoLostRegisteredWake NoticeTypeOK NoExtraWake ResidentWaitOutsideAuthority WaitPreservesCursor"
     },
     "faults": [
       [
@@ -2624,6 +2674,16 @@
       [
         "double-wake",
         "NoExtraWake",
+        12
+      ],
+      [
+        "wait-with-authority",
+        "ResidentWaitOutsideAuthority",
+        12
+      ],
+      [
+        "consume-on-wake",
+        "WaitPreservesCursor",
         12
       ]
     ]
@@ -3028,6 +3088,55 @@
       [
         "metadata-spends-scope",
         "LibraryScopes",
+        12
+      ]
+    ]
+  },
+  "RuntimeMeasurement": {
+    "configuration": {
+      "constants": "PlannedCounts = {1,2,3}\nMinSamples = 2\nLoadCutoff = 2\nMutation = \"none\"",
+      "invariants": "TypeOK RuntimeExact",
+      "constraint": "Exploration"
+    },
+    "faults": [
+      [
+        "unit",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "missing",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "few",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "unchecked",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "owner",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "drain",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "tail",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "wall",
+        "RuntimeExact",
         12
       ]
     ]

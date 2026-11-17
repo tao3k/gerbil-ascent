@@ -7,6 +7,156 @@ mod source_cancellation;
 fn program() -> WorkerProgram {
     WorkerProgram::new(env!("CARGO_BIN_EXE_ascent-scheme-worker"), vec![])
 }
+
+#[test]
+fn scheme_actor_progresses_while_the_process_transport_waits_for_a_request() {
+    let pool = ProcessPool::with_program(1, &program()).unwrap();
+    assert_eq!(pool.receipts()[0].processors, 1);
+    let engine = Engine::new(1).unwrap().on_process(pool.owner(0).unwrap());
+    engine
+        .register_module(
+            "resident-wake",
+            r#"
+              (export start)
+              (def (start gate marker)
+                (thread-start!
+                 (make-thread
+                  (lambda ()
+                    (let await-gate ()
+                      (unless (file-exists? gate)
+                        (thread-sleep! 0.005)
+                        (await-gate)))
+                    (call-with-output-file marker
+                      (lambda (port) (display "actor-ran" port))))))
+                #t)
+            "#,
+        )
+        .unwrap();
+    let module = engine.module("resident-wake").unwrap();
+    let directory = tempfile::tempdir().unwrap();
+    let gate = directory.path().join("client-returned");
+    let marker = directory.path().join("actor-ran");
+    let reply = module
+        .call(
+            "start",
+            &[
+                ObjectInput::Text(gate.to_str().unwrap().into()),
+                ObjectInput::Text(marker.to_str().unwrap().into()),
+            ],
+            None,
+        )
+        .unwrap();
+
+    // The actor can finish only after the caller returned and created the gate.
+    // Keep the reply rooted so dropping it cannot introduce another VM call.
+    std::fs::write(&gate, "").unwrap();
+    let deadline = std::time::Instant::now() + Duration::from_secs(5);
+    let observed = loop {
+        if let Ok(text) = std::fs::read_to_string(&marker)
+            && text == "actor-ran"
+        {
+            break true;
+        }
+        if std::time::Instant::now() >= deadline {
+            break false;
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    };
+    assert!(observed, "actor required another application call to wake");
+    drop(reply);
+    module.close();
+    engine.shutdown();
+}
+
+#[test]
+fn typed_actor_publishes_complete_rows_and_keeps_proof_scope_on_refusal() {
+    let pool = ProcessPool::with_program(1, &program()).unwrap();
+    assert_eq!(pool.receipts()[0].processors, 1);
+    let owner = pool.owner(0).unwrap();
+    let invoke = |request| {
+        owner.call_cancelable(request, Limits::default().timeout, &Cancellation::default())
+    };
+    let source = "(ascent (relation edge (from to)) (relation answer (from to))
+        ((answer x z) <-- (edge x y) (edge y z)) (bounds 3 1 4))";
+    let handle = invoke(Data::object([
+        ("operation", "open-sources".into()),
+        ("sources", Data::List(vec![source.into()])),
+    ]))
+    .unwrap()
+    .field("handle")
+    .unwrap()
+    .clone();
+    let query = || {
+        invoke(Data::object([
+            ("operation", "source-run".into()),
+            ("handle", handle.clone()),
+            ("queries", Data::List(vec!["answer".into()])),
+        ]))
+        .unwrap()
+    };
+    let change = |edges: &[(usize, usize)]| {
+        let rows = edges
+            .iter()
+            .map(|&(a, b)| Data::List(vec![a.into(), b.into()]))
+            .collect();
+        Data::object([
+            ("operation", "source-replace".into()),
+            ("handle", handle.clone()),
+            (
+                "sources",
+                Data::List(vec![Data::object([
+                    ("relation", "edge".into()),
+                    ("rows", Data::List(rows)),
+                ])]),
+            ),
+        ])
+    };
+    assert_eq!(query().field("complete").unwrap(), &Data::Bool(true));
+    invoke(change(&[(0, 1), (1, 2)])).unwrap();
+    let answer = query();
+    assert_eq!(answer.field("complete").unwrap(), &Data::Bool(true));
+    assert_eq!(
+        answer.field("scalarProjection").unwrap(),
+        &Data::from("supported")
+    );
+    assert_eq!(
+        answer.field("relations").unwrap().field("answer").unwrap(),
+        &Data::List(vec![Data::List(vec![0usize.into(), 2usize.into()])]),
+    );
+    let proof_scope = Data::object([
+        ("operation", "owned-result".into()),
+        ("handle", handle.clone()),
+        ("action", "proof-scope".into()),
+        ("relation", "answer".into()),
+        ("result", answer.field("resultHandle").unwrap().clone()),
+    ]);
+    // The Actor rejects at replacement, which would stage a new cut in the
+    // ordinary Session. Its last published rows and proof scope are still live.
+    assert_eq!(
+        invoke(change(&[(0, 1), (1, 2), (2, 3)])),
+        Err(Error::DerivedFactLimit),
+    );
+    assert_eq!(
+        invoke(proof_scope.clone())
+            .unwrap()
+            .field("sourceGeneration")
+            .unwrap(),
+        &Data::from(1usize),
+    );
+    invoke(change(&[(8, 9), (9, usize::MAX)])).unwrap();
+    assert!(invoke(proof_scope).is_err());
+    let next = query();
+    assert_eq!(
+        next.field("relations").unwrap().field("answer").unwrap(),
+        &Data::List(vec![Data::List(vec![8usize.into(), usize::MAX.into()])]),
+    );
+    invoke(Data::object([
+        ("operation", "close".into()),
+        ("handle", handle),
+    ]))
+    .unwrap();
+}
+
 #[test]
 fn twelve_resident_processes_keep_values_limits_and_cancellation_owner_affine() {
     let pool = ProcessPool::with_program(12, &program()).unwrap();

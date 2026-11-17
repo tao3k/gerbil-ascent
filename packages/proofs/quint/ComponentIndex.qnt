@@ -13,7 +13,7 @@ module ComponentIndex {
     stage: int, published: List[int], remaining: List[List[int]],
     held: List[int], heldTruth: List[int], cacheColumns: List[int],
     heldColumns: List[int], heldColumnsTruth: List[int],
-    viewRows: List[int], viewValid: bool
+    viewRows: List[int], viewValid: bool, borrowed: bool
   }
   var owners: int -> Owner
 
@@ -25,13 +25,14 @@ module ComponentIndex {
     stage: 0, published: List(0, 1), remaining: Inputs,
     held: List(0, 1), heldTruth: List(0, 1), cacheColumns: DeclaredColumns,
     heldColumns: DeclaredColumns, heldColumnsTruth: DeclaredColumns,
-    viewRows: List(0, 1), viewValid: false
+    viewRows: List(0, 1), viewValid: false, borrowed: false
   })
 
   action extend(o: int): bool = {
     val x = owners.get(o)
     all {
       x.stage == 0, x.remaining.length() > 0,
+      not(x.borrowed) or Mutation == "mutate-borrowed",
       owners' = Owners.mapBy(p => {
         val old = owners.get(p)
         if (p == o) {
@@ -56,6 +57,7 @@ module ComponentIndex {
     val x = owners.get(o)
     all {
       x.remaining.length() > 0,
+      not(x.borrowed),
       x.stage == 1 or (x.stage == 0 and Mutation == "early"),
       owners' = owners.set(o, { ...x,
         rows: x.remaining.head().concat(x.rows), version: x.version + 1,
@@ -72,6 +74,7 @@ module ComponentIndex {
     val x = owners.get(o)
     all {
       x.stage == 0, x.remaining.length() > 0,
+      not(x.borrowed),
       owners' = owners.set(o, { ...x,
         cache: List(3).concat(x.cache),
         cacheVersion: if (Mutation == "failed") x.version else -1,
@@ -101,9 +104,27 @@ module ComponentIndex {
     }
   }
 
+  // A resolved reader is held between worker admission and join. The
+  // next source update must wait for that interval to close.
+  action borrowView(o: int): bool = {
+    val x = owners.get(o)
+    all {
+      x.viewValid, not(x.borrowed),
+      owners' = owners.set(o, { ...x, borrowed: true })
+    }
+  }
+
+  action join(o: int): bool = {
+    val x = owners.get(o)
+    all {
+      x.borrowed,
+      owners' = owners.set(o, { ...x, borrowed: false })
+    }
+  }
+
   action step = {
     nondet o = Owners.oneOf()
-    any { extend(o), install(o), failExtend(o), rebuild(o), readView(o) }
+    any { extend(o), install(o), failExtend(o), rebuild(o), readView(o), borrowView(o), join(o) }
   }
 
   val Consistent = Owners.forall(o => {
@@ -129,7 +150,11 @@ module ComponentIndex {
       Set(0, 2).contains(x.stage), x.cacheVersion == x.version, x.viewRows == x.rows
     }
   })
-  val safety = Consistent and HeldStable and PrivateExtension and ViewConsistent
+  val BorrowedCut = Owners.forall(o => {
+    val x = owners.get(o)
+    x.borrowed implies (x.viewValid and x.cacheVersion == x.version and x.viewRows == x.rows)
+  })
+  val safety = Consistent and HeldStable and PrivateExtension and ViewConsistent and BorrowedCut
 }
 
 module ComponentIndexFixture {

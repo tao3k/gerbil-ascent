@@ -203,6 +203,55 @@ fn delta_actual_kernel_witness_counts_exclude_all_old_and_duplicate_fresh_joins(
 }
 
 #[test]
+fn directed_chain_closure_matches_the_single_worker_traversal_cost() {
+    const SOURCE: &str = "(define-program (closure) (sources edge0) (outputs reach0)
+        (relation edge0 ((from exact-integer?) (to exact-integer?)))
+        (relation reach0 ((from exact-integer?) (to exact-integer?)))
+        ((reach0 X Y) <-- (edge0 X Y))
+        ((reach0 X Z) <-- (reach0 X Y) (edge0 Y Z)))";
+    let program = crate::RuleProgram::read_sources(&[SOURCE], None).unwrap();
+    let graph = Graph::build(program.program).unwrap();
+    for groups in [16, 256] {
+        const WIDTH: usize = 16;
+        let row = |from: usize, to: usize| {
+            vec![
+                Value::from(i64::try_from(from).unwrap()),
+                Value::from(i64::try_from(to).unwrap()),
+            ]
+            .into()
+        };
+        let edges = (0..groups)
+            .flat_map(|group| {
+                (0..WIDTH - 1)
+                    .map(move |start| row(group * WIDTH + start, group * WIDTH + start + 1))
+            })
+            .collect();
+        let expected: BTreeSet<crate::Row> = (0..groups)
+            .flat_map(|group| {
+                (0..WIDTH).flat_map(move |from| {
+                    (from + 1..WIDTH).map(move |to| row(group * WIDTH + from, group * WIDTH + to))
+                })
+            })
+            .collect();
+        let budget = Budget::new(
+            &Limits::default(),
+            &Cancellation::default(),
+            2,
+            graph.program.fact_limits,
+            graph.program.relation_limit,
+            std::time::Instant::now(),
+        );
+        let actual = evaluate_budgeted(&graph, &[edges, vec![]], &budget, || false).unwrap();
+        assert_eq!(actual[1].iter().cloned().collect::<BTreeSet<_>>(), expected);
+        let matched = budget.matches.load(Ordering::Relaxed);
+        let witnesses = budget.witnesses.load(Ordering::Relaxed);
+        assert_eq!(matched, 2 * expected.len());
+        assert_eq!(witnesses, expected.len());
+        eprintln!("DIRECTED-CHAIN groups={groups} matched={matched} witnesses={witnesses}");
+    }
+}
+
+#[test]
 fn delta_provenance_retains_alternatives_discovered_after_the_head_fact() {
     const SOURCE: &str = "(ascent (relation edge ((x integer?) (y integer?))) (relation p ((x integer?) (y integer?))) (relation q ((x integer?) (y integer?))) ((p x z) <-- (q x y) (q y z)) ((q x y) <-- (p x y)) ((p x y) <-- (edge x y)))";
     let edges = input(0b0_1010_0010, 3);

@@ -13,7 +13,7 @@
                  gerbil-ascent-atom gerbil-ascent-variable gerbil-ascent-literal)
         (only-in :gerbil-ascent/program/scheme-checked relational-source)
         (only-in :gerbil-ascent/program/scheme-snapshot relational-snapshot-program)
-        (only-in :gerbil-ascent/program/types GerbilAscentTermContract)
+        (only-in :gerbil-ascent/program/types GerbilAscentTermContract GerbilAscentGuardContract)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (prefix-in :gerbil-ascent/t/qualification/scheme-snapshot-reference frozen-)
         (only-in :gerbil-ascent/t/performance/operator-publication/fixture publication-shape)
@@ -33,6 +33,44 @@
      (relation number (value) '((0)))
      (rule (number ?next) (number ?n) (compute ?next (+ ?n 1)))
      (limits 8 8 16))))
+
+(def (stratified-construction-observations captured? fail? (change-at 'source))
+  (let ((events []) (classify (.ref GerbilAscentGuardContract '.classify)))
+    (def (observe item value)
+      (set! events (cons item events))
+      value)
+    (def (change-classifier!)
+      (ascent-replace-contract-slot! GerbilAscentGuardContract '.classify
+        (lambda (candidate context)
+          (observe 'guard #t)
+          (when fail? (error "guard classifier rejected"))
+          (classify candidate context))))
+    (def (source)
+      (observe 'source #f)
+      (when (eq? change-at 'source) (change-classifier!))
+      '((0) (1)))
+    (def (budget item count)
+      (when (and (eq? change-at 'limits) (eq? item 'input))
+        (change-classifier!))
+      (observe item count))
+    (try
+      (let (program
+             (if captured?
+               (relational-program
+                (relation edge (n) (source))
+                (relation answer (n))
+                (rule (answer ?n) (edge ?n) (where (< ?n (value 1))))
+                (limits (budget 'input 8) (budget 'derived 8) (budget 'output 16)))
+               (relational-program
+                (relation edge (n) (source))
+                (relation answer (n))
+                (rule (answer ?n) (edge ?n) (where (< ?n 1)))
+                (limits (budget 'input 8) (budget 'derived 8) (budget 'output 16)))))
+        (list (reverse events)
+              ((.ref (gerbil-ascent-evaluate-program program) 'rows-of) 'answer)))
+      (catch (failure) (list (reverse events) (error-message failure)))
+      (finally
+        (ascent-replace-contract-slot! GerbilAscentGuardContract '.classify classify)))))
 
 
 (def (snapshot-checks-active?)
@@ -88,6 +126,21 @@
 
 (def scheme-closure-contract-test
   (test-suite "Scheme closure guarantees and operational failure boundaries"
+    (test-case "closed stratified rule construction preserves caller and classifier order"
+      (let (closed (stratified-construction-observations #f #f))
+        (check-equal? closed (stratified-construction-observations #t #f))
+        (check-equal? (caar closed) 'source)
+        (check-equal? (cadar closed) 'guard)
+        (check-equal? (cadr closed) '((0))))
+      (let (rejected (stratified-construction-observations #f #t))
+        (check-equal? rejected (stratified-construction-observations #t #t))
+        (check-equal? rejected '((source guard) "guard classifier rejected")))
+      ;; Limits are evaluated after rule assembly with the ordinary Program
+      ;; root still responsible for validating a changed descriptor.
+      (let (root-rejected (stratified-construction-observations #f #t 'limits))
+        (check-equal? root-rejected (stratified-construction-observations #t #t 'limits))
+        (check-equal? (car root-rejected) '(source input derived output guard))
+        (check-equal? (string? (cadr root-rejected)) #t)))
     (test-case "captured snapshots retain the frozen AST and independent graph oracle in serial and twelve-worker requests"
       (for-each
         (lambda (mask)

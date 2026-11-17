@@ -187,7 +187,7 @@ impl Drop for Shared {
         }
     }
 }
-fn clock_ns() -> Result<u64> {
+pub(crate) fn clock_ns() -> Result<u64> {
     #[cfg(target_os = "macos")]
     const CLOCK: libc::clockid_t = libc::CLOCK_UPTIME_RAW;
     #[cfg(not(target_os = "macos"))]

@@ -2,11 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :clan/poo/object .def .o .call)
+(import (only-in :clan/poo/object .def .o)
         (only-in :std/make append-options pkg-config-libs)
         (only-in :std/source this-source-path)
-        (only-in :tao3k/yuanxu/module-system/building/source-package
-                 call-with-build-input-path))
+        (only-in :std/misc/process run-process)
+        (only-in :std/misc/ports read-all-as-string))
 (export Build gerbil-ascent-compiler-options gerbil-ascent-compiler-target)
 
 ;; Existing Gambit header policy; this limits C function size, not VM concurrency.
@@ -34,15 +34,20 @@
         "-ld-options" ,module-link-options "-cc-options" ,c-options)
       (exe: "entry" bin: "libascent" "-ld-options" ,library-link-options "-cc-options" ,c-options))))
 
+(def (initialize-compiler-build!)
+  ;; Gambit's native build profile preserves the configured compiler flags.
+  ;; Set the existing function-size policy before Make starts any worker.
+  (def suffix (string-append " " (cadr gerbil-ascent-compiler-options)))
+  (def configured
+    (or (getenv "CORCXXFLAGS_GAMBUILD" #f)
+        (run-process
+          (list "/bin/sh" "-c"
+                "compiler_profile=$1; shift; . \"$compiler_profile\" >/dev/null; printf '%s' \"$CORCXXFLAGS_GAMBUILD\""
+                "ascent-compiler-profile" (path-expand "bin/gambuild-C" (gerbil-home)))
+          stdout-redirection: #t coprocess: read-all-as-string)))
+  (unless (string-suffix? suffix configured)
+    (setenv "CORCXXFLAGS_GAMBUILD" (string-append configured suffix))))
+
 (.def Build
   defbuild-script: (.o spec: abi-targets)
-  .with-static-inputs:
-  (lambda (projection compile)
-    (.call projection .prepare-compiler-contexts)
-    (.call projection .with-compiler-inputs
-      (lambda ()
-        (.call projection .with-static-inputs
-          (lambda ()
-            ;; Admit the compiler path before static staging restores it.
-            (call-with-build-input-path (path-expand "lib" (gerbil-path)) compile
-              make-source: (this-source-path ".."))))))))
+  .prepare: (lambda (_) (initialize-compiler-build!)))

@@ -12,7 +12,7 @@
         (only-in :std/list/list filter-map)
         (only-in :tao3k/yuanxu/module-system/building/source-package register-module-build-source!)
         (only-in "./interface/build.ss" Build gerbil-ascent-compiler-options gerbil-ascent-compiler-target)
-        (only-in "./init.ss" gerbil-ascent.init.exports))
+        (only-in :tao3k/yuanxu/module-system/building/build-projection yuanxu-project-source-spec))
 (export gerbil-ascent.package.exports
         gerbil-ascent-build-projection gerbil-ascent-library-modules
         gerbil-ascent-rust-spec gerbil-ascent-compiler-options gerbil-ascent-compiler-target)
@@ -20,7 +20,9 @@
 (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent)
 
 (def (gerbil-ascent-build-projection)
-  (.call gerbil-ascent.init.exports .yuanxu-init '("init")))
+  (yuanxu-project-source-spec
+    (path-expand "init.ss" (path-directory (this-source-file)))
+    '("init") (path-directory (this-source-file)) (this-source-file)))
 
 (def (gerbil-ascent-library-modules (projection (gerbil-ascent-build-projection)))
   ;; Scheme-only preparation excludes executables and their C ABI inputs.

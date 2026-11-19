@@ -354,6 +354,8 @@ def sourceInterfaceSchemeSource : String :=
   "       (if (string=? mode \"isolated\") (list +testing-process-isolation-profile+) [])))\n" ++
   "   '(" ++ String.intercalate "\n     " (isolatedSourceEntries.map (fun name => "\"" ++ name ++ "\"")) ++ ")))\n"
 
+def sourceLiveRatio (darwin : Bool) : Nat := if darwin then 90 else 50
+
 def groupsSchemeSource : String :=
   sourceInterfaceSchemeSource ++
   "(def (preparation-compatible-batches profiled compatible)\n" ++
@@ -397,13 +399,15 @@ def groupsSchemeSource : String :=
   "                  (testing-interface-worker-count (length files))))\n" ++
   "      (error \"source batch retains too many entry modules\"))\n" ++
   "    batches))\n" ++
-  ";;; Use the SDK's soft GC target only for memory-sensitive ordinary Darwin\n" ++
-  ";;; batches. Isolated exhaustive declaration work keeps the default target.\n" ++
-  "(def (source-live-ratio profiled file (darwin? (cond-expand (darwin #t) (else #f))))\n" ++
-  "  (if (and darwin? (not (testing-interface-test-file-isolated? profiled file))) 80 50))\n" ++
+  ";;; All Darwin source VMs share the host's memory, including isolated build\n" ++
+  ";;; projections. Tighten only the SDK's soft target; retain the hard heap.\n" ++
+  "(def (source-live-ratio (darwin? (cond-expand (darwin #t) (else #f))))\n" ++
+  "  (if darwin? " ++ toString (sourceLiveRatio true) ++ " " ++
+    toString (sourceLiveRatio false) ++ "))\n" ++
   "(def (source-vm-command command (live-ratio #f))\n" ++
   "  ;; Keep upstream GxTest, argv, heap options and its original explicit exit.\n" ++
-  "  (unless (or (not live-ratio) (memv live-ratio '(50 80)))\n" ++
+  "  (unless (or (not live-ratio) (memv live-ratio '(" ++
+    toString (sourceLiveRatio false) ++ " " ++ toString (sourceLiveRatio true) ++ ")))\n" ++
   "    (error \"unsupported source VM live ratio\" live-ratio))\n" ++
   "  (when (and live-ratio\n" ++
   "             (not (ormap (cut string-prefix? \"-:max-heap=\" <>) command)))\n" ++
@@ -815,26 +819,22 @@ theorem resized_sections_preserve_maximum (target lower upper : Nat) :
 -- The existing SDK heap target is tightened without changing its maximum.
 -- This is the SDK arithmetic model, not a claim about RSS or collection cost.
 theorem source_gc_target_le_default (live minimum : Nat) :
-    adjustedHeapWords live minimum 80 ≤ adjustedHeapWords live minimum 50 := by
+    adjustedHeapWords live minimum 90 ≤ adjustedHeapWords live minimum 50 := by
   unfold adjustedHeapWords
   omega
 
 -- Workload-specific SDK targets; this model does not change the hard maximum.
-def sourceLiveRatio (darwin isolated : Bool) : Nat :=
-  if darwin && !isolated then 80 else 50
-theorem isolated_live_ratio (darwin : Bool) : sourceLiveRatio darwin true = 50 := by
-  cases darwin <;> rfl
-theorem source_live_ratio_valid (darwin isolated : Bool) :
-    sourceLiveRatio darwin isolated = 50 ∨ sourceLiveRatio darwin isolated = 80 := by
-  cases darwin <;> cases isolated <;> decide
-theorem source_gc_target_preserves_bound (darwin isolated : Bool) (live minimum : Nat) :
-    adjustedHeapWords live minimum (sourceLiveRatio darwin isolated) ≤
+theorem darwin_source_live_ratio : sourceLiveRatio true = 90 := rfl
+theorem linux_source_live_ratio : sourceLiveRatio false = 50 := rfl
+theorem source_live_ratio_valid (darwin : Bool) :
+    sourceLiveRatio darwin = 50 ∨ sourceLiveRatio darwin = 90 := by
+  cases darwin <;> decide
+theorem source_gc_target_preserves_bound (darwin : Bool) (live minimum : Nat) :
+    adjustedHeapWords live minimum (sourceLiveRatio darwin) ≤
       adjustedHeapWords live minimum 50 := by
-  cases darwin <;> cases isolated
-  · exact Nat.le_refl _
+  cases darwin
   · exact Nat.le_refl _
   · exact source_gc_target_le_default live minimum
-  · exact Nat.le_refl _
 
 theorem preparation_heap_policy_is_bounded :
     preparationHeapGiB = 3 ∧ 0 < preparationLiveRatio ∧ preparationLiveRatio ≤ 100 := by

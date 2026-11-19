@@ -108,13 +108,13 @@
                   (testing-interface-worker-count (length files))))
       (error "source batch retains too many entry modules"))
     batches))
-;;; Use the SDK's soft GC target only for memory-sensitive ordinary Darwin
-;;; batches. Isolated exhaustive declaration work keeps the default target.
-(def (source-live-ratio profiled file (darwin? (cond-expand (darwin #t) (else #f))))
-  (if (and darwin? (not (testing-interface-test-file-isolated? profiled file))) 80 50))
+;;; All Darwin source VMs share the host's memory, including isolated build
+;;; projections. Tighten only the SDK's soft target; retain the hard heap.
+(def (source-live-ratio (darwin? (cond-expand (darwin #t) (else #f))))
+  (if darwin? 90 50))
 (def (source-vm-command command (live-ratio #f))
   ;; Keep upstream GxTest, argv, heap options and its original explicit exit.
-  (unless (or (not live-ratio) (memv live-ratio '(50 80)))
+  (unless (or (not live-ratio) (memv live-ratio '(50 90)))
     (error "unsupported source VM live ratio" live-ratio))
   (when (and live-ratio
              (not (ormap (cut string-prefix? "-:max-heap=" <>) command)))
@@ -165,7 +165,7 @@
                 ;; The canonical command includes compiled GxTest's explicit exit
                 ;; propagation. Process success is checked after draining output.
                 (run-process (append (source-vm-command (testing-interface-command-for profiled file '("-v" "5"))
-                                    (source-live-ratio profiled file)) (cdr batch))
+                                    (source-live-ratio)) (cdr batch))
                   stdout-redirection: #t stderr-redirection: #t
                   coprocess:
                   (lambda (input)

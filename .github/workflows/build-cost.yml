@@ -496,7 +496,9 @@ jobs:
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
         run: |
           set -o pipefail
-          { time -p timeout "$ASCENT_GXTEST_TIMEOUT" just test-file t/qualification 2G; } 2>&1 | tee "$RUNNER_TEMP/macos-semantics/semantics.log"
+          vm_stat > "$RUNNER_TEMP/macos-semantics/memory-before.log"
+          trap 'vm_stat > "$RUNNER_TEMP/macos-semantics/memory-after.log"' EXIT
+          { /usr/bin/time -l timeout "$ASCENT_GXTEST_TIMEOUT" just test-file t/qualification 2G; } 2>&1 | tee "$RUNNER_TEMP/macos-semantics/semantics.log"
           python3 tools/ci/build-cost-control.py --verify-source-log "$RUNNER_TEMP/macos-semantics/semantics.log" --output "$RUNNER_TEMP/macos-semantics/verified"
       - name: Check development policy
         if: ${{ !cancelled() && steps.restore-compilation.outcome == 'success' }}

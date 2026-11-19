@@ -20,7 +20,7 @@ The controller checks actual batch lengths before starting children. The log
 verifier independently rejects oversized batches, missing or duplicate modules,
 compiled Suite carriers and incomplete single-processor receipts. Isolated
 corpora still own distinct processes. Native commands, argv, exit handling and
-existing GC targets are preserved.
+the native collector are preserved.
 
 * Model and implementation
 
@@ -77,8 +77,7 @@ that guard or rolling back its revision would change the library's admission
 semantics and is not a test cleanup mechanism.
 
 These five Suites use the existing process-isolation profile. They retain every
-fault and refusal assertion, their 2 GiB hard heap and the existing isolated GC
-target. Ordinary cache eviction and local object edits remain in compatible
+fault and refusal assertion and their 2 GiB hard heap. Ordinary cache eviction and local object edits remain in compatible
 batches. Framework tests check that each selected Suite owns a singleton batch,
 all ordinary modules remain present, and the protocol-mutation roster is part
 of the Lean-rendered source. Linux and macOS semantic steps both explicitly
@@ -97,3 +96,28 @@ profile. Runtime source-import tests stay in ordinary compatible batches and
 continue to assert unchanged prototype identity and valid held Sessions across
 late imports. Descriptor cache eviction also stays in ordinary batches. No
 namespace restoration hook, type-identity bypass or runtime loader is added.
+
+* Concurrent source heap targets
+
+Process isolation does not reserve a separate host memory budget. Isolated
+build-projection Suites load a substantial Module graph and compete for the
+same host memory as the other source VMs. Exempting them from a tighter soft
+collector target can leave the largest heaps growing at the default ratio.
+
+All Darwin source VMs now use the released collector's =live-ratio=90= target;
+Linux retains =50=. The 2 GiB hard heap, twelve single-processor VM workers,
+complete corpus and semantic deadline remain unchanged. This is a source-test
+configuration, not a new engine GC policy or a warmup requirement. No explicit
+collection, extra loader, collector patch or reduced assertion set is used.
+
+=source_gc_target_le_default= and =source_gc_target_preserves_bound= describe
+the released collector's division-before-multiplication target arithmetic.
+The Scheme policy and command construction are compared against Lean-rendered
+source. These obligations do not prove resident memory, collector latency or
+completion on a particular runner. Tighter targets can increase collection
+work; complete native execution and exact-head CI remain required.
+
+The macOS gate records native process timing and virtual-memory counters before
+and after execution, including on failure. The counters are host-wide snapshots;
+their differences are observations, not per-Suite allocation totals. Logs stay
+in the existing diagnostic artifact and are never committed to the repository.

@@ -7,7 +7,7 @@
         (only-in "./init.ss" gerbil-ascent.init.exports)
         (only-in "./interface/build.ss" Build)
         "./package-spec.ss")
-(export (import: "./package-spec.ss"))
+(export main (import: "./package-spec.ss"))
 
 (def (main . args)
   (defbuild-script (.get gerbil-ascent.init.exports std-make-spec)

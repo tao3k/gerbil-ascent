@@ -3,6 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Publish the native API through the Yuanxu module role.
 (import (only-in :clan/poo/object .def .o)
+        ;; The published callable role is also a first-build dependency.
+        "./func.ss"
         (only-in "./types.ss" RulesScopeContract)
         (only-in "./objects.ss" RulesAPI))
 

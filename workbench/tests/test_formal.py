@@ -2,6 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 """Formal receipt admission and preserved exploration obligations."""
 import unittest
+from pathlib import Path
+import tempfile
+import threading
+import time
+from unittest.mock import patch
+
+import ascent_workbench.formal as formal
 
 from ascent_workbench.formal import MODEL_ORDER, Obligation, configuration, obligations, validate_output
 
@@ -96,6 +103,76 @@ class FormalTests(unittest.TestCase):
         self.assertEqual(signature(ordered), signature(configs))
         repeated = [configs[0], configs[-1], configs[0]]
         self.assertEqual(Counter(verification_schedule(repeated)), Counter(repeated))
+
+    def test_one_model_checks_concurrently_without_dropping_or_rewriting_controls(self):
+        from collections import Counter
+        base = configuration("ActorRoundCredits", {})
+        checks = {f"{base.model}-{item.name}": item for item in obligations(base)}
+        barrier = threading.Barrier(2)
+        lock = threading.Lock()
+        seen = []
+        active = set()
+        peak = [0]
+        with tempfile.TemporaryDirectory() as temporary:
+            runner = formal.Runner.__new__(formal.Runner)
+            runner.environment = {}
+            runner.output = Path(temporary)
+            runner.jar = Path("unchanged-checker.jar")
+            runner.deadline = time.monotonic() + 10
+            compiled = []
+            runner.compile = lambda configurations: compiled.extend(configurations)
+            def run(argv, label):
+                with lock:
+                    seen.append(label)
+                    position = len(seen)
+                    active.add(label)
+                    peak[0] = max(peak[0], len(active))
+                try:
+                    self.assertIn("-Xmx1G", argv)
+                    self.assertEqual(argv[argv.index("-workers") + 1], "1")
+                    if position <= 2:
+                        barrier.wait(timeout=3)
+                    item = checks[label]
+                    return item.expected, ("Model checking completed. No error has been found."
+                                           if item.expected == 0 else
+                                           f"Invariant {item.property} is violated")
+                finally:
+                    with lock:
+                        active.remove(label)
+            runner.run = run
+            with patch.object(formal, "capacity", return_value=2):
+                result = runner.quint_checks((base.model,))
+            self.assertEqual(peak[0], 2)
+            self.assertFalse(active)
+            self.assertEqual(Counter(seen), Counter(checks.keys()))
+            self.assertEqual(compiled, [base])
+            self.assertEqual(result, {base.model: len(checks)})
+            for label, item in checks.items():
+                self.assertEqual((runner.output / f"{label}.cfg").read_text(),
+                                 item.configuration.text())
+
+    def test_parallel_checks_keep_counterexample_rejection_and_deadline(self):
+        base = configuration("ActorRoundCredits", {})
+        with tempfile.TemporaryDirectory() as temporary:
+            runner = formal.Runner.__new__(formal.Runner)
+            runner.environment = {}
+            runner.output = Path(temporary)
+            runner.jar = Path("unchanged-checker.jar")
+            runner.deadline = time.monotonic() + 10
+            runner.compile = lambda configurations: None
+            calls = []
+            def run(argv, label):
+                calls.append(label)
+                return 0, "Model checking completed. No error has been found."
+            runner.run = run
+            with patch.object(formal, "capacity", return_value=2), self.assertRaises(RuntimeError):
+                runner.quint_checks((base.model,))
+            self.assertTrue(calls)
+            calls.clear()
+            runner.deadline = time.monotonic() - 1
+            with self.assertRaises(TimeoutError):
+                runner.check(base, obligations(base)[0])
+            self.assertFalse(calls, "an expired budget must not start another checker")
 
     def test_compiler_cost_controls_cover_real_scope_and_invalidation(self):
         checks = {item.name: item for item in obligations(configuration("CompilerCost", {}))}

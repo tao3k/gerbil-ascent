@@ -362,6 +362,9 @@ jobs:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil
         run: |
           set -o pipefail
+          gerbil env cargo build --locked --manifest-path rust/Cargo.toml -p ascent-scheme --bin ascent-scheme-worker
+          export ASCENT_SCHEME_WORKER="$PWD/rust/target/debug/ascent-scheme-worker"
+          test -x "$ASCENT_SCHEME_WORKER"
           gerbil env cargo nextest run --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme --test-threads 12 --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/scheme-binding-tests.log"
           ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)|^[[:space:]]*(FAIL \+ )?LEAK[[:space:]]' "$RUNNER_TEMP/scheme-binding-tests.log"
       - name: Verify the production AOT entry does not load ASP

@@ -251,7 +251,66 @@ jobs:
           path: ${{ runner.temp }}/build-cost
           include-hidden-files: true
 
+  macos-dependencies:
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.baseline == '' && !inputs.process_throughput) }}
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      GERBIL_BUILD_CORES: "3"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Install released SDK prerequisites
+        run: |
+          brew update
+          brew install gcc just openssl@3 zlib sqlite coreutils pkg-config
+          command -v gcc-16
+          echo "$(brew --prefix coreutils)/libexec/gnubin" >> "$GITHUB_PATH"
+      - name: Install unchanged immutable SDK
+        env:
+          GERBIL_RELEASE_ARCHIVE_CACHE: ${{ runner.temp }}/archives
+        run: bash tools/ci/install-gerbil-v19-release.sh "$RUNNER_TEMP/sdk"
+      - name: Bind dependency compiler identity
+        id: compiler
+        run: |
+          fingerprint="$(sha256sum "$GERBIL_HOME/bin/gxi" "$GERBIL_HOME/bin/gsc" "$GERBIL_HOME/include/gambit.h" "$(command -v gcc-16)" "$(gcc-16 -print-prog-name=cc1)" "$(xcrun --find ld)" "$GERBIL_PREFIX/gerbil-build-receipt.json" | sha256sum | cut -d ' ' -f 1)"
+          printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
+      - name: Restore declared dependency build
+        id: dependencies-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            .gerbil
+            !.gerbil/lib/gerbil-ascent
+            !.gerbil/lib/static/gerbil-ascent__*
+            !.gerbil/bin/libascent*
+          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.compiler.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
+      - name: Install declared Scheme dependencies
+        if: ${{ steps.dependencies-cache.outputs.cache-hit != 'true' }}
+        run: |
+          mkdir -p "$HOME/.gerbil/pkg"
+          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
+          gerbil deps --install
+          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
+      - name: Verify and package this run's dependency prefix
+        run: |
+          gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
+          mkdir -p "$RUNNER_TEMP/macos-dependencies"
+          git rev-parse HEAD > "$RUNNER_TEMP/macos-dependencies/head"
+          printf '%s\n' '${{ steps.compiler.outputs.toolchain }}' > "$RUNNER_TEMP/macos-dependencies/toolchain"
+          tar -cf "$RUNNER_TEMP/macos-dependencies/dependencies.tar" .gerbil
+      - name: Transfer this run's verified dependencies
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: macos-dependencies-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/macos-dependencies
+          compression-level: 1
+          retention-days: 1
+
   macos-preparation:
+    needs: macos-dependencies
     if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.baseline == '' && !inputs.process_throughput) }}
     runs-on: macos-26
     timeout-minutes: 30
@@ -323,38 +382,20 @@ jobs:
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
           # END GENERATED PREPARATION CACHE-ADMISSION
-      - name: Restore declared dependency build
+      - name: Download this run's verified dependencies
         if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' }}
-        id: dependencies-cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          path: |
-            .gerbil
-            !.gerbil/lib/gerbil-ascent
-            !.gerbil/lib/static/gerbil-ascent__*
-            !.gerbil/bin/libascent*
-          key: gerbil-dependencies-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.preparation.outputs.toolchain }}-${{ hashFiles('gerbil.pkg', 'dev/gerbil.pkg', 'tools/ci/install-gerbil-v19-release.sh') }}
-      - name: Install declared Scheme dependencies
-        # A compatible, admitted prefix already contains these exact declarations.
-        # Reinstalling rebuilds Core and invalidates unchanged support interfaces.
-        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' && steps.dependencies-cache.outputs.cache-hit != 'true' }}
+          name: macos-dependencies-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/macos-dependencies
+      - name: Verify dependency source and compiler identity before reuse
+        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' }}
         run: |
-          mkdir -p "$HOME/.gerbil/pkg"
-          gerbil pkg dir --add git.cons.io/mighty-gerbils/gerbil-directory
-          gerbil deps --install
-          (cd dev && GERBIL_PATH="$GITHUB_WORKSPACE/.gerbil" gerbil deps --install)
+          test "$(cat "$RUNNER_TEMP/macos-dependencies/head")" = "$(git rev-parse HEAD)"
+          test "$(cat "$RUNNER_TEMP/macos-dependencies/toolchain")" = '${{ steps.preparation.outputs.toolchain }}'
+          tar -xf "$RUNNER_TEMP/macos-dependencies/dependencies.tar"
       - name: Verify declared Gerbil interfaces
         run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
-      - name: Save verified dependencies before compiling ASCENT
-        if: ${{ steps.preparation-cache.outputs.cache-matched-key == '' && steps.dependencies-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: |
-            .gerbil
-            !.gerbil/lib/gerbil-ascent
-            !.gerbil/lib/static/gerbil-ascent__*
-            !.gerbil/bin/libascent*
-          key: ${{ steps.dependencies-cache.outputs.cache-primary-key }}
       - name: Build current Scheme package
         run: gerbil build
       - name: Prepare complete source semantic dependencies

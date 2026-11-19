@@ -180,8 +180,8 @@ def capacity(heap_mib: int = 1024) -> int:
 
 
 def verification_schedule(configurations: list[Configuration]) -> list[Configuration]:
-    # Every model is already compiled and independent. Start larger obligation
-    # groups first so their serial checks do not form a late verification tail.
+    # Every model is already compiled. Prioritize larger groups while their
+    # independent obligations share the same bounded checker pool.
     return sorted(configurations, key=lambda base: len(obligations(base)), reverse=True)
 
 
@@ -305,33 +305,39 @@ class Runner:
         finally:
             self.close_compiler()
 
-    def check(self, base: Configuration) -> int:
-        count = 0
-        checks = obligations(base)
-        print(f"QUINT-MODEL-START {base.model} obligations={len(checks)}", flush=True)
-        for obligation in checks:
-            label = f"{base.model}-{obligation.name}"
-            config = self.output / f"{label}.cfg"
-            config.write_text(obligation.configuration.text())
-            code, output = self.run(["java", "-Xmx1G", "-XX:+UseParallelGC", f"-Djava.io.tmpdir={self.output}",
-                                     "-cp", str(self.jar), "tlc2.TLC", "-workers", "1", "-config", str(config),
-                                     "-metadir", str(self.output / label), str(self.output / f"{base.main}.tla")], label)
-            validate_output(obligation, code, output)
-            marker = "QUINT-CHECK-OK" if code == 0 else "COUNTEREXAMPLE-OK"
-            print(f"{marker} {label} {obligation.property} exit={code}", flush=True)
-            count += 1
-        return count
+    def check(self, base: Configuration, obligation: Obligation) -> None:
+        if time.monotonic() >= self.deadline:
+            raise TimeoutError("formal verification deadline exhausted before "
+                               f"{base.model}-{obligation.name}")
+        label = f"{base.model}-{obligation.name}"
+        config = self.output / f"{label}.cfg"
+        config.write_text(obligation.configuration.text())
+        code, output = self.run(["java", "-Xmx1G", "-XX:+UseParallelGC", f"-Djava.io.tmpdir={self.output}",
+                                 "-cp", str(self.jar), "tlc2.TLC", "-workers", "1", "-config", str(config),
+                                 "-metadir", str(self.output / label), str(self.output / f"{base.main}.tla")], label)
+        validate_output(obligation, code, output)
+        marker = "QUINT-CHECK-OK" if code == 0 else "COUNTEREXAMPLE-OK"
+        print(f"{marker} {label} {obligation.property} exit={code}", flush=True)
 
     def quint_checks(self, models: tuple[str, ...]) -> dict[str, int]:
         configurations = [configuration(model, self.environment) for model in models]
         self.compile(configurations)
-        workers = min(capacity(), len(configurations))
+        scheduled = []
+        for base in verification_schedule(configurations):
+            checks = obligations(base)
+            print(f"QUINT-MODEL-START {base.model} obligations={len(checks)}", flush=True)
+            scheduled.extend((base, obligation) for obligation in checks)
+        workers = min(capacity(), len(scheduled))
         print(f"QUINT-CAPACITY workers={workers} models={len(configurations)}", flush=True)
-        results = {}
+        results = dict.fromkeys(models, 0)
+        # Configurations and TLA inputs are immutable. Each obligation already
+        # owns a distinct cfg, log and TLC state directory; it needs no model lock.
         with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures = {pool.submit(self.check, base): base.model for base in verification_schedule(configurations)}
+            futures = {pool.submit(self.check, base, obligation): base.model
+                       for base, obligation in scheduled}
             for future in as_completed(futures):
-                results[futures[future]] = future.result()
+                future.result()
+                results[futures[future]] += 1
         print("ALL-QUINT-CHECK-OK", flush=True)
         return results
 

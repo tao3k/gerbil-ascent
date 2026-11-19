@@ -31,6 +31,23 @@ the complete invocation. No output is synthesized. Inactive, failed and
 incomplete Suites still fail. Existing sample counts, scenario comparisons and
 thresholds are unchanged. Old exit-124 receipts remain failed observations.
 
+** Oracle dependency resolution
+
+The differential adapter in =rust/ascent-oracle/tests/integration/common.rs=
+places the selected prefix's =lib= before the repository source directory in
+=GERBIL_LOADPATH=. The fixture remains an explicit source entry. Gerbil's own
+resolver selects prepared production interfaces; no additional loader or
+interface cache is introduced. Native package construction and the existing
+source-view and compiled-artifact checks remain prerequisites.
+
+This preserves the preparation model's distinction between source test
+carriers and compiled production dependencies. It removes repeated dependency
+expansion from differential children, not relation evaluation work. Resolver
+observations and differential tests establish this call path; they do not
+prove equivalence of the entire Scheme implementation and its Lean models.
+
+** Earlier compiled closure observations
+
 The compiled DSL closure of PR head =bebd1ba0= has a separate 120-second
 wall gate. The Linux job completed the standard source suites in 234.12
 seconds, above the prior 180-second target. The compiled run was still

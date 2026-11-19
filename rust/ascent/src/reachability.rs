@@ -339,8 +339,8 @@ impl Group {
         Ok(true)
     }
     fn validate_row(&self, row: &[u64], steps: &mut usize) -> Result<bool> {
-        for b in 0..self.values.len() {
-            if bit(row, b) && !subset(&self.bits[b], row, steps)? {
+        for (b, reachable) in self.bits.iter().enumerate() {
+            if bit(row, b) && !subset(reachable, row, steps)? {
                 return Ok(false);
             }
         }

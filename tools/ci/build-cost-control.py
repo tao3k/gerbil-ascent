@@ -247,9 +247,9 @@ def source_semantic_workload(tree, log):
         raise ValueError('source semantics did not dispatch twelve independent VM workers')
     batch_count = int(re.search(r' batches=(\d+) ', dispatches[0]).group(1))
     width = re.search(r' max-batch-modules=(\d+)(?: |$)', dispatches[0])
-    retained_width = source_batch_width(source_batch_width(len(expected), 12), 12)
+    retained_width = source_batch_width(len(expected), 12)
     if width is None or not 0 < int(width[1]) <= retained_width:
-        raise ValueError('source VM retained-entry width exceeds the native refinement bound')
+        raise ValueError('source VM retained-entry width exceeds the native balanced capacity')
     processors = [line for line in lines if line.startswith('VM-RUNTIME processors=')]
     if len(processors) != batch_count or any(line != 'VM-RUNTIME processors=1' for line in processors):
         raise ValueError('source VM runtime processor receipts are incomplete or not single-threaded')

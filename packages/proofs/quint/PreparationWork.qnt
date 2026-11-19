@@ -130,9 +130,9 @@ module PreparationWork {
     q.cacheGeneration == q.inputGeneration or Mutation == "reuse-stale-input",
     q' = {...q, staleReuse: q.staleReuse or q.cacheGeneration != q.inputGeneration,
       incompleteReuse: q.incompleteReuse or not(q.payloadPresent and q.receiptPresent)}}
-  // Current complete inventory: 174 roots, 12 VM workers, unchanged two-entry cap.
+  // Current complete inventory: 184 roots, 12 VM workers, native balanced width.
   // Generic width/refinement is proved in Lean; this finite instance is not a byte-allocation proof.
-  pure val SourceBatchLimit = batch_width(batch_width(174, 12), 12)
+  pure val SourceBatchLimit = batch_width(184, 12)
   // Suite completion does not evict Gerbil's retained module contexts; VM exit does.
   action StartSourceVm = all {not(q.sourceVmActive), q.sourceStarts < 2,
     q' = {...q, sourceVmActive: true, sourceStarts: q.sourceStarts + 1,
@@ -199,7 +199,7 @@ module PreparationWork {
   val ContentKeyExact = q.requestKeyGeneration == q.inputGeneration
   val CompleteCacheBundle = not(q.incompleteReuse)
   val ReuseCurrentInputs = not(q.staleReuse)
-  val PackedStartupCount = complete_packed_starts == 90 and complete_packed_starts < 146
+  val PackedStartupCount = complete_packed_starts == 14 and complete_packed_starts < 98
   val BoundedSourceEntries = q.retainedEntryRoots <= SourceBatchLimit
   val ExitedVmReleasesEntries = not(q.sourceVmActive) implies q.retainedEntryRoots == 0
 }

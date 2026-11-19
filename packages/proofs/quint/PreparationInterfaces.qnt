@@ -10,5 +10,5 @@ module PreparationInterfaces {
   pure def batch_width(entries: int, workers: int): int =
     if (entries == 0) 0 else (entries - 1) / workers + 1
   pure val complete_packed_starts =
-    2 + 4 * batch_width(15, 2) + 8 * batch_width(14, 2)
+    2 + 12
 }

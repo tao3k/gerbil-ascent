@@ -179,7 +179,7 @@ def interfacesQuintSource : String :=
   "  pure def batch_width(entries: int, workers: int): int =\n" ++
   "    if (entries == 0) 0 else (entries - 1) / workers + 1\n" ++
   "  pure val complete_packed_starts =\n" ++
-  "    2 + 4 * batch_width(15, 2) + 8 * batch_width(14, 2)\n" ++
+  "    2 + 12\n" ++
   "}\n"
 
 def interfacesSchemeSource : String :=
@@ -322,18 +322,15 @@ def runnerRecipeSource : String :=
 -- The SDK eagerly prepares every module in one GxTest batch. Native
 -- groups retain SDK compatibility; bounded consecutive chunks fill the existing cap.
 def groupsSchemeSource : String :=
-  "(def (preparation-refined-batches profiled compatible)\n" ++
+  "(def (preparation-native-batches profiled compatible)\n" ++
   "  (if (null? compatible) []\n" ++
-  "    (let* ((workers (testing-interface-worker-count (length compatible)))\n" ++
-  "           (width (preparation-batch-width (preparation-batch-width (length compatible) workers) workers)))\n" ++
-  "      (apply append\n" ++
-  "        (map (cut group-n-consecutive width <>)\n" ++
-  "          (testing-interface-test-file-batches profiled\n" ++
-  "            (striped-module-files compatible workers)))))))\n" ++
+  "    (testing-interface-test-file-batches profiled\n" ++
+  "      (striped-module-files compatible\n" ++
+  "        (testing-interface-worker-count (length compatible))))))\n" ++
   "(def (preparation-batch-width entries workers)\n" ++
   "  (if (zero? entries) 0 (+ 1 (quotient (- entries 1) workers))))\n" ++
   "(def (preparation-batches-bounded? batches entries workers)\n" ++
-  "  (let (bound (preparation-batch-width (preparation-batch-width entries workers) workers))\n" ++
+  "  (let (bound (preparation-batch-width entries workers))\n" ++
   "    (andmap (lambda (batch) (<= (length batch) bound)) batches)))\n" ++
   "(def (single-thread-vm-command command (live-ratio #f))\n" ++
   "  (let wrap ((arguments command))\n" ++
@@ -356,7 +353,7 @@ def groupsSchemeSource : String :=
   "    (if (string=? mode \"batched\")\n" ++
   "      (let-values (((isolated compatible)\n" ++
   "                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
-  "        (let* ((ordinary (preparation-refined-batches profiled compatible))\n" ++
+  "        (let* ((ordinary (preparation-native-batches profiled compatible))\n" ++
   "               (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))\n" ++
   "          (if defer? (append (take ordinary prefix-count) (map list isolated) (drop ordinary prefix-count))\n" ++
   "                     (append (map list isolated) ordinary))))\n" ++
@@ -511,11 +508,11 @@ theorem native_refinement_retained_width (entries workers : Nat) :
       nativeBatchWidth entries workers := native_batch_width_le_entries _ _
 
 def batchesBounded (groups : List (List String)) (entries workers : Nat) : Bool :=
-  groups.all (fun group => group.length ≤ nativeBatchWidth (nativeBatchWidth entries workers) workers)
+  groups.all (fun group => group.length ≤ nativeBatchWidth entries workers)
 
 theorem oversized_batch_refused (groups : List (List String)) (entries workers : Nat)
     (group : List String) (present : group ∈ groups)
-    (oversized : nativeBatchWidth (nativeBatchWidth entries workers) workers < group.length) :
+    (oversized : nativeBatchWidth entries workers < group.length) :
     batchesBounded groups entries workers = false := by
   cases h : batchesBounded groups entries workers with
   | false => rfl
@@ -524,17 +521,41 @@ theorem oversized_batch_refused (groups : List (List String)) (entries workers :
     simp only [decide_eq_true_eq] at bound
     omega
 
-theorem complete_source_batch_width : nativeBatchWidth (nativeBatchWidth 174 12) 12 = 2 := by decide
+theorem complete_source_batch_width : nativeBatchWidth 184 12 = 16 := by decide
 
--- Full-selection shape: 172 compatible entries in four groups of fifteen and
--- eight of fourteen, plus two independent exhaustive corpora. This is a startup
--- count, not elapsed time or cumulative allocation; SDK balance is a premise.
-def completePackedStarts : Nat :=
-  2 + 4 * nativeBatchWidth 15 2 + 8 * nativeBatchWidth 14 2
+-- The current source inventory has 182 compatible entries in two groups of
+-- sixteen and ten of fifteen, plus two isolated exhaustive corpora. Native
+-- balance is an SDK premise, checked against actual batches before admission.
+def completePackedStarts : Nat := 2 + 12
 
-theorem complete_packing_start_count : completePackedStarts = 90 := by decide
+def secondPartitionStarts : Nat :=
+  2 + 2 * nativeBatchWidth 16 2 + 10 * nativeBatchWidth 15 2
 
-theorem complete_packing_fewer_starts : completePackedStarts < 146 := by decide
+theorem complete_packing_start_count : completePackedStarts = 14 := by decide
+
+theorem complete_packing_fewer_starts :
+    completePackedStarts < secondPartitionStarts ∧ secondPartitionStarts = 98 := by decide
+
+-- A work accounting identity, not a hardware latency or heap-byte theorem.
+-- Per-case work is fixed. Each fresh process pays the same nonnegative
+-- initialization/termination units; removing a split cannot increase that work.
+def sourceLifecycleWork (caseWork lifecycleUnits : Nat) (groups : List (List String)) : Nat :=
+  caseWork + batchStartupUnits groups * lifecycleUnits
+
+theorem native_lifecycle_work_le_refined
+    (caseWork lifecycleUnits : Nat)
+    (split : List String → List (List String)) (groups : List (List String))
+    (nonempty : ∀ group ∈ groups, 1 ≤ (split group).length) :
+    sourceLifecycleWork caseWork lifecycleUnits groups ≤
+      sourceLifecycleWork caseWork lifecycleUnits (refineBatches split groups) := by
+  exact Nat.add_le_add_left
+    (Nat.mul_le_mul_right lifecycleUnits (second_partition_never_fewer_starts split groups nonempty)) caseWork
+
+theorem complete_lifecycle_work_saved (caseWork lifecycleUnits : Nat) :
+    caseWork + secondPartitionStarts * lifecycleUnits =
+      caseWork + completePackedStarts * lifecycleUnits + 84 * lifecycleUnits := by
+  change caseWork + 98 * lifecycleUnits = caseWork + 14 * lifecycleUnits + 84 * lifecycleUnits
+  omega
 
 def isolatedEntryPeak (weight : String → Nat) : List String → Nat
   | [] => 0
@@ -930,3 +951,6 @@ end Ascent.PreparationWork
 #print axioms Ascent.PreparationWork.complete_packing_fewer_starts
 
 #print axioms Ascent.PreparationWork.source_gc_target_le_default
+
+#print axioms Ascent.PreparationWork.native_lifecycle_work_le_refined
+#print axioms Ascent.PreparationWork.complete_lifecycle_work_saved

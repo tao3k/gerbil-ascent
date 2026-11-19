@@ -9,7 +9,7 @@
 ;;; GxTest still owns export/Suite/Case discovery and verdicts in each child.
 ;;; The caller supervises dispatch, startup and progress across all workers.
 (import (only-in :clan/poo/object .cc)
-        (only-in :std/list/list partition group-n-consecutive)
+        (only-in :std/list/list partition)
         (only-in :std/string/misc string-contains)
         (only-in :std/string/uuid random-uuid uuid->string)
         (only-in :std/sync/wg make-wg wg-add! wg-wait!)
@@ -60,21 +60,18 @@
      (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
        (if (string=? mode "isolated") (list +testing-process-isolation-profile+) [])))
    '("ascent-semi-naive-test." "ascent-candidate-flow-test.")))
-;; Native GxTest prepares all modules before running a batch. Refine compatible
-;; batches to release those contexts on VM exit without lowering concurrency.
+;; Keep the framework's balanced batches. A second partition repeats source
+;; initialization and VM teardown; the native hard heap still bounds each VM.
 ;; BEGIN GENERATED PREPARATION GROUPS
-(def (preparation-refined-batches profiled compatible)
+(def (preparation-native-batches profiled compatible)
   (if (null? compatible) []
-    (let* ((workers (testing-interface-worker-count (length compatible)))
-           (width (preparation-batch-width (preparation-batch-width (length compatible) workers) workers)))
-      (apply append
-        (map (cut group-n-consecutive width <>)
-          (testing-interface-test-file-batches profiled
-            (striped-module-files compatible workers)))))))
+    (testing-interface-test-file-batches profiled
+      (striped-module-files compatible
+        (testing-interface-worker-count (length compatible))))))
 (def (preparation-batch-width entries workers)
   (if (zero? entries) 0 (+ 1 (quotient (- entries 1) workers))))
 (def (preparation-batches-bounded? batches entries workers)
-  (let (bound (preparation-batch-width (preparation-batch-width entries workers) workers))
+  (let (bound (preparation-batch-width entries workers))
     (andmap (lambda (batch) (<= (length batch) bound)) batches)))
 (def (single-thread-vm-command command (live-ratio #f))
   (let wrap ((arguments command))
@@ -97,7 +94,7 @@
     (if (string=? mode "batched")
       (let-values (((isolated compatible)
                     (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
-        (let* ((ordinary (preparation-refined-batches profiled compatible))
+        (let* ((ordinary (preparation-native-batches profiled compatible))
                (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))
           (if defer? (append (take ordinary prefix-count) (map list isolated) (drop ordinary prefix-count))
                      (append (map list isolated) ordinary))))

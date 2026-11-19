@@ -125,6 +125,24 @@ class SourceSemanticCiTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'incomplete or compiled'):
                 CONTROL.source_semantic_workload(root, log)
 
+    def test_native_balanced_width_keeps_oversized_batch_negative_control(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            suites = root / 't/qualification'
+            suites.mkdir(parents=True)
+            for index in range(184):
+                (suites / f'entry-{index}-test.ss').write_text('(export)\n')
+            log = root / 'native.log'
+            body = 'VM-RUNTIME processors=1\n' * 14 + 'CASE-OK entry\n'
+            body += ''.join(f'MODULE-OK {path.relative_to(root)}\n'
+                            for path in suites.glob('*-test.ss'))
+            log.write_text('TEST-DISPATCH modules=184 batches=14 workers=12 '
+                           'max-batch-modules=16 mode=batched\n' + body)
+            self.assertEqual(CONTROL.source_semantic_workload(root, log)['max_batch_modules'], 16)
+            log.write_text(log.read_text().replace('max-batch-modules=16', 'max-batch-modules=17'))
+            with self.assertRaisesRegex(ValueError, 'native balanced capacity'):
+                CONTROL.source_semantic_workload(root, log)
+
     def invoke(self, root, arguments):
         output = root / arguments[-1]
         arguments = [*arguments[:-1], str(output)]

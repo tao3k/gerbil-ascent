@@ -1,0 +1,47 @@
+#+title: Native source batch ownership
+
+* Boundary
+
+Gerbil GxTest owns source import, Suite discovery, assertions and process exit.
+ASP's public testing interface owns compatible balanced batches. ASCENT keeps
+its existing isolated exhaustive corpora, twelve single-processor VM workers,
+per-process 2 GiB hard heap and the 600-second macOS semantic deadline. All
+source modules, Cases and original performance checks remain required.
+
+* Repeated work
+
+A second partition of a balanced batch creates more fresh processes. Each
+process repeats source initialization and module retirement. Removing this
+partition retains the framework's ordering and membership. It changes the
+internal retained-entry estimate to the native balanced width; this estimate
+is not a byte-allocation bound and does not replace the VM's hard heap guard.
+
+The controller checks actual batch lengths before starting children. The log
+verifier independently rejects oversized batches, missing or duplicate modules,
+compiled Suite carriers and incomplete single-processor receipts. Isolated
+corpora still own distinct processes. Native commands, argv, exit handling and
+existing GC targets are preserved.
+
+* Model and implementation
+
+=PreparationWork.lean= renders the Scheme grouping implementation and the
+Quint width function. =refined_entries_preserved= establishes coverage given
+an order-preserving splitter. =second_partition_never_fewer_starts= and
+=native_lifecycle_work_le_refined= prove that a further partition cannot reduce
+fixed per-process lifecycle work. =complete_lifecycle_work_saved= accounts for
+the current inventory's removed process starts. These are work identities,
+not proofs of elapsed time, scheduler fairness or native heap bytes.
+
+=PreparationWork.qnt= retains oversized-batch and retained-roots mutation
+controls. The Scheme source tests compare the complete actual grouping with
+the public framework projection, including empty and boundary inventories,
+exhaustive-process isolation and the oversized-batch refusal boundary.
+
+* Acceptance
+
+The full source inventory must complete naturally through =gerbil test= under
+the existing heap, processor, concurrency and deadline controls. Larger native
+batches must expose cross-Suite state leaks and allocation failures as failures;
+coverage, isolation and resource checks must not be skipped to obtain a pass.
+Local acceptance and exact-head Linux/macOS CI are separate obligations.
+Raw logs and diagnostic measurements belong exclusively under =.cache/=.

@@ -4,7 +4,6 @@
 
 (import (only-in :std/test test-suite test-case check-equal? check-exception)
         (only-in :gerbil/expander import-module)
-        (only-in :std/list/list group-n-consecutive)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/type validate)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)
@@ -66,10 +65,11 @@
             (check-equal? (string-suffix? "(native-main)" (list-ref actual 3)) #t))) '(50 80))
         (check-exception (source-vm-command '("gxi" "-e" "(native-main)") 80) true)
         (check-exception (source-vm-command command 0) true)))
-    (test-case "observed wide source batches are rejected before child admission"
-      (let (files (map (lambda (i) (string-append "module-" (number->string i))) (iota 15)))
-        (check-equal? (preparation-batches-bounded? (list files) 174 12) #f)
-        (check-equal? (preparation-batches-bounded? (map list files) 174 12) #t)))
+    (test-case "batches wider than the native balanced capacity are rejected before admission"
+      (let (files (map (lambda (i) (string-append "module-" (number->string i))) (iota 17)))
+        (check-equal? (preparation-batches-bounded? (list files) 184 12) #f)
+        (check-equal? (preparation-batches-bounded? (list (take files 16)) 184 12) #t)
+        (check-equal? (preparation-batches-bounded? (map list files) 184 12) #t)))
     (test-case "native capacity retains every module and distributes adjacent inputs"
       (let* ((files (list-sort string<?
                       (map (lambda (index) (string-append "module-" (number->string index) "-test.ss"))
@@ -81,7 +81,7 @@
         (check-equal? (length batches) workers)
         (when (> workers 1)
           (check-equal? (and (member (cadr files) (car batches)) #t) #f))))
-    (test-case "bounded packing uses the admitted width without extra twelve-way splits"
+    (test-case "native balanced packing preserves complete source coverage without a second split"
       (for-each (lambda (n)
         (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota n)))
                (heavy '("t/qualification/ascent-candidate-flow-test.ss"
@@ -96,15 +96,14 @@
                  (ordinary (cddr early))
                  (prefix-count (max 0 (- (length ordinary) workers))))
             (check-equal? batches (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
-          (when (and (= n 172) (= workers 12))
-            (check-equal? (length batches) 90)
+          (when (and (= n 182) (= workers 12))
+            (check-equal? (length batches) 14)
             (let (outer (testing-interface-test-file-batches profiled
-                         (striped-module-files normal workers)))
-              (check-equal? (+ 2 (length (apply append
-                (map (cut testing-interface-test-file-batches profiled <>) outer)))) 146)))))
-        '(0 1 11 12 13 143 144 145 172)))
+                         (striped-module-files (list-sort string<? normal) workers)))
+              (check-equal? (cddr (source-test-batches profiled files "batched" #f)) outer)))))
+        '(0 1 11 12 13 143 144 145 172 182)))
     (test-case "both host queue policies preserve every native batch and its resource bound"
-      (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 172)))
+      (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 182)))
              (heavy '("t/qualification/ascent-candidate-flow-test.ss"
                       "t/qualification/ascent-semi-naive-test.ss"))
              (files (list-sort string<? (append heavy normal)))
@@ -118,9 +117,9 @@
           (check-equal? staged (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
         (for-each (lambda (batches)
           (check-equal? (length batches) (length staged))
-          (when (= workers 12) (check-equal? (length batches) 90))
+          (when (= workers 12) (check-equal? (length batches) 14))
           (check-equal? (list-sort string<? (apply append batches)) files)
-          (check-equal? (preparation-batches-bounded? batches 174 workers) #t)) (list early staged))
+          (check-equal? (preparation-batches-bounded? batches 184 workers) #t)) (list early staged))
         (check-equal? (source-test-batches profiled files "batched")
                       early)))
     (test-case "exhaustive corpora are isolated within unchanged ordinary capacity bounds"
@@ -134,17 +133,15 @@
                          (striped-module-files (list-sort string<? normal)
                            (testing-interface-worker-count (length files))))))
         (check-equal? (list-sort string<? (apply append batches)) files)
-        ;; The ordinary roster is refined to the existing capacity bound.
-        ;; Compute that bound independently of the dispatch implementation.
-        (let* ((workers (testing-interface-worker-count (length normal)))
-               (bound (ceiling (/ (length normal) (* workers workers))))
-               (ordinary (apply append (map (cut group-n-consecutive bound <>) baseline)))
+        ;; The native framework owns balanced capacity; compare its full result
+        ;; independently rather than re-partitioning it in the source controller.
+        (let* ((ordinary baseline)
                (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))
           (check-equal? batches (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
         (let* ((workers (testing-interface-worker-count (length normal)))
                (ordinary (cddr (source-test-batches profiled files "batched" #f)))
-               (bound (ceiling (/ (length normal) (* workers workers)))))
-          (check-equal? (<= (length ordinary) (* workers workers)) #t)
+               (bound (ceiling (/ (length normal) workers))))
+          (check-equal? (<= (length ordinary) workers) #t)
           (for-each (lambda (batch) (check-equal? (<= (length batch) bound) #t)) ordinary))
         (for-each (lambda (file)
           (check-equal? (testing-interface-runtime-options-for profiled file)

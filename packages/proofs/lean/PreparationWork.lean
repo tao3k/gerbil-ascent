@@ -8,6 +8,28 @@ they cannot be added as if nested imports owned disjoint allocation intervals.
 The SDK compiler/allocator and the observer/decoder remain outside this proof. -/
 namespace Ascent.PreparationWork
 
+-- These Suites intentionally edit process-wide public descriptor protocols.
+-- Restoring a method does not roll back the descriptor's revision history.
+def globalProtocolMutationEntries : List String :=
+  ["ascent-aggregate-admission-test.", "ascent-delta-admission-test.",
+   "ascent-operator-publication-test.", "ascent-value-membership-test.",
+   "scheme-closure-contract-test."]
+
+-- Source build projections intentionally construct another Module graph.
+-- They must not replace the compiled runtime namespace of unrelated Suites.
+def sourceBuildEntries : List String :=
+  ["static-link-inputs-test.", "yuanxu-library-test."]
+
+def isolatedSourceEntries : List String :=
+  ["ascent-semi-naive-test.", "ascent-candidate-flow-test."] ++
+    globalProtocolMutationEntries ++ sourceBuildEntries
+
+theorem isolated_source_entries_distinct : isolatedSourceEntries.Nodup := by decide
+
+theorem protocol_mutations_are_isolated :
+    globalProtocolMutationEntries.all (fun entry => isolatedSourceEntries.contains entry) = true := by decide
+
+
 -- The production entry owns package/ABI declaration work. The native consumer
 -- directly requests init's standard specification without executing that entry.
 -- This classification does not assert zero init, source-admission or lowering
@@ -179,7 +201,7 @@ def interfacesQuintSource : String :=
   "  pure def batch_width(entries: int, workers: int): int =\n" ++
   "    if (entries == 0) 0 else (entries - 1) / workers + 1\n" ++
   "  pure val complete_packed_starts =\n" ++
-  "    2 + 12\n" ++
+  "    " ++ toString isolatedSourceEntries.length ++ " + 12\n" ++
   "}\n"
 
 def interfacesSchemeSource : String :=
@@ -321,8 +343,20 @@ def runnerRecipeSource : String :=
 
 -- The SDK eagerly prepares every module in one GxTest batch. Native
 -- groups retain SDK compatibility; bounded consecutive chunks fill the existing cap.
+def sourceInterfaceSchemeSource : String :=
+  "(def (source-test-interface mode heap)\n" ++
+  "  (foldl (lambda (name testing)\n" ++
+  "    (testing-interface-map-profile testing\n" ++
+  "      (testing-test-selector 'contains name)\n" ++
+  "      +testing-process-isolation-profile+))\n" ++
+  "   (testing-interface profiles:\n" ++
+  "     (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))\n" ++
+  "       (if (string=? mode \"isolated\") (list +testing-process-isolation-profile+) [])))\n" ++
+  "   '(" ++ String.intercalate "\n     " (isolatedSourceEntries.map (fun name => "\"" ++ name ++ "\"")) ++ ")))\n"
+
 def groupsSchemeSource : String :=
-  "(def (preparation-native-batches profiled compatible)\n" ++
+  sourceInterfaceSchemeSource ++
+  "(def (preparation-compatible-batches profiled compatible)\n" ++
   "  (if (null? compatible) []\n" ++
   "    (testing-interface-test-file-batches profiled\n" ++
   "      (striped-module-files compatible\n" ++
@@ -353,7 +387,7 @@ def groupsSchemeSource : String :=
   "    (if (string=? mode \"batched\")\n" ++
   "      (let-values (((isolated compatible)\n" ++
   "                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
-  "        (let* ((ordinary (preparation-native-batches profiled compatible))\n" ++
+  "        (let* ((ordinary (preparation-compatible-batches profiled compatible))\n" ++
   "               (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))\n" ++
   "          (if defer? (append (take ordinary prefix-count) (map list isolated) (drop ordinary prefix-count))\n" ++
   "                     (append (map list isolated) ordinary))))\n" ++
@@ -523,15 +557,15 @@ theorem oversized_batch_refused (groups : List (List String)) (entries workers :
 
 theorem complete_source_batch_width : nativeBatchWidth 184 12 = 16 := by decide
 
--- The current source inventory has 182 compatible entries in two groups of
--- sixteen and ten of fifteen, plus two isolated exhaustive corpora. Native
--- balance is an SDK premise, checked against actual batches before admission.
-def completePackedStarts : Nat := 2 + 12
+-- Nine isolated corpora leave 175 compatible entries in seven groups of
+-- fifteen and five of fourteen. Native balance remains an SDK premise,
+-- checked against actual batches before admission.
+def completePackedStarts : Nat := isolatedSourceEntries.length + 12
 
 def secondPartitionStarts : Nat :=
   2 + 2 * nativeBatchWidth 16 2 + 10 * nativeBatchWidth 15 2
 
-theorem complete_packing_start_count : completePackedStarts = 14 := by decide
+theorem complete_packing_start_count : completePackedStarts = 21 := by decide
 
 theorem complete_packing_fewer_starts :
     completePackedStarts < secondPartitionStarts ∧ secondPartitionStarts = 98 := by decide
@@ -553,8 +587,8 @@ theorem native_lifecycle_work_le_refined
 
 theorem complete_lifecycle_work_saved (caseWork lifecycleUnits : Nat) :
     caseWork + secondPartitionStarts * lifecycleUnits =
-      caseWork + completePackedStarts * lifecycleUnits + 84 * lifecycleUnits := by
-  change caseWork + 98 * lifecycleUnits = caseWork + 14 * lifecycleUnits + 84 * lifecycleUnits
+      caseWork + completePackedStarts * lifecycleUnits + 77 * lifecycleUnits := by
+  change caseWork + 98 * lifecycleUnits = caseWork + 21 * lifecycleUnits + 77 * lifecycleUnits
   omega
 
 def isolatedEntryPeak (weight : String → Nat) : List String → Nat
@@ -954,3 +988,11 @@ end Ascent.PreparationWork
 
 #print axioms Ascent.PreparationWork.native_lifecycle_work_le_refined
 #print axioms Ascent.PreparationWork.complete_lifecycle_work_saved
+
+#print axioms Ascent.PreparationWork.isolated_source_entries_distinct
+#print axioms Ascent.PreparationWork.protocol_mutations_are_isolated
+
+theorem Ascent.PreparationWork.source_builds_are_isolated :
+    Ascent.PreparationWork.sourceBuildEntries.all
+      (fun entry => Ascent.PreparationWork.isolatedSourceEntries.contains entry) = true := by decide
+#print axioms Ascent.PreparationWork.source_builds_are_isolated

@@ -14,8 +14,20 @@
         (only-in :gerbil-ascent/t/harness/library-spec preparation-support-roots)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
                  testing-interface-worker-count testing-interface-test-file-batches
+                 testing-interface-test-file-isolated?
                  testing-interface-runtime-options-for))
 (export ascent-source-import-test)
+
+(def isolated-source-fixtures
+  '("t/qualification/ascent-aggregate-admission-test.ss"
+    "t/qualification/ascent-candidate-flow-test.ss"
+    "t/qualification/ascent-delta-admission-test.ss"
+    "t/qualification/ascent-operator-publication-test.ss"
+    "t/qualification/ascent-semi-naive-test.ss"
+    "t/qualification/ascent-value-membership-test.ss"
+    "t/qualification/scheme-closure-contract-test.ss"
+    "t/qualification/static-link-inputs-test.ss"
+    "t/qualification/yuanxu-library-test.ss"))
 
 (def ascent-source-import-test
   (test-suite "Source fixtures retain the native production module identity"
@@ -70,6 +82,20 @@
         (check-equal? (preparation-batches-bounded? (list files) 184 12) #f)
         (check-equal? (preparation-batches-bounded? (list (take files 16)) 184 12) #t)
         (check-equal? (preparation-batches-bounded? (map list files) 184 12) #t)))
+    (test-case "global protocol and build graph effects cannot share another Suite's VM"
+      (let* ((profiled (source-test-interface "batched" "2G"))
+             (ordinary '("t/qualification/ascent-actor-session-test.ss"
+                         "t/qualification/ascent-engine-interface-test.ss"))
+             (files (append ordinary isolated-source-fixtures))
+             (batches (source-test-batches profiled files "batched")))
+        (for-each (lambda (file)
+          (check-equal? (testing-interface-test-file-isolated? profiled file) #t)
+          (check-equal? (source-live-ratio profiled file #t) 50)
+          (check-equal? (filter (lambda (batch) (member file batch)) batches) (list (list file))))
+          isolated-source-fixtures)
+        (for-each (lambda (file)
+          (check-equal? (testing-interface-test-file-isolated? profiled file) #f)) ordinary)
+        (check-equal? (list-sort string<? (apply append batches)) (list-sort string<? files))))
     (test-case "native capacity retains every module and distributes adjacent inputs"
       (let* ((files (list-sort string<?
                       (map (lambda (index) (string-append "module-" (number->string index) "-test.ss"))
@@ -84,8 +110,7 @@
     (test-case "native balanced packing preserves complete source coverage without a second split"
       (for-each (lambda (n)
         (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota n)))
-               (heavy '("t/qualification/ascent-candidate-flow-test.ss"
-                        "t/qualification/ascent-semi-naive-test.ss"))
+               (heavy isolated-source-fixtures)
                (files (list-sort string<? (append heavy normal)))
                (profiled (source-test-interface "batched" "2G"))
                (batches (source-test-batches profiled files "batched" #t))
@@ -93,39 +118,37 @@
           (check-equal? (list-sort string<? (apply append batches)) files)
           (check-equal? (preparation-batches-bounded? batches (length files) workers) #t)
           (let* ((early (source-test-batches profiled files "batched" #f))
-                 (ordinary (cddr early))
+                 (ordinary (drop early (length heavy)))
                  (prefix-count (max 0 (- (length ordinary) workers))))
             (check-equal? batches (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
-          (when (and (= n 182) (= workers 12))
-            (check-equal? (length batches) 14)
+          (when (and (= n 175) (= workers 12))
+            (check-equal? (length batches) 21)
             (let (outer (testing-interface-test-file-batches profiled
                          (striped-module-files (list-sort string<? normal) workers)))
-              (check-equal? (cddr (source-test-batches profiled files "batched" #f)) outer)))))
-        '(0 1 11 12 13 143 144 145 172 182)))
+              (check-equal? (drop (source-test-batches profiled files "batched" #f) (length heavy)) outer)))))
+        '(0 1 11 12 13 143 144 145 172 175 177 182)))
     (test-case "both host queue policies preserve every native batch and its resource bound"
-      (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 182)))
-             (heavy '("t/qualification/ascent-candidate-flow-test.ss"
-                      "t/qualification/ascent-semi-naive-test.ss"))
+      (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 175)))
+             (heavy isolated-source-fixtures)
              (files (list-sort string<? (append heavy normal)))
              (profiled (source-test-interface "batched" "2G"))
              (staged (source-test-batches profiled files "batched" #t))
              (early (source-test-batches profiled files "batched" #f))
-             (ordinary (cddr early))
+             (ordinary (drop early (length heavy)))
              (workers (testing-interface-worker-count (length files))))
         (check-equal? early (append (map list heavy) ordinary))
         (let (prefix-count (max 0 (- (length ordinary) workers)))
           (check-equal? staged (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
         (for-each (lambda (batches)
           (check-equal? (length batches) (length staged))
-          (when (= workers 12) (check-equal? (length batches) 14))
+          (when (= workers 12) (check-equal? (length batches) 21))
           (check-equal? (list-sort string<? (apply append batches)) files)
           (check-equal? (preparation-batches-bounded? batches 184 workers) #t)) (list early staged))
         (check-equal? (source-test-batches profiled files "batched")
                       early)))
     (test-case "exhaustive corpora are isolated within unchanged ordinary capacity bounds"
       (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 37)))
-             (heavy '("t/qualification/ascent-candidate-flow-test.ss"
-                      "t/qualification/ascent-semi-naive-test.ss"))
+             (heavy isolated-source-fixtures)
              (files (list-sort string<? (append heavy normal)))
              (profiled (source-test-interface "batched" "2G"))
              (batches (source-test-batches profiled files "batched" #t))
@@ -139,7 +162,7 @@
                (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))
           (check-equal? batches (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
         (let* ((workers (testing-interface-worker-count (length normal)))
-               (ordinary (cddr (source-test-batches profiled files "batched" #f)))
+               (ordinary (drop (source-test-batches profiled files "batched" #f) (length heavy)))
                (bound (ceiling (/ (length normal) workers))))
           (check-equal? (<= (length ordinary) workers) #t)
           (for-each (lambda (batch) (check-equal? (<= (length batch) bound) #t)) ordinary))

@@ -47,10 +47,9 @@
       files (iota (length files)))
     (apply append (map reverse (vector->list lanes)))))
 
-;; Exhaustive corpora own independent processes. Darwin overlaps them with
-;; the final ordinary wave to avoid both a long exhaustive tail and sustained
-;; exhaustive/ordinary allocation contention. Other hosts keep their native
-;; order. Capacity, isolation, module coverage and runtime options are equal.
+;; Exhaustive, process-wide Contract mutation and source-build Suites own VMs.
+;; Use the framework's balanced compatible batches without a second partition.
+;; BEGIN GENERATED PREPARATION GROUPS
 (def (source-test-interface mode heap)
   (foldl (lambda (name testing)
     (testing-interface-map-profile testing
@@ -59,11 +58,16 @@
    (testing-interface profiles:
      (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
        (if (string=? mode "isolated") (list +testing-process-isolation-profile+) [])))
-   '("ascent-semi-naive-test." "ascent-candidate-flow-test.")))
-;; Keep the framework's balanced batches. A second partition repeats source
-;; initialization and VM teardown; the native hard heap still bounds each VM.
-;; BEGIN GENERATED PREPARATION GROUPS
-(def (preparation-native-batches profiled compatible)
+   '("ascent-semi-naive-test."
+     "ascent-candidate-flow-test."
+     "ascent-aggregate-admission-test."
+     "ascent-delta-admission-test."
+     "ascent-operator-publication-test."
+     "ascent-value-membership-test."
+     "scheme-closure-contract-test."
+     "static-link-inputs-test."
+     "yuanxu-library-test.")))
+(def (preparation-compatible-batches profiled compatible)
   (if (null? compatible) []
     (testing-interface-test-file-batches profiled
       (striped-module-files compatible
@@ -94,7 +98,7 @@
     (if (string=? mode "batched")
       (let-values (((isolated compatible)
                     (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))
-        (let* ((ordinary (preparation-native-batches profiled compatible))
+        (let* ((ordinary (preparation-compatible-batches profiled compatible))
                (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))
           (if defer? (append (take ordinary prefix-count) (map list isolated) (drop ordinary prefix-count))
                      (append (map list isolated) ordinary))))

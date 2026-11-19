@@ -1,10 +1,10 @@
-#+title: Native source batch ownership
+#+title: Source batch ownership
 
 * Boundary
 
 Gerbil GxTest owns source import, Suite discovery, assertions and process exit.
 ASP's public testing interface owns compatible balanced batches. ASCENT keeps
-its existing isolated exhaustive corpora, twelve single-processor VM workers,
+its isolated exhaustive and process-wide protocol-mutation corpora, twelve single-processor VM workers,
 per-process 2 GiB hard heap and the 600-second macOS semantic deadline. All
 source modules, Cases and original performance checks remain required.
 
@@ -66,3 +66,34 @@ Snapshot regressions cover reset, inherited transfer, disappearing members and
 new PIDs. A controlled native fork/wait/exec workload verifies real continuous
 CPU work under the unchanged production deadline. Darwin ABI decoding and
 floating-point counter conversion are not a whole-source equivalence proof.
+
+* Fault injection has process-wide revision effects
+
+The Contract-admission, delta-admission, operator-publication, value-membership
+and closure-contract Suites intentionally edit shared descriptor protocols.
+POO revisions remain monotone when a test restores the original method. The
+previously captured optimization guard must therefore stay revoked. Refreshing
+that guard or rolling back its revision would change the library's admission
+semantics and is not a test cleanup mechanism.
+
+These five Suites use the existing process-isolation profile. They retain every
+fault and refusal assertion, their 2 GiB hard heap and the existing isolated GC
+target. Ordinary cache eviction and local object edits remain in compatible
+batches. Framework tests check that each selected Suite owns a singleton batch,
+all ordinary modules remain present, and the protocol-mutation roster is part
+of the Lean-rendered source. Linux and macOS semantic steps both explicitly
+select twelve workers, independently of their build-worker capacities.
+
+* Build projections have another namespace lifetime
+
+The static-input and Yuanxu Library Suites load the source build entry and its
+source Module graph. Their source expansion can install Module contexts with
+the same identities as the already compiled runtime graph. Evaluating a later
+source fixture can then initialize that source context, replacing nominal
+prototype bindings held by an unrelated live Session.
+
+These two build-projection Suites therefore use the same framework isolation
+profile. Runtime source-import tests stay in ordinary compatible batches and
+continue to assert unchanged prototype identity and valid held Sessions across
+late imports. Descriptor cache eviction also stays in ordinary batches. No
+namespace restoration hook, type-identity bypass or runtime loader is added.

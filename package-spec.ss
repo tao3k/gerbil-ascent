@@ -8,19 +8,18 @@
   (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent))
 
 (import (only-in :std/source this-source-file)
-        (only-in :clan/poo/object .get .o)
+        (only-in :clan/poo/object .get)
         (only-in :std/list/list filter-map)
         (only-in :tao3k/yuanxu/module-system/building/source-package register-module-build-source!)
-        (only-in "./interface/build.ss" Build gerbil-ascent-compiler-options gerbil-ascent-compiler-target)
+        (only-in "./interface/build.ss" gerbil-ascent-compiler-options gerbil-ascent-compiler-target)
         (only-in "./init.ss" gerbil-ascent.init.exports))
-(export gerbil-ascent.package.exports
-        gerbil-ascent-build-projection gerbil-ascent-library-modules
+(export gerbil-ascent-build-projection gerbil-ascent-library-modules
         gerbil-ascent-rust-spec gerbil-ascent-compiler-options gerbil-ascent-compiler-target)
 
 (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent)
 
 (def (gerbil-ascent-build-projection)
-  (.get gerbil-ascent.package.exports build))
+  (.get gerbil-ascent.init.exports build))
 
 (def (gerbil-ascent-library-modules (projection (gerbil-ascent-build-projection)))
   ;; Scheme-only preparation excludes executables and their C ABI inputs.
@@ -38,8 +37,3 @@
   [(gerbil-ascent-compiler-target
      [gxc: "interface/hybrid" "-ld-options"
       (cond-expand (darwin "-Wl,-undefined,dynamic_lookup") (else ""))])])
-
-(def gerbil-ascent.package.exports
-  (.o (:: @ gerbil-ascent.init.exports)
-      __std-make-spec: '((gxc: "init" (extra-inputs: ("package-spec.ss"))))
-      build-actions: Build))

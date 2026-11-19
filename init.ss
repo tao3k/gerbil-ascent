@@ -4,9 +4,10 @@
 (import (only-in :tao3k/yuanxu/module-system/selection/init-syntax yuanxu!))
 ;; Production capabilities own native roots; Core derives their source closure.
 (yuanxu!
+  :build-roots ("init")
   :load-modules "."
   mode: explicit
-  rename: Library
+  mount: Library
   (core)
   (table)
   (program)

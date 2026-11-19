@@ -212,7 +212,7 @@ impl Declaration {
         if self.closed() {
             return Err(PyValueError::new_err("declaration owner closed"));
         }
-        let limits = limits.map(|p| p.0).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |p| p.0);
         py.detach(|| self.engine.open_rule_program(self.entry.clone(), limits))
             .map(RuleSession::owned)
             .map_err(error)

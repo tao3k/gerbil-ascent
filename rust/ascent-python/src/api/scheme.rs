@@ -6,8 +6,8 @@ use std::sync::OnceLock;
 static REFERENCE: OnceLock<gerbil_ascent::Result<ascent_scheme::ProcessOwner>> = OnceLock::new();
 use pyo3::{Bound, Py, PyAny, PyResult, Python, pyfunction};
 
-#[pyfunction]
-pub(super) fn _scheme_call(py: Python<'_>, input: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+#[pyfunction(name = "_scheme_call")]
+pub(super) fn scheme_call(py: Python<'_>, input: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
     let request = packets::read(input)?;
     let result = py
         .detach(|| {

@@ -113,8 +113,8 @@ impl Provenance {
         limits: Option<PyRef<'_, ProvenanceLimits>>,
         cancellation: Option<PyRef<'_, Cancellation>>,
     ) -> PyResult<bool> {
-        let limits = limits.map(|l| l.0.clone()).unwrap_or_default();
-        let cancel = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |l| l.0.clone());
+        let cancel = cancellation.map_or_else(Default::default, |c| c.0.clone());
         py.detach(|| {
             let graph = self.0.graph()?;
             self.0.verify(&graph, &limits, &cancel)

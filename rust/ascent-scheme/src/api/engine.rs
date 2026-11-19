@@ -112,33 +112,29 @@ impl Engine {
         Ok(())
     }
     fn close_modules(&self) {
-        let owners = self
-            .owners
-            .modules
-            .lock()
-            .map(|mut owners| {
+        let owners = self.owners.modules.lock().map_or_else(
+            |_| Vec::new(),
+            |mut owners| {
                 owners
                     .drain(..)
                     .filter_map(|owner| owner.upgrade())
                     .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
+            },
+        );
         for owner in owners {
             owner.close();
         }
     }
     fn close_sessions(&self) {
-        let owners = self
-            .owners
-            .sessions
-            .lock()
-            .map(|mut owners| {
+        let owners = self.owners.sessions.lock().map_or_else(
+            |_| Vec::new(),
+            |mut owners| {
                 owners
                     .drain(..)
                     .filter_map(|owner| owner.upgrade())
                     .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
+            },
+        );
         for owner in owners {
             owner.close();
         }

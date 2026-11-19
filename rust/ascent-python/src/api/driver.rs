@@ -84,8 +84,8 @@ impl Case {
                 "workers and samples must be nonempty",
             ));
         }
-        let limits = limits.map(|l| l.0.clone()).unwrap_or_default();
-        let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |l| l.0.clone());
+        let cancellation = cancellation.map_or_else(Default::default, |c| c.0.clone());
         py.detach(|| self.execute(workers, samples, &limits, &cancellation))
     }
 }

@@ -335,6 +335,10 @@ jobs:
         env:
           GERBIL_RELEASE_ARCHIVE_CACHE: ${{ runner.temp }}/archives
         run: bash tools/ci/install-gerbil-v19-release.sh "$RUNNER_TEMP/sdk"
+      - name: Verify native build supervision and inactivity controls
+        env:
+          PYTHONPATH: workbench/src
+        run: python3 -m unittest discover -s workbench/tests -p test_supervision.py -v
       - name: Bind compiler inputs before restoring compiled preparation
         id: preparation
         run: |

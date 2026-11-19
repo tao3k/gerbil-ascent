@@ -10,7 +10,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from ascent_workbench.supervision import darwin_process_cpu, group_cpu, proc_group_cpu, signal_group
+from ascent_workbench.supervision import cpu_advance, darwin_process_cpu, group_cpu, proc_group_cpu, signal_group
 
 
 class BuildActivity(unittest.TestCase):
@@ -45,6 +45,20 @@ class BuildActivity(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('cpu-advance=', result.stderr)
 
+    @unittest.skipUnless(sys.platform == 'darwin', 'Darwin exec CPU counter reset')
+    def test_exec_counter_reset_does_not_hide_continuing_native_work(self):
+        work = 'import time\nend=time.process_time()+3\nwhile time.process_time()<end: pass\n'
+        code = ('import os,sys,time\npid=os.fork()\n'
+                'if pid==0:\n'
+                ' end=time.process_time()+3\n'
+                ' while time.process_time()<end: pass\n'
+                ' os._exit(0)\n'
+                'os.waitpid(pid,0)\n'
+                f'os.execv(sys.executable,[sys.executable,"-c",{work!r}])\n')
+        result = self.run_child(code)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('basis=own', result.stderr)
+
     def test_closed_output_does_not_disable_stall_detection(self):
         result = self.run_child('import os,time; os.close(1); os.close(2); time.sleep(10)')
         self.assertEqual(result.returncode, 124, result.stderr)
@@ -72,6 +86,7 @@ class BuildActivity(unittest.TestCase):
                  patch('ascent_workbench.supervision.darwin_rusage', return_value=read), \
                  patch('ascent_workbench.supervision.darwin_cpu_seconds_per_tick', return_value=scale):
                 self.assertAlmostEqual(darwin_process_cpu(42), 24000000 * scale)
+                self.assertAlmostEqual(darwin_process_cpu(42, include_children=False), 7200000 * scale)
 
     @unittest.skipUnless(sys.platform == 'darwin', 'Darwin native CPU clock')
     def test_darwin_native_cpu_matches_process_clock(self):
@@ -107,6 +122,29 @@ class BuildActivity(unittest.TestCase):
                 (process / 'stat').write_text(f'{pid} (compiler (child)) ' + ' '.join(fields))
             (root / '13').mkdir()  # Directory of an already exited compiler.
             self.assertEqual(proc_group_cpu(root, 42, 100), {11: .14})
+            self.assertEqual(proc_group_cpu(root, 42, 100, include_children=False), {11: .05})
+
+
+class CpuSnapshots(unittest.TestCase):
+    def test_exec_reset_itself_is_not_progress(self):
+        advance, peak = cpu_advance({42: 8}, {42: 0}, 0, 8)
+        self.assertEqual((advance, peak), (0, 8))
+        # The next real CPU increment must not repay the vanished epoch first.
+        self.assertEqual(cpu_advance({42: 0}, {42: .5}, .5, peak), (.5, 8))
+
+    def test_reaping_or_missing_member_alone_never_creates_own_progress(self):
+        previous = {42: 1, 43: 7}
+        self.assertEqual(cpu_advance(previous, {42: 1}, 1, 8), (0, 8))
+        # Reaped CPU becomes inherited CPU, not the parent's own work.
+        self.assertEqual(cpu_advance({42: 1}, {42: 1}, 8, 8), (0, 8))
+        self.assertEqual(cpu_advance({42: 1}, {42: 1}, 8, 12), (0, 12))
+
+    def test_surviving_worker_progress_is_not_hidden_by_group_snapshot_debt(self):
+        self.assertEqual(cpu_advance({42: 1, 43: 7}, {42: 1.5}, 1.5, 12), (.5, 12))
+        self.assertEqual(cpu_advance({42: 1}, {42: 1.5}, 13, 12), (1, 13))
+
+    def test_new_pid_first_observation_is_not_own_cpu_progress(self):
+        self.assertEqual(cpu_advance({42: 8}, {43: .5}, .5, 8), (0, 8))
 
 
 class SeparateStreams(unittest.TestCase):

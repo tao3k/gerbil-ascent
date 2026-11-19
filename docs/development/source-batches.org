@@ -45,3 +45,24 @@ batches must expose cross-Suite state leaks and allocation failures as failures;
 coverage, isolation and resource checks must not be skipped to obtain a pass.
 Local acceptance and exact-head Linux/macOS CI are separate obligations.
 Raw logs and diagnostic measurements belong exclusively under =.cache/=.
+
+* CPU progress across compiler exec
+
+The build observer's inactivity deadline remains five seconds. A process-group
+CPU sum is not monotone across Darwin exec: an execution image may reset CPU
+counters while retaining its PID. A global high-water mark can consequently
+hide genuine work in the new image until the previous epoch's total is reached.
+
+The observer retains inclusive group sampling for short-lived compiler work.
+It additionally reads each process's own CPU, excluding inherited child usage.
+Only an increase for a PID present in both samples supplies this independent
+progress witness. A counter reset itself, a first observation, a missing child
+or reaping alone supplies no own-CPU progress. The observer takes the larger
+witness instead of adding overlapping measurements; this is an inactivity
+observation, not a cumulative CPU or allocation report. Sleeping and failed
+commands retain their original rejection and cleanup behavior.
+
+Snapshot regressions cover reset, inherited transfer, disappearing members and
+new PIDs. A controlled native fork/wait/exec workload verifies real continuous
+CPU work under the unchanged production deadline. Darwin ABI decoding and
+floating-point counter conversion are not a whole-source equivalence proof.

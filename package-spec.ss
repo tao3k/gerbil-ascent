@@ -8,7 +8,7 @@
   (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent))
 
 (import (only-in :std/source this-source-file)
-        (only-in :clan/poo/object .call .get .o)
+        (only-in :clan/poo/object .get .o)
         (only-in :std/list/list filter-map)
         (only-in :tao3k/yuanxu/module-system/building/source-package register-module-build-source!)
         (only-in "./interface/build.ss" Build gerbil-ascent-compiler-options gerbil-ascent-compiler-target)
@@ -20,7 +20,7 @@
 (register-module-build-source! (path-directory (this-source-file)) 'gerbil-ascent)
 
 (def (gerbil-ascent-build-projection)
-  (.call gerbil-ascent.init.exports .yuanxu-init '("init")))
+  (.get gerbil-ascent.package.exports build))
 
 (def (gerbil-ascent-library-modules (projection (gerbil-ascent-build-projection)))
   ;; Scheme-only preparation excludes executables and their C ABI inputs.
@@ -40,10 +40,6 @@
       (cond-expand (darwin "-Wl,-undefined,dynamic_lookup") (else ""))])])
 
 (def gerbil-ascent.package.exports
-  (let (owner (.o build: (gerbil-ascent-build-projection)))
-    (.o (:: @ owner)
-        std-make-spec:
-        (map gerbil-ascent-compiler-target (.get owner build std-make-spec))
-        build-actions:
-        (.o .with-static-inputs:
-            (lambda (compile) ((.get Build .with-static-inputs) (.get owner build) compile))))))
+  (.o (:: @ gerbil-ascent.init.exports)
+      __std-make-spec: '((gxc: "init" (extra-inputs: ("package-spec.ss"))))
+      build-actions: Build))

@@ -6,7 +6,7 @@
 (yuanxu!
   :load-modules "."
   mode: explicit
-  rename: Library
+  mount: Library
   (core)
   (table)
   (program)

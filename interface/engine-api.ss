@@ -456,6 +456,7 @@
           (when (.ref result 'finished) (source-state-last-result-set! state result))
           (let (handle (retain-owned-result state result))
             (hash ("complete" (.ref result 'finished)) ("relations" answers)
+                  ("executionRuntime" (if actor? "actor" "session"))
                   ("resultHandle" handle)
                   ("scalarProjection"
                    (if (if actor? scalar-projection?

@@ -172,6 +172,10 @@ def run_case(args, case, configuration, work_distribution, diagnostic=False):
         launch_command = ["/usr/bin/time", "-o", str(resource_path), "-f",
                           "%e real %U user %S sys\n%M maximum resident set size", *command]
     environment = dict(os.environ)
+    # Keep the original population and DSL in this historical comparison.
+    # Direct benchmark invocation defaults to the current machine's capacity.
+    environment["ASCENT_BENCH_CLIENTS"] = "12"
+    environment["ASCENT_BENCH_DSL"] = "typed"
     if diagnostic:
         environment["ASCENT_PROCESS_TRACE"] = "1"
     traced = "ASCENT_PROCESS_TRACE" in environment

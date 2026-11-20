@@ -1,0 +1,79 @@
+#+title: Owner-local Actor replies and host scheduling
+
+* Boundaries
+
+Rust owns ingress, routing, host wakeups and Rust-owned computation. A Scheme
+VM owner retains its Scheme roots and continuations. Rust thread count does
+not multiply a single VM's execution opportunities. The current production
+foreign-call pump waits for a complete call before serving the next request;
+changing this requires a cooperative handoff with request-local authority.
+
+An application may use Actors for coordination and message processing. These
+are application roles, not two prescribed Actor protocol classes. A local
+Scheme request with no Rust work should not acquire an unnecessary Rust hop.
+
+* Reply mechanism under study
+
+=program/actor-session.ss= previously created one short-lived reply Actor for
+every synchronous request, then joins it. This isolates the caller's mailbox,
+including its selective-receive cursor. A direct selective receive on the
+caller is therefore not a drop-in replacement: the standard receiver extracts
+the match and rewinds that cursor. The prior per-request buffered-channel
+candidate was slower and remains rejected.
+
+Use =std/sync/completion= as the candidate one-shot reply endpoint. Each request gets
+a fresh Completion. Its construction, wait and post use the frozen standard
+library. It has no message queue and requires no reply Actor. Keep the existing
+Session owner, gate, five-field request envelope, authority, generation,
+publication checks and close/drain protocol. The owner posts each endpoint at
+most once. A canceled caller cannot make a later request reuse its endpoint.
+Do not cache or reset endpoints as part of this change.
+
+* Model and source obligations
+
+=ActorReply.lean= specifies post, wait, duplicate refusal and exact opaque
+outcome preservation for an unbounded request identity. =ActorReply.qnt=
+explores two simultaneous requests, distinct payload/authority identities,
+caller mailbox/cursor isolation, close/drain and one-shot delivery. Mutants
+must expose cross-request delivery, duplicate consumption, early consumption,
+cursor modification and premature owner retirement.
+
+STD Completion waiting does not clear its ready flag or consume its value.
+The Lean model therefore distinguishes that native state from the private
+protocol's consumed endpoint. Its correspondence relation proves that posting
+agrees and that a protocol return preserves the native ready outcome exactly.
+The single wait call and fresh private endpoint supply the protocol's linear
+use; do not mistake it for a single-reader restriction implemented by STD.
+
+The standard Completion implementation, its mutex semantics, the compiler
+and native scheduler remain trusted boundaries. The model does not prove
+their implementation or an achieved time bound. Existing ActorSession and
+ActorRound models continue to govern evaluator cancellation, source cuts,
+resource checks and provenance publication. Reply delivery grants no new
+publication authority.
+
+* Measurement and adoption
+
+Keep native =gerbil test= entry, original limits, public Session calls,
+unrelated mailbox markers and the 1/3/12 caller experimental populations.
+Measure the complete 1.2-million verified-request window per population,
+P50/P95/P99/max, CPU and natural GC; retain cold opening separately. Raw mailbox
+messages and complete Session requests retain distinct units. One million
+complete requests per second is a target, not an assertion derived from the
+Quint state model. Retain failures and compare against the original mechanism
+with the same frozen library/dependency cohort before adoption.
+
+Caller compilation is a separate experimental axis. Compile the unchanged
+benchmark module with the official Gerbil compiler and execute its SSI with
+the same native test command to separate source-interpreted caller work.
+Retain source-mode tests and their original gates. The compiled 10,000-request
+window exceeded one million requests/s, while the complete 1.2-million-request
+windows remained below that target. Neither result qualifies large relation
+queries or the Rust transport. Raw receipts remain under =.cache/=.
+
+Add a distinct throughput-only window: keep all 1.2 million synchronous public
+requests and all result checks, but read the clock only at the window edges.
+Report zero latency samples and no P95 admission for this window. Retain every
+existing per-request timing Case and its complete sampling/gates unchanged.
+This separates clock/sample-recording cost from maximum verified throughput;
+it does not establish latency under that maximum load.

@@ -83,6 +83,7 @@
           void
           (lambda ()
             (let (initial (source-run handle 1000000000))
+              (check-equal? (hash-ref initial "executionRuntime") "actor")
               (check-exception
                (replace-edges! handle '#s64(1 2 0 1)) true)
               (check-equal?
@@ -147,6 +148,7 @@
                             (append (list (length (rows ordinary "reach")) 2)
                                     (apply append (rows ordinary "reach"))))
               (check-equal? (hash-ref packed "complete") #t)
+              (check-equal? (hash-ref packed "executionRuntime") "session")
               (check-equal? (hash-ref packed "sourceGeneration") 1)
               (check-equal? (hash-ref packed "scalarProjection") "supported")
               (check-equal? (hash-ref (proof-scope handle packed) "sourceGeneration") 1)
@@ -186,6 +188,7 @@
                            (set! used-worker? #t)))))
                    (source-run handle 0 #t)))
             (check-equal? used-worker? #t)
+            (check-equal? (hash-ref partial "executionRuntime") "actor")
             (check-equal? (hash-ref partial "complete") #f)
             (check-equal? (list? (rows partial "reach")) #t)
             (check-exception (proof-scope handle partial) true)

@@ -602,6 +602,27 @@
          (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
          (check-equal? (thread-receive) 'caller-message)
          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "requests and closed failures preserve the caller selective-receive cursor"
+      (thread-join!
+       (spawn
+        (lambda ()
+          (let ((session (gerbil-ascent-open-actor-session (program '((0 1)))))
+                (closed? #f))
+            (try
+              (thread-send (current-thread) 'first-marker)
+              (thread-send (current-thread) 'second-marker)
+              (check-equal? (thread-mailbox-next) 'first-marker)
+              (check-equal? (gerbil-ascent-session-state session) '(0 idle))
+              (gerbil-ascent-session-close! session)
+              (set! closed? #t)
+              (check-equal? (outcome (lambda () (gerbil-ascent-session-state session))) 'rejected)
+              (check-equal? (thread-mailbox-next) 'second-marker)
+              (thread-mailbox-rewind)
+              (check-equal? (thread-receive) 'first-marker)
+              (check-equal? (thread-receive) 'second-marker)
+              (finally
+                (thread-mailbox-rewind)
+                (unless closed? (gerbil-ascent-session-close! session)))))))))
     (test-case "batch rejection preserves generation sources and multiplicity budget"
       (let (session (gerbil-ascent-open-actor-session (program '((0 1)) 200000 2)))
         (try

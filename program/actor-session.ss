@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/runtime/gambit
+        (only-in :std/sync/completion make-completion completion-wait! completion-post!)
         (only-in :gerbil-ascent/core/actor-envelope
                  gerbil-ascent-send-envelope! gerbil-ascent-match-envelope!)
         (only-in :gerbil-ascent/core/execution-control
@@ -78,7 +79,7 @@
                    (snapshot-source #f) (snapshot-relations #f)
                    (source-indexes (and (= workers 1) (make-vector (vector-length arities) #f)))
                    (generation 0) (running #f) (closing []))
-               (def (reply! channel value) (thread-send channel value))
+               (def (reply! channel value) (completion-post! channel value))
                (def (snapshot sources)
                  ;; Compute outside the POO slot scope: `relations` inside its
                  ;; own slot expression would resolve recursively to that slot.
@@ -264,22 +265,24 @@
     (def (request operation . args)
       ;; A checker/getter running on this coordinator cannot synchronously
       ;; wait for the coordinator's own mailbox. Refuse before allocating a
-      ;; reply Actor so the surrounding operation can recover normally.
+      ;; reply endpoint so the surrounding operation can recover normally.
       (when (eq? (current-thread) owner)
         (error "ASCENT actor Session request from its owner"))
-      ;; A private reply actor leaves the caller's mailbox untouched.
+      ;; A fresh one-shot completion leaves both caller messages and their
+      ;; selective-receive cursor untouched. Never reset or share this endpoint.
       (let* ((authority (current-ascent-execution-control))
+             (reply (make-completion 'ascent-session-request))
              (outcome
-              (thread-join!
-               (spawn/name 'ascent-session-request
-                (lambda ()
-                  (mutex-lock! gate)
-                  (if closed?
-                    (begin (mutex-unlock! gate) (vector #f (session-failure "ASCENT actor Session closed")))
-                    (begin
-                      (gerbil-ascent-send-envelope! owner 'request (current-thread) authority operation args)
-                      (mutex-unlock! gate)
-                      (thread-receive))))))))
+              (begin
+                (mutex-lock! gate)
+                (if closed?
+                  (begin
+                    (mutex-unlock! gate)
+                    (vector #f (session-failure "ASCENT actor Session closed")))
+                  (begin
+                    (gerbil-ascent-send-envelope! owner 'request reply authority operation args)
+                    (mutex-unlock! gate)
+                    (completion-wait! reply))))))
         (if (vector-ref outcome 0) (vector-ref outcome 1) (raise (vector-ref outcome 1)))))
     (validate GerbilAscentSessionContract
               (.o (:: @ Session.)

@@ -76,7 +76,7 @@ theorem payload_identity (message : Envelope Value) :
   rw [decode_encode]; rfl
 
 /-! The same exact codec serves a Session request. Its positions are request
-tag, private reply Actor, caller authority, operation and arguments. Values may
+tag, private reply endpoint, caller authority, operation and arguments. Values may
 be Scheme references/procedures; the codec does not evaluate or reconstruct them. -/
 theorem session_authority_identity (tag reply authority operation arguments : Value) :
     (decode (encode ⟨tag, reply, authority, operation, arguments⟩)).map Envelope.worker =

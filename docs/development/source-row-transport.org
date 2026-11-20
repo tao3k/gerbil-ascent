@@ -116,3 +116,29 @@ test-executor capacity and zero retries. All 15 original scenario performance
 Cases passed. The ten-module Contract aggregate retained its failure at the
 unchanged nonnegative cumulative-allocation assertion; the other nine modules
 passed. Allocation qualification remains upstream-owned and incomplete.
+
+* Production Actor selection and matched recursive control
+
+Keep the typed constructor fixture as an ordinary-Session control. Add an
+explicit =ASCENT_BENCH_DSL=ascent= selection to the existing production
+throughput benchmark. It loads the same two closure rules through the public
+=Engine.load_sources= interface. Scheme execution must report =executionRuntime=
+from the actual =api-session-actor?= branch used by =source-run=. Assert this
+diagnostic for every completed Scheme request. Native tests independently
+observe the evaluation thread for both choices. The label is diagnostic;
+completion, cancellation, budget and proof authority remain separate.
+
+The grouped closure remains 256 chains of width 16, with 3,840 input edges and
+30,720 output rows per changed request. Keep the Rust independent complete
+pair oracle, all finite resource prechecks, original limits and explicit
+result release. The Rust oracle avoids attributing source-interpreted Scheme
+benchmark validation to the production evaluator. Report client population
+explicitly; default it to the machine's available Rust parallelism and permit
+an experimental override for matched one-client and saturation measurements.
+This is a workload population, not a limit on the Actor protocol.
+
+The direct source-entry recursive diagnostic exceeded its unchanged 90-second
+limit. Its native sample includes GC scanning and Scheme evaluator frames.
+No completed distribution or attribution of the whole timeout to the query
+kernel follows. Preserve that prototype and receipt in =.cache/=; do not add
+it to the required suite as a purported passing performance qualification.

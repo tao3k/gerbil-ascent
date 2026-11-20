@@ -99,12 +99,14 @@ class DiagnosticAdmission(unittest.TestCase):
             with self.subTest(diagnostic=diagnostic), tempfile.TemporaryDirectory() as directory:
                 args = argparse.Namespace(benchmark=Path('/not-run/benchmark'), worker=Path('/not-run/worker'), output=Path(directory))
                 process = SimpleNamespace(pid=123, returncode=0, communicate=lambda **_: self.complete_evidence())
-                with patch.dict(CONTROL.os.environ, {}, clear=True), patch.object(CONTROL, 'compilers', return_value=[]), patch.object(CONTROL, 'process_snapshot', return_value=[dict(pid=123,ppid=0,rss_kib=1024,command='benchmark')]), patch.object(CONTROL, 'thread_population', return_value={123:12}), patch.object(CONTROL, 'cpu_resources', return_value={'maximum_process_rss_bytes': 1024}), \
+                with patch.dict(CONTROL.os.environ, {'ASCENT_BENCH_DSL': 'ascent', 'ASCENT_BENCH_CLIENTS': '7'}, clear=True), patch.object(CONTROL, 'compilers', return_value=[]), patch.object(CONTROL, 'process_snapshot', return_value=[dict(pid=123,ppid=0,rss_kib=1024,command='benchmark')]), patch.object(CONTROL, 'thread_population', return_value={123:12}), patch.object(CONTROL, 'cpu_resources', return_value={'maximum_process_rss_bytes': 1024}), \
                         patch.object(CONTROL.subprocess, 'Popen', return_value=process) as launch:
                     row = CONTROL.run_case(args, ('small', 12, 4, 8), ('vm', 1, 1), 'adaptive', diagnostic=diagnostic)
                 self.assertEqual(row['valid'], not diagnostic)
                 self.assertEqual(row['diagnostic_only'], diagnostic)
                 self.assertEqual('ASCENT_PROCESS_TRACE' in launch.call_args.kwargs['env'], diagnostic)
+                self.assertEqual(launch.call_args.kwargs['env']['ASCENT_BENCH_DSL'], 'typed')
+                self.assertEqual(launch.call_args.kwargs['env']['ASCENT_BENCH_CLIENTS'], '12')
 
     def test_zombie_group_cleanup_preserves_timeout_and_every_observation(self):
         import argparse

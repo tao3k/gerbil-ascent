@@ -3,6 +3,58 @@ use crate::support::Engine;
 use gerbil_ascent::{GraphItem, ObjectInput};
 
 #[test]
+fn public_source_receipts_identify_the_actual_actor_and_ordinary_session() {
+    use ascent_scheme::{Backend, Source};
+    use gerbil_ascent::{Cancellation, FactLimits, SourceSession};
+    let engine = crate::engine(1).unwrap().with_backend(Backend::Scheme);
+    let Source::Scheme(actor) = engine
+        .load_sources(
+            &["(ascent (relation edge (a b) '((0 1))) (relation reach (a b)) ((reach a b) <-- (edge a b)))".into()],
+            FactLimits::default(),
+            false,
+        )
+        .unwrap()
+    else {
+        panic!("requested Scheme execution");
+    };
+    let module = engine.load_definitions("(define-program (make) (sources edge) (outputs reach) (relation edge ((a exact-integer?) (b exact-integer?)) '((0 1))) (relation reach ((a exact-integer?) (b exact-integer?))) ((reach a b) <-- (edge a b)))").unwrap();
+    let value = module.call("make", &[], None).unwrap();
+    let ordinary = value.open_session(FactLimits::default()).unwrap();
+    for (session, runtime) in [(&actor, "actor"), (&ordinary, "session")] {
+        let receipt = session
+            .run(
+                None,
+                &SourceSession::default_limits(),
+                &Cancellation::default(),
+            )
+            .unwrap();
+        assert!(receipt.field("complete").unwrap().boolean().unwrap());
+        assert_eq!(
+            receipt.field("executionRuntime").unwrap().text().unwrap(),
+            runtime
+        );
+        let rows = receipt
+            .field("relations")
+            .unwrap()
+            .field("reach")
+            .unwrap()
+            .list()
+            .unwrap();
+        assert_eq!(rows.len(), 1);
+        let row = rows[0].list().unwrap();
+        assert_eq!((row[0].index().unwrap(), row[1].index().unwrap()), (0, 1));
+        session
+            .result(u64::try_from(receipt.field("resultHandle").unwrap().index().unwrap()).unwrap())
+            .unwrap()
+            .close();
+        session.close();
+    }
+    value.close();
+    module.close();
+    engine.shutdown();
+}
+
+#[test]
 fn resident_actor_keeps_cuts_across_module_calls_and_value_apply() {
     let engine = Engine::new(12).unwrap();
     engine

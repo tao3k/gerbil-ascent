@@ -20,6 +20,28 @@ itself. These component measurements exclude Rust/Scheme value conversion,
 process IPC, rule evaluation and full relation export; their throughput units
 must not be substituted for those production operations.
 
+* Caller compilation control
+
+Source entry remains available without a benchmark build. To measure compiled
+callers separately, compile the same module through the official compiler and
+run its SSI through the same native test command:
+
+#+begin_src sh
+gerbil compile -O -d .cache/ascent/message-callers benchmarks/actor-mailbox-test.ss
+GERBIL_LOADPATH=".cache/ascent/message-callers${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" \
+  timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  .cache/ascent/message-callers/gerbil-ascent-benchmarks/actor-mailbox-test.ssi
+#+end_src
+
+Keep the same source, sample counts, verification and gates. Label caller mode;
+do not mix compiled and source-mode observations in one performance comparison
+or attribute their difference to a change of the production runtime.
+
+The throughput-only Case still verifies every one of 1.2 million public
+Session replies, with clocks at window edges. Its =ACTOR-THROUGHPUT= receipt
+explicitly has zero latency samples. It supplies no P95 evidence. Every original
+fully timed Case and its thresholds remain required and unchanged.
+
 * Concurrent native requesters
 
 The current single-VM Suite also exercises 1, 3 and 12 native calling Actors
@@ -63,6 +85,27 @@ throughput includes result verification and release. Opening and the initial
 empty query have separate timings. The steady-state phases measure eager
 replacement, complete typed export, and the paired transaction. The normal
 2 GiB heap, 90-second supervision and 100 ms sustained P95 gate apply.
+
+* Matched recursive production transport
+
+The existing Rust =process_throughput= benchmark retains its complete row oracle
+and changing source values. Set =ASCENT_BENCH_DSL=ascent= to load the original
+closure DSL through =Engine.load_sources= and require an Actor receipt from
+every Scheme query. The default =typed= fixture retains its ordinary Session
+and requires that receipt instead. Rayon uses the same selected source after
+owned projection. A receipt mismatch fails, including stale compiled carriers.
+
+Set =ASCENT_BENCH_CLIENTS=1= for an isolated requester or specify the population
+for a matched saturation experiment. Omission uses the machine's available
+parallelism. This does not impose an Actor protocol capacity. The historical
+33-row experiment explicitly retains its original 12 callers and typed DSL.
+
+The grouped recursive case uses 256 chains of width 16, 3,840 input edges,
+30,720 exported rows and at least 1,000 verified changed-source requests.
+Keep finite resource prechecks when comparing the Rust interface. They include
+an independent Rust budget execution before the native query and replacement;
+the resulting measurements are not pure Scheme kernel timings. Keep encoding,
+native calls, decoding/release, queueing and client oracle costs separate.
 
 * Rejected reply-channel candidate (historical experiment)
 

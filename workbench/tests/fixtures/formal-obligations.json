@@ -1,4 +1,37 @@
 {
+  "ActorReply": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactReply Once NoEarlyReply MailboxIsolation DrainedClose EndpointOwnership"
+    },
+    "faults": [
+      [
+        "foreign",
+        "ExactReply",
+        12
+      ],
+      [
+        "duplicate",
+        "Once",
+        12
+      ],
+      [
+        "early",
+        "NoEarlyReply",
+        12
+      ],
+      [
+        "cursor",
+        "MailboxIsolation",
+        12
+      ],
+      [
+        "retire",
+        "DrainedClose",
+        12
+      ]
+    ]
+  },
   "ActorRound": {
     "configuration": {
       "constants": "Workers = {1,2}\nGenerationCutoff = $actor_cutoff\nRoundCutoff = $round_cutoff\nMutation = \"none\"",

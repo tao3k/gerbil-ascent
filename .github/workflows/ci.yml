@@ -22,6 +22,7 @@ jobs:
         run: |
           python3 -m ascent_workbench.repository_policy
           python3 -m unittest discover -s workbench/tests -p test_repository_policy.py -v
+          python3 -m unittest discover -s workbench/tests -p test_compiler_cost.py -v
           python3 -m unittest discover -s workbench/tests -p 'test_preparation*.py' -v
           python3 -m unittest discover -s workbench/tests -p test_source_semantic_ci.py -v
           python3 -m unittest discover -s workbench/tests -p test_supervision.py -v

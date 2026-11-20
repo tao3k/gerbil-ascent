@@ -122,3 +122,26 @@ obligations. It does not qualify the unfinished Rust carrier candidate, erase
 complete-query timeouts, claim an isolated speedup between overlapping cohorts,
 or establish the one-million-request-per-second objective. Keep optimizing the
 real runtime and run the same full workloads before adopting further changes.
+
+** Resident Session state baseline
+
+Use ASCENT revision =1c2c6a708f319ee9f766a959b068cd8bd8f19fe9= with the
+compiled =actor-state-mechanism-test.ss= caller and one Scheme VM processor.
+The resident Session retains 1,000,000 two-column source facts. The production
+state window verifies all 1,000,000 public request/reply pairs and checks that
+its caller mailbox marker survives the window. Keep the 2 GiB heap and the
+90-second supervisor for the native =gerbil test= invocation.
+
+That window completed in 2.736396916 seconds at 365,444 replies per second.
+It consumed 1.780 seconds of CPU, including 0.992 seconds of GC CPU, with
+10 natural collections. The earlier timed source-caller window recorded
+57,730 replies per second. The two windows differ in caller compilation and
+per-request sampling. Use the compiled profile for throughput comparisons and
+compare the timed profile's latency separately. Complete relation evaluation
+and export have their own workloads and acceptance thresholds.
+
+Compare runtime candidates with this revision under matched caller artifacts,
+resident facts, verified reply count, Gerbil release and machine conditions.
+Record both throughput and GC costs, with complete semantic checks for
+cancellation, resource accounting and provenance. Keep the raw measurements
+and binary identities in the local benchmark cache.

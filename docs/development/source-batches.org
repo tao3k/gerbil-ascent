@@ -20,6 +20,11 @@ This bounds source context accumulation without replacing the native worker
 capacity. The entry estimate is not a byte-allocation or host-memory bound.
 Explicit benchmark and leak-test heap profiles retain their original controls.
 
+Ordinary Rust binding CI likewise leaves Nextest's test-thread count at its
+native default. Test-executor capacity does not redefine the fixed Actor or
+owner populations inside an individual semantic scenario. The on-demand
+fixed-work experiments retain their explicitly selected concurrency controls.
+
 The controller checks actual batch lengths before starting children. The log
 verifier independently rejects oversized batches, missing or duplicate modules,
 compiled Suite carriers and incomplete single-processor receipts. Isolated

@@ -274,6 +274,7 @@ jobs:
       - name: Bind dependency compiler identity
         id: compiler
         run: |
+          echo "GERBIL_BUILD_CORES=$(sysctl -n hw.logicalcpu)" >> "$GITHUB_ENV"
           fingerprint="$(sha256sum "$GERBIL_HOME/bin/gxi" "$GERBIL_HOME/bin/gsc" "$GERBIL_HOME/include/gambit.h" "$(command -v gcc-16)" "$(gcc-16 -print-prog-name=cc1)" "$(xcrun --find ld)" "$GERBIL_PREFIX/gerbil-build-receipt.json" | sha256sum | cut -d ' ' -f 1)"
           printf 'toolchain=%s\n' "$fingerprint" >> "$GITHUB_OUTPUT"
       - name: Restore declared dependency build

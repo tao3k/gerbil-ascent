@@ -116,6 +116,64 @@ empty query have separate timings. The steady-state phases measure eager
 replacement, complete typed export, and the paired transaction. The normal
 2 GiB heap, 90-second supervision and 100 ms sustained P95 gate apply.
 
+* State request mechanism costs
+
+=actor-state-mechanism-test.ss= compares empty and million-row production
+Sessions with one million operations per component window. It distinguishes
+verification, clock/sample overhead, same-thread fresh STD Completion, and
+complete public state request/replies. These inclusive cohorts cannot be
+subtracted as an exact GC or scheduler partition. Window-only controls supply
+no P95 evidence; the fully timed million-row Suite remains required.
+See [[file:../docs/development/actor-state-cost.org][the source-cost model and native commands]] for the original limits, optional
+official caller compilation control, Lean obligations and Quint mutations.
+
+* Million-row production workloads
+
+Run the native Suites independently; no benchmark executable, preliminary
+build or nested Scheme runner is required:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-oracle-test$' benchmarks/actor-million-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-state-test$' benchmarks/actor-million-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-query-test$' benchmarks/actor-million-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-recursive-test$' benchmarks/actor-million-test.ss
+#+end_src
+
+The base query has 1,000,000 input facts and 1,000,000 complete exported rows.
+The recursive query has 128 disjoint chains of width 128: 16,256 input facts
+and 1,040,384 exported rows. Both plan 1,000 changed-source queries, alternating
+two disjoint cuts. A bitmap oracle checks every tuple, duplicate freedom and
+complete cardinality without asking ASCENT for an expected result. Refusal
+controls cover missing rows, duplicates, foreign cuts and invalid paths.
+
+The state Suite retains 1,000,000 source facts and independently checks
+1,000,000 public state request/replies. A reply is a source generation and
+=idle=, =running= or =draining=; it contains no query result rows. Its throughput
+must never be labelled complete-query throughput.
+
+Preparation, one cold complete query and changed-source requests are distinct
+receipts. Complete query timing includes public Session execution and full row
+export. Changed-source request latency additionally includes replacement and
+independent oracle verification. Sustained throughput includes client checks
+and progress reporting; reciprocal phase times are not throughput. The
+existing strict 100 ms P95 policy applies only to complete populations.
+
+Workload-specific declaration ceilings admit the named data cardinalities.
+The existing output budget counts source and derived facts: these new profiles
+declare total ceilings of 2,000,000 and 1,056,640, respectively. The reported
+complete query still exports only the named result relation;
+production default ceilings and all older gates stay unchanged. Keep 2 GiB and
+90 seconds for each Suite, without prewarming or retries. A timeout before the
+planned population completes is a failed workload, not a throughput or P95
+pass. Keep partial phase receipts and report the last completed operation.
+Observe whole-process CPU and peak RSS externally. Raw Gambit allocation
+counter deltas remain evidence; allocation is unavailable across collections
+until the upstream counter is qualified. No patched runtime is required.
+
 * Matched recursive production transport
 
 The existing Rust =process_throughput= benchmark retains its complete row oracle
@@ -144,6 +202,11 @@ omits =owners= by default so it checks the public constructor itself.
 The Python package reexports the Rust/PyO3 extension. Python qualification
 scripts supply workloads and assertions; execution and runtime control remain
 in the selected Rust or Scheme backend.
+The Scheme wheel's process owner currently uses =python -c= to enter the Rust
+worker export in its child process. This is interpreter-based bootstrap, not
+a Python evaluator or scheduler. The default Rust-runtime wheel does not use
+that Scheme process bootstrap. Do not describe both configurations as an
+independent Rust executable.
 Each matrix row now requires at least 1000 fixed-work request samples across
 five windows, followed by its separate 30-second saturation window. Every
 configuration within a workload executes the same total work. Keep the

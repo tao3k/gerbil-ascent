@@ -1,0 +1,124 @@
+#+title: Source costs of resident Actor Session state requests
+
+* Operation and objective
+
+The public =gerbil-ascent-session-state= call returns a generation and one of
+=idle=, =running= or =draining=. It does not evaluate rules or export relation
+rows. Measure at least one million verified complete request/replies separately
+from complete million-row queries. One million request/replies per second
+requires their complete measured window to finish in at most one second.
+Neither an enqueue rate nor a reciprocal of P95 establishes this rate.
+
+=benchmarks/actor-million-test.ss= retains one million two-column source rows.
+=benchmarks/actor-state-mechanism-test.ss= uses the same source shape and base
+rule for empty and loaded Session controls. Callers use one VM processor and
+the existing production owner; no Rust hop or second Actor implementation is
+introduced. The source caller and officially compiled caller are separate
+experiments, not interchangeable acceptance results.
+
+* Actual successful request path
+
+| Source | Work on one canonical successful state request |
+|--------+-----------------------------------------------|
+| =program/actor-session.ss: request= | Refuse owner reentrancy, capture authority, create fresh STD Completion, lock lifecycle gate, check closed state, enqueue exact envelope, unlock, wait, unwrap outcome |
+| =core/actor-envelope.ss= | The Lean-generated codec constructs an exact five-field list, retaining identities |
+| Frozen =std/sync/completion.ss= | Construct Completion, mutex and condition variable; wait under the mutex, recheck readiness after wake, post once and broadcast |
+| =program/actor-session.ss: dispatch-request!= | Execute only on owner, construct generation/status pair and success outcome, post private endpoint |
+
+The Completion cannot be reset or shared between requests. Its native ready
+flag remains set after waiting; private protocol consumption is distinct from
+the standard object's state. =ActorReply.lean= and =ActorReply.qnt= preserve
+that distinction, exact authority and outcome, mailbox/cursor isolation,
+duplicate refusal and close/drain obligations. Cost work does not relax the
+existing ActorSession, ActorRound, resource or provenance checks.
+
+* Models and limits
+
+=ActorStateCost.lean= counts source constructor calls: one Completion, mutex
+and condition-variable constructor, five envelope pairs, two state pairs and
+one outcome vector for each successful state request. The timed caller also
+constructs two clock buffers per request. These are source-level constructors,
+not an assertion about optimized machine allocations or their byte sizes.
+The envelope field count comes from the existing =ActorEnvelope= definition.
+
+The source state handler does not traverse relation rows. A loaded Session can
+still change collection cost through its live roots. The conditional
+=collections * retainedRoots= expression does not identify those roots or
+verify Gambit's traversal/copying implementation. Retained-root identity and
+actual collector costs need native observations before a lifetime change.
+
+=ActorStateCost.qnt= explores successful allocate/send/reply/take lifecycles,
+clock probes, collection and external delay. Negative controls hide source
+work, reuse private endpoints, change the caller cursor or discount measured
+wall time. The two-request exploration bounds are checker fixtures, not queue,
+Actor or production capacity limits. This is not full source refinement of STD
+mutexes, condition variables, the scheduler or collector.
+
+=MillionQueryWorkload.lean= proves that exact cardinality, membership and
+uniqueness imply complete coverage, and that the width-bounded bitmap index is
+injective. Its concrete dataset arithmetic distinguishes one million inputs,
+one million requests and 1,040,384 recursive result rows. The Scheme oracle
+and its refusal controls remain native validation; they are not thereby
+proved equivalent to the entire evaluator.
+
+CPU, GC CPU and GC wall overlap. Do not add them as disjoint phases. Wall minus
+CPU is an unattributed difference until native evidence identifies scheduling,
+blocking or another cause. No model establishes an achieved time bound.
+
+* Component controls
+
+The native mechanism Suite runs one million operations in each window:
+
+1. A verified loop without a Session call.
+2. The same loop with the original per-request clocks and sample writes.
+3. Fresh STD Completion post/wait on the same thread, without a mailbox hop.
+4. Complete public Session state request/replies with window clocks only.
+
+Repeat the same controls with zero and one million retained input facts. Each
+window reports wall and CPU, natural collections, GC wall/CPU and allocation
+availability. Never subtract these separate cohorts as an exact additive
+partition: collection frequency and process history differ. Do not prewarm or
+force a collection between windows to manufacture a pass.
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-state-mechanism-test.ss
+gerbil compile -O -d .cache/ascent/state-callers \
+  benchmarks/actor-state-mechanism-test.ss
+GERBIL_LOADPATH=".cache/ascent/state-callers${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" \
+  timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  .cache/ascent/state-callers/gerbil-ascent-benchmarks/actor-state-mechanism-test.ssi
+#+end_src
+
+Compilation is optional caller-mode control, outside runtime timing. Production
+library identity, complete work and original resource limits must match. Keep
+raw evidence under =.cache=; retain failures, natural termination, exact source
+and binary identities and whole-process resource observations. A negative
+Gambit allocation counter is unavailable evidence, never zero allocation.
+
+* Changes require evidence
+
+First distinguish caller instrumentation/interpretation, endpoint construction,
+mailbox scheduling, and collection. Then select an actual production change
+and extend ownership/refinement obligations before applying it. Do not bypass
+the mailbox for a cheap state read and call that Actor throughput. Any pooling,
+batching, endpoint reuse or root retirement requires separate authority,
+linearization, cancellation, late reply and lifetime arguments plus the same
+complete queries and original gates.
+
+* Regression checkpoint
+
+Freeze the source, officially compiled caller artifacts, production library
+identities, Gerbil release and dependency revisions for a qualified observation.
+Store machine details, measurements, failed cohorts and hashes under =.cache=,
+not as tracked experiment logs. A source caller and a compiled caller are
+different profiles. A future candidate must keep the complete million-call
+window, loaded data shape, independent checks and caller mode when comparing
+throughput with this checkpoint. Keep timed latency tests separately; the
+window-only control cannot supply a P95 or certify complete-query throughput.
+
+This checkpoint establishes reproducible controls and mathematical cost
+obligations. It does not qualify the unfinished Rust carrier candidate, erase
+complete-query timeouts, claim an isolated speedup between overlapping cohorts,
+or establish the one-million-request-per-second objective. Keep optimizing the
+real runtime and run the same full workloads before adopting further changes.

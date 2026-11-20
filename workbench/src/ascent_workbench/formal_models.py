@@ -741,3 +741,8 @@ FAULTS["OwnerAdmission"] = (('child-publishes', 'CallerOnly', 12), ('mirror-auth
 FAULTS["OwnerAdmission"] += (("skip-snapshot-reverify", "SnapshotCurrent", 12), ("drop-resource-with-host", "ResourceLifetime", 12), ("fork-drops-parent", "ForkLifetime", 12), ("repeat-package-copy", "CapturedCopyCost", 12))
 
 FAULTS["OwnerAdmission"] += (("ready-before-metadata", "OwnerReady", 12), ("metadata-spends-scope", "LibraryScopes", 12))
+
+# Source constructor calls and overlapping runtime observations, not cycle timing.
+MODEL_ORDER += ("ActorStateCost",)
+CONFIGURATIONS["ActorStateCost"] = {"constants": 'Mutation = "none"', "invariants": "FreshEndpoints EnvelopeExact StateExact OutcomeExact ClockExact MailboxIsolation ClockBounds NoDiscountedWall"}
+FAULTS["ActorStateCost"] = (("reuse-endpoint", "FreshEndpoints", 12), ("hide-envelope", "EnvelopeExact", 12), ("hide-state-pairs", "StateExact", 12), ("hide-outcome", "OutcomeExact", 12), ("hide-clock", "ClockExact", 12), ("caller-cursor", "MailboxIsolation", 12), ("subtract-gc", "NoDiscountedWall", 12), ("report-cpu-as-wall", "NoDiscountedWall", 12))

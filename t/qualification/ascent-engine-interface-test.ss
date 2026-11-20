@@ -48,6 +48,21 @@
          ("timeoutNanoseconds" duration) ("queries" '("reach")))
    packed-rows?))
 
+(def (open-typed-reachability edges)
+  (let (source
+         (object->string
+          `(define-program (make)
+             (sources edge) (outputs reach)
+             (relation edge ((a exact-integer?) (b exact-integer?)) (quote ,edges))
+             (relation reach ((a exact-integer?) (b exact-integer?)))
+             ((reach a b) <-- (edge a b))
+             ((reach a c) <-- (reach a b) (edge b c)))))
+    (hash-ref
+     (ascent-engine-call
+      (hash ("operation" "open-program") ("source" source)
+            ("constructor" "make") ("arguments" []) ("trusted" #t)))
+     "handle")))
+
 (def (proof-scope handle result)
   (ascent-engine-call
    (hash ("operation" "owned-result") ("handle" handle)
@@ -111,6 +126,52 @@
                           '((0 9223372036854775808)))
             (replace-edges! handle '((#f 7)))
             (check-equal? (rows (source-run handle 1000000000 #t) "reach") '((#f 7))))
+          (finally
+           (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
+    (test-case "ordinary typed DSL keeps its executor and uses lossless integer packets"
+      (let* ((handle (open-typed-reachability []))
+             (used-worker? #f))
+        (try
+          (parameterize
+              ((current-ascent-execution-control
+                (lambda (_work _facts)
+                  (when (eq? (thread-name (current-thread)) 'ascent-session-evaluation)
+                    (set! used-worker? #t)))))
+            (check-equal? (rows (source-run handle 1000000000 #t) "reach") [])
+            (replace-edges! handle '((-9223372036854775808 0) (0 9223372036854775807)))
+            (let* ((ordinary (source-run handle 1000000000))
+                   (packed (source-run handle 1000000000 #t))
+                   (packet (rows packed "reach")))
+              (check-equal? (s64vector? packet) #t)
+              (check-equal? (s64vector->list packet)
+                            (append (list (length (rows ordinary "reach")) 2)
+                                    (apply append (rows ordinary "reach"))))
+              (check-equal? (hash-ref packed "complete") #t)
+              (check-equal? (hash-ref packed "sourceGeneration") 1)
+              (check-equal? (hash-ref packed "scalarProjection") "supported")
+              (check-equal? (hash-ref (proof-scope handle packed) "sourceGeneration") 1)
+              (replace-edges! handle '((0 9223372036854775808)))
+              (check-equal? (rows (source-run handle 1000000000 #t) "reach")
+                            '((0 9223372036854775808)))
+              (check-exception (proof-scope handle packed) true))
+            (check-exception (replace-edges! handle '((#f 7))) true)
+            (check-equal? (rows (source-run handle 1000000000 #t) "reach")
+                          '((0 9223372036854775808)))
+            (replace-edges! handle '((0 1) (1 2) (2 3) (3 4)))
+            ;; Eager replacement already accepted this cut. A zero-deadline
+            ;; query may return its completed result without further evaluation.
+            (let (complete (source-run handle 0 #t))
+              (check-equal? (hash-ref complete "complete") #t)
+              (check-equal? (hash-ref (proof-scope handle complete) "sourceGeneration") 3))
+            (check-equal? used-worker? #f))
+          (finally
+           (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
+    (test-case "ordinary packed replies cannot promote an initially incomplete cut"
+      (let (handle (open-typed-reachability '((0 1) (1 2) (2 3) (3 4))))
+        (try
+          (let (partial (source-run handle 0 #t))
+            (check-equal? (hash-ref partial "complete") #f)
+            (check-exception (proof-scope handle partial) true))
           (finally
            (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
     (test-case "typed source-run resumes a resident Actor and confines partial proof scope"

@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 MODEL_ORDER = ('DeltaClosure',
+ 'SourceRowTransfer',
  'RayonPublication',
  'RequestScheduling',
  'CheckpointTransport',
@@ -62,7 +63,8 @@ MODEL_ORDER = ('DeltaClosure',
  'RowViewShape',
  'RankedPublication',
  'RuntimeMeasurement')
-CONFIGURATIONS = {'RuntimeMeasurement': {'constants': 'PlannedCounts = {1,2,3}\nMinSamples = 2\nLoadCutoff = 2\nMutation = "none"',
+CONFIGURATIONS = {'SourceRowTransfer': {'constants': 'Mutation = "none"', 'invariants': 'SelectionExact TransportOptIn Representable RowsPreserved CompletionPreserved CancellationPreserved ResourcePreserved ProvenancePreserved GenerationPreserved'},
+ 'RuntimeMeasurement': {'constants': 'PlannedCounts = {1,2,3}\nMinSamples = 2\nLoadCutoff = 2\nMutation = "none"',
                         'invariants': 'TypeOK RuntimeExact', 'constraint': 'Exploration'},
  'CheckpointTransport': {'constants': 'Mutation = "none"', 'invariants': 'TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll WaitTypeOK TransientRechecks FatalStaysFatal ChangedNeverBackoff RetryNoDecision NoLostRegisteredWake NoticeTypeOK NoExtraWake ResidentWaitOutsideAuthority WaitPreservesCursor'},
  'RequestScheduling': {'constants': 'Mutation = "none"', 'invariants': 'TypeOK NoExpiredAdmission NoCanceledAdmission HeldFailure PendingExact FanoutExact OwnerPublication StageExact CapacityExact'},
@@ -247,7 +249,8 @@ CONFIGURATIONS = {'RuntimeMeasurement': {'constants': 'PlannedCounts = {1,2,3}\n
                   'invariants': 'TypeOK PolicyExact CurrentOptionsOnly SuccessfulCommitOnly'},
  'RowViewShape': {'constants': 'Mutation = "none"', 'invariants': 'StampExact CurrentShape RowsPreserved NoEarlyGetter NoShapeAdmission FreshAdmission GetterOrder'},
  'RankedPublication': {'constants': 'Mutation = "none"', 'invariants': 'OrderEmbedding DecodeExact OrderedPublication NoCanceledPublication NoFailedPublication'}}
-FAULTS = {'RuntimeMeasurement': tuple((mutation, 'RuntimeExact', 12) for mutation in
+FAULTS = {'SourceRowTransfer': (('actor-only', 'SelectionExact', 12), ('missing-optin', 'TransportOptIn', 12), ('unsupported-packet', 'Representable', 12), ('reverse-rows', 'RowsPreserved', 12), ('force-complete', 'CompletionPreserved', 12), ('clear-cancel', 'CancellationPreserved', 12), ('clear-resource', 'ResourcePreserved', 12), ('forge-provenance', 'ProvenancePreserved', 12), ('stale-generation', 'GenerationPreserved', 12)),
+ 'RuntimeMeasurement': tuple((mutation, 'RuntimeExact', 12) for mutation in
      ('unit', 'missing', 'few', 'unchecked', 'owner', 'drain', 'tail', 'wall')),
  'DeltaClosure': (('drop', 'Complete', 12),
                   ('early', 'Complete', 12),

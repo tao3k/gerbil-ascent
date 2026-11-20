@@ -345,6 +345,10 @@
           decoded)) row columns)) raw)))
 
 ;; BEGIN GENERATED ACTOR INTEGER ROWS
+;; : (-> Boolean Boolean Boolean Boolean)
+(def (source-row-packet? requested actor ready)
+  (or ready (and requested (not actor))))
+
 ;; : (-> Rows (Or False S64Vector))
 (def (pack-integer-rows rows)
   (and (pair? rows) (pair? (car rows))
@@ -431,16 +435,20 @@
          (lambda (n)
            (let (rows ((.ref result 'rows-of) n))
              (hash-put! answers (source-label state n)
-               (or (and pack? (pack-integer-rows rows))
-                   (map (lambda (row)
-                          (map (lambda (v)
-                                 (cond ((interned-symbol? v) (symbol->string v))
-                                       ((or (string? v) (exact-integer? v) (boolean? v)) v)
-                                       (else
-                                        (set! scalar-projection? #f)
-                                        (hash ("encoding" "owned-result-reference")))))
-                               row))
-                        rows)))))
+               (or
+                ;; BEGIN GENERATED SOURCE ROW SELECTION
+                (and (source-row-packet? packed-rows? actor? pack?)
+                     (pack-integer-rows rows))
+                ;; END GENERATED SOURCE ROW SELECTION
+                (map (lambda (row)
+                       (map (lambda (v)
+                              (cond ((interned-symbol? v) (symbol->string v))
+                                    ((or (string? v) (exact-integer? v) (boolean? v)) v)
+                                    (else
+                                     (set! scalar-projection? #f)
+                                     (hash ("encoding" "owned-result-reference")))))
+                            row))
+                     rows)))))
          queries)
         (ascent-accept-publication!)
         (source-state-runs-set! state (+ (source-state-runs state) 1))

@@ -445,6 +445,8 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "instance-package-lifecycle", "rust/ascent-scheme/src/instances/lifecycle.rs"),
                 ("ExecutionPolicy.lean", "owner-hybrid-scheme", "interface/hybrid.ss"),
                 ("ExecutionPolicy.lean", "actor-integer-rows", "interface/engine-api.ss"),
+                ("ExecutionPolicy.lean", "source-row-packet-quint", "packages/proofs/quint/SourceRowTransfer.qnt"),
+                ("ExecutionPolicy.lean", "source-row-selection", "interface/engine-api.ss"),
                 ("ExecutionPolicy.lean", "integer-source-packet", "interface/engine-api.ss"),
                 ("ExecutionPolicy.lean", "owner-source-scheme", "rules/source.ss"),
                 ("ExecutionPolicy.lean", "owner-control-rust", "rust/ascent-scheme/src/control_state.rs"),
@@ -504,10 +506,11 @@ def main() -> int:
                         ["lake", "env", "lean", "--run", script, language],
                         Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
-                if language in ("actor-integer-rows", "integer-source-packet"):
-                    region = language.replace("-", " ").upper()
-                    begin = f";; BEGIN GENERATED {region}\n"
-                    end = f";; END GENERATED {region}\n"
+                if language in ("actor-integer-rows", "integer-source-packet", "source-row-packet-quint", "source-row-selection"):
+                    region = language.removesuffix("-quint").replace("-", " ").upper()
+                    comment = "  //" if language.endswith("-quint") else "                ;;" if language == "source-row-selection" else ";;"
+                    begin = f"{comment} BEGIN GENERATED {region}\n"
+                    end = f"{comment} END GENERATED {region}\n"
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError(f"missing or duplicate {language} source region")
                     expected = expected.split(begin)[1].split(end)[0]

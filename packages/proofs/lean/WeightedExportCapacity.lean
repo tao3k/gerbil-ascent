@@ -3180,6 +3180,49 @@ theorem unpack_flatten (width : Nat) (rows : List (List Int))
     simp only [List.length_cons, List.flatten_cons, unpack, enough, ↓reduceIte,
       List.take_left' size, List.drop_left' size, ih tail, Option.map_some]
 
+/-- `ready` is the existing requested/Actor/finished decision. Transport opt-in
+also permits an ordinary Session to represent its captured integer rows. This
+decision carries no completion, publication or proof authority. -/
+def sourcePacketReady (requested actor ready : Bool) : Bool :=
+  ready || (requested && !actor)
+
+theorem source_packet_actor_unchanged (requested ready : Bool) :
+    sourcePacketReady requested true ready = ready := by
+  simp [sourcePacketReady]
+
+theorem source_packet_ordinary_selected (ready : Bool) :
+    sourcePacketReady true false ready = true := by
+  simp [sourcePacketReady]
+
+theorem source_packet_requires_request (requested actor finished : Bool)
+    (selected : sourcePacketReady requested actor (requested && actor && finished) = true) :
+    requested = true := by
+  cases requested <;> simp_all [sourcePacketReady]
+
+/-- This uses the already proved rectangular-row codec. The arbitrary receipt
+can include completion, source generation, cancellation and provenance scope.
+Numeric ABI correctness and the actual Scheme control flow remain separate. -/
+theorem source_packet_preserves_receipt {Receipt : Type} (receipt : Receipt)
+    (requested actor ready : Bool) (width : Nat) (rows : List (List Int))
+    (rectangular : ∀ row ∈ rows, row.length = width) :
+    (receipt, if sourcePacketReady requested actor ready
+      then unpack width rows.length rows.flatten else some rows) = (receipt, some rows) := by
+  rw [unpack_flatten width rows rectangular]
+  cases sourcePacketReady requested actor ready <;> rfl
+
+def sourceRowSelectionSchemeSource : String :=
+  ";; : (-> Boolean Boolean Boolean Boolean)\n" ++
+  "(def (source-row-packet? requested actor ready)\n" ++
+  "  (or ready (and requested (not actor))))\n\n"
+
+def sourceRowSelectionQuintSource : String :=
+  "  pure def source_row_packet(requested: bool, actor: bool, ready: bool): bool =\n" ++
+  "    ready or (requested and not(actor))\n"
+
+def sourceRowSelectionCallSource : String :=
+  "                (and (source-row-packet? packed-rows? actor? pack?)\n" ++
+  "                     (pack-integer-rows rows))\n"
+
 theorem unpack_has_exact_size (width count : Nat) (cells : List Int) (rows : List (List Int))
     (accepted : unpack width count cells = some rows) :
     cells.length = count * width := by
@@ -3238,6 +3281,7 @@ def sourcePacketSchemeSource : String :=
   "\n"
 
 def actorSchemeSource : String :=
+  sourceRowSelectionSchemeSource ++
   ";; : (-> Rows (Or False S64Vector))\n" ++
   "(def (pack-integer-rows rows)\n" ++
   "  (and (pair? rows) (pair? (car rows))\n" ++

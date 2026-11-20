@@ -3150,5 +3150,58 @@
         12
       ]
     ]
+  },
+  "SourceRowTransfer": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "SelectionExact TransportOptIn Representable RowsPreserved CompletionPreserved CancellationPreserved ResourcePreserved ProvenancePreserved GenerationPreserved"
+    },
+    "faults": [
+      [
+        "actor-only",
+        "SelectionExact",
+        12
+      ],
+      [
+        "missing-optin",
+        "TransportOptIn",
+        12
+      ],
+      [
+        "unsupported-packet",
+        "Representable",
+        12
+      ],
+      [
+        "reverse-rows",
+        "RowsPreserved",
+        12
+      ],
+      [
+        "force-complete",
+        "CompletionPreserved",
+        12
+      ],
+      [
+        "clear-cancel",
+        "CancellationPreserved",
+        12
+      ],
+      [
+        "clear-resource",
+        "ResourcePreserved",
+        12
+      ],
+      [
+        "forge-provenance",
+        "ProvenancePreserved",
+        12
+      ],
+      [
+        "stale-generation",
+        "GenerationPreserved",
+        12
+      ]
+    ]
   }
 }

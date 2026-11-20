@@ -1,0 +1,118 @@
+#+title: Source result transport independently of evaluator selection
+
+* Observed production boundary
+
+The typed =define-program= closure fixture in
+=rust/ascent-scheme/benches/process_throughput.rs= selects the ordinary
+Session. A native production-interface probe observed only =primordial=
+execution checkpoints and an ordinary list reply despite requesting packed
+rows. It must not be reported as a resident Actor qualification.
+
+The baseline =source-run= implementation in =interface/engine-api.ss= permits
+integer packets only for a finished Actor result. The Rust decoder in
+=rust/ascent-scheme/src/values.rs= already accepts the same integer packet
+independently of the evaluator. Ordinary list decoding promotes and snapshots
+each row. The existing numeric buffer path copies one signed integer buffer.
+The 1,000-request closure baseline retained all tuple comparisons and recorded
+substantial time inside decoding and release. Raw traces remain in =.cache/=.
+
+* Selection rule and unchanged authority
+
+Keep the existing Actor-ready expression and its getter evaluation order.
+Select the existing integer encoder when that expression is true, or when
+the caller explicitly requests packets for an ordinary Session. Keep the
+existing encoder's signed-64, rectangular, nonempty shape checks and ordinary
+fallback. Do not replace the evaluator or classify host callbacks as pure.
+
+Representation selection does not grant completion. In particular, an ordinary
+partial result may use a lossless integer representation while its complete
+flag, generation, retained result, cancellation outcome and proof scope remain
+unchanged. The current Actor partial-result behavior remains unchanged.
+The existing final publication checkpoint still runs after serialization.
+
+* Mathematical and source obligations
+
+=IntegerRowTransfer= in =WeightedExportCapacity.lean= already proves that
+unpacking flattened rectangular rows preserves all rows and their order.
+Extend that model with the three-Boolean selection decision. Relate the old
+ready flag to its original requested/Actor/finished expression. Prove that
+the Actor decision is unchanged, no non-requested packet is introduced, and
+selection preserves arbitrary receipt metadata as well as decoded rows.
+
+The existing native-call model charges =rows * (6 + 2 * columns)= for the
+known-kind ordinary row path and three calls for the packed numeric vector.
+This excludes Scheme packing, Rust allocations, IPC, GC and scheduler time.
+It is not a wall-time or cumulative-byte theorem. Gambit's backward allocation
+readings remain unavailable evidence, not zero allocation.
+
+Bind the selection source and its Quint counterpart to the Lean renderer.
+Quint must reject changes that force completion, erase cancellation or resource
+failure, lose provenance metadata, reorder rows, or bypass transport opt-in.
+These checks do not prove the compiler, numeric ABI or mutable runtime.
+
+* Native acceptance
+
+Compare ordinary and packed replies through =gerbil test= for the real typed
+DSL, signed endpoints, bignum fallback, empty results, partial completion,
+callback observations, stale proof scope and source replacement. Preserve the
+existing Actor, cancellation, resource and provenance suites. Run the Rust
+decoder and production control tests with the same data.
+
+Rebuild the production worker through the existing package/archive interface.
+Repeat the same 1,000 verified closure requests and report client queueing,
+encoding, call, decoding/release, CPU, natural GC and resource costs separately.
+Retain the fixed-work workload and its original limits. A faster ordinary
+Session transport does not establish resident Actor integration or scheduler
+fairness. The latter remains a separate production-path obligation.
+
+** Selected compiled carriers
+
+The local prefix contained an older =engine-api~0.o2= that Gerbil's native
+loader selected ahead of the newly compiled =.o1=. Declared-target clean did
+not enumerate these historical dynamic carriers. Preserve that generated
+namespace in =.cache/= and rebuild its outputs while reusing the upstream
+dependencies. Source tests that loaded a shadowed object do not qualify the
+current implementation. Verify the actual selected carrier after rebuilding;
+do not add a second loader or infer source identity from build success alone.
+
+* Qualification and remaining costs
+
+The measured closure has 256 independent chains of width 16: 3,840 input
+edges and 30,720 output rows per request. Both production workers completed
+1,000 independently checked requests on one VM processor with the existing
+12-client workload, adaptive Rust work distribution and 240-second limit.
+Tracing, request data and client verification were the same in both arms.
+The released Gerbil recipe and GSR revision remained fixed. This workload's
+client population is an experimental parameter, not an Actor capacity limit.
+
+| Observation | Baseline | Integer packet change |
+|-------------+----------+-----------------------|
+| Verified requests per second | 5.328 | 8.879 |
+| Client P95, ms | 2464.821 | 1662.371 |
+| Client maximum, ms | 2646.374 | 1799.368 |
+| Traced VM process CPU, s | 178.696 | 101.425 |
+| Natural collections | 1407 | 518 |
+| Full-export decoding and release, s | 78.409 | 0.614 |
+
+The per-operation trace keeps the remaining work visible. Source replacement
+still used 69.841 seconds inside the VM call across the change's complete
+profile. Source projection retained 18.807 seconds of decoding and release.
+=RuleSession.run= and =admit_replacement= in
+=rust/ascent-scheme/src/api/session.rs= obtain a finite projection and perform
+independent Rust work-budget admission when finite ceilings are requested.
+These checks must not be removed under a claim of pure Scheme performance or
+provenance reuse. Their cost and the serialized owner queue remain separate
+optimization obligations. This change does not establish the 100 ms target.
+
+The same profile's Rayon controls still expose a tail problem: the 1-thread
+arm measured 103.128 requests/s and 126.303 ms P95; the machine's 12-thread
+arm measured 167.348 requests/s and 249.164 ms P95. Rust inference was not
+changed. These observations do not establish a scheduler improvement.
+
+The guarded formal run passed 83 positive checks, 531 rejecting controls and
+103 emitted-source comparisons. Source semantics passed all 184 modules and
+1,559 Cases. The production Rust binding profile passed 83 tests with native
+test-executor capacity and zero retries. All 15 original scenario performance
+Cases passed. The ten-module Contract aggregate retained its failure at the
+unchanged nonnegative cumulative-allocation assertion; the other nine modules
+passed. Allocation qualification remains upstream-owned and incomplete.

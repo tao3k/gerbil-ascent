@@ -423,7 +423,7 @@ jobs:
           (cd python && gerbil env ../.cache/ascent/python-runtime/bin/maturin build --release --locked --no-default-features --features scheme-runtime,rayon,extension-module --auditwheel repair --out ../.cache/ascent/scheme-wheels)
           python3 -m venv .cache/ascent/python-scheme-runtime
           .cache/ascent/python-scheme-runtime/bin/pip install --no-deps .cache/ascent/scheme-wheels/*.whl
-      - name: Qualify twelve resident VMs through installed PyO3
+      - name: Qualify resident VMs at machine capacity through installed PyO3
         if: ${{ !cancelled() && steps.build_prerequisites.outcome == 'success' }}
         env:
           GERBIL_PATH: ${{ github.workspace }}/.gerbil

@@ -54,8 +54,13 @@ publication authority.
 
 * Measurement and adoption
 
-Keep native =gerbil test= entry, original limits, public Session calls,
-unrelated mailbox markers and the 1/3/12 caller experimental populations.
+Keep native =gerbil test= entry, original limits, public Session calls and
+unrelated mailbox markers. Caller controls use one, up to three and the
+machine's available CPU count, removing duplicate populations on small hosts.
+Keep one VM processor; caller Actors are not additional VMs. Preserve exactly
+1.2 million requests by distributing division remainders across callers.
+The process matrix separately sizes VM owners and Rust workers to machine
+capacity and records both populations. Neither setting caps the Actor protocol.
 Measure the complete 1.2-million verified-request window per population,
 P50/P95/P99/max, CPU and natural GC; retain cold opening separately. Raw mailbox
 messages and complete Session requests retain distinct units. One million
@@ -77,3 +82,10 @@ Report zero latency samples and no P95 admission for this window. Retain every
 existing per-request timing Case and its complete sampling/gates unchanged.
 This separates clock/sample-recording cost from maximum verified throughput;
 it does not establish latency under that maximum load.
+
+The old message benchmark used =std/time/precise=, which calls
+=CLOCK_REALTIME= in the frozen release. Preserve those observations as
+diagnostic data. Use Gambit's existing monotonic tick/frequency primitives for
+qualification, relative to one module origin; keep all thresholds and sample
+counts. =RuntimeMeasurement.tick_timestamp_monotone= proves the integer scale
+preserves tick ordering. The SDK's physical clock behavior remains trusted.

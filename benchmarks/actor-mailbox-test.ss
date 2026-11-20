@@ -3,23 +3,37 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 ;;; Single-VM components, not a Rust bridge or rule-evaluation benchmark.
 (import :std/test
+        (only-in :std/list/list delete-duplicates/hash)
         (only-in :gerbil/runtime/thread spawn)
-        (only-in :std/time/precise current-time-precise PreciseTime-seconds PreciseTime-nseconds)
         (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation)
         (only-in :gerbil-ascent/program/actor-session
                  gerbil-ascent-open-actor-session gerbil-ascent-session-state
                  gerbil-ascent-session-close!))
 (export actor-mailbox-test)
 
+(def clock-frequency
+  (let (buffer (make-u64vector 1 0))
+    (##get-monotonic-time-frequency! buffer 0)
+    (let (frequency (u64vector-ref buffer 0))
+      (unless (> frequency 0) (error "missing monotonic clock frequency"))
+      frequency)))
+
+(def (clock-tick)
+  (let (buffer (make-u64vector 1 0))
+    (##get-monotonic-time! buffer 0)
+    (u64vector-ref buffer 0)))
+
+(def clock-origin (clock-tick))
+
 (def (nanoseconds)
-  (let (time (current-time-precise))
-    (+ (* (PreciseTime-seconds time) 1000000000) (PreciseTime-nseconds time))))
+  (quotient (* (- (clock-tick) clock-origin) 1000000000) clock-frequency))
 
 ;; Same total work; only the number of native caller Actors changes.
 ;; No second VM, Rust thread pool, custom mailbox or per-request logger.
 (def (concurrent-session-state clients)
   (check (##current-vm-processor-count) => 1)
   (let* ((total 1200000) (per-client (quotient total clients))
+         (remainder-count (remainder total clients))
          (program (gerbil-ascent-program
                     (list (gerbil-ascent-relation 'edge 1 [])) [] 1000 1000 1000))
          (session (gerbil-ascent-open-actor-session program workers: 1))
@@ -28,7 +42,8 @@
     (try
       (for-each
        (lambda (client)
-         (let (times (make-f64vector per-client 0.))
+         (let* ((client-count (+ per-client (if (< client remainder-count) 1 0)))
+                (times (make-f64vector client-count 0.)))
            (vector-set! samples client times)
            (set! actors
              (cons
@@ -39,7 +54,7 @@
                      (unless (eq? (thread-receive) 'start) (error "invalid client start"))
                      (thread-send (current-thread) 'client-mailbox-marker)
                      (let loop ((index 0))
-                       (unless (= index per-client)
+                       (unless (= index client-count)
                          (let* ((start (nanoseconds))
                                 (result (gerbil-ascent-session-state session))
                                 (elapsed (- (nanoseconds) start)))
@@ -59,7 +74,7 @@
                (per-client-ordered (map (lambda (times) (list-sort < (f64vector->list times)))
                                         (vector->list samples)))
                (client-p95 (map (lambda (times)
-                                 (list-ref times (- (quotient (+ (* per-client 95) 99) 100) 1)))
+                                 (list-ref times (- (quotient (+ (* (length times) 95) 99) 100) 1)))
                                per-client-ordered))
                (ordered (list-sort < (apply append per-client-ordered)))
                (p95 (list-ref ordered (- (quotient (+ (* total 95) 99) 100) 1))))
@@ -68,7 +83,8 @@
           (display "ACTOR-CLIENTS ")
           (write (list (cons 'unit 'public-session-state-request-reply)
                        (cons 'vm-processors 1) (cons 'clients clients)
-                       (cons 'verified-completions total) (cons 'samples-per-client per-client)
+                       (cons 'verified-completions total)
+                       (cons 'samples-per-client (map length per-client-ordered))
                        (cons 'elapsed-ns elapsed) (cons 'cpu-seconds cpu-elapsed)
                        (cons 'verified-requests-per-second (/ (* total 1000000000.) elapsed))
                        (cons 'p50-ns (list-ref ordered (- (quotient total 2) 1)))
@@ -84,6 +100,9 @@
   (test-suite "Single VM Actor components"
     (test-case "one million ordered mailbox messages with receiver drain"
       (check (##current-vm-processor-count) => 1)
+      (display "ACTOR-CLOCK ")
+      (write (list (cons 'source 'gambit-monotonic) (cons 'frequency clock-frequency)))
+      (newline)
       (let* ((count 1000000)
              (receiver
                (spawn
@@ -147,8 +166,14 @@
               (newline)
               (check (< p95 100000000) => #t)))
           (finally (gerbil-ascent-session-close! session)))))
-    (test-case "same 1.2 million requests through one three and twelve caller Actors"
-      (for-each concurrent-session-state '(1 3 12)))
+    (test-case "same 1.2 million requests through machine-sized caller populations"
+      (let* ((capacity (max 1 (##cpu-count)))
+             (populations (delete-duplicates/hash (list 1 (min 3 capacity) capacity))))
+        (display "ACTOR-CAPACITY ")
+        (write (list (cons 'available-cpus capacity) (cons 'caller-populations populations)
+                     (cons 'vms 1) (cons 'vm-processors 1)))
+        (newline)
+        (for-each concurrent-session-state populations)))
     (test-case "1.2 million verified Session replies without per-request clock probes"
       (check (##current-vm-processor-count) => 1)
       (let* ((program (gerbil-ascent-program

@@ -22,6 +22,18 @@ def queueTime (t : Trace) : Nat := t.entered - t.enqueued
 def executionTime (t : Trace) : Nat := t.computed - t.entered
 def publicationTime (t : Trace) : Nat := t.visible - t.computed
 
+/-- The benchmark reads Gambit's monotonic tick counter relative to one module
+origin. The SDK supplies the nondecreasing ticks and positive frequency. -/
+def tickTimestamp (origin tick frequency : Nat) : Nat :=
+  (tick - origin) * 1000000000 / frequency
+
+theorem tick_timestamp_monotone (origin first last frequency : Nat)
+    (ordered : first ≤ last) :
+    tickTimestamp origin first frequency ≤ tickTimestamp origin last frequency := by
+  unfold tickTimestamp
+  apply Nat.div_le_div_right
+  exact Nat.mul_le_mul_right 1000000000 (Nat.sub_le_sub_right ordered origin)
+
 theorem phase_decomposition (t : Trace) (h : Ordered t) :
     latency t = queueTime t + executionTime t + publicationTime t := by
   unfold Ordered at h
@@ -81,6 +93,7 @@ theorem too_few_samples_rejected (unit : Unit) (bound : Nat) (e : Evidence)
 end Ascent.RuntimeMeasurement
 
 #print axioms Ascent.RuntimeMeasurement.phase_decomposition
+#print axioms Ascent.RuntimeMeasurement.tick_timestamp_monotone
 #print axioms Ascent.RuntimeMeasurement.preparation_is_not_query_latency
 #print axioms Ascent.RuntimeMeasurement.incomplete_rejected
 #print axioms Ascent.RuntimeMeasurement.different_units_rejected

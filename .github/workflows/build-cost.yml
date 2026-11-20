@@ -48,7 +48,7 @@ on:
         type: boolean
         default: false
       semantic_runtime:
-        description: Also compare all source semantics with twelve single-thread VMs and the current 600-second limit
+        description: Also compare all source semantics at machine capacity with the current 600-second limit
         type: boolean
         default: false
 permissions:
@@ -190,7 +190,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/nextest"
           tar -xzf "$archive" -C "$RUNNER_TEMP/nextest"
           export PATH="$RUNNER_TEMP/nextest:$PATH"
-          cargo nextest run --release --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme -p ascent-python --no-default-features --features "$ASCENT_OWNER_FEATURES" --test-threads 12 --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/process-binding-tests.log"
+          cargo nextest run --release --no-fail-fast --locked --manifest-path rust/Cargo.toml -p ascent-scheme -p ascent-python --no-default-features --features "$ASCENT_OWNER_FEATURES" --retries 0 --success-output immediate 2>&1 | tee "$RUNNER_TEMP/process-binding-tests.log"
           ! grep -E 'ASCENT-(PROCESS-(FORCED-STOP|SHUTDOWN-ERROR)|CHECKPOINT-TRANSPORT-ERROR)|^[[:space:]]*(FAIL \+ )?LEAK[[:space:]]' "$RUNNER_TEMP/process-binding-tests.log"
       - name: Qualify installed PyO3 process and instance owner interfaces
         if: ${{ inputs.process_throughput }}
@@ -212,10 +212,10 @@ jobs:
           ASCENT_WORK_DISTRIBUTION: ${{ inputs.work_distribution || 'adaptive' }}
         run: |
           if [[ -n "$BASELINE" ]]; then
-            python3 tools/ci/rayon-control.py --reference-source "$RUNNER_TEMP/process-reference" --reference-build "$RUNNER_TEMP/process-reference-build.jsonl" --candidate-build "$RUNNER_TEMP/process-build.jsonl" --expected-cpus 3 --output "$RUNNER_TEMP/process-control"
+            python3 tools/ci/rayon-control.py --reference-source "$RUNNER_TEMP/process-reference" --reference-build "$RUNNER_TEMP/process-reference-build.jsonl" --candidate-build "$RUNNER_TEMP/process-build.jsonl" --output "$RUNNER_TEMP/process-control"
           else
             benchmark="$(python3 -c 'import json,sys; print(next(v["executable"] for line in open(sys.argv[1]) if (v:=json.loads(line)).get("reason")=="compiler-artifact" and v.get("target",{}).get("name")=="process_throughput" and v.get("executable")))' "$RUNNER_TEMP/process-build.jsonl")"
-            python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --expected-cpus 3 --include-instances --output "$RUNNER_TEMP/process-throughput"
+            python3 tools/ci/process-throughput.py --benchmark "$benchmark" --worker rust/target/release/ascent-scheme-worker --include-instances --output "$RUNNER_TEMP/process-throughput"
           fi
       - name: Diagnose resident mean provenance after all original measurements
         if: ${{ !cancelled() && inputs.process_throughput && inputs.baseline == '' && steps.production.outcome == 'success' && steps.bindings.outcome == 'success' }}

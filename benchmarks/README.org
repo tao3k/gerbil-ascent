@@ -1,5 +1,28 @@
 #+TITLE: ASCENT benchmarks
 
+* Performance questions and measurement units
+
+High performance must be demonstrated on the operation being claimed. Keep
+these layers distinct when selecting an optimization and reporting a result:
+
+| Layer | Existing native measurement | What a completion means | Remaining evidence |
+|-------+-----------------------------+-------------------------+--------------------|
+| Mailbox | =actor-mailbox-test.ss= ordered burst | Receiver checked one message | Does not execute a Session request |
+| Session protocol | Same Suite, timed and throughput-only windows | Public state reply checked; caller mailbox preserved | A throughput-only window supplies no latency distribution |
+| Resident evaluation | =actor-session-test.ss= phase Suites | Versioned result and complete expected tuples checked | Kernel work must be separated from materialization and caller checks |
+| Index/provider | =provider-index-test.ss= physical callback intervals | Expected IDs checked; published snapshots remain isolated | Inclusive intervals overlap; do not add them as exclusive costs |
+| Production transport | Rust =process_throughput= with actual runtime identity | Changed source replaced, result exported and independent oracle matched | Budget preflight, transport, evaluation and export are separate costs |
+
+Use verified completions per second, complete request P50/P95/P99/maximum,
+input/output cardinalities, CPU, GC and process resources. Report queue time
+only where it is instrumented; do not infer it from total wall time minus CPU.
+An unavailable or backward allocation counter is unavailable evidence, not
+zero allocation. Cold preparation and caller compilation are independent axes.
+Million-message throughput does not establish million-query throughput.
+Existing semantic and performance gates remain required. The million-request
+and sub-100-ms large-query targets require production evidence; neither follows
+from a model proof or the configuration checks.
+
 * Single VM Actor components
 
 Run the source Suite through the native test entry; it does not create another
@@ -41,15 +64,22 @@ The throughput-only Case still verifies every one of 1.2 million public
 Session replies, with clocks at window edges. Its =ACTOR-THROUGHPUT= receipt
 explicitly has zero latency samples. It supplies no P95 evidence. Every original
 fully timed Case and its thresholds remain required and unchanged.
+All message Cases use Gambit's monotonic counter and report its frequency in
+=ACTOR-CLOCK=. Earlier system-clock receipts remain diagnostic observations.
 
 * Concurrent native requesters
 
-The current single-VM Suite also exercises 1, 3 and 12 native calling Actors
+The current single-VM Suite exercises one, up to three, and machine-capacity calling Actors
 against the same one-worker Session. Each profile completes exactly 1,200,000
 independently checked state requests. This is mailbox/Session-state admission,
 not a relation-query or Rust transport result. All calling Actors join before
 Session retirement, including failure paths. The original 100 ms P95 check
 still applies to every client and the complete profile.
+Duplicate populations on small machines are omitted. Remainder requests are
+distributed across callers so machines with five or seven cores still execute
+the same total work. =ACTOR-CAPACITY= distinguishes CPU capacity, caller
+population, one VM and one VM processor. These are benchmark populations,
+not a limit on the Actor protocol or green-thread count.
 
 * Resident production Session phases
 
@@ -97,8 +127,19 @@ owned projection. A receipt mismatch fails, including stale compiled carriers.
 
 Set =ASCENT_BENCH_CLIENTS=1= for an isolated requester or specify the population
 for a matched saturation experiment. Omission uses the machine's available
-parallelism. This does not impose an Actor protocol capacity. The historical
-33-row experiment explicitly retains its original 12 callers and typed DSL.
+parallelism. This does not impose an Actor protocol capacity. The matrix tool
+also defaults to available CPUs for callers and Rust threads, and compares
+one, up to three, and machine-capacity VMs. Every VM has one processor. Rayon
+thread-count controls fit the same machine. Use =--clients= and =--dsl typed=
+only for explicitly labelled requester and ordinary-Session controls. Historical
+33-row receipts used twelve callers and remain historical data; they do not
+define the current default. The new matrix schema records actual CPU capacity,
+requester population and DSL. Results from different schemas or caller modes
+must not be pooled as one performance comparison.
+Each matrix row now requires at least 1000 fixed-work request samples across
+five windows, followed by its separate 30-second saturation window. Every
+configuration within a workload executes the same total work. Keep the
+original 240-second process limit and retain any timeout as a failure.
 
 The grouped recursive case uses 256 chains of width 16, 3,840 input edges,
 30,720 exported rows and at least 1,000 verified changed-source requests.

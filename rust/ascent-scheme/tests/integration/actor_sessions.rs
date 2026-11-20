@@ -56,7 +56,7 @@ fn public_source_receipts_identify_the_actual_actor_and_ordinary_session() {
 
 #[test]
 fn resident_actor_keeps_cuts_across_module_calls_and_value_apply() {
-    let engine = Engine::new(12).unwrap();
+    let engine = Engine::new(std::thread::available_parallelism().unwrap().get()).unwrap();
     engine
         .register_module(
             "resident-actor",

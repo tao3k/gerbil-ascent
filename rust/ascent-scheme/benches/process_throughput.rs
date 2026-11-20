@@ -485,7 +485,20 @@ fn prepare_client(
             .unwrap()
         {
             Source::Scheme(session) => Session::Scheme(session, "actor"),
-            Source::Rayon(session) => Session::Rayon(session),
+            Source::Rayon(mut session) => {
+                // SourceSession requires its admitted initial cut to run before
+                // the first replacement, just like the typed fixture above.
+                let initial = session
+                    .run(
+                        Some(&["reach".into()]),
+                        &SourceSession::default_limits(),
+                        &Cancellation::default(),
+                    )
+                    .unwrap();
+                assert!(initial.complete && initial.relations["reach"].is_empty());
+                session.result(initial.result_handle).unwrap().close();
+                Session::Rayon(session)
+            }
         };
         (session, None)
     } else {

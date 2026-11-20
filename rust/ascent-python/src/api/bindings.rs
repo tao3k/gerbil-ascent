@@ -23,8 +23,11 @@ pub(super) struct ProcessPool(ascent_scheme::ProcessPool);
 #[pymethods]
 impl ProcessPool {
     #[new]
-    #[pyo3(signature=(owners=12))]
-    fn new(py: Python<'_>, owners: usize) -> PyResult<Self> {
+    #[pyo3(signature=(owners=None))]
+    fn new(py: Python<'_>, owners: Option<usize>) -> PyResult<Self> {
+        let owners = owners.unwrap_or_else(|| {
+            std::thread::available_parallelism().map_or(1, std::num::NonZero::get)
+        });
         py.detach(|| ascent_scheme::ProcessPool::new(owners))
             .map(Self)
             .map_err(super::types::source_error)

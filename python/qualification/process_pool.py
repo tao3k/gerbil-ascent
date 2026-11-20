@@ -49,8 +49,13 @@ def qualify_rayon_modes():
     print(f"RAYON-PYTHON-OK threads={CAPACITY} modes=3 limits=preserved snapshots=preserved", flush=True)
 
 
-def qualify(pool_type=ProcessPool, shared_process=False, package=None, *, owners=CAPACITY):
-    pool = pool_type(owners) if package is None else pool_type(owners, package=package)
+def qualify(pool_type=ProcessPool, shared_process=False, package=None, *, owners=None):
+    options = {} if owners is None else {'owners': owners}
+    if package is not None:
+        options['package'] = package
+    # Exercise the public constructor's machine default rather than supplying it.
+    pool = pool_type(**options)
+    owners = CAPACITY if owners is None else owners
     identities = pool.identities()
     assert len(identities) == owners
     assert len({row['domain'] for row in identities}) == owners
@@ -105,23 +110,24 @@ def qualify(pool_type=ProcessPool, shared_process=False, package=None, *, owners
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--instances', action='store_true')
-    parser.add_argument("--owners", type=int, default=CAPACITY)
+    parser.add_argument("--owners", type=int,
+                        help="explicit owner population; default: native available CPUs")
     args = parser.parse_args()
-    if args.owners < 1:
+    if args.owners is not None and args.owners < 1:
         parser.error("--owners must be positive")
-    owners = args.owners
+    owners = CAPACITY if args.owners is None else args.owners
     qualify_rayon_modes()
     if args.instances:
         from ascent import InstancePackage, InstancePool
-        pids = qualify(InstancePool, shared_process=True, owners=owners)
+        pids = qualify(InstancePool, shared_process=True, owners=args.owners)
         assert set(pids) == {os.getpid()}
         print(f'INSTANCE-PYTHON-OK owners={owners} processors=1 clients={owners} calls=120 applications=120 joined={owners}')
         package = InstancePackage()
-        captured_pids = qualify(InstancePool, shared_process=True, package=package, owners=owners)
+        captured_pids = qualify(InstancePool, shared_process=True, package=package, owners=args.owners)
         assert set(captured_pids) == {os.getpid()}
         print(f'INSTANCE-PACKAGE-PYTHON-OK owners={owners} processors=1 clients={owners} calls=120 applications=120 joined={owners}')
     else:
-        pids = qualify(owners=owners)
+        pids = qualify(owners=args.owners)
         gc.collect()
         for pid in pids:
             try:

@@ -47,11 +47,14 @@ class BuildActivity(unittest.TestCase):
 
     @unittest.skipUnless(sys.platform == 'darwin', 'Darwin exec CPU counter reset')
     def test_exec_counter_reset_does_not_hide_continuing_native_work(self):
-        work = 'import time\nend=time.process_time()+3\nwhile time.process_time()<end: pass\n'
+        # Exercise real fork/exec counter reset for two observable intervals.
+        # Six CPU seconds cannot promise completion within fifteen wall seconds
+        # under contention; the watchdog checks progress, not reserved CPU share.
+        work = 'import time\nend=time.monotonic()+3\nwhile time.monotonic()<end: pass\n'
         code = ('import os,sys,time\npid=os.fork()\n'
                 'if pid==0:\n'
-                ' end=time.process_time()+3\n'
-                ' while time.process_time()<end: pass\n'
+                ' end=time.monotonic()+3\n'
+                ' while time.monotonic()<end: pass\n'
                 ' os._exit(0)\n'
                 'os.waitpid(pid,0)\n'
                 f'os.execv(sys.executable,[sys.executable,"-c",{work!r}])\n')

@@ -136,6 +136,14 @@ only for explicitly labelled requester and ordinary-Session controls. Historical
 define the current default. The new matrix schema records actual CPU capacity,
 requester population and DSL. Results from different schemas or caller modes
 must not be pooled as one performance comparison.
+The installed Python =ProcessPool()= and macOS =InstancePool()= also derive
+their default owner population from Rust's =available_parallelism=. An explicit
+=owners=N= remains a caller choice; neither constructor imposes a twelve-VM
+default. Each owner retains one VM processor. Installed-wheel qualification
+omits =owners= by default so it checks the public constructor itself.
+The Python package reexports the Rust/PyO3 extension. Python qualification
+scripts supply workloads and assertions; execution and runtime control remain
+in the selected Rust or Scheme backend.
 Each matrix row now requires at least 1000 fixed-work request samples across
 five windows, followed by its separate 30-second saturation window. Every
 configuration within a workload executes the same total work. Keep the
@@ -147,6 +155,34 @@ Keep finite resource prechecks when comparing the Rust interface. They include
 an independent Rust budget execution before the native query and replacement;
 the resulting measurements are not pure Scheme kernel timings. Keep encoding,
 native calls, decoding/release, queueing and client oracle costs separate.
+
+The Rayon fixture must execute and release its initial admitted result before
+the first source replacement. This initialization belongs to startup, not the
+measured changing-source requests. It uses the existing =SourceSession= lifecycle.
+
+The measured client phases currently include the following production work:
+
+| Client phase | Source | Included work |
+|--------------+--------+---------------|
+| =replace_ns= | =RuleSession.replace= and =admit_replacement= | Input construction, finite projection, Rust budget evaluation, payload conversion, native source replacement and acknowledgement |
+| =run_export_ns= | =RuleSession.run= and result ownership operations | Finite projection, Rust budget evaluation, native run/export, row decoding, result authority check and release |
+| Remaining request time | Benchmark =execute= | Sorting, independent complete tuple comparison and digest updates |
+
+For Actor sessions the native replacement eagerly evaluates and publishes its
+candidate; a following =source-run= may reuse that completed result. Therefore
+=replace_ns= is not an enqueue measurement. Opt-in =ASCENT-VM-PHASE= and
+=ASCENT-RPC-PHASE= brackets separate native encoding, calls, decoding/release,
+GC and owner queueing. Time outside these native brackets remains unattributed
+host work until directly instrumented; do not label it all as Rust inference.
+Traced runs are diagnostics, separate from performance admission.
+
+Potential projection or index reuse must be bound to the owner, immutable
+source cut and current generation, with failure invalidation and fresh
+cancellation/resource/publication checks. A public object's identity or a
+previous successful validation is insufficient. In particular, controlled
+execution currently disables retained scalar source indexes in =evaluate.ss=;
+enabling them requires validating interrupted index construction and source
+replacement, not just deleting that guard.
 
 * Rejected reply-channel candidate (historical experiment)
 

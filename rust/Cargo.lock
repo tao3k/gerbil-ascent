@@ -136,6 +136,7 @@ dependencies = [
  "gerbil-ascent",
  "gerbil-scheme-python 0.1.0 (git+https://github.com/tao3k/gerbil-scheme-rust?rev=7c4dd3d8e3b6321113d1a752599ee7f40045c48a)",
  "pyo3",
+ "pyo3-build-config",
  "serde_json",
 ]
 

@@ -14,6 +14,7 @@
 ;;; test hook. It records field-specification ownership, never validation success.
 (def shape? (##eval 'gerbil-ascent/program/types#declared-value-shape?))
 (def ordinary-check (##eval 'gerbil-ascent/program/func#current-declaration-check))
+(def pack-projection (##eval 'gerbil-ascent/interface/engine-api#pack-projection-rows!))
 (def (old-view relation replacement) (.o (:: @ relation) rows: replacement))
 (def (rejected? action) (with-catch (lambda (_) #t) (lambda () (action) #f)))
 (def (same-data? a b)
@@ -44,6 +45,21 @@
 
 (def ascent-relation-row-view-test
   (test-suite "Source row views retain fresh admission and prototype invalidation"
+    (test-case "private row encoding never re-enters captured caller getters"
+      (let* ((trace [])
+             (parent (gerbil-ascent-relation 'input 1 '((1) (1) (2))))
+             (relation (.o (:: @ parent)
+                          name: (begin
+                                  (set! trace (cons (eq? (ordinary-check) validate) trace))
+                                  'input)))
+             (captured (wire relation))
+             (before (map identity trace)))
+        (check (pair? before) => #t)
+        (check (eq? (pack-projection captured #f) captured) => #t)
+        (check (eq? (pack-projection captured #t) captured) => #t)
+        (check trace => before)
+        (check (s64vector->list (hash-ref (car (hash-ref captured "relations")) "rows"))
+               => '(3 1 1 1 2))))
     (test-case "canonical views preserve duplicate, complex and mutable cell projection"
       (let* ((parent (gerbil-ascent-relation 'input 1 []))
              (cell (vector 7))

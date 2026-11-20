@@ -75,8 +75,103 @@
          ("sources" (list (hash ("relation" "edge") ("rows" edges)))))
    packed-rows?))
 
+(def (same-datum? left right)
+  (cond
+    ((hash-table? left)
+     (and (hash-table? right) (= (hash-length left) (hash-length right))
+          (andmap (lambda (entry)
+                    (and (hash-key? right (car entry))
+                         (same-datum? (cdr entry) (hash-ref right (car entry)))))
+                  (hash->list left))))
+    ((pair? left)
+     (and (pair? right) (same-datum? (car left) (car right))
+          (same-datum? (cdr left) (cdr right))))
+    (else (equal? left right))))
+
+(def (check-source-projection handle packed?)
+  (let* ((request (hash ("operation" "source-projection") ("handle" handle)))
+         (ordinary (ascent-engine-call request))
+         (encoded (ascent-engine-call request #t))
+         (before (hash-ref ordinary "program"))
+         (after (hash-ref encoded "program")))
+    (check-equal? (hash-ref encoded "status") "supported")
+    (check-equal? (hash-ref encoded "sourceGeneration") (hash-ref ordinary "sourceGeneration"))
+    (check-equal? (hash-length before) (hash-length after))
+    (for-each
+      (lambda (entry)
+        (unless (equal? (car entry) "relations")
+          (check-equal? (same-datum? (cdr entry) (hash-ref after (car entry))) #t)))
+      (hash->list before))
+    (check-equal? (length (hash-ref before "relations")) (length (hash-ref after "relations")))
+    (for-each
+      (lambda (left right)
+        (check-equal? (hash-length left) (hash-length right))
+        (for-each
+          (lambda (entry)
+            (if (equal? (car entry) "rows")
+              (let* ((rows (cdr entry)) (packet (hash-ref right "rows"))
+                     (expected? (and packed? (not (null? rows)))))
+                (check-equal? (s64vector? packet) expected?)
+                (if expected?
+                  (check-equal? (s64vector->list packet)
+                                (append (list (length rows) (length (car rows)))
+                                        (apply append rows)))
+                  (check-equal? (same-datum? rows packet) #t)))
+              (check-equal? (same-datum? (cdr entry) (hash-ref right (car entry))) #t)))
+          (hash->list left)))
+      (hash-ref before "relations") (hash-ref after "relations"))
+    ;; Private transport must not mutate the Session's retained catalogue.
+    (check-equal? (same-datum? ordinary (ascent-engine-call request)) #t)))
+
 (def ascent-engine-interface-test
   (test-suite "Public inert engine contract for C ABI consumers"
+    (test-case "input projection does not require a completed Actor result"
+      (let (handle (open-reachability '((0 1) (1 2) (2 3)) 16))
+        (try
+          (begin
+            (check-source-projection handle #t)
+            (let (partial (source-run handle 0 #t))
+              (check-equal? (hash-ref partial "executionRuntime") "actor")
+              (check-equal? (hash-ref partial "complete") #f)
+              (check-exception (proof-scope handle partial) true))
+            (check-source-projection handle #t))
+          (finally
+            (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
+    (test-case "projected source packets preserve complete catalogues and source generations"
+      (let (handle (open-reachability [] 16))
+        (try
+          (begin
+            ;; In the existing closure DSL, nonempty declarations are fixed
+            ;; facts. Use its mutable empty source, then publish the first cut.
+            (source-run handle 1000000000)
+            (replace-edges! handle
+              '((-9223372036854775808 0) (-9223372036854775808 0)
+                (0 9223372036854775807)))
+            (check-source-projection handle #t)
+            (let (initial (source-run handle 1000000000))
+              (for-each
+                (lambda (point)
+                  (replace-edges! handle (car point))
+                  (check-source-projection handle (cadr point)))
+                '((((0 9223372036854775808)) #f)
+                  (((#f 7)) #f)
+                  (() #f)
+                  (((2 3) (2 3)) #t)))
+              (check-exception (replace-edges! handle '((#(1) #(2)))) true)
+              (check-source-projection handle #t)
+              (check-exception (proof-scope handle initial) true)))
+          (finally
+            (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
+    (test-case "complex projected values retain their complete shared value pool"
+      (let* ((source "(def (make) (gerbil-ascent-program (list (gerbil-ascent-relation 'edge 2 '((#(1) #(2)) (#(1) #(2))))) [] 32 64 96 '(edge)))")
+             (opened (ascent-engine-call
+                       (hash ("operation" "open-program") ("source" source)
+                             ("constructor" "make") ("arguments" []) ("trusted" #t))))
+             (handle (hash-ref opened "handle")))
+        (try
+          (check-source-projection handle #f)
+          (finally
+            (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
     (test-case "private integer inputs preserve source updates and rejection precedence"
       (let (handle (open-reachability [] 4))
         (dynamic-wind

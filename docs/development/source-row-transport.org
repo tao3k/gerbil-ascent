@@ -75,47 +75,84 @@ dependencies. Source tests that loaded a shadowed object do not qualify the
 current implementation. Verify the actual selected carrier after rebuilding;
 do not add a second loader or infer source identity from build success alone.
 
-* Qualification and remaining costs
+* Performance admission and remaining costs
 
-The measured closure has 256 independent chains of width 16: 3,840 input
-edges and 30,720 output rows per request. Both production workers completed
-1,000 independently checked requests on one VM processor with the existing
-12-client workload, adaptive Rust work distribution and 240-second limit.
-Tracing, request data and client verification were the same in both arms.
-The released Gerbil recipe and GSR revision remained fixed. This workload's
-client population is an experimental parameter, not an Actor capacity limit.
+The fixed recursive workload has 256 independent chains of width 16: 3,840
+input edges and 30,720 output rows per changed-source request. Require at least
+1,000 independently checked requests and preserve the existing process limit.
+Record preparation, client queueing, encoding, native execution, decoding,
+release, CPU and natural GC separately. Keep raw receipts in =.cache/= or CI
+artifacts; historical timings are not a current performance admission.
 
-| Observation | Baseline | Integer packet change |
-|-------------+----------+-----------------------|
-| Verified requests per second | 5.328 | 8.879 |
-| Client P95, ms | 2464.821 | 1662.371 |
-| Client maximum, ms | 2646.374 | 1799.368 |
-| Traced VM process CPU, s | 178.696 | 101.425 |
-| Natural collections | 1407 | 518 |
-| Full-export decoding and release, s | 78.409 | 0.614 |
-
-The per-operation trace keeps the remaining work visible. Source replacement
-still used 69.841 seconds inside the VM call across the change's complete
-profile. Source projection retained 18.807 seconds of decoding and release.
 =RuleSession.run= and =admit_replacement= in
-=rust/ascent-scheme/src/api/session.rs= obtain a finite projection and perform
-independent Rust work-budget admission when finite ceilings are requested.
-These checks must not be removed under a claim of pure Scheme performance or
-provenance reuse. Their cost and the serialized owner queue remain separate
-optimization obligations. This change does not establish the 100 ms target.
+=rust/ascent-scheme/src/api/session.rs= each obtain a finite projection and
+perform independent Rust work-budget admission when finite ceilings are
+requested. Neither execution may be skipped under a transport optimization.
+Source replacement, projection decoding and the serialized owner queue remain
+separate costs. Allocation readings that move backwards remain failed evidence;
+they must not be clamped or described as available cumulative allocation.
 
-The same profile's Rayon controls still expose a tail problem: the 1-thread
-arm measured 103.128 requests/s and 126.303 ms P95; the machine's 12-thread
-arm measured 167.348 requests/s and 249.164 ms P95. Rust inference was not
-changed. These observations do not establish a scheduler improvement.
+* Projected source-row transport
 
-The guarded formal run passed 83 positive checks, 531 rejecting controls and
-103 emitted-source comparisons. Source semantics passed all 184 modules and
-1,559 Cases. The production Rust binding profile passed 83 tests with native
-test-executor capacity and zero retries. All 15 original scenario performance
-Cases passed. The ten-module Contract aggregate retained its failure at the
-unchanged nonnegative cumulative-allocation assertion; the other nine modules
-passed. Allocation qualification remains upstream-owned and incomplete.
+
+The production trace still decodes ordinary nested source rows for
+=source-projection= twice per changed-source request: =admit_replacement= and
+=RuleSession.run= each perform a finite budget check. Their independent Rust
+execution remains required. Optimizing their transport must not cache a public
+object's validation or skip either resource decision.
+
+The current =ascent-engine-program-wire= in =interface/wire-value.ss= already
+represents integer cells as exact integers. Its relation rows can therefore
+reuse the existing signed-integer packet after the complete wire catalogue
+has been captured. Apply this only to fresh private catalogue dictionaries;
+keep every original descriptor, getter, cell conversion and complex-pool visit
+in its original order. Mixed cells, empty rows and integers outside signed 64
+bits retain the ordinary representation.
+
+The Rust =ReplyShape= route table now admits integer packets below either
+result relations or the explicit catalogue path
+=source-projection / program / relations / each relation / rows=. It does not
+recognize numeric vectors throughout arbitrary values. The application
+negotiates the existing transport for =source-projection= as well as
+=source-run=. Ordinary Scheme callers retain their original catalogue shape.
+
+=ProjectionRowTransfer.lean= proves the complete ordered relation-list
+round trip, duplicate preservation, arbitrary metadata preservation, opt-in
+and unsupported-input identity. The packet model includes a target allocation
+capacity and signed header bounds. The source-row codec remains the existing
+signed-64 encoder. A separate theorem counts fewer native row calls; it does
+not predict wall time, cumulative bytes or GC behavior.
+
+The same typed route table emits Rust dispatch and Quint route definitions.
+The private Scheme transformer is emitted alongside them and checked by the
+existing formal source comparisons. This is not a proof of the mutable hash
+implementation, native numeric ABI or whole compiler. Fresh private catalogue
+ownership and the native scalar codec remain explicit boundaries.
+
+Native semantic tests compare the complete ordinary and packed catalogues,
+including signed endpoints, duplicates, empty relations, mixed and complex
+values, source generations and rejected updates. They verify that encoding
+does not re-enter captured caller getters or mutate a retained catalogue.
+Rust compares both rooted ABI representations under the same live execution
+control and rejects packets appearing in metadata. Existing cancellation,
+resource-limit and stale-provenance controls remain required.
+
+Repeat the complete production workload with the original controls. A partial
+timed-out trace is diagnostic evidence, never performance acceptance.
+
+* Remaining Actor work-counter boundary
+
+=program/engine-state.ss= currently refuses =current-positive-plan-cost= for
+an engine with cancellation, reuse, Session state or multiple workers. An
+attempt to attach that mutable collector to a real Actor evaluation was
+correctly rejected. Do not relax this guard to obtain measurements. Native
+stack samples and completed-call brackets are available, but Actor join/index
+counts require a separately justified owner-local observation design. The
+existing serial counter tests do not close that production-path obligation.
+
+Full semantic, formal and performance acceptance is required for the exact
+published head. The Contract aggregate's cumulative-allocation failure remains
+upstream-owned; passing other modules does not close that lane.
 
 * Production Actor selection and matched recursive control
 

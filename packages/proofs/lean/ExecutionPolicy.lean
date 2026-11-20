@@ -12,6 +12,7 @@ import DslDeclarations
 import FiniteChoice
 import WeightedExportCapacity
 import SourceUpdateFrame
+import ProjectionRowTransfer
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -654,6 +655,9 @@ def renderedSource (name : String) : IO String := do
   | "actor-integer-rows" => pure Ascent.WeightedCapacity.IntegerRowTransfer.actorSchemeSource
   | "source-row-packet-quint" => pure Ascent.WeightedCapacity.IntegerRowTransfer.sourceRowSelectionQuintSource
   | "source-row-selection" => pure Ascent.WeightedCapacity.IntegerRowTransfer.sourceRowSelectionCallSource
+  | "projection-row-shapes" => pure Ascent.ProjectionRowTransfer.rustSource
+  | "projection-rows" => pure Ascent.ProjectionRowTransfer.schemeSource
+  | "projection-row-shapes-quint" => pure Ascent.ProjectionRowTransfer.quintSource
   | "integer-source-packet" => pure Ascent.WeightedCapacity.IntegerRowTransfer.sourcePacketSchemeSource
   | "owner-source-scheme" => pure Ascent.OwnerAdmission.ownerSourceSchemeSource
   | "owner-control-rust" => pure Ascent.OwnerAdmission.controlRustSource

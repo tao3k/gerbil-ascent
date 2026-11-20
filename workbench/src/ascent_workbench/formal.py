@@ -447,6 +447,9 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "actor-integer-rows", "interface/engine-api.ss"),
                 ("ExecutionPolicy.lean", "source-row-packet-quint", "packages/proofs/quint/SourceRowTransfer.qnt"),
                 ("ExecutionPolicy.lean", "source-row-selection", "interface/engine-api.ss"),
+                ("ExecutionPolicy.lean", "projection-rows", "interface/engine-api.ss"),
+                ("ExecutionPolicy.lean", "projection-row-shapes", "rust/ascent-scheme/src/values.rs"),
+                ("ExecutionPolicy.lean", "projection-row-shapes-quint", "packages/proofs/quint/SourceRowTransfer.qnt"),
                 ("ExecutionPolicy.lean", "integer-source-packet", "interface/engine-api.ss"),
                 ("ExecutionPolicy.lean", "owner-source-scheme", "rules/source.ss"),
                 ("ExecutionPolicy.lean", "owner-control-rust", "rust/ascent-scheme/src/control_state.rs"),
@@ -506,9 +509,9 @@ def main() -> int:
                         ["lake", "env", "lean", "--run", script, language],
                         Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
-                if language in ("actor-integer-rows", "integer-source-packet", "source-row-packet-quint", "source-row-selection"):
+                if language in ("actor-integer-rows", "integer-source-packet", "source-row-packet-quint", "source-row-selection", "projection-rows", "projection-row-shapes", "projection-row-shapes-quint"):
                     region = language.removesuffix("-quint").replace("-", " ").upper()
-                    comment = "  //" if language.endswith("-quint") else "                ;;" if language == "source-row-selection" else ";;"
+                    comment = "  //" if language.endswith("-quint") else "//" if language == "projection-row-shapes" else "                ;;" if language == "source-row-selection" else ";;"
                     begin = f"{comment} BEGIN GENERATED {region}\n"
                     end = f"{comment} END GENERATED {region}\n"
                     if expected.count(begin) != 1 or expected.count(end) != 1:

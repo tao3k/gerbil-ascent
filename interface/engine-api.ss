@@ -378,6 +378,18 @@
 
 ;; END GENERATED ACTOR INTEGER ROWS
 
+;; BEGIN GENERATED PROJECTION ROWS
+(def (pack-projection-rows! program requested)
+  ;; Only fresh private wire dictionaries enter here, after complete capture.
+  (when requested
+    (for-each
+      (lambda (relation)
+        (let (packet (pack-integer-rows (hash-ref relation "rows")))
+          (when packet (hash-put! relation "rows" packet))))
+      (hash-ref program "relations")))
+  program)
+;; END GENERATED PROJECTION ROWS
+
 ;; BEGIN GENERATED INTEGER SOURCE PACKET
 (def (unpack-integer-source-rows packet width limit)
   (let (size (s64vector-length packet))
@@ -684,10 +696,11 @@
          (source-state-projection-cache-set! state cache)
          (with-catch (lambda (_) (hash ("status" "unsupported") ("sourceGeneration" (source-state-generation state))))
            (lambda () (hash ("status" "supported") ("sourceGeneration" (source-state-generation state))
-             ("program" (ascent-engine-program-wire program (.ref program 'source-handles)
+             ("program" (pack-projection-rows!
+               (ascent-engine-program-wire program (.ref program 'source-handles)
                (map (lambda (descriptor binding) (cons (cdr binding) (hash-ref descriptor "columns")))
                     (source-state-descriptors state) (source-state-names state))
-               (source-state-queries state)))))))))
+               (source-state-queries state)) packed-rows?))))))))
     ((source-run)
      (shape request '("operation" "handle" "queries") '("timeoutNanoseconds"))
      (source-run request packed-rows?))

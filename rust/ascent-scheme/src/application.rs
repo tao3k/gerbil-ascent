@@ -55,7 +55,7 @@ impl Runtime {
         let mut usage = crate::diagnostics::Request::start(&self.runtime, request);
         let operation = request.get("operation").and_then(|v| v.text().ok());
         let packed_input = operation == Some("source-replace");
-        let packed_output = operation == Some("source-run");
+        let packed_output = matches!(operation, Some("source-run" | "source-projection"));
         let request = if packed_input {
             values::encode_source_request(&self.runtime, request)?
         } else {

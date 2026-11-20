@@ -144,6 +144,7 @@ fn integer_source_packet(rows: &[Data]) -> Option<Vec<i64>> {
     Some(packet)
 }
 
+// BEGIN GENERATED PROJECTION ROW SHAPES
 #[derive(Clone, Copy)]
 enum ReplyShape {
     Ordinary,
@@ -151,7 +152,31 @@ enum ReplyShape {
     SourceResult,
     Relations,
     RowSet,
+    Program,
+    ProgramRelations,
+    ProgramRelation,
 }
+
+impl ReplyShape {
+    fn element_child(self, index: usize) -> Self {
+        match (self, index) {
+            (Self::SourceEnvelope, 1) => Self::SourceResult,
+            (Self::ProgramRelations, _) => Self::ProgramRelation,
+            _ => Self::Ordinary,
+        }
+    }
+
+    fn field_child(self, key: &str) -> Self {
+        match (self, key) {
+            (Self::SourceResult, "relations") => Self::Relations,
+            (Self::SourceResult, "program") => Self::Program,
+            (Self::Relations, _) | (Self::ProgramRelation, "rows") => Self::RowSet,
+            (Self::Program, "relations") => Self::ProgramRelations,
+            _ => Self::Ordinary,
+        }
+    }
+}
+// END GENERATED PROJECTION ROW SHAPES
 
 pub(super) fn decode(value: Root<'_>, packed_rows: bool) -> Result<Data> {
     let shape = if packed_rows {
@@ -191,10 +216,7 @@ fn decode_object(
             collection.copy_into(&mut snapshot).map_err(scheme_error)?;
             let values = (0..snapshot.len())
                 .map(|index| {
-                    let child = match (shape, index) {
-                        (ReplyShape::SourceEnvelope, 1) => ReplyShape::SourceResult,
-                        _ => ReplyShape::Ordinary,
-                    };
+                    let child = shape.element_child(index);
                     decode_element(&snapshot, index, depth + 1, child)
                 })
                 .collect::<Result<Vec<_>>>()?;
@@ -208,13 +230,7 @@ fn decode_object(
             let mut values = BTreeMap::new();
             for index in (0..snapshot.len()).step_by(2) {
                 let key = decode_element(&snapshot, index, depth + 1, ReplyShape::Ordinary)?;
-                let child = match shape {
-                    ReplyShape::SourceResult if key.text().ok() == Some("relations") => {
-                        ReplyShape::Relations
-                    }
-                    ReplyShape::Relations => ReplyShape::RowSet,
-                    _ => ReplyShape::Ordinary,
-                };
+                let child = shape.field_child(key.text()?);
                 let item = decode_element(&snapshot, index + 1, depth + 1, child)?;
                 values.insert(key.text()?.into(), item);
             }

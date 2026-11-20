@@ -1296,6 +1296,11 @@
     },
     "faults": [
       [
+        "darwin-source-roots",
+        "BoundedSourceEntries",
+        12
+      ],
+      [
         "compact-isolated-source",
         "SourceGcIsolation",
         12

@@ -17,6 +17,23 @@ SPEC.loader.exec_module(CONTROL)
 
 
 class SourceSemanticCiTests(unittest.TestCase):
+    @staticmethod
+    def schedule_lines(runtime, serial=()):
+        lines = []
+        for offset in range(0, len(runtime), 12):
+            wave = runtime[offset:offset + 12]
+            for name in wave:
+                lines.append('TEST-BATCH-START ' + name)
+                ratio = 90 if sys.platform == 'darwin' else 50
+                lines.append(f'TEST-WORK batch={name} VM-GC-RUNTIME live-ratio={ratio}')
+            lines.extend('TEST-BATCH-COMPLETE ' + name for name in wave)
+        lines.append('TEST-SERIAL-BARRIER pending=' + str(len(serial)))
+        for name in serial:
+            lines.extend(['TEST-BATCH-START ' + name,
+                          f'TEST-WORK batch={name} VM-GC-RUNTIME live-ratio=50',
+                          'TEST-BATCH-COMPLETE ' + name])
+        return lines
+
     def test_cost_control_builds_production_before_development_policy(self):
         import ast
         self.assertEqual(CONTROL.control_build_command(), ['gerbil', 'build'])
@@ -103,7 +120,8 @@ class SourceSemanticCiTests(unittest.TestCase):
             source.write_text('(export)\n')
             log = root / 'native.log'
             log.write_text('TEST-DISPATCH modules=1 batches=1 workers=12 max-batch-modules=1 mode=batched\n'
-                           'VM-RUNTIME processors=1\nCASE-OK entry\nMODULE-OK t/qualification/entry-test.ss\n')
+                           'VM-RUNTIME processors=1\nCASE-OK entry\nMODULE-OK t/qualification/entry-test.ss\n'
+                           + '\n'.join(self.schedule_lines(['t/qualification/entry-test.ss'])) + '\n')
             output = root / 'verified'
             with patch.object(Path, 'cwd', return_value=root), \
                     patch.object(sys, 'argv', ['control', '--verify-source-log', str(log), '--output', str(output)]), \
@@ -118,7 +136,8 @@ class SourceSemanticCiTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     CONTROL.source_semantic_workload(root, log)
             log.write_text('TEST-DISPATCH modules=1 batches=1 workers=12 max-batch-modules=1 mode=batched\n'
-                           'VM-RUNTIME processors=1\nCASE-OK entry\nMODULE-OK t/qualification/entry-test.ss\n')
+                           'VM-RUNTIME processors=1\nCASE-OK entry\nMODULE-OK t/qualification/entry-test.ss\n'
+                           + '\n'.join(self.schedule_lines(['t/qualification/entry-test.ss'])) + '\n')
             compiled = root / '.gerbil/lib/gerbil-ascent/t/qualification/entry-test.ssi'
             compiled.parent.mkdir(parents=True)
             compiled.write_text('stale compiled Suite')
@@ -133,15 +152,57 @@ class SourceSemanticCiTests(unittest.TestCase):
             for index in range(184):
                 (suites / f'entry-{index}-test.ss').write_text('(export)\n')
             log = root / 'native.log'
+            names = [str(path.relative_to(root)) for path in suites.glob('*-test.ss')]
             body = 'VM-RUNTIME processors=1\n' * 14 + 'CASE-OK entry\n'
-            body += ''.join(f'MODULE-OK {path.relative_to(root)}\n'
-                            for path in suites.glob('*-test.ss'))
-            log.write_text('TEST-DISPATCH modules=184 batches=14 workers=12 '
-                           'max-batch-modules=16 mode=batched\n' + body)
-            self.assertEqual(CONTROL.source_semantic_workload(root, log)['max_batch_modules'], 16)
-            log.write_text(log.read_text().replace('max-batch-modules=16', 'max-batch-modules=17'))
-            with self.assertRaisesRegex(ValueError, 'native balanced capacity'):
-                CONTROL.source_semantic_workload(root, log)
+            body += ''.join(f'MODULE-OK {name}\n' for name in names)
+            for platform_name, width in [('linux', 16), ('darwin', 8)]:
+                with patch.object(CONTROL.sys, 'platform', platform_name):
+                    trace = '\n'.join(self.schedule_lines(names[:14])) + '\n'
+                    log.write_text('TEST-DISPATCH modules=184 batches=14 workers=12 '
+                                   f'max-batch-modules={width} mode=batched\n' + body + trace)
+                    self.assertEqual(CONTROL.source_semantic_workload(root, log)['max_batch_modules'], width)
+                    log.write_text(log.read_text().replace(f'max-batch-modules={width}',
+                                                          f'max-batch-modules={width + 1}'))
+                    with self.assertRaisesRegex(ValueError, 'native balanced capacity'):
+                        CONTROL.source_semantic_workload(root, log)
+
+    def test_serial_resource_requires_quiescence_and_exclusive_builds(self):
+        runtime = ['t/qualification/runtime-test.ss']
+        serial = ['t/qualification/static-link-inputs-test.ss',
+                  't/qualification/yuanxu-library-test.ss']
+        expected = runtime + serial
+        valid = self.schedule_lines(runtime, serial)
+        self.assertEqual(CONTROL.source_schedule_workload(valid, expected, 3),
+                         {'serial_suites': 2, 'peak_runtime_workers': 1})
+        barrier = valid.index('TEST-SERIAL-BARRIER pending=2')
+        first_build = valid.index('TEST-BATCH-START ' + serial[0])
+        second_build = valid.index('TEST-BATCH-START ' + serial[1])
+        first_done = valid.index('TEST-BATCH-COMPLETE ' + serial[0])
+        invalid = [valid[:1] + [valid[barrier]] + valid[1:barrier] + valid[barrier + 1:],
+                   valid[:first_done] + valid[second_build:second_build + 2] + valid[first_done:second_build] + valid[second_build + 2:],
+                   valid[:-1],
+                   [line.replace('pending=2', 'pending=1') for line in valid],
+                   valid + ['TEST-BATCH-START ' + runtime[0]],
+                   [line.replace(f'batch={serial[0]} VM-GC-RUNTIME live-ratio=50',
+                                 f'batch={serial[0]} VM-GC-RUNTIME live-ratio=90') for line in valid],
+                   [line for line in valid if not line.startswith(f'TEST-WORK batch={serial[0]}')]]
+        for lines in invalid:
+            with self.subTest(lines=lines), self.assertRaises(ValueError):
+                CONTROL.source_schedule_workload(lines, expected, 3)
+
+    def test_full_source_trace_must_exercise_twelve_runtime_workers(self):
+        expected = [f't/qualification/{index}-test.ss' for index in range(12)]
+        lines = []
+        ratio = 90 if sys.platform == 'darwin' else 50
+        for name in expected:
+            lines.extend(['TEST-BATCH-START ' + name,
+                          f'TEST-WORK batch={name} VM-GC-RUNTIME live-ratio={ratio}',
+                          'TEST-BATCH-COMPLETE ' + name])
+        lines.append('TEST-SERIAL-BARRIER pending=0')
+        with self.assertRaisesRegex(ValueError, 'twelve concurrent workers'):
+            CONTROL.source_schedule_workload(lines, expected, 12)
+        valid = self.schedule_lines(expected)
+        self.assertEqual(CONTROL.source_schedule_workload(valid, expected, 12)['peak_runtime_workers'], 12)
 
     def invoke(self, root, arguments):
         output = root / arguments[-1]

@@ -11,6 +11,7 @@ import FiniteOperators
 import DslDeclarations
 import FiniteChoice
 import WeightedExportCapacity
+import SourceUpdateFrame
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -688,6 +689,9 @@ def renderedSource (name : String) : IO String := do
   | "dsl-rule-protocol" => pure Ascent.ClosedDslLowering.ruleProtocolSchemeSource
   | "dsl-workload" => pure Ascent.ClosedDslLowering.workloadSchemeSource
   | "preparation-groups" => pure Ascent.PreparationWork.groupsSchemeSource
+  | "source-queue-admission" => pure Ascent.PreparationWork.queueAdmissionSchemeSource
+  | "source-phase-barrier" => pure Ascent.PreparationWork.phaseBarrierSchemeSource
+  | "scalar-materialization" => pure Ascent.SourceUpdateFrame.ScalarMemo.schemeSource
   | "preparation-heap" => pure Ascent.PreparationWork.heapRecipeSource
   | "preparation-runner" => pure Ascent.PreparationWork.runnerRecipeSource
   | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-import, preparation-source or preparation-runner")

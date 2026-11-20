@@ -14,7 +14,7 @@
         (only-in :gerbil-ascent/t/harness/library-spec preparation-support-roots)
         (only-in :asp-gerbil-scheme/testing-api testing-interface
                  testing-interface-worker-count testing-interface-test-file-batches
-                 testing-interface-test-file-isolated?
+                 testing-interface-test-file-isolated? testing-interface-test-file-serial?
                  testing-interface-runtime-options-for))
 (export ascent-source-import-test)
 
@@ -64,6 +64,8 @@
       (let (command '("gxi" "-:max-heap=2048M" "-e" "(native-main)" "-v" "5" "suite.ss"))
         (check-equal? (source-live-ratio #t) 90)
         (check-equal? (source-live-ratio #f) 50)
+        (check-equal? (source-live-ratio #t parallel-source?: #f) 50)
+        (check-equal? (source-live-ratio parallel-source?: #f) 50)
         (for-each (lambda (ratio)
           (let (actual (source-vm-command command ratio))
             (check-equal? (cadr actual)
@@ -74,10 +76,12 @@
         (check-exception (source-vm-command command 80) true)
         (check-exception (source-vm-command command 95) true)
         (check-exception (source-vm-command command 0) true)))
-    (test-case "batches wider than the native balanced capacity are rejected before admission"
+    (test-case "source retention bounds reject oversized batches on both hosts"
       (let (files (map (lambda (i) (string-append "module-" (number->string i))) (iota 17)))
-        (check-equal? (preparation-batches-bounded? (list files) 184 12) #f)
-        (check-equal? (preparation-batches-bounded? (list (take files 16)) 184 12) #t)
+        (check-equal? (preparation-batches-bounded? (list files) 184 12 #f) #f)
+        (check-equal? (preparation-batches-bounded? (list (take files 16)) 184 12 #f) #t)
+        (check-equal? (preparation-batches-bounded? (list (take files 9)) 184 12 #t) #f)
+        (check-equal? (preparation-batches-bounded? (list (take files 8)) 184 12 #t) #t)
         (check-equal? (preparation-batches-bounded? (map list files) 184 12) #t)))
     (test-case "global protocol and build graph effects cannot share another Suite's VM"
       (let* ((profiled (source-test-interface "batched" "2G"))
@@ -87,6 +91,9 @@
              (batches (source-test-batches profiled files "batched")))
         (for-each (lambda (file)
           (check-equal? (testing-interface-test-file-isolated? profiled file) #t)
+          (check-equal? (testing-interface-test-file-serial? profiled file)
+            (and (member file '("t/qualification/static-link-inputs-test.ss"
+                               "t/qualification/yuanxu-library-test.ss")) #t))
           (check-equal? (source-live-ratio #t) 90)
           (check-equal? (filter (lambda (batch) (member file batch)) batches) (list (list file))))
           isolated-source-fixtures)
@@ -104,45 +111,38 @@
         (check-equal? (length batches) workers)
         (when (> workers 1)
           (check-equal? (and (member (cadr files) (car batches)) #t) #f))))
-    (test-case "native balanced packing preserves complete source coverage without a second split"
+    (test-case "bounded native batches preserve the complete ordered source projection"
       (for-each (lambda (n)
         (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota n)))
                (heavy isolated-source-fixtures)
                (files (list-sort string<? (append heavy normal)))
                (profiled (source-test-interface "batched" "2G"))
-               (batches (source-test-batches profiled files "batched" #t))
+               (native (source-test-batches profiled files "batched" #f))
+               (bounded (source-test-batches profiled files "batched" #t))
                (workers (testing-interface-worker-count (length files))))
-          (check-equal? (list-sort string<? (apply append batches)) files)
-          (check-equal? (preparation-batches-bounded? batches (length files) workers) #t)
-          (let* ((early (source-test-batches profiled files "batched" #f))
-                 (ordinary (drop early (length heavy)))
-                 (prefix-count (max 0 (- (length ordinary) workers))))
-            (check-equal? batches (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
+          (check-equal? (apply append bounded) (apply append native))
+          (check-equal? (list-sort string<? (apply append bounded)) files)
+          (check-equal? (preparation-batches-bounded? bounded (length files) workers #t) #t)
+          (check-equal? (preparation-batches-bounded? native (length files) workers #f) #t)
           (when (and (= n 175) (= workers 12))
-            (check-equal? (length batches) 21)
-            (let (outer (testing-interface-test-file-batches profiled
-                         (striped-module-files (list-sort string<? normal) workers)))
-              (check-equal? (drop (source-test-batches profiled files "batched" #f) (length heavy)) outer)))))
+            (check-equal? (length native) 21)
+            (check-equal? (length bounded) 33)
+            (check-equal? (drop native (length heavy))
+              (testing-interface-test-file-batches profiled
+                (striped-module-files (list-sort string<? normal) workers))))))
         '(0 1 11 12 13 143 144 145 172 175 177 182)))
-    (test-case "both host queue policies preserve every native batch and its resource bound"
-      (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 175)))
-             (heavy isolated-source-fixtures)
-             (files (list-sort string<? (append heavy normal)))
+    (test-case "only the two source build projections claim the serial resource"
+      (let* ((files (append isolated-source-fixtures
+                           '("t/qualification/ascent-actor-session-test.ss"
+                             "t/qualification/ascent-source-import-test.ss")))
              (profiled (source-test-interface "batched" "2G"))
-             (staged (source-test-batches profiled files "batched" #t))
-             (early (source-test-batches profiled files "batched" #f))
-             (ordinary (drop early (length heavy)))
-             (workers (testing-interface-worker-count (length files))))
-        (check-equal? early (append (map list heavy) ordinary))
-        (let (prefix-count (max 0 (- (length ordinary) workers)))
-          (check-equal? staged (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
-        (for-each (lambda (batches)
-          (check-equal? (length batches) (length staged))
-          (when (= workers 12) (check-equal? (length batches) 21))
-          (check-equal? (list-sort string<? (apply append batches)) files)
-          (check-equal? (preparation-batches-bounded? batches 184 workers) #t)) (list early staged))
-        (check-equal? (source-test-batches profiled files "batched")
-                      early)))
+             (serial (filter (cut testing-interface-test-file-serial? profiled <>) files)))
+        (check-equal? serial '("t/qualification/static-link-inputs-test.ss"
+                               "t/qualification/yuanxu-library-test.ss"))
+        (for-each (lambda (darwin?)
+          (let (batches (source-test-batches profiled files "batched" darwin?))
+            (check-equal? (list-sort string<? (apply append batches)) (list-sort string<? files))))
+          '(#t #f))))
     (test-case "exhaustive corpora are isolated within unchanged ordinary capacity bounds"
       (let* ((normal (map (lambda (i) (string-append "module-" (number->string i) "-test.ss")) (iota 37)))
              (heavy isolated-source-fixtures)
@@ -153,16 +153,15 @@
                          (striped-module-files (list-sort string<? normal)
                            (testing-interface-worker-count (length files))))))
         (check-equal? (list-sort string<? (apply append batches)) files)
-        ;; The native framework owns balanced capacity; compare its full result
-        ;; independently rather than re-partitioning it in the source controller.
-        (let* ((ordinary baseline)
-               (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))
-          (check-equal? batches (append (take ordinary prefix-count) (map list heavy) (drop ordinary prefix-count))))
-        (let* ((workers (testing-interface-worker-count (length normal)))
-               (ordinary (drop (source-test-batches profiled files "batched" #f) (length heavy)))
-               (bound (ceiling (/ (length normal) workers))))
-          (check-equal? (<= (length ordinary) workers) #t)
-          (for-each (lambda (batch) (check-equal? (<= (length batch) bound) #t)) ordinary))
+        ;; The native framework still owns compatibility and order. The
+        ;; retained-source bound may split a group, never reorder its entries.
+        (check-equal? (apply append batches) (apply append (append (map list heavy) baseline)))
+        (for-each (lambda (darwin?)
+          (let* ((workers (testing-interface-worker-count (length normal)))
+                 (ordinary (drop (source-test-batches profiled files "batched" darwin?) (length heavy)))
+                 (bound (min (if darwin? 8 (length normal)) (ceiling (/ (length normal) workers)))))
+            (for-each (lambda (batch) (check-equal? (<= (length batch) bound) #t)) ordinary)))
+          '(#t #f))
         (for-each (lambda (file)
           (check-equal? (testing-interface-runtime-options-for profiled file)
                         (testing-interface-runtime-options-for profiled (car normal)))) heavy)

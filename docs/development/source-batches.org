@@ -3,7 +3,7 @@
 * Boundary
 
 Gerbil GxTest owns source import, Suite discovery, assertions and process exit.
-ASP's public testing interface owns compatible balanced batches. ASCENT keeps
+ASP's public testing interface owns compatible balanced batches and serial-resource profiles. ASCENT keeps
 its isolated exhaustive and process-wide protocol-mutation corpora, twelve single-processor VM workers,
 per-process 2 GiB hard heap and the 600-second macOS semantic deadline. All
 source modules, Cases and original performance checks remain required.
@@ -11,10 +11,11 @@ source modules, Cases and original performance checks remain required.
 * Repeated work
 
 A second partition of a balanced batch creates more fresh processes. Each
-process repeats source initialization and module retirement. Removing this
-partition retains the framework's ordering and membership. It changes the
-internal retained-entry estimate to the native balanced width; this estimate
-is not a byte-allocation bound and does not replace the VM's hard heap guard.
+process repeats source initialization and module retirement. Linux retains the native balanced width. Darwin additionally uses Gerbil STD
+=group-n-consecutive= to retain at most eight source entries per process.
+This bounds source context accumulation without reducing the twelve runtime
+workers. The entry estimate is not a byte-allocation bound and does not replace
+the VM's hard heap guard.
 
 The controller checks actual batch lengths before starting children. The log
 verifier independently rejects oversized batches, missing or duplicate modules,
@@ -99,25 +100,45 @@ namespace restoration hook, type-identity bypass or runtime loader is added.
 
 * Concurrent source heap targets
 
-Process isolation does not reserve a separate host memory budget. Isolated
-build-projection Suites load a substantial Module graph and compete for the
-same host memory as the other source VMs. Exempting them from a tighter soft
-collector target can leave the largest heaps growing at the default ratio.
+Process isolation does not reserve separate host memory. The two source-build
+Suites select ASP's existing =serial-resource= profile. The dispatcher completes
+its twelve-worker runtime lane before executing these Suites, one at a time.
+All phases share the same outer deadline; no phase starts another timeout.
+The ordinary source corpus still exercises twelve concurrent single-thread VMs.
 
-All Darwin source VMs now use the released collector's =live-ratio=90= target;
-Linux retains =50=. The 2 GiB hard heap, twelve single-processor VM workers,
-complete corpus and semantic deadline remain unchanged. This is a source-test
-configuration, not a new engine GC policy or a warmup requirement. No explicit
-collection, extra loader, collector patch or reduced assertion set is used.
+Parallel Darwin source VMs use the released collector's =live-ratio=90= target.
+Serial build projections, compiled isolated profiles and Linux retain =50=.
+The 2 GiB hard heap, complete corpus, semantic deadline and performance gates
+remain unchanged. No explicit collection, extra loader or collector patch is
+used. In particular, the library's evaluator GC policy is unchanged.
 
-=source_gc_target_le_default= and =source_gc_target_preserves_bound= describe
-the released collector's division-before-multiplication target arithmetic.
-The Scheme policy and command construction are compared against Lean-rendered
-source. These obligations do not prove resident memory, collector latency or
-completion on a particular runner. Tighter targets can increase collection
-work; complete native execution and exact-head CI remain required.
+The Darwin entry bound trades extra module initializations for a smaller
+concurrent source working set. Linux retains the original balanced batching.
+Both preserve source order, coverage, process isolation and native argv. The
+old optional queue-order switch has been removed. Compiler projections have an
+explicit resource profile instead of sharing the runtime lane by queue position.
 
-The macOS gate records native process timing and virtual-memory counters before
-and after execution, including on failure. The counters are host-wide snapshots;
-their differences are observations, not per-Suite allocation totals. Logs stay
-in the existing diagnostic artifact and are never committed to the repository.
+=source_width_le_native=, =darwin_source_width_bounded= and the GC arithmetic
+lemmas describe retained entry counts and the released collector's target
+arithmetic. =completeDarwinStarts= records the current full corpus projection.
+These are not proofs of resident memory, collector latency or native scheduler
+fairness. Source grouping, GC decisions and retained-width audits are emitted
+from Lean; the Quint policies consume the same generated definitions.
+
+An independent log audit requires complete batch ownership, runtime quiescence
+at the serial barrier, exclusive compiler work and twelve in-flight runtime
+workers for the full corpus. Missing or overlapping events reject acceptance.
+The audit observes executed traces; it is not a proof of the SDK workgroup or
+OS process implementation. Full source execution and exact-head CI remain
+separate obligations.
+
+Concurrent progress and ownership records use the runtime's =with-lock= around
+the complete output line. A multipart =displayln= must not let another worker
+split a start, completion or collector receipt. The log checker keeps rejecting
+interleaved, missing and orphaned events.
+
+The macOS gate records native timing and virtual-memory counters before and
+after execution, including failure. Counters are host-wide snapshots, not
+per-Suite allocation totals. Native child CPU accounting can be incomplete
+when the outer timeout kills parents before they reap descendants. Raw logs
+and diagnostic measurements remain exclusively under =.cache/= or CI artifacts.

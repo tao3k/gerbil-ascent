@@ -232,8 +232,65 @@ def test_outputs(tree):
 
 # BEGIN GENERATED PREPARATION BATCH-WIDTH
 def source_batch_width(entries, workers):
-    return 0 if entries == 0 else (entries - 1) // workers + 1
+    width = 0 if entries == 0 else (entries - 1) // workers + 1
+    return min(8, width) if sys.platform == 'darwin' else width
+
+
+def source_serial_suites():
+    return {"t/qualification/static-link-inputs-test.ss", "t/qualification/yuanxu-library-test.ss"}
+
+
+def source_live_ratio(darwin, parallel_source):
+    return 90 if darwin and parallel_source else 50
 # END GENERATED PREPARATION BATCH-WIDTH
+
+
+def source_schedule_workload(lines, expected, batch_count):
+    serial = source_serial_suites() & set(expected)
+    runtime_active, build_active, started, completed = set(), set(), set(), set()
+    barrier, peak = False, 0
+    collector_receipts = {}
+    for line in lines:
+        if line.startswith('TEST-BATCH-START '):
+            name = line.removeprefix('TEST-BATCH-START ')
+            if name not in expected or name in started:
+                raise ValueError('source schedule has an unknown or repeated batch')
+            if name in serial:
+                if not barrier or runtime_active or build_active:
+                    raise ValueError('serial source resource overlaps another batch')
+                build_active.add(name)
+            else:
+                if barrier:
+                    raise ValueError('runtime source started after the serial barrier')
+                runtime_active.add(name)
+                peak = max(peak, len(runtime_active))
+                if peak > 12:
+                    raise ValueError('source schedule exceeds twelve runtime workers')
+            started.add(name)
+        elif line.startswith('TEST-BATCH-COMPLETE '):
+            name = line.removeprefix('TEST-BATCH-COMPLETE ')
+            active = build_active if name in serial else runtime_active
+            if name not in active:
+                raise ValueError('source batch completion has no active owner')
+            active.remove(name)
+            completed.add(name)
+        elif line.startswith('TEST-WORK batch=') and ' VM-GC-RUNTIME live-ratio=' in line:
+            owner, ratio = line.removeprefix('TEST-WORK batch=').rsplit(' VM-GC-RUNTIME live-ratio=', 1)
+            expected_ratio = source_live_ratio(sys.platform == 'darwin', owner not in serial)
+            if owner not in started or owner in collector_receipts or int(ratio) != expected_ratio:
+                raise ValueError('source collector receipt has an invalid owner or scope')
+            collector_receipts[owner] = int(ratio)
+        elif line.startswith('TEST-SERIAL-BARRIER pending='):
+            if barrier or runtime_active or build_active or int(line.split('=')[1]) != len(serial):
+                raise ValueError('source serial barrier did not follow runtime quiescence')
+            barrier = True
+    if (not barrier or runtime_active or build_active or started != completed or
+            len(started) != batch_count or not serial <= completed or
+            set(collector_receipts) != started):
+        raise ValueError('source schedule did not complete both resource lanes')
+    if len(expected) >= 12 and peak != 12:
+        raise ValueError('full source schedule did not exercise twelve concurrent workers')
+    return {'serial_suites': len(serial), 'peak_runtime_workers': peak}
 
 
 def source_semantic_workload(tree, log):
@@ -255,7 +312,9 @@ def source_semantic_workload(tree, log):
         raise ValueError('source VM runtime processor receipts are incomplete or not single-threaded')
     if not expected or modules != expected or cases == 0 or compiled:
         raise ValueError('source semantic workload is incomplete or compiled')
-    return {'modules': modules, 'cases': cases, 'vm_workers': 12, 'max_batch_modules': int(width[1])}
+    schedule = source_schedule_workload(lines, expected, batch_count)
+    return {'modules': modules, 'cases': cases, 'vm_workers': 12,
+            'max_batch_modules': int(width[1]), **schedule}
 
 
 

@@ -450,4 +450,47 @@ theorem indexed_operations_bound {Row : Type} [DecidableEq Row] (base completed 
 
 end RetainedSetSeed
 
+/-! Private scalar classification is pure on a captured, read-only row spine.
+These sequential transition laws assume that purity and ownership; they do
+not verify Gambit's promise implementation or permit mutable caller roots.
+The released make-atomic-promise allocates two promises and one mutex, while
+make-promise allocates one promise. Closure and collector costs are excluded. -/
+namespace ScalarMemo
+
+def force (value : Bool) (cached : Option Bool) : Bool × Option Bool :=
+  let result := cached.getD value
+  (result, some result)
+
+def forceAtomic (value : Bool) (cached : Option Bool) (locked : Bool) :
+    Option ((Bool × Option Bool) × Bool) :=
+  if locked then none else some (force value cached, false)
+
+theorem unlocked_atomic_refines_force (value : Bool) (cached : Option Bool) :
+    forceAtomic value cached false = some (force value cached, false) := rfl
+
+theorem force_is_idempotent (value : Bool) (cached : Option Bool) :
+    force value (force value cached).2 = force value cached := by
+  cases cached <;> rfl
+
+theorem owned_classification_exact (value : Bool) (cached : Option Bool)
+    (valid : cached = none ∨ cached = some value) :
+    (force value cached).1 = value := by
+  rcases valid with h | h <;> simp [force, h]
+
+def constructorRecords (atomic : Bool) (materializations : Nat) : Nat :=
+  materializations * if atomic then 3 else 1
+
+theorem unused_atomic_records_removed (materializations : Nat) :
+    constructorRecords false materializations + 2 * materializations =
+      constructorRecords true materializations := by
+  simp [constructorRecords]
+  omega
+
+def schemeSource : String :=
+  "(def (capture-source-materialization base additions rows)\n" ++
+  "  (make-source-materialization base additions rows\n" ++
+  "    (delay (andmap (cut andmap relational-scalar? <>) rows))))\n"
+
+end ScalarMemo
+
 end Ascent.SourceUpdateFrame

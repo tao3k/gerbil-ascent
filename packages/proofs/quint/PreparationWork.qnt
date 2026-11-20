@@ -12,7 +12,7 @@ module PreparationWork {
                 gscCpu: int, helperCpu: int, residualCpu: int, cumulativeClaim: bool, heapCap: int, heapSections: int, sourceStamp: int, sourceRestored: bool,
                 unrequestedJobs: int, compiledSourceCarriers: int,
                 inputGeneration: int, commitGeneration: int, manifestGeneration: int, requestKeyGeneration: int, cacheGeneration: int, cacheReady: bool, staleReuse: bool, payloadPresent: bool, receiptPresent: bool, incompleteReuse: bool,
-                sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
+                sourceVmActive: bool, sourceStarts: int, retainedEntryRoots: int, darwinEntryRoots: int, forcedCatalogRoots: int, productionAdmitted: bool, rootsProjected: bool}
   var q: State
   action init = q' = {jobs: 0, observedJobs: 0, imports: 0, observedImports: 0,
     failedJobs: 0, changedInputs: 0, finished: false, current: true, counterValid: true, published: false,
@@ -20,7 +20,7 @@ module PreparationWork {
     gscCpu: 0, helperCpu: 0, residualCpu: 0, cumulativeClaim: false, heapCap: 3, heapSections: 0, sourceStamp: 0, sourceRestored: false,
     unrequestedJobs: 0, compiledSourceCarriers: 0,
     inputGeneration: 0, commitGeneration: 0, manifestGeneration: 0, requestKeyGeneration: 0, cacheGeneration: 0, cacheReady: false, staleReuse: false, payloadPresent: false, receiptPresent: false, incompleteReuse: false,
-    sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
+    sourceVmActive: false, sourceStarts: 0, retainedEntryRoots: 0, darwinEntryRoots: 0, forcedCatalogRoots: 0, productionAdmitted: true, rootsProjected: false}
   // A stateless selector has no protocol transition. Check its complete input
   // domain once; adding eight no-op choices at every state only repeats work.
   pure def selected_interface(admitted: bool, reload: bool, compiling: bool, producer: bool, present: bool): bool = {
@@ -62,22 +62,20 @@ module PreparationWork {
   // Check after native projection is requested, so a mutant has a concrete
   // state-transition counterexample rather than a constant-FALSE TLC config.
   val IndexedDispatchExact = not(q.rootsProjected) or IndexedAliasesExact
-  // Same finite entries and multiplicity; source-bound Lean retains arbitrary weights.
-  // Eight ordinary batches and capacity two distinguish first-wave from tail overlap.
-  pure def source_queue(defer: bool): List[int] = if (Mutation == "drop-isolated-source")
+  // This is lane membership, not the native workers' nondeterministic completion order.
+  // The two source build projections follow the quiescent parallel lane.
+  pure val source_queue: List[int] = if (Mutation == "drop-isolated-source")
     List(0, 1, 2, 3, 4, 5, 6, 7)
-    else if (defer) List(0, 1, 2, 3, 4, 5).concat(List(8, 9)).concat(List(6, 7))
-    else List(8, 9).concat(List(0, 1, 2, 3, 4, 5, 6, 7))
-  pure val SourceQueueExact = source_queue(true) == List(0, 1, 2, 3, 4, 5, 8, 9, 6, 7) and
-    source_queue(false) == List(8, 9, 0, 1, 2, 3, 4, 5, 6, 7)
+    else List(0, 1, 2, 3, 4, 5, 6, 7).concat(List(8, 9))
+  pure val SourceQueueExact = source_queue == List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
   val SourceQueueCoverage = q.sourceStarts == 0 or SourceQueueExact
-  pure def source_live_ratio(darwin: bool, isolated: bool): int =
-    if (Mutation == "compact-isolated-source" and isolated) 80
-    else if (Mutation == "ignore-ordinary-gc") 50
-    else if (darwin and not(isolated)) 80 else 50
-  pure val SourceGcExact = source_live_ratio(true, false) == 80 and
-    source_live_ratio(true, true) == 50 and source_live_ratio(false, false) == 50 and
-    source_live_ratio(false, true) == 50
+  pure def observed_source_live_ratio(darwin: bool, parallel_source: bool): int =
+    if (Mutation == "compact-isolated-source" and not(parallel_source)) source_live_ratio(true, true)
+    else if (Mutation == "ignore-ordinary-gc") source_live_ratio(false, true)
+    else source_live_ratio(darwin, parallel_source)
+  pure val SourceGcExact = Set(false, true).forall(darwin =>
+    Set(false, true).forall(parallel_source =>
+      observed_source_live_ratio(darwin, parallel_source) == source_live_ratio(darwin, parallel_source)))
   val SourceGcIsolation = q.sourceStarts == 0 or SourceGcExact
   action ReadInventory = q' = {...q,
     inventoryDeclarations: if (Mutation == "bootstrap-inventory") 1 else 0}
@@ -136,10 +134,12 @@ module PreparationWork {
   // Suite completion does not evict Gerbil's retained module contexts; VM exit does.
   action StartSourceVm = all {not(q.sourceVmActive), q.sourceStarts < 2,
     q' = {...q, sourceVmActive: true, sourceStarts: q.sourceStarts + 1,
-      retainedEntryRoots: SourceBatchLimit + (if (Mutation == "batch-source-roots") 1 else 0)}}
+      retainedEntryRoots: SourceBatchLimit + (if (Mutation == "batch-source-roots") 1 else 0),
+      darwinEntryRoots: source_batch_width(true, 184, 12) + (if (Mutation == "darwin-source-roots") 1 else 0)}}
   action ExitSourceVm = all {q.sourceVmActive,
     q' = {...q, sourceVmActive: false,
-      retainedEntryRoots: if (Mutation == "retain-source-roots") q.retainedEntryRoots else 0}}
+      retainedEntryRoots: if (Mutation == "retain-source-roots") q.retainedEntryRoots else 0,
+      darwinEntryRoots: if (Mutation == "retain-source-roots") q.darwinEntryRoots else 0}}
   action Allocate = q' = {...q, outerAllocation: 4,
     reportedAllocation: if (Mutation == "sum-nested") 6 else 4, published: false}
   // GSC child usage already includes native compiler/helper descendants.
@@ -199,7 +199,9 @@ module PreparationWork {
   val ContentKeyExact = q.requestKeyGeneration == q.inputGeneration
   val CompleteCacheBundle = not(q.incompleteReuse)
   val ReuseCurrentInputs = not(q.staleReuse)
-  val PackedStartupCount = complete_packed_starts == 21 and complete_packed_starts < 98
-  val BoundedSourceEntries = q.retainedEntryRoots <= SourceBatchLimit
-  val ExitedVmReleasesEntries = not(q.sourceVmActive) implies q.retainedEntryRoots == 0
+  val PackedStartupCount = complete_packed_starts == 21 and complete_packed_starts < 98 and
+    complete_darwin_starts == 33 and complete_darwin_starts < 98
+  val BoundedSourceEntries = q.retainedEntryRoots <= SourceBatchLimit and
+    q.darwinEntryRoots <= source_batch_width(true, 184, 12)
+  val ExitedVmReleasesEntries = not(q.sourceVmActive) implies (q.retainedEntryRoots == 0 and q.darwinEntryRoots == 0)
 }

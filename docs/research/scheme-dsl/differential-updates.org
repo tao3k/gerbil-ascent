@@ -27,3 +27,25 @@ own frontier publication and retirement. A native discriminator must mix removal
 and insertion through nested recursion and compare complete rows after each
 epoch with fresh evaluation. Keep the current grounded withdrawal and Session
 publication baseline until those obligations are met.
+
+* Owned scalar materialization
+
+The source snapshot's deferred scalar classification reads only its captured,
+read-only row spine and the closed =relational-scalar?= predicate. It invokes no
+caller callback and performs no external publication. Keep it lazy: sources
+that never request closure reuse must not pay for a value scan.
+
+Use the released runtime's ordinary promise for this pure classification. Its
+atomic promise wrapper additionally allocates a mutex and a second promise,
+then locks around forcing. The scalar result has no observable once-only
+effect to protect. No public getter, provider, row checker or callback promise
+is changed, and changed row roots still require a new materialization.
+
+=SourceUpdateFrame.ScalarMemo= states the pure memo transition, its repeated
+force law and the refinement from an unlocked atomic transition. Constructor
+counts exclude closures, heap bytes and collector work. The emitted Scheme
+constructor is compared with the checked-in source during formal acceptance.
+This does not establish the native promise implementation's concurrency or
+memory-model correctness; immutable capture and a pure classifier remain
+explicit premises. Existing cancellation, publication and occurrence budgets
+remain owned by the Session and evaluator, outside this memo transition.

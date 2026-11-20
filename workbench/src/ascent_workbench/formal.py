@@ -469,6 +469,9 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-heap", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-runner", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-groups", "t/harness/test.ss"),
+                ("ExecutionPolicy.lean", "source-queue-admission", "t/harness/test.ss"),
+                ("ExecutionPolicy.lean", "source-phase-barrier", "t/harness/test.ss"),
+                ("ExecutionPolicy.lean", "scalar-materialization", "program/source-snapshot.ss"),
                 ("ExecutionPolicy.lean", "dsl-select", "program/scheme-language.ss"),
                 ("ExecutionPolicy.lean", "dsl-root", "program/func.ss"),
                 ("ExecutionPolicy.lean", "dsl-owned", "program/scheme-language.ss"),
@@ -622,6 +625,19 @@ def main() -> int:
                                   '            ;; END GENERATED CAPTURE ROW TRANSPORT\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate capture row transport region')
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"source-queue-admission", "source-phase-barrier"}:
+                    label = language.replace('-', ' ').upper()
+                    begin, end = f';; BEGIN GENERATED {label}\n', f';; END GENERATED {label}\n'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate source scheduling region')
+                    expected = expected.split(begin)[1].split(end)[0]
+                    expected = expected[:expected.rfind('\n') + 1]
+                elif language == "scalar-materialization":
+                    begin, end = (';; BEGIN GENERATED SCALAR MATERIALIZATION\n',
+                                  ';; END GENERATED SCALAR MATERIALIZATION\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate scalar materialization region')
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language in {"preparation-metadata-guard", "preparation-value-shape", "preparation-runtime-env", "preparation-pass-total", "preparation-batch-width", "preparation-cc-observed", "preparation-modules-current", "preparation-source-coverage", "preparation-output-publication", "preparation-projection-cache", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-restore-inputs", "preparation-cache-admission", "preparation-producer", "preparation-support-admission", "preparation-parent", "preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
                     region = language.removeprefix("preparation-").upper()

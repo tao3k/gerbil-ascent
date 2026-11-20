@@ -205,6 +205,8 @@ def interfacesQuintSource : String :=
   "    if (k0 == key) v0 else if (k1 == key) v1 else -1\n" ++
   "  pure def batch_width(entries: int, workers: int): int =\n" ++
   "    if (entries == 0) 0 else (entries - 1) / workers + 1\n" ++
+  "  pure def native_source_workers(entries: int, cores: int): int =\n" ++
+  "    if (entries < cores) entries else cores\n" ++
   "  pure def source_batch_width(darwin: bool, entries: int, workers: int): int =\n" ++
   "    if (darwin) {\n" ++
   "      val width = batch_width(entries, workers)\n" ++
@@ -354,7 +356,7 @@ def groupingArgument : SourceGrouping → String
 def sourceGrouping : SourceGrouping := .batched
 
 def runnerRecipeSource : String :=
-  "        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss " ++
+  "        runner=({{ gxi_command }} \"${source_runtime_options[@]}\" t/harness/test.ss " ++
   groupingArgument sourceGrouping ++ " \"{{ heap }}\")\n"
 
 -- The SDK eagerly prepares every module in one GxTest batch. Native
@@ -369,7 +371,8 @@ def sourceInterfaceSchemeSource : String :=
   "               +testing-process-isolation-profile+))\n" ++
   "           (testing-interface\n" ++
   "             profiles:\n" ++
-  "             (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))\n" ++
+  "             (append (if (string=? heap \"auto\") []\n" ++
+  "                       (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap))))\n" ++
   "               (if (string=? mode \"isolated\") (list +testing-process-isolation-profile+) [])))\n" ++
   "           '(" ++
   String.intercalate "\n             " (isolatedSourceEntries.map (fun name => "\"" ++ name ++ "\"")) ++
@@ -526,6 +529,22 @@ def nativeBatchWidth (entries workers : Nat) : Nat :=
 def sourceBatchWidth (darwin : Bool) (entries workers : Nat) : Nat :=
   if darwin then min darwinSourceEntryLimit (nativeBatchWidth entries workers)
   else nativeBatchWidth entries workers
+
+-- CPU discovery is an OS/runtime boundary, not proved by these arithmetic laws.
+-- ASP receives the discovered capacity and owns the native workgroup.
+def nativeSourceWorkers (entries cores : Nat) : Nat := min entries cores
+
+theorem native_source_workers_fit_host (entries cores : Nat) :
+    nativeSourceWorkers entries cores ≤ cores := Nat.min_le_right _ _
+
+theorem native_source_workers_fill_host (entries cores : Nat) (enough : cores ≤ entries) :
+    nativeSourceWorkers entries cores = cores := Nat.min_eq_right enough
+
+def sourceHeapOverride (automatic : Bool) (limit : Nat) : Option Nat :=
+  if automatic then none else some limit
+
+theorem automatic_source_has_no_heap_override (limit : Nat) :
+    sourceHeapOverride true limit = none := rfl
 
 theorem source_width_le_native (darwin : Bool) (entries workers : Nat) :
     sourceBatchWidth darwin entries workers ≤ nativeBatchWidth entries workers := by

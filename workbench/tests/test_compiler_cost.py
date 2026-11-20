@@ -89,28 +89,29 @@ class CompilerCostTests(unittest.TestCase):
             for name in ['a-test.ss', 'b-test.ss']:
                 (source / name).touch()
             log = root / 'run.log'
-            valid = 'TEST-DISPATCH modules=2 batches=2 workers=12 max-batch-modules=1 mode=batched heap=2G\nMODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
+            valid = 'TEST-DISPATCH modules=2 batches=2 workers=2 max-batch-modules=1 mode=batched heap=2G\nMODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
             valid += 'VM-RUNTIME processors=1\n' * 2
             for name in ['a-test.ss', 'b-test.ss']:
                 owner = 't/qualification/' + name
                 ratio = 90 if sys.platform == 'darwin' else 50
                 valid += (f'TEST-BATCH-START {owner}\n'
-                          f'TEST-WORK batch={owner} VM-GC-RUNTIME live-ratio={ratio}\n'
-                          f'TEST-BATCH-COMPLETE {owner}\n')
+                          f'TEST-WORK batch={owner} VM-GC-RUNTIME live-ratio={ratio}\n')
+            valid += ''.join(f'TEST-BATCH-COMPLETE t/qualification/{name}\n'
+                             for name in ['a-test.ss', 'b-test.ss'])
             valid += 'TEST-SERIAL-BARRIER pending=0\n'
             log.write_text(valid)
-            self.assertEqual(check(root, log)['cases'], 1)
-            for invalid in [valid.replace('max-batch-modules=1', 'max-batch-modules=2'), valid.replace('processors=1', 'processors=2'), valid.replace('VM-RUNTIME processors=1\n', '', 1), valid.replace('workers=12', 'workers=3'), valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
+            self.assertEqual(check(root, log, capacity=2)['cases'], 1)
+            for invalid in [valid.replace('max-batch-modules=1', 'max-batch-modules=2'), valid.replace('processors=1', 'processors=2'), valid.replace('VM-RUNTIME processors=1\n', '', 1), valid.replace('workers=2', 'workers=3'), valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
                             valid.replace('MODULE-OK t/qualification/b-test.ss\n', '')]:
                 log.write_text(invalid)
                 with self.subTest(log=invalid), self.assertRaises(ValueError):
-                    check(root, log)
+                    check(root, log, capacity=2)
             log.write_text(valid)
             compiled = root / '.gerbil/lib/gerbil-ascent/t/qualification/a-test.ssi'
             compiled.parent.mkdir(parents=True)
             compiled.touch()
             with self.assertRaises(ValueError):
-                check(root, log)
+                check(root, log, capacity=2)
 
     def test_native_refinement_width_covers_empty_and_complete_source_selection(self):
         import runpy

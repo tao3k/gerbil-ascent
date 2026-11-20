@@ -238,7 +238,7 @@ CONFIGURATIONS = {'RuntimeMeasurement': {'constants': 'PlannedCounts = {1,2,3}\n
                                    'CompleteCacheBundle PackedStartupCount BoundedSourceEntries '
                                    'ExitedVmReleasesEntries OnlyConsumerRoots '
                                    'UnadmittedCatalogPresent DemandedSupportRetained '
-                                   'CachedSupportRetained SourceQueueCoverage SourceGcIsolation'},
+                                   'CachedSupportRetained SourceQueueCoverage SourceGcIsolation SourceMachineCapacity'},
  'ArchiveWork': {'constants': 'Mutation = "none"',
                  'invariants': 'LeaseExclusive NativeCostExact ProfilesShareWork SourceCurrent '
                                'ReceiptComplete PrivateOutputStable'},
@@ -563,7 +563,8 @@ FAULTS = {'RuntimeMeasurement': tuple((mutation, 'RuntimeExact', 12) for mutatio
                           ('accept-incomplete', 'Complete', 12),
                           ('ignore-work', 'Accounted', 12),
                           ('ignore-warm', 'WarmCurrent', 12)),
- 'PreparationWork': (('darwin-source-roots', 'BoundedSourceEntries', 12),
+ 'PreparationWork': (('fixed-twelve-source', 'SourceMachineCapacity', 12),
+                     ('darwin-source-roots', 'BoundedSourceEntries', 12),
                      ('compact-isolated-source', 'SourceGcIsolation', 12),
                      ('ignore-ordinary-gc', 'SourceGcIsolation', 12),
                      ('drop-isolated-source', 'SourceQueueCoverage', 12),

@@ -9,8 +9,6 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-env:
-  RUST_TEST_THREADS: "12"
 jobs:
   repository-hygiene:
     runs-on: ubuntu-latest
@@ -156,8 +154,6 @@ jobs:
       - name: Qualify complete standard Gerbil source tests
         if: ${{ matrix.lane == 'semantics' }}
         id: full_scheme
-        env:
-          GERBIL_BUILD_CORES: "12"
         run: |
           set -o pipefail
           mkdir -p .cache/ascent/runtime-crashes
@@ -165,7 +161,7 @@ jobs:
           ulimit -c unlimited
           export GERBIL_LOADPATH="$PWD/.gerbil/lib${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}"
           # Measure one complete run. Keep the prior target visible in the receipt.
-          { time -p timeout 600s env ASCENT_GXTEST_TIMEOUT=600s just test-file t/qualification 2G; } 2>&1 | tee "$RUNNER_TEMP/linux-semantics.log"
+          { time -p timeout 600s env ASCENT_GXTEST_TIMEOUT=600s just test-file t/qualification auto; } 2>&1 | tee "$RUNNER_TEMP/linux-semantics.log"
           python3 tools/ci/build-cost-control.py --verify-source-log "$RUNNER_TEMP/linux-semantics.log" --output "$RUNNER_TEMP/linux-semantics-verified"
           elapsed="$(awk '$1 == "real" { seconds = $2 } END { print seconds }' "$RUNNER_TEMP/linux-semantics.log")"
           awk -v seconds="$elapsed" 'BEGIN { if (seconds !~ /^[0-9]+(\.[0-9]+)?$/) exit 1; printf "Linux source semantics: %.2f s (prior 180 s target: %s)\n", seconds, seconds <= 180 ? "met" : "exceeded" }' | tee -a "$GITHUB_STEP_SUMMARY"

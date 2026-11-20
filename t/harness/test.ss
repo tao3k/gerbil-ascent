@@ -60,7 +60,8 @@
                +testing-process-isolation-profile+))
            (testing-interface
              profiles:
-             (append (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap)))
+             (append (if (string=? heap "auto") []
+                       (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap))))
                (if (string=? mode "isolated") (list +testing-process-isolation-profile+) [])))
            '("ascent-semi-naive-test."
              "ascent-candidate-flow-test."
@@ -185,10 +186,11 @@
                     (append
                       (source-vm-command
                         (testing-interface-command-for profiled file '("-v" "5"))
-                        (source-live-ratio
-                          parallel-source?:
-                          (and (string=? mode "batched")
-                               (not (testing-interface-test-file-serial? profiled file)))))
+                        (and (not (string=? heap "auto"))
+                             (source-live-ratio
+                               parallel-source?:
+                               (and (string=? mode "batched")
+                                    (not (testing-interface-test-file-serial? profiled file))))))
                       (cdr batch))
                     stdout-redirection: #t stderr-redirection: #t
                     coprocess:

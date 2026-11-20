@@ -60,6 +60,15 @@
         (check-equal? (take wrapped 3) (take command 3))
         (check-equal? (drop wrapped 4) (drop command 4))
         (check-equal? (string-suffix? "(native-main)" (list-ref wrapped 3)) #t)))
+    (test-case "machine-native memory profiles impose no per-VM heap override"
+      (let* ((profiled (source-test-interface "batched" "auto"))
+             (command '("gxi" "-e" "(native-main)" "-v" "5" "suite.ss"))
+             (wrapped (source-vm-command command)))
+        (for-each (lambda (file)
+          (check-equal? (testing-interface-runtime-options-for profiled file) []))
+          (cons "t/qualification/ordinary-test.ss" isolated-source-fixtures))
+        (check-equal? (take wrapped 2) '("gxi" "-e"))
+        (check-equal? (drop wrapped 3) (drop command 3))))
     (test-case "Darwin GC targets preserve hard heaps and isolated work"
       (let (command '("gxi" "-:max-heap=2048M" "-e" "(native-main)" "-v" "5" "suite.ss"))
         (check-equal? (source-live-ratio #t) 90)

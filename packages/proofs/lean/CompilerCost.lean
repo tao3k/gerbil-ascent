@@ -243,7 +243,7 @@ def sourceRuntimePythonSource : String :=
   "def source_semantic_environment(root, env):\n" ++
   "    runtime = dict(env, GERBIL_PATH=str(root / '.gerbil'),\n" ++
   "                   GERBIL_LOADPATH=str(root / '.gerbil/lib'),\n" ++
-  "                   GERBIL_BUILD_CORES='12', ASCENT_GXTEST_TIMEOUT='600s')\n" ++
+  "                   ASCENT_GXTEST_TIMEOUT='600s')\n" ++
   "    runtime.pop('ASCENT_TEST_LIBRARY', None)\n" ++
   "    return runtime\n"
 

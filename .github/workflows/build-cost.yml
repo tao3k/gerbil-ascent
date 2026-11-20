@@ -257,7 +257,6 @@ jobs:
     timeout-minutes: 30
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
-      GERBIL_BUILD_CORES: "3"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -318,7 +317,6 @@ jobs:
       prepared: ${{ steps.semantic-preparation.outcome == 'success' && steps.prepared-artifact.outcome == 'success' }}
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
-      GERBIL_BUILD_CORES: "3"
       # Completion allowance, separate from unchanged timed performance gates.
       ASCENT_GXTEST_TIMEOUT: "600s"
     steps:
@@ -459,7 +457,6 @@ jobs:
     timeout-minutes: 20
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
-      GERBIL_BUILD_CORES: "3"
       ASCENT_GXTEST_TIMEOUT: "600s"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -488,17 +485,16 @@ jobs:
           test "$(cat "$RUNNER_TEMP/macos-semantics/toolchain")" = "$fingerprint"
           tar -xf "$RUNNER_TEMP/macos-semantics/prepared.tar"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
-      - name: Qualify complete source semantics with twelve single-thread VMs
+      - name: Qualify complete source semantics at machine capacity
         # A cache-check failure must not suppress full semantic verification.
         if: ${{ !cancelled() && success() }}
         env:
-          GERBIL_BUILD_CORES: "12"
           GERBIL_LOADPATH: ${{ github.workspace }}/.gerbil/lib
         run: |
           set -o pipefail
           vm_stat > "$RUNNER_TEMP/macos-semantics/memory-before.log"
           trap 'vm_stat > "$RUNNER_TEMP/macos-semantics/memory-after.log"' EXIT
-          { /usr/bin/time -l timeout "$ASCENT_GXTEST_TIMEOUT" just test-file t/qualification 2G; } 2>&1 | tee "$RUNNER_TEMP/macos-semantics/semantics.log"
+          { /usr/bin/time -l timeout "$ASCENT_GXTEST_TIMEOUT" just test-file t/qualification auto; } 2>&1 | tee "$RUNNER_TEMP/macos-semantics/semantics.log"
           python3 tools/ci/build-cost-control.py --verify-source-log "$RUNNER_TEMP/macos-semantics/semantics.log" --output "$RUNNER_TEMP/macos-semantics/verified"
       - name: Check development policy
         if: ${{ !cancelled() && steps.restore-compilation.outcome == 'success' }}

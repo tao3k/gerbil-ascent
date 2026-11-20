@@ -88,6 +88,10 @@ _test-file path heap='2G':
     export GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}${GERBIL_LOADPATH:+$GERBIL_LOADPATH:}{{ justfile_directory() }}"
     test_module="{{ path }}"
     test_args=(-v 5 "$test_module")
+    source_runtime_options=(-:debug=q)
+    if [[ "{{ heap }}" != auto ]]; then
+        source_runtime_options=(-:max-heap={{ heap }},debug=q)
+    fi
     if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then
         compiled="$ASCENT_TEST_LIBRARY/gerbil-ascent/${test_module%.ss}.ssi"
         test -f "$compiled"
@@ -96,11 +100,11 @@ _test-file path heap='2G':
         runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil/tools/gxtest)
     elif [[ -d "$test_module" ]]; then
         # BEGIN GENERATED PREPARATION RUNNER
-        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss batched "{{ heap }}")
+        runner=({{ gxi_command }} "${source_runtime_options[@]}" t/harness/test.ss batched "{{ heap }}")
         # END GENERATED PREPARATION RUNNER
         test_args=("$test_module")
     else
-        runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)
+        runner=({{ gerbil_command }} "${source_runtime_options[@]}" test)
     fi
     inactivity="${ASCENT_GXTEST_TIMEOUT:-120s}"
     inactivity="${inactivity%s}"

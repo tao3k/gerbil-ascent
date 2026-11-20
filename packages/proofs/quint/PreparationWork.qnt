@@ -69,6 +69,15 @@ module PreparationWork {
     else List(0, 1, 2, 3, 4, 5, 6, 7).concat(List(8, 9))
   pure val SourceQueueExact = source_queue == List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
   val SourceQueueCoverage = q.sourceStarts == 0 or SourceQueueExact
+  // Complete small domains discriminate a fixed pool from native capacity.
+  // OS CPU discovery and SDK scheduling remain implementation boundaries.
+  pure val SourceMachineExact = Set(1, 3, 12).forall(cores =>
+    Set(1, 2, 17, 184).forall(entries => {
+      val observed = native_source_workers(entries,
+        if (Mutation == "fixed-twelve-source") 12 else cores)
+      observed == (if (entries < cores) entries else cores)
+    }))
+  val SourceMachineCapacity = q.sourceStarts == 0 or SourceMachineExact
   pure def observed_source_live_ratio(darwin: bool, parallel_source: bool): int =
     if (Mutation == "compact-isolated-source" and not(parallel_source)) source_live_ratio(true, true)
     else if (Mutation == "ignore-ordinary-gc") source_live_ratio(false, true)

@@ -17,14 +17,19 @@ SPEC.loader.exec_module(CONTROL)
 
 
 class SourceSemanticCiTests(unittest.TestCase):
+    def setUp(self):
+        capacity = patch.dict(os.environ, {'GERBIL_BUILD_CORES': '12'})
+        capacity.start()
+        self.addCleanup(capacity.stop)
+
     @staticmethod
-    def schedule_lines(runtime, serial=()):
+    def schedule_lines(runtime, serial=(), workers=12, automatic_heap=False):
         lines = []
-        for offset in range(0, len(runtime), 12):
-            wave = runtime[offset:offset + 12]
+        for offset in range(0, len(runtime), workers):
+            wave = runtime[offset:offset + workers]
             for name in wave:
                 lines.append('TEST-BATCH-START ' + name)
-                ratio = 90 if sys.platform == 'darwin' else 50
+                ratio = 90 if sys.platform == 'darwin' and not automatic_heap else 50
                 lines.append(f'TEST-WORK batch={name} VM-GC-RUNTIME live-ratio={ratio}')
             lines.extend('TEST-BATCH-COMPLETE ' + name for name in wave)
         lines.append('TEST-SERIAL-BARRIER pending=' + str(len(serial)))
@@ -90,8 +95,8 @@ class SourceSemanticCiTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'exit=124'):
                     CONTROL.run_source_semantics(root, output, {'GERBIL_BUILD_CORES': '3'})
             self.assertEqual(measure.call_args.args[1],
-                             ['timeout', '600s', 'just', 'test-file', 't/qualification', '2G'])
-            self.assertEqual(measure.call_args.args[3]['GERBIL_BUILD_CORES'], '12')
+                             ['timeout', '600s', 'just', 'test-file', 't/qualification', 'auto'])
+            self.assertEqual(measure.call_args.args[3]['GERBIL_BUILD_CORES'], '3')
             self.assertEqual(measure.call_args.args[3]['GERBIL_LOADPATH'], str(root / '.gerbil/lib'))
             self.assertTrue(measure.call_args.kwargs['semantic_diagnostics'])
             self.assertEqual((output / 'semantic-batches/incomplete.log').read_text(), 'CASE still running\n')
@@ -119,7 +124,7 @@ class SourceSemanticCiTests(unittest.TestCase):
             source.parent.mkdir(parents=True)
             source.write_text('(export)\n')
             log = root / 'native.log'
-            log.write_text('TEST-DISPATCH modules=1 batches=1 workers=12 max-batch-modules=1 mode=batched\n'
+            log.write_text('TEST-DISPATCH modules=1 batches=1 workers=1 max-batch-modules=1 mode=batched\n'
                            'VM-RUNTIME processors=1\nCASE-OK entry\nMODULE-OK t/qualification/entry-test.ss\n'
                            + '\n'.join(self.schedule_lines(['t/qualification/entry-test.ss'])) + '\n')
             output = root / 'verified'
@@ -129,13 +134,13 @@ class SourceSemanticCiTests(unittest.TestCase):
                 CONTROL.main()
             launch.assert_not_called()
             self.assertEqual(json.loads((output / 'source-runtime-workload.json').read_text())['cases'], 1)
-            for invalid in [log.read_text().replace('workers=12', 'workers=1'),
+            for invalid in [log.read_text().replace('workers=1', 'workers=2'),
                             log.read_text().replace('processors=1', 'processors=2'),
                             log.read_text().replace('MODULE-OK t/qualification/entry-test.ss', '')]:
                 log.write_text(invalid)
                 with self.assertRaises(ValueError):
                     CONTROL.source_semantic_workload(root, log)
-            log.write_text('TEST-DISPATCH modules=1 batches=1 workers=12 max-batch-modules=1 mode=batched\n'
+            log.write_text('TEST-DISPATCH modules=1 batches=1 workers=1 max-batch-modules=1 mode=batched\n'
                            'VM-RUNTIME processors=1\nCASE-OK entry\nMODULE-OK t/qualification/entry-test.ss\n'
                            + '\n'.join(self.schedule_lines(['t/qualification/entry-test.ss'])) + '\n')
             compiled = root / '.gerbil/lib/gerbil-ascent/t/qualification/entry-test.ssi'
@@ -199,10 +204,39 @@ class SourceSemanticCiTests(unittest.TestCase):
                           f'TEST-WORK batch={name} VM-GC-RUNTIME live-ratio={ratio}',
                           'TEST-BATCH-COMPLETE ' + name])
         lines.append('TEST-SERIAL-BARRIER pending=0')
-        with self.assertRaisesRegex(ValueError, 'twelve concurrent workers'):
+        with self.assertRaisesRegex(ValueError, 'configured machine capacity'):
             CONTROL.source_schedule_workload(lines, expected, 12)
         valid = self.schedule_lines(expected)
         self.assertEqual(CONTROL.source_schedule_workload(valid, expected, 12)['peak_runtime_workers'], 12)
+
+    def test_machine_native_capacity_and_heap_are_independently_audited(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            suites = root / 't/qualification'
+            suites.mkdir(parents=True)
+            names = [f't/qualification/entry-{i}-test.ss' for i in range(17)]
+            for name in names:
+                (root / name).touch()
+            log = root / 'native.log'
+            for platform in ['linux', 'darwin']:
+                for cores in [1, 3, 12]:
+                    with patch.dict(os.environ, {}, clear=True), \
+                            patch.object(CONTROL.os, 'cpu_count', return_value=cores), \
+                            patch.object(CONTROL.sys, 'platform', platform):
+                        self.assertEqual(CONTROL.source_worker_capacity(), cores)
+                        prefix = (f'TEST-DISPATCH modules=17 batches=17 workers={cores} '
+                                  'max-batch-modules=1 mode=batched heap=auto\n')
+                        body = 'VM-RUNTIME processors=1\n' * 17 + 'CASE-OK native\n'
+                        body += ''.join(f'MODULE-OK {name}\n' for name in names)
+                        trace = self.schedule_lines(names, workers=cores, automatic_heap=True)
+                        log.write_text(prefix + body + '\n'.join(trace) + '\n')
+                        result = CONTROL.source_semantic_workload(root, log)
+                        self.assertEqual(result['vm_workers'], cores)
+                        self.assertEqual(result['peak_runtime_workers'], cores)
+                        log.write_text(prefix.replace(f'workers={cores}', f'workers={cores + 1}')
+                                       + body + '\n'.join(trace) + '\n')
+                        with self.assertRaisesRegex(ValueError, 'native machine capacity'):
+                            CONTROL.source_semantic_workload(root, log)
 
     def invoke(self, root, arguments):
         output = root / arguments[-1]
@@ -244,9 +278,9 @@ class SourceSemanticCiTests(unittest.TestCase):
                 receipts.append(json.loads((output / 'inputs.json').read_text()))
             self.assertEqual(receipts[0], receipts[1])
             self.assertEqual(receipts[1], receipts[2])
-            self.assertEqual(receipts[0]['scheme_vm_workers'], 12)
+            self.assertEqual(receipts[0]['scheme_vm_workers'], CONTROL.source_worker_capacity())
             self.assertEqual(receipts[0]['threads_per_vm'], 1)
-            self.assertEqual(receipts[0]['cores'], 3)
+            self.assertEqual(receipts[0]['cores'], CONTROL.source_worker_capacity())
 
 
 if __name__ == '__main__':

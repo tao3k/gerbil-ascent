@@ -1292,9 +1292,14 @@
   "PreparationWork": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained SourceQueueCoverage SourceGcIsolation"
+      "invariants": "InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained SourceQueueCoverage SourceGcIsolation SourceMachineCapacity"
     },
     "faults": [
+      [
+        "fixed-twelve-source",
+        "SourceMachineCapacity",
+        12
+      ],
       [
         "darwin-source-roots",
         "BoundedSourceEntries",

@@ -65,6 +65,13 @@ joins them again. It times 32 publications and first ordered origin
 queries in each direction. Witness creation and replay are checked
 outside the timers. Its full closure contains 1,664 squared rows.
 
+Use the ten-million-row case for current split/merge measurements.
+It uses 50 groups of 64 vertices and 201,649 or 201,650 input facts.
+The split has 5,222,400 logical output rows and the merged closure has
+10,240,000. The test checks both cardinalities from the published
+result and materializes only the selected first-origin query. The
+million-row cases remain available for comparison.
+
 #+begin_src sh
 timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
   -r '^scc-bound-query-test$' benchmarks/scc-bridge-test.ss
@@ -72,6 +79,8 @@ timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
   -r '^scc-first-origin-test$' benchmarks/scc-bridge-test.ss
 timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
   -r '^scc-split-merge-test$' benchmarks/scc-bridge-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^scc-ten-million-split-merge-test$' benchmarks/scc-bridge-test.ss
 cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-bound
 cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-origin
 #+end_src

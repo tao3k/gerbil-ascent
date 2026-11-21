@@ -1081,6 +1081,21 @@ theorem copy_binary_reply_without_capture {Version : Type}
     copyBinaryReply (Version := Version) none destination start packetLimit live =
       (destination, none) := rfl
 
+/-- A frozen packed lane in export order supplies exactly the packet payload.
+Copying that lane directly has the same slice effect as staging the header
+and dropping it. Neither route changes cells outside the affected slice. -/
+theorem copy_packed_lane_matches_staged {Version : Type}
+    (version : Version) (rows : List (Int × Int)) (lane destination : List Int)
+    (start packetLimit : Nat)
+    (ordered : lane = packedBinaryCells rows)
+    (fits : 0 < rows.length ∧ 2 + 2 * rows.length ≤ packetLimit ∧
+        start + 2 * rows.length ≤ destination.length) :
+    copyBinaryReply (some (version, rows)) destination start packetLimit true =
+      (destination.take start ++ lane ++ destination.drop (start + lane.length),
+        some (version, rows.length)) := by
+  subst lane
+  simp [copyBinaryReply, fits, binaryReply, packed_capture_exact_extent]
+
 end OrderedBinaryReply
 
 /-- Replacement preflight checks the outer extent and each complete

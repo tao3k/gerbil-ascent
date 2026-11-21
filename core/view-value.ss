@@ -6,7 +6,9 @@
   (struct-out relation-view)
   (struct-out part-visitors)
   make-ordered-binary-visitors
+  make-packed-binary-visitors
   gerbil-ascent-ordered-binary-row-parts?
+  gerbil-ascent-ordered-binary-copy!
   (struct-out rectangle-visitors)
   (struct-out row-stream)
   (struct-out rectangle)
@@ -32,7 +34,9 @@
 (defstruct relation-view (identity generation revision lane count units visit contains export parts))
 (defstruct part-visitors (checked admitted))
 ;; Only the owner of an exact integer field stream certifies its full export.
-(defstruct (ordered-binary-visitors part-visitors) (exporter) final: #t)
+(defstruct (ordered-binary-visitors part-visitors) (exporter))
+;; The copier captures private immutable cells, never the caller's buffer.
+(defstruct (packed-binary-visitors ordered-binary-visitors) (copy) final: #t)
 ;; Built-in products additionally own a direct selected-result collector.
 ;; Custom visitors keep their existing callback and ordering protocol.
 (defstruct (rectangle-visitors part-visitors) (materialize) final: #t)
@@ -88,6 +92,11 @@
        (let (parts (relation-view-parts view))
          (and (ordered-binary-visitors? parts)
               (eq? (ordered-binary-visitors-exporter parts) (relation-view-export view))))))
+;; Only a copier with the current export order may commit to a destination.
+(def (gerbil-ascent-ordered-binary-copy! view)
+  (and (gerbil-ascent-ordered-binary-row-parts? view)
+       (let (parts (relation-view-parts view))
+         (and (packed-binary-visitors? parts) (packed-binary-visitors-copy parts)))))
 ;; : (-> PartVisitor RowSource Void)
 (def (gerbil-ascent-for-each-row-parts consume rows)
   (if (relation-view? rows) (gerbil-ascent-visit-view-parts! rows [] [] consume)

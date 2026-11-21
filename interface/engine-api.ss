@@ -422,17 +422,20 @@
   (let (result (gerbil-ascent-session-last-completed session))
     (and result
          ((.ref result 'with-ordered-binary-fields) name
-           (lambda (count visit)
+           (lambda (count visit copy!)
              (let (cells (* 2 count))
                (when (> cells (- (s64vector-length destination) start))
                  (error "ASCENT integer reply exceeds buffer capacity"))
-               (let (packet (pack-ordered-binary-fields count visit))
-                 (and packet
-                      (begin
-                        ;; The native copy has no user callbacks or checkpoints.
-                        (ascent-execution-checkpoint!)
-                        (s64vector-copy! destination start packet 2 (+ 2 cells))
-                        count)))))))))
+               (if (and copy! (not (current-ascent-execution-control)))
+                 (begin (copy! destination start) count)
+                 (let (packet (pack-ordered-binary-fields count visit))
+                   (and packet
+                        (begin
+                          ;; The native copy has no user callbacks or checkpoints.
+                          (ascent-execution-checkpoint!)
+                          (s64vector-copy! destination start packet 2 (+ 2 cells))
+                          count))))))
+           #t))))
 
 ;; BEGIN GENERATED PROJECTION ROWS
 (def (pack-projection-rows! program requested)

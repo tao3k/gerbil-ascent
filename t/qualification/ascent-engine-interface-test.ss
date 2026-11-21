@@ -2,7 +2,9 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :std/encoding/json :gerbil-ascent/interface/engine-api
+        (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/core/view-value make-relation-view make-ordered-binary-visitors
+                 make-packed-binary-visitors gerbil-ascent-ordered-binary-copy!
                  gerbil-ascent-view-with-export)
         (only-in :gerbil-ascent/program/result gerbil-ascent-make-published-result)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
@@ -156,6 +158,33 @@
 
 (def ascent-engine-interface-test
   (test-suite "Public inert engine contract for C ABI consumers"
+    (test-case "packed caller buffers preserve capture order without exposing backing cells"
+      (let* ((rows (map (lambda (i) (list (- 11 i) (modulo i 7))) (iota 64)))
+             (session (open-ordered-actor rows))
+             (target (make-s64vector 130 -999))
+             (expected (cons -999 (append (apply append rows) '(-999)))))
+        (try
+          (let (result (gerbil-ascent-session-run session))
+            (check-equal?
+             ((.ref result 'with-ordered-binary-fields)
+              'reach (lambda (_count _visit copy!) (procedure? copy!)) #t) #t)
+            (check-equal? (ascent-engine-relation-answer result 'reach #f values) rows)
+            (check-equal? (ascent-engine-session-copy-integer-relation! session 'reach target 1) 64)
+            (check-equal? (s64vector->list target) expected)
+            (s64vector-set! target 1 65536)
+            (let (checks 0)
+              (parameterize ((current-ascent-execution-control
+                               (lambda (_work _facts)
+                                 (set! checks (+ checks 1))
+                                 (when (= checks 5) (error "cancel packed buffer before commit")))))
+                (check-equal?
+                 (with-catch error-message
+                   (lambda () (ascent-engine-session-copy-integer-relation! session 'reach target 1)))
+                 "cancel packed buffer before commit"))
+              (check-equal? (s64vector-ref target 1) 65536))
+            (check-equal? (ascent-engine-session-copy-integer-relation! session 'reach target 1) 64)
+            (check-equal? (s64vector->list target) expected))
+          (finally (gerbil-ascent-session-close! session)))))
     (test-case "caller buffer copies one ordered publication during a reentrant update"
       (let* ((before (ordered-rows 17)) (after (ordered-rows -31))
              (session (open-ordered-actor before))
@@ -219,7 +248,9 @@
       (let* ((emit (lambda (_columns _key consume) (consume [] 1 2) (consume [] 3 4)))
              (export (lambda () (list (list 1 2) (list 3 4))))
              (original (make-relation-view #f #f 0 'total 2 2 void void export
-                         (make-ordered-binary-visitors emit emit export)))
+                         (make-packed-binary-visitors emit emit export
+                           (lambda (destination start)
+                             (s64vector-copy! destination start '#s64(1 2 3 4))))))
              (reordered (gerbil-ascent-view-with-export original
                           (lambda () (list (list 3 4) (list 1 2))))))
         (def (packet view)
@@ -228,6 +259,8 @@
             (ascent-engine-relation-answer result 'reach #t values)))
         (check-equal? (s64vector->list (packet original)) '(2 2 1 2 3 4))
         (check-equal? (s64vector->list (packet reordered)) '(2 2 3 4 1 2))
+        (check-equal? (procedure? (gerbil-ascent-ordered-binary-copy! original)) #t)
+        (check-equal? (gerbil-ascent-ordered-binary-copy! reordered) #f)
         (for-each
          (lambda (count)
            (let (broken (make-relation-view #f #f 0 'total count count void void export

@@ -7,7 +7,8 @@
 (import (only-in :std/iter for/fold in-list)
         (only-in :gerbil-ascent/core/relation-view make-relation-view)
         (only-in :gerbil-ascent/core/view-value
-                 make-ordered-binary-visitors gerbil-ascent-visit-admitted-view-parts!)
+                 make-ordered-binary-visitors make-packed-binary-visitors
+                 gerbil-ascent-visit-admitted-view-parts!)
         (only-in "scheme-checked.ss" relational-scalar?))
 (export gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
         gerbil-ascent-source-cut-update gerbil-ascent-source-cut-scalar?
@@ -39,7 +40,7 @@
 
 ;; Both representations keep their numeric load inlined at scan and lookup
 ;; sites. Ordinals address rows; only the vector adapter scales by width.
-(defrule (binary-source-view count ascending? indexed? read-left read-right)
+(defrule (binary-source-view count ascending? indexed? read-left read-right copy-cells)
   (let ()
     (def (column-index columns key)
       (let search ((columns columns) (key key))
@@ -95,12 +96,16 @@
           (collect (fx- i 1)
             (cons (list (read-left i) (read-right i)) rows)))))
     (make-relation-view #f #f 0 'total count count visit contains? export
-      (make-ordered-binary-visitors parts parts export))))
+      (let (copy copy-cells)
+        (if copy
+          (make-packed-binary-visitors parts parts export copy)
+          (make-ordered-binary-visitors parts parts export))))))
 
 (def (packed-source-view cells count ascending? (indexed? #t))
   (binary-source-view count ascending? indexed?
     (lambda (i) (##s64vector-ref cells (fx* i 2)))
-    (lambda (i) (##s64vector-ref cells (fx+ (fx* i 2) 1)))))
+    (lambda (i) (##s64vector-ref cells (fx+ (fx* i 2) 1)))
+    (lambda (destination start) (s64vector-copy! destination start cells))))
 
 (def (make-affine-source-slot count left right left-stride right-stride)
   (defrule (left-at i) (fx+ left (fx* i left-stride)))
@@ -112,7 +117,7 @@
               (collect (fx+ i 1) (cons (list (left-at i) (right-at i)) rows))))))
     (make-source-slot lane (delay-atomic (reverse (force lane))) count #t
       (binary-source-view count (fx> left-stride 0) #t
-        (lambda (i) (left-at i)) (lambda (i) (right-at i)))
+        (lambda (i) (left-at i)) (lambda (i) (right-at i)) #f)
       #f)))
 
 (def (fixnum-binary-row? row)

@@ -7,7 +7,8 @@
 ;;; unchanged roots share a promise without retaining membership or index state.
 ;;; Slot zero carries the invocation deadline and is never captured by results.
 (import :gerbil-ascent/core/relation-view
-        (only-in :gerbil-ascent/core/view-value gerbil-ascent-ordered-binary-row-parts?)
+        (only-in :gerbil-ascent/core/view-value gerbil-ascent-ordered-binary-row-parts?
+                 gerbil-ascent-ordered-binary-copy!)
         (only-in :std/iter for in-range)
         (only-in :std/list/list-builder with-list-builder)
         (only-in :clan/poo/object .o))
@@ -207,15 +208,18 @@
           (gerbil-ascent-visit-snapshot! (vector-ref snapshots index)
             (vector-ref arity index) columns key consume fields?))))
       (with-ordered-binary-fields
-       (lambda (name receive)
+       (lambda (name receive (copy? #f))
          (and complete?
               (let* ((index (position-of name)) (view (vector-ref snapshots index)))
                 (and (= (vector-ref arity index) 2)
                      (gerbil-ascent-ordered-binary-row-parts? view)
-                     (receive (relation-view-count view)
-                       (lambda (consume)
-                         (gerbil-ascent-visit-admitted-view-parts! view [] []
-                           (lambda (_prefix left right) (consume left right))))))))))
+                     (let ((count (relation-view-count view))
+                           (visit (lambda (consume)
+                                    (gerbil-ascent-visit-admitted-view-parts! view [] []
+                                      (lambda (_prefix left right) (consume left right))))))
+                       (if copy?
+                         (receive count visit (gerbil-ascent-ordered-binary-copy! view))
+                         (receive count visit))))))))
       (rows-of (lambda (name)
         (let (index (position-of name))
           (gerbil-ascent-public-snapshot-rows (vector-ref snapshots index)

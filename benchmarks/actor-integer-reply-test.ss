@@ -13,7 +13,7 @@
         (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-actor-session
                  gerbil-ascent-session-close!))
 (export actor-million-integer-list-test actor-million-integer-view-test
-        actor-million-integer-buffer-test)
+        actor-million-integer-buffer-test actor-million-integer-packed-buffer-test)
 
 (def row-count 1000000)
 (def request-count 128)
@@ -24,10 +24,11 @@
   (##get-monotonic-time! clock 0)
   (u64vector-ref clock 0))
 
-(def (make-input offset)
+(def (make-input offset packed?)
   (append-map
     (lambda (group)
-      (let (left (+ offset (* group 2))) (list (list left (+ left 1)))))
+      (let (left (+ offset (* group 2)))
+        (list (list left (if packed? (+ left (modulo group 7)) (+ left 1))))))
     (iota row-count)))
 
 (def (open-session rows)
@@ -56,12 +57,12 @@
 
 ;; Independent fixture for the bulk consumer. Build it before starting the
 ;; clock, and compare every delivered cell in the measured request.
-(def (expected-payload offset)
+(def (expected-payload offset packed?)
   (let (cells (make-s64vector (* 2 row-count)))
     (do ((row 0 (+ row 1))) ((= row row-count) cells)
       (let ((index (* row 2)) (left (+ offset (* row 2))))
         (s64vector-set! cells index left)
-        (s64vector-set! cells (+ index 1) (+ left 1))))))
+        (s64vector-set! cells (+ index 1) (+ left (if packed? (modulo row 7) 1)))))))
 
 (def (report name samples)
   (let* ((ordered (list-sort < (vector->list samples)))
@@ -73,11 +74,12 @@
 
 (def (measure mode)
   (check (##current-vm-processor-count) => 1)
-  (let* ((buffer? (eq? mode 'buffer))
-         (span (* 2 row-count)) (original (make-input 0)) (alternate (make-input span))
+  (let* ((packed? (eq? mode 'packed-buffer))
+         (buffer? (or packed? (eq? mode 'buffer)))
+         (span (* 2 row-count)) (original (make-input 0 packed?)) (alternate (make-input span packed?))
          (destination (and buffer? (make-s64vector span)))
-         (expected-original (and buffer? (expected-payload 0)))
-         (expected-alternate (and buffer? (expected-payload span)))
+         (expected-original (and buffer? (expected-payload 0 packed?)))
+         (expected-alternate (and buffer? (expected-payload span packed?)))
          (session (open-session original))
          (requests (make-vector request-count 0))
          (packs (make-vector request-count 0))
@@ -150,3 +152,7 @@
 (def actor-million-integer-buffer-test
   (test-suite "Integer replies from an Actor Session into a caller buffer"
     (test-case "copy and verify every ordered field after each source replacement" (measure 'buffer))))
+
+(def actor-million-integer-packed-buffer-test
+  (test-suite "Integer replies from a packed Actor Session into a caller buffer"
+    (test-case "copy every non-affine tuple in publication order" (measure 'packed-buffer))))

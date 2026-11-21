@@ -14,7 +14,7 @@
         (only-in :gerbil-ascent/core/relation-view relation-view-count)
         (only-in "source-cut.ss" gerbil-ascent-make-source-cut
                  gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update
-                 gerbil-ascent-source-cut-terminal-slot
+                 gerbil-ascent-source-cut-terminal-slot gerbil-ascent-source-cut-edit-edge
                  source-slot-newest-first source-slot-count source-slot-view source-slot-rows
                  source-slot-binary-visitor source-slot-validated-binary-view source-slot-packed-extra)
         (only-in "component-worker.ss" gerbil-ascent-functional-result-view
@@ -35,12 +35,13 @@
         (only-in "engine-state.ss" engine-state-schema engine-state-analysis)
         (only-in "positive-components.ss" gerbil-ascent-component-mode?))
 (export gerbil-ascent-open-actor-session gerbil-ascent-open-condensed-actor-session
-        gerbil-ascent-session-cancel!
+        gerbil-ascent-session-cancel! gerbil-ascent-session-edit-edge!
         gerbil-ascent-session-last-completed gerbil-ascent-session-close!
         gerbil-ascent-session-state)
 
 (defstruct actor-run (epoch token worker monitor reply authority sources accept-result fallback) final: #t)
 (defstruct actor-job (epoch evaluate) final: #t)
+(defstruct actor-edge-edit (insert? row) final: #t)
 (defstruct actor-engine (run token) final: #t)
 (defstruct state-request (reply) final: #t)
 
@@ -147,8 +148,19 @@
                     check!))
         (cons index 'rebuilt))))
 
+(def (build-condensed-edit source size previous (edit :- actor-edge-edit) check!)
+  (let (index
+         (if edit.insert?
+           (gerbil-ascent-extend-condensed-closure previous source size edit.row check! #f #t)
+           (gerbil-ascent-remove-condensed-edge previous source size edit.row check! #t)))
+    (unless index (error "ASCENT edge edit requires known endpoints and a change in edge membership"))
+    (cons index
+      (if (gerbil-ascent-condensed-same-partition? previous index)
+        (if edit.insert? 'inserted 'removed)
+        (if edit.insert? 'merged-local 'split-local)))))
+
 (def (actor-terminal-result program schema analysis (plan :- actor-terminal-plan) sources token
-                            committed previous-frontier condense? version)
+                            committed previous-frontier condense? version (edit #f))
   (let* ((input-limit (.ref program 'max-input-facts))
          (derived-limit (.ref program 'max-derived-facts))
          (output-limit (.ref program 'max-output-facts))
@@ -160,16 +172,26 @@
                 (validated-view #f) (condensed #f) (update-kind #f)
                 (evaluation
                  (if plan.recursive?
-                   (and (>= room count) (>= count 32)
-                        (let ((visit-binary (source-slot-binary-visitor source))
-                              (check! (lambda () (actor-check-token! token)))
+                   (and (or edit
+                            (and condense? (condensed-closure? previous-frontier)
+                                 (eq? source (condensed-closure-source previous-frontier)))
+                            (and (>= room count) (>= count 32)))
+                        (let ((visit-binary (and (not edit) (source-slot-binary-visitor source)))
+                              (check! (if (and edit (current-ascent-execution-control))
+                                        (lambda ()
+                                          (actor-check-token! token)
+                                          (ascent-execution-checkpoint! 1 0))
+                                        (lambda () (actor-check-token! token))))
                               (prior (and (not (eq? sources committed))
                                           (gerbil-ascent-source-cut-terminal-slot committed plan.source plan.target
                                             input-limit output-limit))))
                           (def (newest-first) (source-slot-newest-first source))
                           (or (and condense?
-                                   (alet* ((candidate (build-condensed-closure source count visit-binary
-                                                        previous-frontier check!))
+                                   (alet* ((candidate
+                                            (if edit
+                                              (build-condensed-edit source count previous-frontier edit check!)
+                                              (build-condensed-closure source count visit-binary
+                                                previous-frontier check!)))
                                            (index (car candidate))
                                            (view (gerbil-ascent-condensed-closure-view index version room check!)))
                                      (set! condensed index)
@@ -177,19 +199,20 @@
                                      (unless (source-slot-view source)
                                        (set! validated-view (source-slot-validated-binary-view source)))
                                      (cons view index)))
-                              (and previous-frontier (not (condensed-closure? previous-frontier))
-                                   (gerbil-ascent-replay-branching-frontier (newest-first) count room check!
-                                     previous-frontier))
-                              (let (functional
-                                     (gerbil-ascent-functional-result-view
-                                       (and (not visit-binary) (newest-first)) count room check! visit-binary))
-                                (when (and functional (not (source-slot-view source)))
-                                  (set! validated-view (source-slot-validated-binary-view source)))
-                                functional)
-                              (let (rows (newest-first))
-                                (gerbil-ascent-branching-result-view rows count room check!
-                                  (and prior (= count (+ (source-slot-count prior) 1))
-                                       (eq? (cdr rows) (source-slot-newest-first prior))))))))
+                              (and (not edit)
+                                   (or (and previous-frontier (not (condensed-closure? previous-frontier))
+                                            (gerbil-ascent-replay-branching-frontier (newest-first) count room check!
+                                              previous-frontier))
+                                       (let (functional
+                                              (gerbil-ascent-functional-result-view
+                                                (and (not visit-binary) (newest-first)) count room check! visit-binary))
+                                         (when (and functional (not (source-slot-view source)))
+                                           (set! validated-view (source-slot-validated-binary-view source)))
+                                         functional)
+                                       (let (rows (newest-first))
+                                         (gerbil-ascent-branching-result-view rows count room check!
+                                           (and prior (= count (+ (source-slot-count prior) 1))
+                                                (eq? (cdr rows) (source-slot-newest-first prior))))))))))
                    (and (<= count room) (source-slot-view source))))
                 (target (if (pair? evaluation) (car evaluation) evaluation)))
            (and target
@@ -199,6 +222,7 @@
                        (views (make-vector 2 (or (source-slot-view source) validated-view
                                                  (source-slot-rows source)))))
                   (actor-check-token! token)
+                  (when edit (ascent-execution-checkpoint! 0 (+ count (relation-view-count target))))
                   (vector-set! sizes plan.target (relation-view-count target))
                   (vector-set! views plan.target target)
                   (let (result
@@ -361,7 +385,7 @@
                            (if (= epoch generation) outcome
                              (vector #f (session-failure "ASCENT actor Session canceled")))))))
                    (set! running #f)))
-               (def (terminal-result sources token version)
+               (def (terminal-result sources token version (edit #f))
                  (and (not (current-positive-plan-cost))
                       (= (##current-vm-processor-count) 1)
                       (gerbil-ascent-projection-tree-current? program)
@@ -370,7 +394,7 @@
                                      (not (.ref relation 'checked-domain))))
                               relations)
                       (actor-terminal-result program schema analysis projection sources token
-                        committed branching-frontier condense? version)))
+                        committed branching-frontier condense? version edit)))
                (def (start-ordinary! epoch token channel authority sources accept-result evaluate)
                  (let* ((session-owner (current-thread))
                         (worker (spawn/name 'ascent-session-evaluation evaluate))
@@ -407,6 +431,14 @@
                                  (lambda () (thread-join! worker)))))))
                      (set! resident worker)
                      (set! resident-monitor monitor))))
+               (def (start-resident! epoch token channel authority sources accept-result evaluate fallback)
+                 (ensure-resident!)
+                 (let (worker resident)
+                   (set! running
+                     (make-actor-run epoch token worker #f channel authority sources accept-result fallback))
+                   (with-catch
+                     (lambda (failure) (finish! epoch worker (vector #f failure)))
+                     (lambda () (thread-send worker (make-actor-job epoch evaluate))))))
                (def (finish-resident! epoch worker outcome)
                  (when (owns-run? epoch worker)
                    (if (eq? outcome 'declined)
@@ -486,28 +518,45 @@
                      (if (and projection owned? (not duration) (not authority)
                               (not accept-result) (not (current-positive-plan-cost))
                               (= (##current-vm-processor-count) 1))
-                       (begin
-                         (ensure-resident!)
-                         (let (worker resident)
-                           (set! running
-                             (make-actor-run epoch token worker #f channel authority sources accept-result
-                               (lambda () (ordinary! #f))))
-                           (with-catch
-                             (lambda (failure) (finish! epoch worker (vector #f failure)))
-                             (lambda ()
-                               (thread-send worker
-                                 (make-actor-job epoch
-                                   (lambda ()
-                                     (ascent-execution-checkpoint!)
-                                     (let (result (terminal-result sources token epoch))
-                                       (or result 'declined)))))))))
+                       (start-resident! epoch token channel authority sources accept-result
+                         (lambda ()
+                           (ascent-execution-checkpoint!)
+                           (or (terminal-result sources token epoch) 'declined))
+                         (lambda () (ordinary! #f)))
                        (ordinary! #t)))))
+               (def (start-edge-edit! channel authority expected name operation left right)
+                 (when (or running (pair? closing)) (error "ASCENT actor Session is busy"))
+                 (unless (and published (eq? expected published) (eq? pending committed))
+                   (error "ASCENT edge edit requires the current completed Result and a clean Session"))
+                 (unless (and condense? projection (actor-terminal-plan-recursive? projection)
+                              (condensed-closure? branching-frontier)
+                              (gerbil-ascent-canonical-actor-inputs? program relations)
+                              (eqv? (hash-get positions name) (+ 1 (actor-terminal-plan-source projection))))
+                   (error "ASCENT edge edit requires a condensed Session source"))
+                 (unless (and (memq operation '(insert delete)) (fixnum? left) (fixnum? right))
+                   (error "invalid ASCENT edge edit" operation left right))
+                 (ascent-execution-checkpoint!)
+                 (let* ((insert? (eq? operation 'insert))
+                        (sources (gerbil-ascent-source-cut-edit-edge committed
+                                   (actor-terminal-plan-source projection) insert? left right input-limit))
+                        (edit (make-actor-edge-edit insert? (list left right)))
+                        (epoch (+ generation 1))
+                        (token (vector #f)))
+                   (set! generation epoch)
+                   (start-resident! epoch token channel authority sources #f
+                     (lambda ()
+                       (parameterize ((current-ascent-execution-control authority))
+                         (ascent-execution-checkpoint!)
+                         (or (terminal-result sources token epoch edit)
+                             (error "ASCENT edge edit could not publish within the admitted fact limits"))))
+                     #f)))
                (def (dispatch-request! channel authority operation args)
                  (with-catch (lambda (failure) (reply! channel (vector #f failure)))
                    (lambda ()
                      (parameterize ((current-ascent-execution-control authority))
                        (case operation
                          ((run) (start-run! channel authority (if (null? args) #f (car args))))
+                         ((edit-edge) (apply start-edge-edit! channel authority args))
                          ((replace-and-run)
                           (start-run! channel authority #f (cadr args) (car args)))
                          ((append) (update! (list (cons (car args) (list (cadr args)))) #t) (reply! channel (vector #t (void))))
@@ -628,10 +677,18 @@
                      (unless (and (exact-integer? duration) (>= duration 0))
                        (error "invalid ASCENT timeout in nanoseconds" duration))
                      (request 'run duration)))
+                  (.edge-edit
+                   (lambda (expected name operation left right)
+                     (request 'edit-edge expected name operation left right)))
                   (.cancel! (lambda () (request 'cancel)))
                   (.last-completed (lambda () (request 'result)))
                   (.state request-state)
                   (.close! (lambda () (request 'close) (thread-join! owner)))))))
+
+;; The completed Result is the edit's version token. A successful call
+;; returns the next completed Result, with its own source and witnesses.
+(def (gerbil-ascent-session-edit-edge! session expected name operation left right)
+  ((.ref session '.edge-edit) expected name operation left right))
 
 (def (gerbil-ascent-session-cancel! session) ((.ref session '.cancel!)))
 (def (gerbil-ascent-session-last-completed session) ((.ref session '.last-completed)))

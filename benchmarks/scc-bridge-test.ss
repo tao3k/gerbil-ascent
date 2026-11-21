@@ -10,9 +10,10 @@
         (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
                  gerbil-ascent-session-replace-source!)
         (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-condensed-actor-session
-                 gerbil-ascent-session-close!))
+                 gerbil-ascent-session-close! gerbil-ascent-session-edit-edge!))
 (export scc-bound-query-test scc-first-origin-test scc-split-merge-test
-        scc-ten-million-split-merge-test scc-ten-million-local-split-merge-test)
+        scc-ten-million-split-merge-test scc-ten-million-local-split-merge-test
+        scc-ten-million-global-edge-edit-test scc-ten-million-local-edge-edit-test)
 
 (def vertices 1664)
 (def group-width 64)
@@ -187,12 +188,18 @@
                    (* 1000. (/ (car sample) ticks-per-sec)) (cdr sample)))
           (newline))
         (reverse samples)))
-    '(replace publish first-origin) (list replacement publication query)))
+    (if (null? replacement) '(publish first-origin) '(replace publish update first-origin))
+    (if (null? replacement)
+      (list publication query)
+      (list replacement publication
+        (map (lambda (before after) (map + before after)) replacement publication)
+        query))))
 
 ;; The return bridge closes a suffix of the chain of cliques.
-(def (measure-split-merge size (return-target 0))
+(def (measure-split-merge size (return-target 0) (versioned? #f))
   (check (##current-vm-processor-count) => 1)
-  (let* ((intact (inputs #f #t size return-target)) (split (inputs #f #f size))
+  (let* ((intact (inputs #f #t size return-target))
+         (split (and (not versioned?) (inputs #f #f size)))
          (groups (quotient size group-width))
          (merged-groups (quotient (- size return-target) group-width))
          (split-rows (* group-width group-width (quotient (* groups (+ groups 1)) 2)))
@@ -202,11 +209,19 @@
          (from (- size 1)) (bytes (make-f64vector 2 0.))
          (split-replace []) (split-publish []) (split-query [])
          (merge-replace []) (merge-publish []) (merge-query []))
-    (def (edit cut merging?)
+    (def (edit cut merging? expected)
       (let*-values (((_ replace-cost)
-                     (observe-edit bytes (lambda () (gerbil-ascent-session-replace-source! session 'edge cut))))
+                     (if versioned?
+                       (values #f #f)
+                       (observe-edit bytes
+                         (lambda () (gerbil-ascent-session-replace-source! session 'edge cut)))))
                     ((result publish-cost)
-                     (observe-edit bytes (lambda () (gerbil-ascent-session-run session)))))
+                     (observe-edit bytes
+                       (lambda ()
+                         (if versioned?
+                           (gerbil-ascent-session-edit-edge! session expected 'edge
+                             (if merging? 'insert 'delete) from return-target)
+                           (gerbil-ascent-session-run session))))))
         (let* ((visit (.ref result 'visit-rows))
                (next (if merging? return-target (- size group-width))))
           (let-values (((_ query-cost)
@@ -220,16 +235,17 @@
                               fields?: #t)))))
             (check next => size)
             (check (.ref result 'evaluation-path) => 'condensed-closure)
-            (check (.ref result 'closure-update) => 'rebuilt)
+            (check (.ref result 'closure-update)
+                   => (if versioned? (if merging? 'merged-local 'split-local) 'rebuilt))
             (check (cdr (assq 'reach ((.ref result 'relation-sizes))))
                    => (if merging? merged-rows split-rows))
             (if merging?
               (begin
-                (set! merge-replace (cons replace-cost merge-replace))
+                (when replace-cost (set! merge-replace (cons replace-cost merge-replace)))
                 (set! merge-publish (cons publish-cost merge-publish))
                 (set! merge-query (cons query-cost merge-query)))
               (begin
-                (set! split-replace (cons replace-cost split-replace))
+                (when replace-cost (set! split-replace (cons replace-cost split-replace)))
                 (set! split-publish (cons publish-cost split-publish))
                 (set! split-query (cons query-cost split-query))))
             result))))
@@ -237,17 +253,21 @@
       (let* ((original (gerbil-ascent-session-run session))
              (proof ((.ref original 'closure-witness) from return-target 128)))
         (check ((.ref original 'verify-closure-witness) proof) => #t)
-        (for (_ (in-range 32))
-          (let* ((separated (edit split #f)) (restored (edit intact #t))
-                 (fresh ((.ref restored 'closure-witness) from return-target 128)))
-            (check ((.ref separated 'closure-witness) from return-target 128) => #f)
-            (check ((.ref separated 'verify-closure-witness) proof) => #f)
-            (check ((.ref restored 'verify-closure-witness) proof) => #f)
-            (check ((.ref restored 'verify-closure-witness) fresh) => #t)))
+        (let loop ((round 0) (expected original))
+          (unless (= round 32)
+            (let* ((separated (edit split #f expected)) (restored (edit intact #t separated))
+                   (fresh ((.ref restored 'closure-witness) from return-target 128)))
+              (check ((.ref separated 'closure-witness) from return-target 128) => #f)
+              (check ((.ref separated 'verify-closure-witness) proof) => #f)
+              (check ((.ref restored 'verify-closure-witness) proof) => #f)
+              (check ((.ref restored 'verify-closure-witness) fresh) => #t)
+              (loop (+ round 1) restored))))
         (check ((.ref original 'verify-closure-witness) proof) => #t)
-        (write (list 'WORKLOAD 'vertices size 'merged-components merged-groups
-                     'split-input (length split) 'merged-input (length intact)
-                     'split-rows split-rows 'merged-rows merged-rows))
+        (let (input-count (length intact))
+          (write (list 'WORKLOAD 'path (if versioned? 'edge-edit 'replacement)
+                       'vertices size 'merged-components merged-groups
+                       'split-input (- input-count 1) 'merged-input input-count
+                       'split-rows split-rows 'merged-rows merged-rows)))
         (newline)
         (report-edit 'split split-replace split-publish split-query)
         (report-edit 'merge merge-replace merge-publish merge-query))
@@ -267,3 +287,13 @@
   (test-suite "Split and merge two components in a ten-million-row logical closure"
     (test-case "Only the last two components change their mutual reachability"
       (measure-split-merge (* 71 group-width) (* 69 group-width)))))
+
+(def scc-ten-million-global-edge-edit-test
+  (test-suite "Versioned return bridge across a ten-million-row logical closure"
+    (test-case "Edit one edge that splits or joins the entire chain"
+      (measure-split-merge (* 50 group-width) 0 #t))))
+
+(def scc-ten-million-local-edge-edit-test
+  (test-suite "Versioned return bridge between two SCCs of a ten-million-row logical closure"
+    (test-case "Edit one edge without capturing a whole source replacement"
+      (measure-split-merge (* 71 group-width) (* 69 group-width) #t))))

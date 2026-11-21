@@ -149,6 +149,116 @@
     (condensed-order-labels prior.order)
     gerbil-ascent-graph-components/borrowed checkpoint!))
 
+;; Local partitions may assign dense ordinals in a different order.
+;; Traverse the quotient dependencies before closing each mask.
+(def (close-edited-quotient direct checkpoint!)
+  (let* ((groups (vector-length direct))
+         (reach (make-vector groups 0))
+         (status (make-vector groups #f)))
+    (def (close! g)
+      (checkpoint!)
+      (case (vector-ref status g)
+        ((done) (vector-ref reach g))
+        ((active) (error "ASCENT edited quotient has a cycle"))
+        (else
+         (vector-set! status g 'active)
+         (let* ((mask (vector-ref direct g))
+                (closed
+                 (fold-members mask
+                   (lambda (h out)
+                     (checkpoint!)
+                     (if (= g h) out (bitwise-ior out (close! h)))) mask)))
+           (vector-set! reach g closed)
+           (vector-set! status g 'done)
+           closed))))
+    (for (g (in-range groups)) (close! g))
+    reach))
+
+;; Keep the member spines for unchanged SCCs. Translate their old mask
+;; bits; only a destination that split needs concrete target endpoints.
+(def (repair-local (prior :- condensed-closure) source size adjacent affected replacements split? checkpoint!)
+  (let* ((old-groups (vector-length prior.members))
+         (translate (make-vector old-groups #f))
+         (unchanged
+          (foldl (lambda (g out)
+                   (checkpoint!)
+                   (if (bit-set? g affected) out (cons g out)))
+                 [] (iota old-groups)))
+         (old-order (reverse! unchanged))
+         (fresh-at (length old-order))
+         (members (list->vector
+                   (append (map (lambda (g) (vector-ref prior.members g)) old-order)
+                           replacements)))
+         (groups (vector-length members))
+         (owner (make-vector (vector-length adjacent) #f))
+         (direct (make-vector groups 0)))
+    (for-each (lambda (old g) (vector-set! translate old g)) old-order (iota fresh-at))
+    (unless split?
+      (fold-members affected (lambda (old _) (vector-set! translate old fresh-at)) #f))
+    (for (g (in-range groups))
+      (for-each (lambda (v) (checkpoint!) (vector-set! owner v g)) (vector-ref members g)))
+    (def (remap old bits)
+      (fold-members (vector-ref prior.direct old)
+        (lambda (h out)
+          (checkpoint!)
+          (let (next (vector-ref translate h))
+            (if next (bitwise-ior out (slot-bit next)) out))) bits))
+    (def (scan members mask target?)
+      (foldl
+       (lambda (v bits)
+         (checkpoint!)
+         (foldl (lambda (w out)
+                  (checkpoint!)
+                  (if (target? w)
+                    (let (h (vector-ref owner w))
+                      (if (bit-set? h out) out (bitwise-ior out (slot-bit h))))
+                    out))
+                bits (vector-ref adjacent v)))
+       mask members))
+    (for-each
+     (lambda (old g)
+       (let (mask (remap old 0))
+         (vector-set! direct g
+           (if (and split? (not (zero? (bitwise-and affected (vector-ref prior.direct old)))))
+             (scan (vector-ref prior.members old) mask
+               (lambda (w) (bit-set? (vector-ref prior.owner w) affected)))
+             mask))))
+     old-order (iota fresh-at))
+    (if split?
+      (for (g (in-range fresh-at groups))
+        (vector-set! direct g (scan (vector-ref members g) 0 (lambda (_) #t))))
+      ;; The newly added edge is internal. It supplies a self bit even
+      ;; when none of the merged groups previously had a self bit.
+      (vector-set! direct fresh-at (fold-members affected remap (slot-bit fresh-at))))
+    (let (reach (close-edited-quotient direct checkpoint!))
+      (make-condensed-closure source size prior.positions prior.labels
+        adjacent members owner direct reach
+        (build-condensed-order (condensed-order-labels prior.order)
+          prior.positions owner checkpoint!)))))
+
+(def (merge-local (prior :- condensed-closure) source size adjacent a b checkpoint!)
+  (let* ((forward (bitwise-ior (slot-bit b) (vector-ref prior.reach b)))
+         (affected
+          (fold-members forward
+            (lambda (g out)
+              (checkpoint!)
+              (if (or (= g a) (bit-set? a (vector-ref prior.reach g)))
+                (bitwise-ior out (slot-bit g)) out)) 0))
+         (vertices
+          (fold-members affected
+            (lambda (g out)
+              (foldl (lambda (v tail) (checkpoint!) (cons v tail)) out (vector-ref prior.members g)))
+            [])))
+    (repair-local prior source size adjacent affected (list vertices) #f checkpoint!)))
+
+(def (split-local (prior :- condensed-closure) source size adjacent group checkpoint!)
+  (let (parts (gerbil-ascent-graph-components/borrowed adjacent checkpoint!
+                (vector-ref prior.members group)))
+    (if (null? (cdr parts))
+      (make-condensed-closure source size prior.positions prior.labels
+        adjacent prior.members prior.owner prior.direct prior.reach prior.order)
+      (repair-local prior source size adjacent (slot-bit group) parts #t checkpoint!))))
+
 (def (gerbil-ascent-condensed-same-partition? (prior :- condensed-closure)
                                              (next :- condensed-closure))
   (eq? prior.owner next.owner))
@@ -163,7 +273,7 @@
 ;; instead supplies the next target of this origin to preserve witness order.
 ;; An edge that can merge components must rebuild the quotient.
 (def (gerbil-ascent-extend-condensed-closure (prior :- condensed-closure) source size row checkpoint!
-                                           (packed-edit? #f))
+                                           (packed-edit? #f) (local? #f))
   (let* ((left (car row)) (right (cadr row))
          (x (and (fixnum? left) (hash-get prior.positions left)))
          (y (and (fixnum? right) (hash-get prior.positions right))))
@@ -176,7 +286,9 @@
                  (insert-adjacent edges y (and next (hash-get prior.positions next)) checkpoint!))
                (cons y edges)))
            (if (and (not (= a b)) (bit-set? a (vector-ref prior.reach b)))
-             (repair-partition prior source size adjacent checkpoint!)
+             (if local?
+               (merge-local prior source size adjacent a b checkpoint!)
+               (repair-partition prior source size adjacent checkpoint!))
              (let* ((direct (vector-copy prior.direct)) (reach (vector-copy prior.reach))
                     (suffix (bitwise-ior (slot-bit b) (vector-ref reach b))))
                (vector-set! direct a (bitwise-ior (slot-bit b) (vector-ref direct a)))
@@ -227,7 +339,8 @@
 
 ;; A non-self edge inside a component may split it, but both endpoints
 ;; remain incident. A cross-edge edit retains both cyclic owner domains.
-(def (gerbil-ascent-remove-condensed-edge (prior :- condensed-closure) source size row checkpoint!)
+(def (gerbil-ascent-remove-condensed-edge (prior :- condensed-closure) source size row checkpoint!
+                                           (local? #f))
   (let ((x (hash-get prior.positions (car row))) (y (hash-get prior.positions (cadr row))))
     (and x y (memv y (vector-ref prior.adjacent x))
          (let ((a (vector-ref prior.owner x)) (b (vector-ref prior.owner y)))
@@ -235,8 +348,23 @@
             ((and (= a b) (not (= x y)))
              (let (adjacent (vector-copy prior.adjacent))
                (vector-set! adjacent x (remove-adjacent (vector-ref adjacent x) y checkpoint!))
-               (repair-partition prior source size adjacent checkpoint!)))
-            ((and (not (= a b)) (bit-set? a (vector-ref prior.direct a)) (bit-set? b (vector-ref prior.direct b)))
+               (if local?
+                 (split-local prior source size adjacent a checkpoint!)
+                 (repair-partition prior source size adjacent checkpoint!))))
+            ((and local? (= x y))
+             (let ((adjacent (vector-copy prior.adjacent))
+                   (direct prior.direct)
+                   (reach prior.reach))
+               (vector-set! adjacent x (remove-adjacent (vector-ref adjacent x) y checkpoint!))
+               (when (null? (cdr (vector-ref prior.members a)))
+                 (set! direct (vector-copy direct))
+                 (vector-set! direct a (bitwise-and (vector-ref direct a) (bitwise-not (slot-bit a))))
+                 (set! reach (withdrawal-reach direct reach a checkpoint!)))
+               (make-condensed-closure source size prior.positions prior.labels
+                 adjacent prior.members prior.owner direct reach prior.order)))
+            ((and (not (= a b))
+                  (or local? (and (bit-set? a (vector-ref prior.direct a))
+                                  (bit-set? b (vector-ref prior.direct b)))))
              (let ((adjacent (vector-copy prior.adjacent))
                    (direct prior.direct)
                    (reach prior.reach))

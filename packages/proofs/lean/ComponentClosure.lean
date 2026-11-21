@@ -545,6 +545,142 @@ theorem replay_uses_published_edges {V Cut : Type} {read : Cut → V → V → P
   rw [replays.1]
   exact replays.2
 
+section VersionedEdgeEdit
+
+private theorem path_mono {V : Type} {old new : V → V → Prop}
+    (keep : ∀ a b, old a b → new a b) {a b : V} (path : EdgePath old a b) :
+    EdgePath new a b := by
+  induction path with
+  | step h => exact .step (keep _ _ h)
+  | append _ _ before after => exact .append before after
+
+/-- Deleting inside a component requires only its induced graph. For
+endpoints with the same old owner, leaving and returning would give a
+cycle in the old quotient. The edited edge set is a subset of the old. -/
+theorem delete_split_induced_exact {V Group : Type}
+    {old new : V → V → Prop} (owner : V → Group) (g : Group)
+    (subgraph : ∀ a b, new a b → old a b)
+    (acyclic : ∀ h, ¬ EdgePath (CrossEdge old owner) h h)
+    {a b : V} (left : owner a = g) (right : owner b = g) :
+    EdgePath new a b ↔ EdgePath (fun x y => new x y ∧ owner x = g ∧ owner y = g) a b := by
+  refine ⟨?_, path_mono (fun _ _ h => h.1)⟩
+  intro path
+  induction path with
+  | step step => exact .step ⟨step, left, right⟩
+  | @append a mid b leading trailing ih₁ ih₂ =>
+    have atMid : owner mid = g := by
+      by_cases different : owner mid = g
+      · exact different
+      exfalso
+      have out := (collapse_cross_component_path owner (path_mono subgraph leading)).resolve_left
+        (by simpa [left, eq_comm] using different)
+      have back := (collapse_cross_component_path owner (path_mono subgraph trailing)).resolve_left
+        (by simpa [right] using different)
+      exact acyclic g (by rw [left] at out; rw [right] at back; exact .append out back)
+    exact .append (ih₁ left atMid) (ih₂ atMid right)
+
+/-- A deletion in a different component cannot destroy any path between
+retained members of this component. -/
+theorem delete_preserves_retained_component {V Group : Type}
+    {edge : V → V → Prop} (owner : V → Group) (g : Group)
+    (acyclic : ∀ h, ¬ EdgePath (CrossEdge edge owner) h h)
+    {a b x y : V} (left : owner a = g) (right : owner b = g)
+    (other : owner x ≠ g) (path : EdgePath edge a b) :
+    EdgePath (DeleteEdge edge x y) a b := by
+  have confined := (delete_split_induced_exact owner g
+    (fun (_ _ : V) (h : edge _ _) => h) acyclic left right).mp path
+  apply path_mono _ confined
+  intro u v step
+  exact ⟨step.1, .inl (fun equal => other (equal ▸ step.2.1))⟩
+
+/-- After adding x -> y with an old return path y -> x, the SCC
+containing y is exactly the intersection of the old forward cone of y
+and the old reverse cone of x, including both endpoints. -/
+theorem insertion_merges_exact_cone {V : Type} {edge : V → V → Prop}
+    (x y z : V) (back : EdgePath edge y x) :
+    (ReachOrSame (InsertEdge edge x y) y z ∧ ReachOrSame (InsertEdge edge x y) z y) ↔
+      (ReachOrSame edge y z ∧ ReachOrSame edge z x) := by
+  constructor
+  · rintro ⟨out, ret⟩
+    refine ⟨?_, ?_⟩
+    · rcases out with same | out
+      · exact .inl same
+      · rcases (insert_edge_exact x y y z).mp out with old | ⟨_, right⟩
+        · exact .inr old
+        · exact right
+    · have toX : EdgePath (InsertEdge edge x y) z x :=
+        extend_path ret (unchanged_path_after_insert back x y)
+      rcases (insert_edge_exact x y z x).mp toX with old | ⟨left, _⟩
+      · exact .inr old
+      · exact left
+  · rintro ⟨out, toX⟩
+    refine ⟨out.imp id (fun p => unchanged_path_after_insert p x y), .inr ?_⟩
+    exact (insert_edge_exact x y z y).mpr (.inr ⟨toX, .inl rfl⟩)
+
+/-- A newly mutual pair must lie in the SCC of the inserted edge.
+Choose the direction in which the pair gained a path. -/
+theorem gained_mutual_path_joins_inserted_target {V : Type} {edge : V → V → Prop}
+    (x y a b : V) (gained : ¬ EdgePath edge a b)
+    (forward : EdgePath (InsertEdge edge x y) a b)
+    (back : EdgePath (InsertEdge edge x y) b a) :
+    ReachOrSame (InsertEdge edge x y) y a ∧ ReachOrSame (InsertEdge edge x y) a y := by
+  obtain ⟨fromA, toB⟩ := ((insert_edge_exact x y a b).mp forward).resolve_left gained
+  have first : ReachOrSame (InsertEdge edge x y) y b :=
+    toB.imp id (fun p => unchanged_path_after_insert p x y)
+  exact ⟨.inr (extend_path first back), .inr ((insert_edge_exact x y a y).mpr (.inr ⟨fromA, .inl rfl⟩))⟩
+
+/-- Translating a retained direct list through the new ordinal map
+preserves precisely the destinations represented by that list. Internal
+edges of a merge can map to the same new ordinal. For a split, only
+unambiguous old destinations use this map. -/
+theorem reused_quotient_destination {Old New : Type}
+    (translate : Old → New) (direct : List Old) (h : New) :
+    h ∈ direct.map translate ↔ ∃ previous ∈ direct, translate previous = h :=
+  List.mem_map
+
+/-- A source journal filters deleted base rows in place and enumerates
+its live additions in insertion order after that base. -/
+def editedSource {Row : Type} (original appended : List Row) (hidden : Row → Bool) : List Row :=
+  (original.filter (fun row => !hidden row)) ++ appended
+
+theorem edited_source_exact {Row : Type} (original appended : List Row)
+    (hidden : Row → Bool) (row : Row) :
+    row ∈ editedSource original appended hidden ↔
+      (row ∈ original ∧ hidden row = false) ∨ row ∈ appended := by
+  simp [editedSource]
+
+theorem remove_source_occurrence {Row : Type} [DecidableEq Row]
+    (original appended : List Row) (hidden : Row → Bool) (row : Row) :
+    (editedSource original appended hidden).filter (fun live => decide (live ≠ row)) =
+      editedSource original (appended.filter (fun live => decide (live ≠ row)))
+        (fun live => hidden live || decide (live = row)) := by
+  simp only [editedSource, List.filter_append, List.filter_filter]
+  congr 1
+  apply congrArg (fun p => original.filter p)
+  funext live
+  by_cases same : live = row <;> cases hidden live <;> simp [same]
+
+theorem append_source_order {Row : Type} (original appended : List Row)
+    (hidden : Row → Bool) (row : Row) :
+    editedSource original (appended ++ [row]) hidden =
+      editedSource original appended hidden ++ [row] := by
+  simp [editedSource, List.append_assoc]
+
+/-- An owner adopts only a completed edit of its expected version. An
+abandoned worker leaves the old cut and version intact. -/
+def edgeEditPublication {Cut : Type} (current : Cut × Nat) (expected : Nat)
+    (next : Cut) (accept : Bool) : Cut × Nat :=
+  if current.2 = expected ∧ accept = true then (next, current.2 + 1) else current
+
+theorem refused_edge_edit_keeps_cut {Cut : Type} (current : Cut × Nat) (expected : Nat)
+    (next : Cut) (refused : accept = false ∨ current.2 ≠ expected) :
+    edgeEditPublication current expected next accept = current := by
+  rcases refused with rfl | stale
+  · simp [edgeEditPublication]
+  · simp [edgeEditPublication, stale]
+
+end VersionedEdgeEdit
+
 variable {Fact Component : Type}
 abbrev Database (Fact : Type) := Fact → Prop
 structure Rule (Fact : Type) where

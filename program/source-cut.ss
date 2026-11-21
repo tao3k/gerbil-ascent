@@ -5,6 +5,8 @@
 ;;; Actor Session source transactions. Cuts own row list spines and dense slot
 ;;; headers. Published cuts are read-only; a failed preparation changes nothing.
 (import (only-in :std/iter for/fold in-list)
+        (only-in :std/struct/rbtree RBTree rbtree-get rbtree-put rbtree-remove
+                 rbtree-empty? rbtree-for-each)
         (only-in :gerbil-ascent/core/relation-view make-relation-view)
         (only-in :gerbil-ascent/core/view-value
                  make-ordered-binary-visitors make-packed-binary-visitors
@@ -13,10 +15,11 @@
 (export gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
         gerbil-ascent-source-cut-update gerbil-ascent-source-cut-scalar?
         gerbil-ascent-source-cut-export-mask gerbil-ascent-source-cut-initial-lane
-        gerbil-ascent-source-cut-terminal-slot
+        gerbil-ascent-source-cut-terminal-slot gerbil-ascent-source-cut-edit-edge
         source-slot-newest-first source-slot-count source-slot-view source-slot-rows
         source-slot-binary-visitor source-slot-validated-binary-view source-slot-packed-extra)
-(defstruct source-slot (lane rows count scalar? view cells) final: #t)
+(defstruct source-slot (lane rows count scalar? view cells journal) final: #t)
+(defstruct edge-journal (base hidden offsets appended next) final: #t)
 (defstruct source-change (position rows count affine) final: #t)
 (defstruct affine-source (count left right left-stride right-stride) final: #t)
 (defstruct source-cut (slots count packed-source recursive-source? alternate))
@@ -26,7 +29,7 @@
 ;;; Force the chronological view only when the declaration needs it.
 ;; : (-> OwnedRows Natural Boolean SourceSlot)
 (def (published-source-slot newest-first count scalar?)
-  (make-source-slot newest-first (delay-atomic (reverse newest-first)) count scalar? #f #f))
+  (make-source-slot newest-first (delay-atomic (reverse newest-first)) count scalar? #f #f #f))
 
 (def (source-slot-newest-first (slot :- source-slot))
   (let (lane slot.lane) (if (promise? lane) (force lane) lane)))
@@ -118,7 +121,7 @@
     (make-source-slot lane (delay-atomic (reverse (force lane))) count #t
       (binary-source-view count (fx> left-stride 0) #t
         (lambda (i) (left-at i)) (lambda (i) (right-at i)) #f)
-      #f)))
+      #f #f)))
 
 (def (fixnum-binary-row? row)
   (and (pair? row) (pair? (cdr row)) (null? (cddr row))
@@ -172,7 +175,7 @@
 (def (make-packed-source-slot cells count ascending? (ordered? #t))
   (let (lane (delay-atomic (packed-source-lane cells)))
     (make-source-slot lane (delay-atomic (reverse (force lane))) count #t
-      (and ordered? (packed-source-view cells count ascending?)) cells)))
+      (and ordered? (packed-source-view cells count ascending?)) cells #f)))
 
 ;; Only the terminal worker calls this after validating distinct source rows.
 (def (source-slot-validated-binary-view (slot :- source-slot))
@@ -196,6 +199,93 @@
         (gerbil-ascent-visit-admitted-view-parts! view [] []
           (lambda (_ left right) (consume left right)))))
      (else #f))))
+
+;; These maps use the persistent STD operations, including for a nested
+;; origin's targets. No published tree or base buffer is ever changed.
+(def (edge-number-order a b) (cond ((< a b) -1) ((> a b) 1) (else 0)))
+(def (edge-map-get tree left right)
+  (alet (targets (rbtree-get tree left)) (rbtree-get targets right)))
+
+(def (edge-map-set tree left right value)
+  (let (targets (or (rbtree-get tree left) (RBTree edge-number-order)))
+    (let (next (if value (rbtree-put targets right value) (rbtree-remove targets right)))
+      (if (rbtree-empty? next) (rbtree-remove tree left) (rbtree-put tree left next)))))
+
+(def (edit-source-slot (slot :- source-slot) insert? left right count)
+  (using (journal (or slot.journal
+                     (let (empty (RBTree edge-number-order))
+                       (make-edge-journal slot empty empty empty 0)))
+                  :- edge-journal)
+    (let* ((base journal.base)
+           (hidden journal.hidden)
+           (offsets journal.offsets)
+           (appended journal.appended)
+           (next journal.next)
+           (at (and (not insert?) (edge-map-get offsets left right))))
+      (cond (insert?
+             (set! offsets (edge-map-set offsets left right next))
+             (set! appended (rbtree-put appended next (cons left right)))
+             (set! next (+ next 1)))
+            (at
+             (set! offsets (edge-map-set offsets left right #f))
+             (set! appended (rbtree-remove appended at)))
+            (else (set! hidden (edge-map-set hidden left right #t))))
+      (let (visit-base (or (source-slot-binary-visitor base)
+                          (lambda (consume)
+                            (for-each (lambda (row) (consume (car row) (cadr row)))
+                                      (force (source-slot-rows base))))))
+        (def (visit consume)
+          (if (rbtree-empty? hidden)
+            (visit-base consume)
+            (visit-base (lambda (a b) (unless (edge-map-get hidden a b) (consume a b)))))
+          (rbtree-for-each (lambda (_ row) (consume (car row) (cdr row))) appended))
+        (def (parts columns key consume)
+          (def (matches? columns key a b)
+            (or (null? columns)
+                (and (equal? (if (= (car columns) 0) a b) (car key))
+                     (matches? (cdr columns) (cdr key) a b))))
+          (visit (lambda (a b) (when (matches? columns key a b) (consume [] a b)))))
+        (def (materialize-lane)
+          (let (rows [])
+            (visit (lambda (a b) (set! rows (cons (list a b) rows))))
+            rows))
+        (def (export) (reverse! (materialize-lane)))
+        (def (copy-fields! destination start)
+          (unless (and (fixnum? start) (<= 0 start)
+                       (<= (+ start (* 2 count)) (s64vector-length destination)))
+            (error "ASCENT source edit buffer span is out of range" start count))
+          (let (i start)
+            (visit (lambda (a b)
+                     (s64vector-set! destination i a)
+                     (s64vector-set! destination (+ i 1) b)
+                     (set! i (+ i 2))))))
+        (def (contains? row)
+          (and (pair? row) (pair? (cdr row)) (null? (cddr row))
+               (let/cc found
+                 (visit (lambda (a b)
+                          (when (and (equal? (car row) a) (equal? (cadr row) b)) (found #t))))
+                 #f)))
+        (let* ((lane (delay-atomic (materialize-lane)))
+               (view (make-relation-view #f #f 0 'total count count
+                       (lambda (columns key consume)
+                         (parts columns key (lambda (_ a b) (consume (list a b)))))
+                       contains? export (make-packed-binary-visitors parts parts export copy-fields!))))
+          (make-source-slot lane (delay-atomic (reverse (force lane))) count #t view #f
+            (make-edge-journal base hidden offsets appended next)))))))
+
+;; Only the Actor owner prepares this cut, against the source identity
+;; certified by the worker's retained graph. Presence is checked there
+;; before the candidate can be published.
+(def (gerbil-ascent-source-cut-edit-edge (cut :- source-cut) position insert? left right limit)
+  (let* ((slots (vector-copy cut.slots))
+         (slot (vector-ref slots position))
+         (delta (if insert? 1 -1))
+         (count (+ cut.count delta)))
+    (when (> count limit) (error "ASCENT actor Session input fact budget exceeded"))
+    (when (and (not insert?) (zero? (source-slot-count slot)))
+      (error "ASCENT actor Session cannot delete a missing edge"))
+    (vector-set! slots position (edit-source-slot slot insert? left right (+ (source-slot-count slot) delta)))
+    (make-source-cut slots count cut.packed-source cut.recursive-source? #f)))
 
 ;; The two slots already own their captured fields. Accept exactly one
 ;; ordered splice and verify the full suffix before returning the edit.

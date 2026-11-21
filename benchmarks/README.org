@@ -96,6 +96,20 @@ cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench ac
 cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-origin
 #+end_src
 
+The versioned-edit controls use those same cuts and check the same
+ordered results and witnesses. They submit one edge against the
+previous completed Result and return the next completed Result. Their
+publish interval includes validation, staging and publication. Compare
+it with the replacement control's per-sample =update= interval, which
+includes both replacement and publication.
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^scc-ten-million-global-edge-edit-test$' benchmarks/scc-bridge-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^scc-ten-million-local-edge-edit-test$' benchmarks/scc-bridge-test.ss
+#+end_src
+
 Use upstream Rust Ascent for the reference column in SCC benchmark results.
 It runs the same two closure rules serially using the workspace dev-dependency
 and verifies the complete sorted result on every edit after timing the first

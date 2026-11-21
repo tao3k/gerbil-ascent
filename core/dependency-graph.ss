@@ -134,10 +134,12 @@
 ;; The low-word and follower transitions are adapted from POO's
 ;; compact-discover. Active cursors retain suffixes of admitted adjacency
 ;; rows, so returning from a child requires neither an arc-ID nor CSR.
-(def (gerbil-ascent-graph-components/borrowed successors checkpoint!)
+;; A restricted traversal marks all vertices outside its roots retired.
+;; Those vertices cannot become children or lower a discovery word.
+(def (gerbil-ascent-graph-components/borrowed successors checkpoint! (selected #f))
   (let* ((count (vector-length successors))
          (infinity (+ (* 2 count) 1))
-         (lows (make-u32vector count 0))
+         (lows (make-u32vector count (if selected infinity 0)))
          (links (make-u32vector count 0))
          (resume (make-vector count []))
          (clock 0) (followers 0) (components []))
@@ -184,13 +186,19 @@
             (let* ((p (fx- parent 1)) (prior (u32vector-ref lows p)))
               (walk p (vector-ref resume p)
                 (if (and (not leader?) (fx< low prior)) (fxior low 1) prior)))))))
-    (let roots ((root 0))
-      (when (fx< root count)
-        (checkpoint!)
-        (when (fx= (u32vector-ref lows root) 0)
-          (let (entered (enter! root 0))
-            (walk root (vector-ref successors root) entered))
-          (unless (fx= followers 0)
-            (error "ASCENT SCC did not retire all followers" root)))
-        (roots (fx+ root 1))))
+    (def (visit-root! root)
+      (checkpoint!)
+      (when (fx= (u32vector-ref lows root) 0)
+        (let (entered (enter! root 0))
+          (walk root (vector-ref successors root) entered))
+        (unless (fx= followers 0)
+          (error "ASCENT SCC did not retire all followers" root))))
+    (if selected
+      (begin
+        (for-each (lambda (v) (checkpoint!) (u32vector-set! lows v 0)) selected)
+        (for-each visit-root! selected))
+      (let roots ((root 0))
+        (when (fx< root count)
+          (visit-root! root)
+          (roots (fx+ root 1)))))
     components))

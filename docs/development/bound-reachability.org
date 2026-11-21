@@ -194,3 +194,38 @@ relating its owner ordinal to the next version. A local partition by
 itself leaves whole-cut validation, source replacement and remapping
 the reachability masks outside that region in place. Measure these
 costs separately before choosing the update path.
+
+** Versioned single-edge edits
+
+Open the Session with =gerbil-ascent-open-condensed-actor-session= and
+run its initial source. Submit an edit as
+=(gerbil-ascent-session-edit-edge! session current-result 'edge 'delete left right)=
+or use ='insert=. The call returns the next published Result.
+The owner compares the caller's completed Result with the current
+publication and admits an edit only on an idle, clean condensed Session.
+Deletion removes one existing edge. Insertion appends one
+absent edge to the source order. Endpoints must be in the admitted
+vertex dictionary. A persistent ordered source journal shares the
+original owned source and retains the surviving additions in insertion
+order. The worker edits a private adjacency row and publishes only on
+owner acceptance. Input, derived and output limits keep their existing
+meaning. A Result and its witnesses retain the source cut they captured.
+
+An intra-component delete partitions only the old component. A path
+between two of its members cannot leave and return through the acyclic
+old quotient. An insertion that closes a quotient cycle merges exactly
+the intersection of the old forward cone of the destination and the
+old reverse cone of the origin. A retained component's immutable member
+list supplies its identity across cuts. Dense mask ordinals are local
+to each cut. The next cut translates the retained direct masks, scans
+the old component's changed members and resolves incoming targets
+that refer to the split component. Merges map the old ordinals to one
+new owner without reading their internal concrete arcs. The resulting
+acyclic quotient supplies the next reachability masks.
+
+The =VersionedEdgeEdit= section of =ComponentClosure.lean= checks the
+induced path, merge cone, direct destination translation, source
+selection and refusal properties. The source keeps cancellation checks
+at the restricted SCC walk, affected edge and quotient traversals and
+owner publication. Native tests check the integrated Session, including
+stale edits, source order, aliasing, resource exhaustion and replay.

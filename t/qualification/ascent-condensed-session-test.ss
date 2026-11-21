@@ -4,6 +4,8 @@
 
 (import (only-in :std/test check test-case test-suite)
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
+        (only-in :std/sync/completion make-completion completion-wait! completion-post!)
+        (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components/borrowed)
         (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation
@@ -11,7 +13,7 @@
         (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
                  gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!)
         (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-condensed-actor-session
-                 gerbil-ascent-session-cancel! gerbil-ascent-session-state
+                 gerbil-ascent-session-cancel! gerbil-ascent-session-state gerbil-ascent-session-edit-edge!
                  gerbil-ascent-session-last-completed gerbil-ascent-session-close!)
         (only-in :gerbil-ascent/program/condensed-closure condensed-witness-vertices))
 (export ascent-condensed-session-test)
@@ -78,6 +80,12 @@
   (check (.ref result 'evaluation-path) => 'condensed-closure)
   (check (.ref result 'closure-update) => update)
   (check (rows result) => expected))
+
+(def (edit-edge session result operation left right)
+  (gerbil-ascent-session-edit-edge! session result 'edge operation left right))
+
+(def (refused? thunk)
+  (with-catch (lambda (_) #t) (lambda () (thunk) #f)))
 
 (def (active-run session)
   (let loop ((remaining 10000))
@@ -288,6 +296,127 @@
                 (check (replay restored proof) => #f)
                 (check (replay restored fresh) => #t)
                 (check (condensed-witness-vertices fresh) => (condensed-witness-vertices proof)))))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "Versioned edits match the full oracle across an interleaved quotient"
+      (let* ((base (append (cycle 12 0) (cycle 12 12) (cycle 12 24)
+                           (cycle 12 36) (cycle 12 48)
+                           '((1 12) (2 24) (13 36) (25 37) (27 48))))
+             (session (gerbil-ascent-open-condensed-actor-session (program base 80 3600 3680))))
+        (try
+          (let* ((prior (gerbil-ascent-session-run session))
+                 (bridge '(47 12))
+                 (joined (append base (list bridge)))
+                 (merged (edit-edge session prior 'insert 47 12))
+                 (proof (witness merged 47 12 8)))
+            (check-result prior (closure-oracle 60 base) 'rebuilt)
+            (check-result merged (closure-oracle 60 joined) 'merged-local)
+            (check (replay merged proof) => #t)
+            (check (refused? (lambda () (edit-edge session prior 'insert 14 39))) => #t)
+            (check (refused? (lambda () (edit-edge session merged 'insert 47 12))) => #t)
+            (check (refused? (lambda () (edit-edge session merged 'delete 47 13))) => #t)
+            (check (refused? (lambda () (edit-edge session merged 'insert 60 12))) => #t)
+            (check (eq? (gerbil-ascent-session-last-completed session) merged) => #t)
+            (let* ((split (edit-edge session merged 'delete 47 12))
+                   (without-first (cdr base))
+                   (removed (edit-edge session split 'delete 0 1))
+                   (ordered (append without-first '((0 1))))
+                   (restored (edit-edge session removed 'insert 0 1)))
+              (check-result split (closure-oracle 60 base) 'split-local)
+              (check-result removed (closure-oracle 60 without-first) 'split-local)
+              (check-result restored (closure-oracle 60 ordered) 'merged-local)
+              (check (replay split proof) => #f)
+              (check (replay merged proof) => #t)
+              (check ((.ref prior 'rows-of) 'edge) => base)
+              (check ((.ref merged 'rows-of) 'edge) => joined)
+              (check ((.ref split 'rows-of) 'edge) => base)
+              (check ((.ref removed 'rows-of) 'edge) => without-first)
+              (check ((.ref restored 'rows-of) 'edge) => ordered)
+              (set-car! (car ((.ref restored 'rows-of) 'edge)) -1)
+              (check ((.ref restored 'rows-of) 'edge) => ordered)
+              (check
+               ((.ref restored 'with-ordered-binary-fields) 'edge
+                 (lambda (count _ copy!)
+                   (let (buffer (make-s64vector (+ 1 (* 2 count)) -1))
+                     (check (refused? (lambda () (copy! buffer 2))) => #t)
+                     (check (s64vector-ref buffer 1) => -1)
+                     (copy! buffer 1)
+                     (check (s64vector->list buffer) => (cons -1 (apply append ordered)))
+                     #t))
+                 #t)
+               => #t)
+              (check (selected-rows restored '(0 1) '(47 12)) => [])))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "An edited cut can reuse an index below the cold admission threshold"
+      (let* ((edges (cycle 32 0))
+             (session (gerbil-ascent-open-condensed-actor-session (program edges 32 1024 1056))))
+        (try
+          (let* ((prior (gerbil-ascent-session-run session))
+                 (split (edit-edge session prior 'delete 31 0))
+                 (without-return (filter (lambda (row) (not (equal? row '(31 0)))) edges))
+                 (self (edit-edge session split 'insert 31 31))
+                 (without-self (edit-edge session self 'delete 31 31))
+                 (still-split (gerbil-ascent-session-run session))
+                 (restored (edit-edge session still-split 'insert 31 0)))
+            (check-result split (closure-oracle 32 without-return) 'split-local)
+            (check-result self (closure-oracle 32 (append without-return '((31 31)))) 'inserted)
+            (check-result without-self (rows split) 'removed)
+            (check-result still-split (rows split) 'reused)
+            (check-result restored (closure-oracle 32 edges) 'merged-local))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "Versioned edge edits keep the cut on each fact limit"
+      (let* ((base (append (cycle 16 0) (cycle 16 16) '((15 16))))
+             (expected (closure-oracle 32 base)))
+        (for-each
+         (lambda (limits)
+           (let (session (gerbil-ascent-open-condensed-actor-session
+                           (apply program base limits)))
+             (try
+               (let* ((prior (gerbil-ascent-session-run session))
+                      (proof (witness prior 15 16 8)))
+                 (check (refused? (lambda () (edit-edge session prior 'insert 31 0))) => #t)
+                 (check (eq? prior (gerbil-ascent-session-last-completed session)) => #t)
+                 (check-result prior expected 'rebuilt)
+                 (check (replay prior proof) => #t))
+               (finally (gerbil-ascent-session-close! session)))))
+         '((33 1024 1060) (40 768 1060) (40 1024 801)))))
+    (test-case "Versioned edge edits keep the published cut on work refusal and cancellation"
+      (let* ((base (append (cycle 16 0) (cycle 16 16) '((15 16) (31 0))))
+             (session (gerbil-ascent-open-condensed-actor-session (program base 40 1100 1200))))
+        (try
+          (let* ((prior (gerbil-ascent-session-run session))
+                 (proof (witness prior 31 0 8))
+                 (started (make-completion 'edge-edit-started))
+                 (proceed (make-completion 'edge-edit-proceed)))
+            (check
+             (refused?
+              (lambda ()
+                (parameterize ((current-ascent-execution-control
+                                (lambda (work _) (when (> work 0) (error "work refused")))))
+                  (edit-edge session prior 'delete 31 0))))
+             => #t)
+            (check (eq? prior (gerbil-ascent-session-last-completed session)) => #t)
+            (let (caller
+                  (spawn
+                   (lambda ()
+                     (let (first? #t)
+                       (refused?
+                        (lambda ()
+                          (parameterize ((current-ascent-execution-control
+                                          (lambda (work _)
+                                            (when (and first? (> work 0))
+                                              (set! first? #f)
+                                              (completion-post! started #t)
+                                              (completion-wait! proceed)))))
+                            (edit-edge session prior 'delete 31 0))))))))
+              (completion-wait! started)
+              (check (gerbil-ascent-session-cancel! session) => 'draining)
+              (completion-post! proceed #t)
+              (check (thread-join! caller) => #t))
+            (check (eq? prior (gerbil-ascent-session-last-completed session)) => #t)
+            (check (replay prior proof) => #t)
+            (let (next (edit-edge session prior 'delete 31 0))
+              (check (replay next proof) => #f)
+              (check (witness next 31 0 32) => #f)))
           (finally (gerbil-ascent-session-close! session)))))
     (test-case "Derived and output exhaustion preserve the last committed index and witness"
       (let* ((edges (append (cycle 20 0) (cycle 20 20)))

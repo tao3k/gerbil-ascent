@@ -7,7 +7,8 @@
         (only-in :std/sync/completion make-completion completion-wait! completion-post!)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components/borrowed)
+        (only-in :gerbil-ascent/core/dependency-graph
+                 gerbil-ascent-graph-components/borrowed gerbil-ascent-graph-components/packed)
         (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-variable gerbil-ascent-rule gerbil-ascent-atom)
         (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
@@ -108,8 +109,15 @@
             (iota 9))
            (let* ((saved (vector-copy adjacent))
                   (groups (gerbil-ascent-graph-components/borrowed adjacent void))
+                  (packed (vector-map list->u16vector adjacent))
                   (owner (make-vector 3 #f))
                   (reached (closure-oracle 3 edges)))
+             (check (gerbil-ascent-graph-components/packed packed void) => groups)
+             (for-each
+              (lambda (subset)
+                (check (gerbil-ascent-graph-components/packed packed void subset)
+                       => (gerbil-ascent-graph-components/borrowed adjacent void subset)))
+              '(() (0) (1) (2) (0 1) (0 2) (1 2) (0 1 2)))
              (for-each
               (lambda (group rank)
                 (for-each (lambda (v)
@@ -345,6 +353,27 @@
                  #t)
                => #t)
               (check (selected-rows restored '(0 1) '(47 12)) => [])))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "Packed successors preserve witness order and the exact probe budget"
+      (let* ((base 100000)
+             (edges (append (cycle 32 base)
+                      '((100000 100008) (100000 100016) (100008 100024) (100016 100024))))
+             (session (gerbil-ascent-open-condensed-actor-session (program edges 40 1024 1064))))
+        (try
+          (let* ((prior (gerbil-ascent-session-run session))
+                 (first (witness prior 100000 100024 6))
+                 (removed (edit-edge session prior 'delete 100000 100008))
+                 (second (witness removed 100000 100024 5))
+                 (restored (edit-edge session removed 'insert 100000 100008)))
+            (check (witness prior 100000 100024 5) => #f)
+            (check (condensed-witness-vertices first) => '(100000 100008 100024))
+            (check (witness removed 100000 100024 4) => #f)
+            (check (condensed-witness-vertices second) => '(100000 100016 100024))
+            (check (condensed-witness-vertices (witness restored 100000 100024 6))
+                   => '(100000 100008 100024))
+            (check (replay prior first) => #t)
+            (check (replay removed first) => #f)
+            (check (replay restored second) => #f))
           (finally (gerbil-ascent-session-close! session)))))
     (test-case "An edited cut can reuse an index below the cold admission threshold"
       (let* ((edges (cycle 32 0))

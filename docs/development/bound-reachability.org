@@ -117,9 +117,9 @@ The [[https://github.com/tao3k/gerbil-poo/blob/30fe206fcdf93c21d94ad00682a26150c
 flag bit. On postvisit the active parent link is read before a vertex
 becomes a follower or retires. A leader retires its eligible followers,
 and retired vertices cannot lower an active discovery word. The ASCENT
-repair traversal uses the same state transitions over existing adjacency
-list cursors. It keeps the current dense ordinals and does not acquire a
-symbol roster or convert the rows to CSR.
+repair traversal uses the same state transitions for list suffixes and
+packed row offsets. The condensed Session walks its existing packed rows
+and keeps the current dense ordinals.
 
 A verified reverse bridge deletion or restoration copies the adjacency
 vector header and edits only the affected origin row. Every other row
@@ -229,3 +229,37 @@ selection and refusal properties. The source keeps cancellation checks
 at the restricted SCC walk, affected edge and quotient traversals and
 owner publication. Native tests check the integrated Session, including
 stale edits, source order, aliasing, resource exhaustion and replay.
+
+** Live roots during a full-component split
+
+A published result carries its own admitted source and the index used
+by its witness. During an edit, the Session also keeps the last
+completed result until the worker passes owner acceptance. The
+source journal shares its numeric base, and the two adjacency headers
+share every unchanged outgoing row. The full-component benchmark
+holds the caller's original fact list through the edit. A bound
+first-origin visit follows the retained index without constructing
+the whole logical closure.
+
+The phase observation uses the SDK's post-collection hook with counters
+only. Matched retained-root controls hold the loaded test, caller list,
+source slots, adjacency, or completed Results across collections. The
+controls identify differences in accounted live bytes and GC time.
+The runtime does not tag scanned bytes with Scheme ownership or retain
+an object census for an earlier pause.
+
+The condensed index owns packed successor rows. Only dense ordinals
+below 8,192 occupy the unsigned 16-bit cells, and the ordered label
+table keeps caller labels at their original width. The shared SCC
+walker resumes a packed row by an offset with the same meaning as
+the previous ordered list suffix. =splice-neighbor= copies the
+changed row, and the edit borrows every unchanged row through its
+new adjacency header. The previously published index remains available
+for witness replay and rollback. Public row and witness lists keep
+their existing ownership and order.
+
+The packed-row theorems in =SccState.lean= check the ordinal round trip,
+cursor suffix, splice order and unchanged rows. The same model counts
+201,713 successor pairs across the fixture's two initially held
+adjacencies and 3,201 buffers for the packed form. The latter store
+unboxed ordinals. Neither object count measures collector scan bytes.

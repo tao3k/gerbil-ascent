@@ -122,6 +122,64 @@ theorem unchanged_rows_borrowed (neighbors : Nat → List Nat) (origin source : 
     editOrigin neighbors origin row source = neighbors source := by
   simp [editOrigin, other]
 
+/-- Only internal vertex ordinals are packed. The caller's integer
+labels remain in the existing inverse dictionary. -/
+def decodeNeighbors (row : List UInt16) : List Nat :=
+  row.map UInt16.toNat
+
+theorem bounded_packed_row_exact (row : List Nat)
+    (bounded : ∀ v ∈ row, v < 8192) :
+    decodeNeighbors (row.map UInt16.ofNat) = row := by
+  induction row with
+  | nil => rfl
+  | cons first rest ih =>
+    have small : first < UInt16.size := by
+      have bound := bounded first (List.mem_cons_self)
+      change first < 65536
+      omega
+    have tail : ∀ v ∈ rest, v < 8192 :=
+      fun v h => bounded v (List.mem_cons_of_mem _ h)
+    change (UInt16.ofNat first).toNat :: decodeNeighbors (rest.map UInt16.ofNat) = first :: rest
+    rw [UInt16.toNat_ofNat_of_lt' small, ih tail]
+
+/-- A packed DFS frame retains the next offset. The old frame retained
+the corresponding ordered suffix. Resuming either enumerates the same
+targets, including after descending into a child. -/
+theorem packed_cursor_suffix (row : List UInt16) (next : Nat) :
+    decodeNeighbors (row.drop next) = (decodeNeighbors row).drop next := by
+  simp [decodeNeighbors, List.map_drop]
+
+/-- Copying a prefix and suffix around the edit preserves the exact
+successor order and thus the traversal and bounded witness order. -/
+theorem packed_row_splice (row inserted : List UInt16) (before skip : Nat) :
+    decodeNeighbors (row.take before ++ inserted ++ row.drop (before + skip)) =
+      (decodeNeighbors row).take before ++ decodeNeighbors inserted ++
+        (decodeNeighbors row).drop (before + skip) := by
+  simp [decodeNeighbors, List.map_take, List.map_drop]
+
+theorem packed_edit_borrows_other_rows (rows : Nat → List UInt16)
+    (origin other : Nat) (replacement : List UInt16) (unchanged : other ≠ origin) :
+    decodeNeighbors (if other = origin then replacement else rows other) =
+      decodeNeighbors (rows other) := by
+  simp [unchanged]
+
+/-- Count distinct successor cells under the two retained adjacency
+headers, independently of the collector's accounted-byte convention.
+When one row changes, every other row remains shared. -/
+def heldListEdgePairs (degrees : List Nat) (copiedPrefix : Nat) : Nat :=
+  degrees.sum + copiedPrefix
+
+def heldPackedRowBuffers (degrees : List Nat) : Nat := degrees.length + 1
+
+theorem packed_fixture_object_counts :
+    heldListEdgePairs (List.replicate 3150 63 ++ List.replicate 50 64) 63 = 201713 ∧
+    heldPackedRowBuffers (List.replicate 3150 63 ++ List.replicate 50 64) = 3201 := by
+  constructor
+  · unfold heldListEdgePairs
+    rw [List.sum_append, List.sum_replicate_nat, List.sum_replicate_nat]
+  · unfold heldPackedRowBuffers
+    rw [List.length_append, List.length_replicate, List.length_replicate]
+
 theorem path_first_edge {edge : Vertex → Vertex → Prop} {a b : Vertex}
     (path : Path edge a b) (distinct : a ≠ b) : ∃ v, edge a v := by
   cases path with

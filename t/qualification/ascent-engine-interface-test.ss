@@ -2,6 +2,9 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :std/encoding/json :gerbil-ascent/interface/engine-api
+        (only-in :gerbil-ascent/core/view-value make-relation-view make-ordered-binary-visitors
+                 gerbil-ascent-view-with-export)
+        (only-in :gerbil-ascent/program/result gerbil-ascent-make-published-result)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control))
 (export ascent-engine-interface-test)
 (def (request value)
@@ -41,6 +44,16 @@
     (hash-ref
      (ascent-engine-call (hash ("operation" "open-sources") ("sources" (list source))))
      "handle")))
+
+(def (open-ordered-projection)
+  (hash-ref
+   (ascent-engine-call
+    (hash ("operation" "open-sources")
+          ("sources" '("(ascent (relation edge (from to) '()) (relation reach (from to)) ((reach x y) <-- (edge x y)) (bounds 2048 2048 4096))"))))
+   "handle"))
+
+(def (ordered-rows offset)
+  (map (lambda (i) (list (- offset i) (+ offset (* 2 i)))) (iota 2048)))
 
 (def (source-run handle duration (packed-rows? #f))
   (ascent-engine-call
@@ -125,6 +138,66 @@
 
 (def ascent-engine-interface-test
   (test-suite "Public inert engine contract for C ABI consumers"
+    (test-case "a different complete exporter takes precedence over the old field order"
+      (let* ((emit (lambda (_columns _key consume) (consume [] 1 2) (consume [] 3 4)))
+             (export (lambda () (list (list 1 2) (list 3 4))))
+             (original (make-relation-view #f #f 0 'total 2 2 void void export
+                         (make-ordered-binary-visitors emit emit export)))
+             (reordered (gerbil-ascent-view-with-export original
+                          (lambda () (list (list 3 4) (list 1 2))))))
+        (def (packet view)
+          (let (result (gerbil-ascent-make-published-result '#(reach) '#(2) (vector view) '#(2)
+                         [] '#(fixture () 0 #f) (lambda (_) 0) #t #t))
+            (ascent-engine-relation-answer result 'reach #t values)))
+        (check-equal? (s64vector->list (packet original)) '(2 2 1 2 3 4))
+        (check-equal? (s64vector->list (packet reordered)) '(2 2 3 4 1 2))
+        (for-each
+         (lambda (count)
+           (let (broken (make-relation-view #f #f 0 'total count count void void export
+                           (make-ordered-binary-visitors emit emit export)))
+             (check-exception (packet broken) true)))
+         '(1 3))))
+    (test-case "ordered binary replies preserve descending order and the previous generation's bytes"
+      (let ((handle (open-ordered-projection)) (before (ordered-rows 7)) (after (ordered-rows -5)))
+        (try
+          (begin
+            (source-run handle 1000000000)
+            (replace-edges! handle before)
+            (let* ((first (source-run handle 0 #t)) (packet (rows first "reach"))
+                   (expected (append '(2048 2) (apply append before)))
+                   (checks 0))
+              (check-equal? (hash-ref first "executionRuntime") "actor")
+              (check-equal? (s64vector->list packet) expected)
+              (check-equal? (rows (source-run handle 0) "reach") before)
+              (parameterize ((current-ascent-execution-control
+                              (lambda (work _facts)
+                                (when (= work 0) (set! checks (+ checks 1)))
+                                (when (= checks 4) (error "cancel during ordered packet")))))
+                (check-equal?
+                 (with-catch error-message (lambda () (source-run handle 0 #t)))
+                 "cancel during ordered packet"))
+              (check-equal? checks 4)
+              (check-exception (replace-edges! handle (cons '(2048 4096) before)) true)
+              (let (unchanged (source-run handle 0 #t))
+                (check-equal? (hash-ref unchanged "runIndex") (+ 2 (hash-ref first "runIndex")))
+                (check-equal? (hash-ref unchanged "sourceGeneration") (hash-ref first "sourceGeneration")))
+              (set! checks 0)
+              (parameterize ((current-ascent-execution-control
+                              (lambda (work _facts)
+                                (when (= work 0)
+                                  (set! checks (+ checks 1))
+                                  (when (= checks 4)
+                                    (parameterize ((current-ascent-execution-control #f))
+                                      (replace-edges! handle after)))))))
+                (check-equal?
+                 (with-catch error-message (lambda () (source-run handle 0 #t)))
+                 "ASCENT source changed during result delivery"))
+              (let (next (source-run handle 0 #t))
+                (check-equal? (hash-ref next "sourceGeneration") (+ 1 (hash-ref first "sourceGeneration")))
+                (check-equal? (s64vector->list (rows next "reach")) (append '(2048 2) (apply append after)))
+                (check-equal? (s64vector->list packet) expected))))
+          (finally
+            (ascent-engine-call (hash ("operation" "close") ("handle" handle)))))))
     (test-case "input projection does not require a completed Actor result"
       (let (handle (open-reachability '((0 1) (1 2) (2 3)) 16))
         (try

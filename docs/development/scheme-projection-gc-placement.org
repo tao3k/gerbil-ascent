@@ -1,0 +1,204 @@
+#+title: Collection placement in the fixed Scheme projection
+
+* Which costs can move
+
+The 220 natural export collections from the fixed one-million-row
+projection were paired to their output suffixes. GC elapsed time alone
+crossed the 100 ms bound in 110 requests. Of those, 78 also spent at least
+100 ms of GC CPU. The remaining 32 crossed in wall time with a smaller
+CPU charge.
+
+| Rows already emitted | Collecting requests | GC wall at least 100 ms | GC CPU at least 100 ms |
+|----------------------+---------------------+-------------------------+------------------------|
+| Below 32,768 | 19 | 2 | 0 |
+| 32,768 to under 250,000 | 101 | 28 | 4 |
+| 250,000 to under 500,000 | 73 | 53 | 47 |
+| 500,000 to under 750,000 | 19 | 19 | 19 |
+| 750,000 and above | 8 | 8 | 8 |
+
+=program/source-cut.ss:make-affine-source-slot= admits two numeric
+descriptors across the alternating replacements. In
+=binary-source-view:export= the loop reads the two numbers and links a
+fresh row to the invocation's output accumulator. The existing
+weak-root and loader controls identify two caller-owned input lists,
+loader metadata and the required output suffix. An extra reference
+to the inputs contributes no additional reachable cells according to
+=redundant_projection_root_no_reachable_saving=. The steady affine
+cut has no packed alternate or forced memoized row lane.
+
+One remaining question is whether the collector can do the same work
+when the accumulator is empty. The Scheme view and caller can determine
+that boundary before the first allocation. The active heap, callbacks
+and other threads still belong to the VM. The diagnostic therefore calls
+the existing SDK collection primitive at chosen boundaries. It charges
+that work to the request and retains the same inputs, returned list,
+row oracle, heap cap and watchdog. The original exporter and acceptance
+caller are separate builds.
+
+=moving_projection_collection_to_boundary= states the pair-word savings
+from a zero-length suffix, with both caller inputs still present.
+=projection_boundary_needs_pause_saving= gives the strict gate condition
+for a pause moved within a request while other measured work is fixed.
+A pause of 90 ms still misses the complete-query gate when the remaining
+work costs at least 10 ms. The source and the two proofs leave the actual
+pause and the feasibility of safe placement to the matched comparison.
+
+* Boundary and cadence controls
+
+The cache-only diagnostic loads the fixed SDK, the normal Session and
+the compiled native test fixture. Each lane verifies all one million
+rows on each of 100 alternating source replacements. The collector call
+is issued at export entry or at exactly 524,288 emitted rows. The
+instrumentation uses the same accumulator and pair construction in
+both arms. Fixed intervals of three, four and five distinguish moving
+the pause from collecting on every request. Both caller-held inputs
+stay live in every lane.
+
+| Placement | Explicit export GCs | Remaining natural export GCs | Pre-oracle P95 ms | Complete P95 ms | Requests at or above 100 ms |
+|-----------+---------------------+------------------------------+-------------------+-----------------+-----------------------------|
+| Natural diagnostic control | 0 | 21 | 125.06 | 137.76 | 21 |
+| Entry on every request | 100 | 0 | 114.24 | 127.00 | 100 |
+| 524,288 rows on every request | 100 | 0 | 128.50 | 145.73 | 100 |
+| Entry every third request | 33 | 0 | 102.02 | 114.25 | 33 |
+| Entry every fourth request | 25 | 2 | 105.66 | 118.48 | 27 |
+| Entry every fifth request | 20 | 4 | 98.70 | 109.69 | 24 |
+
+At the same frequency of one collection per export, moving the pause
+from 524,288 rows to zero removed 72.28 MiB from the median accounted
+live extent (492.97 to 420.68 MiB). Pause wall medians were 108.54 and
+95.73 ms, respectively. The caller and module baseline therefore still
+dominates an empty-output collection.
+
+Every fifth request had the lowest observed full-query P95 of the
+explicit cadences. All twenty forced requests still crossed 100 ms
+in their paired phase clocks. The forced GC wall median was 89.86 ms
+and the measured remainder median was 14.98 ms on those same requests.
+The four additional natural export collections also crossed the bound
+in their complete requests. The 98.70 ms pre-oracle result accounts
+for fewer stages than the release gate. The production path continues
+to use natural collection. These are 100-request placement diagnostics;
+the release fixtures still run 1,000 native requests.
+
+* Native acceptance
+
+The native tests ran after the placement diagnostics with the fixed
+Gerbil =1cfb032= and Gambit =ea114fc= SDK. The uninstrumented affine
+exporter verified all rows in each of 1,000 complete requests.
+
+| Gate | Verified requests | GC elapsed | P95 | Status |
+|------+-------------------+------------+-----+--------|
+| Pure projection | 1,000 | 20.42 s | 114.62 ms | Fail |
+| Recursive export | 1,000 | 16.90 s | 87.27 ms | Pass |
+
+The SCC control passed, with bridge deletion and restoration publication
+P95 of 1.166 and 1.361 ms. The corresponding first-origin reads were
+16.88 and 28.13 us. The original 90-second watchdog, 2 GiB heap cap and
+strict 100 ms threshold apply to both million-row gates. The projection
+gate remains the publication blocker for PR #2.
+
+Full native qualification completed 185 modules and 1,576 cases.
+The guarded Lean build completed 195 jobs, including the two placement
+theorems. The runtime modules match the preceding compiled source digests.
+
+The raw phase, prefix and forced-collection receipts are retained in
+=.cache/ascent/projection-gc-placement/=.
+
+* Follow-up after the bound-query optimization
+
+The original pure projection still reported 118.052 ms P95 on the
+frozen runtime. The bound-query optimization exercises another kernel.
+The unchanged recursive export passed at 88.167 ms. The exact projection
+fixture alternates two prebuilt source lists and verifies all 1,000
+detached million-row results. Its timer includes replacement, publication,
+export, and the independent bitmap oracle.
+
+The source cut already stores the admitted projection as a row count and
+two affine fields. The =binary-source-view= exporter allocates the final
+caller-owned list in one traversal. =million_projection_word_counts= in
+=MillionQueryWorkload.lean= accounts for nine million pair words for that
+result, using three independent cons cells per binary row. The two caller
+lists retain eighteen million pair words before export begins. The root
+probes measured the effects of caller lists, the output suffix, and loader
+metadata separately. No change to ASCENT's references was identified that
+would release those independently retained objects.
+
+** Paired timing and the remaining collector budget
+
+A diagnostic build of the existing native fixture brackets each phase
+and records the runtime's own collector elapsed and CPU clocks. It keeps
+the same two source lists, one VM processor, 2 GiB heap cap, 90-second
+watchdog, result format and independent row oracle. It verified all 1,000
+results. Its standalone P95 was 121.330 ms, with 121.206 ms at P95 for
+the sum of the paired phase brackets. Acceptance continues to use the
+uninstrumented Case.
+
+| Phase | Wall total over 1,000 requests | Wall P95 |
+|-------+-------------------------------+----------|
+| Source replacement | 2.158 s | 2.696 ms |
+| Run and publish | 0.205 s | 0.277 ms |
+| Detached export | 23.938 s | 107.107 ms |
+| Independent oracle | 11.639 s | 14.214 ms |
+| Collector inside detached export | 21.664 s | 104.528 ms |
+
+The collector ran inside 211 exports. It spent at least 100 ms of wall
+time in 95 requests and at least 100 ms of CPU time in 63. The strict
+rank permits 50 such requests in a window of 1,000. The premise of
+=RuntimeMeasurement.bounded_phase_misses_p95= therefore already holds
+for GC CPU on this sample. Per-request subtraction gives a P95 of
+118.794 ms if every non-GC part of the exporter is made free. Charging
+only GC CPU inside the collector, with the remaining request time
+fixed, gives 118.816 ms. These counterfactuals preserve the measured
+collections and are useful for identifying which part must change.
+
+For each measured request, subtract the time outside export GC from
+100 ms to get its collector budget. Scaling only its export GC wall
+time by a shared factor passes when at least 950 of the 1,000 paired
+requests are strictly below the bound. The observed break-even factor
+is 0.798999, so the current sample needs more than 20.10 percent lower
+export GC wall time at fixed cadence and remainder. Earlier phase
+receipts give 22.47 and 32.17 percent by the same calculation. A runtime
+candidate may change the cadence and must therefore pass the actual
+original gate. These values are diagnostic targets, with the strict
+100 ms threshold still governing acceptance.
+
+** Implementation and acceptance sequence
+
+The existing delivery suites compared complete lists and positional
+fields with the same independent ordered oracle. Both consumed
+one billion two-field rows from the same alternating inputs. This
+comparison uses the ordered delivery oracle in both arms. The original
+projection gate uses its existing bitmap oracle.
+
+| Delivery | First-row P95 | Complete P95 | Maximum | Verified rows/s | Collections |
+|----------+---------------+--------------+---------+-----------------+-------------|
+| Detached list | 111.532 ms | 119.812 ms | 175.404 ms | 27,340,108 | 215 |
+| Positional fields | 5.111 ms | 19.224 ms | 60.257 ms | 74,230,083 | 0 |
+
+The field run passed the delivery Case and exited normally. The list
+run verified all rows and failed its 100 ms assertion. The runtime
+reported a negative raw allocation delta in the field run. That counter
+has no verified byte interpretation in this run. The reported collection
+counts are read separately from the allocation counter.
+
+1. Use the existing positional-field visitor for production consumers
+   that consume or serialize fields synchronously. One published result
+   pins the traversal to its source version. Consumers requesting a
+   mutable detached list continue through =rows-of=.
+2. For the existing signed-integer packet boundary, avoid the intermediate
+   call to =rows-of= where an owned binary view certifies the same order
+   as complete export. Use the published count and write the positional
+   fields directly into the existing packet. The fallback continues to
+   handle all other shapes. Validate packet headers, order, integer
+   bounds, exact counts, old-version isolation and cancel-before-reply.
+   Gate the change by comparing the same client output, including packet
+   decoding and delivery, while keeping the existing Scheme list gate.
+3. For a candidate Gambit release, start with the two independently held
+   source lists and the detached result. Remeasure scanning, copying,
+   GC CPU, and elapsed pause durations before evaluating the complete
+   uninstrumented gate. Require both original million-row suites to
+   verify all 1,000 requests and exit naturally under the same cap and
+   watchdog. Reuse the phase comparisons to attribute a gain to pause
+   duration or collection frequency on the same workload.
+
+The paired raw receipt and the per-request calculation are retained in
+=.cache/ascent/projection-decision/=.

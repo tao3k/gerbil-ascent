@@ -3220,8 +3220,7 @@ def sourceRowSelectionQuintSource : String :=
   "    ready or (requested and not(actor))\n"
 
 def sourceRowSelectionCallSource : String :=
-  "                (and (source-row-packet? packed-rows? actor? pack?)\n" ++
-  "                     (pack-integer-rows rows))\n"
+  "                (source-row-packet? packed-rows? actor? pack?)\n"
 
 theorem unpack_has_exact_size (width count : Nat) (cells : List Int) (rows : List (List Int))
     (accepted : unpack width count cells = some rows) :

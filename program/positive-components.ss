@@ -7,11 +7,12 @@
 (import "component-plan.ss"
         (only-in :gerbil-ascent/core/execution-policy gerbil-ascent-component-ready)
         (only-in :std/iter for/fold in-list)
+        (only-in :std/struct/pqueue make-PQueue pqueue-push! pqueue-pop!)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-advance!
                  gerbil-ascent-make-source-row-indexes row-indexes-recycle-source!
                  source-row-indexes-bind!)
         (only-in "component-worker.ss" gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!)
-        (only-in "actor-round.ss" gerbil-ascent-run-actor-round!))
+        (only-in "actor-round.ss" gerbil-ascent-run-actor-ready-round!))
 (export gerbil-ascent-positive-components gerbil-ascent-compile-positive-components
         gerbil-ascent-component-mode? gerbil-ascent-run-positive-components!
         positive-component-id positive-component-members positive-component-rules positive-component-predecessors)
@@ -128,6 +129,7 @@
          (remaining (make-vector (length components) 0))
          (snapshots (make-vector (length components) #f))
          (assigned (filter (lambda (component) (pair? (positive-component-rules component))) components))
+         (ready (and (pair? assigned) (pair? (cdr assigned)) (make-PQueue values)))
          (source-indexes
           (and scalar-source-owner? (= workers 1) (pair? assigned)
                ;; A retained index can amortize even one consumer across runs.
@@ -164,7 +166,15 @@
                 (vector-set! remaining (positive-component-id component)
                   (for/fold (blocked 0) (id (in-list (positive-component-predecessors component)))
                     (+ blocked (if (pair? (positive-component-rules (vector-ref by-id id))) 1 0))))) components)
-    (gerbil-ascent-run-actor-round!
+    ;; The minimum ready id matches the former first-ready scan. After the
+    ;; initial seed, only the final predecessor completion can enqueue a task.
+    (when ready
+      (for-each (lambda (component)
+                  (let (id (positive-component-id component))
+                    (when (gerbil-ascent-component-ready (vector-ref remaining id))
+                      (pqueue-push! ready id))))
+                assigned))
+    (gerbil-ascent-run-actor-ready-round!
      (vector analysis initial 'components)
      assigned workers
      (lambda (component emit! checkpoint!)
@@ -193,8 +203,16 @@
          ;; needed for dependency admission or round cleanup.
          (vector-set! snapshots id #f)
          (for-each (lambda (successor)
-                     (vector-set! remaining successor (- (vector-ref remaining successor) 1)))
-                   (positive-component-successors component)))))
+                     (let (blocked (- (vector-ref remaining successor) 1))
+                       (vector-set! remaining successor blocked)
+                       (when (and ready (gerbil-ascent-component-ready blocked)
+                                  (pair? (positive-component-rules (vector-ref by-id successor))))
+                         (pqueue-push! ready successor))))
+                   (positive-component-successors component))))
+     (and ready
+          (lambda ()
+            (let (id (pqueue-pop! ready #f))
+              (and id (vector-ref by-id id))))))
     ;; A changed source can go unprobed after replacement or an empty join
     ;; prefix. Once the round joins, release every obsolete root it skipped.
     (when retained-source-indexes

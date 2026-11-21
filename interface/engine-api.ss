@@ -35,7 +35,8 @@
 (import (only-in "../rules/closed-source.ss" ascent-closed-guard-description)
         :gerbil-ascent/core/execution-control
         :gerbil-ascent/program/aggregators)
-(export ascent-engine-dispatch ascent-engine-program-wire ascent-engine-call)
+(export ascent-engine-dispatch ascent-engine-program-wire ascent-engine-call
+        ascent-engine-relation-answer)
 (defstruct api-session (engine sources queries actor?))
 (def sessions (make-hash-table-eqv))
 (defstruct source-state (queries descriptors generation last-result runs program explain results sources names projection-cache))
@@ -378,6 +379,38 @@
 
 ;; END GENERATED ACTOR INTEGER ROWS
 
+(def (pack-ordered-binary-fields count visit)
+  (let (size (+ 2 (* 2 count)))
+    (and (> count 0) (fixnum? size) (<= size 9223372036854775807)
+         (begin
+           (ascent-execution-checkpoint!)
+           (let ((packet (make-s64vector size)) (cursor 2)
+                 (controlled? (current-ascent-execution-control)))
+             (s64vector-set! packet 0 count)
+             (s64vector-set! packet 1 2)
+             (visit
+              (lambda (left right)
+                (when (fx>= cursor size) (error "ASCENT ordered field count exceeded"))
+                (when (and controlled? (fx= (fxand (fx- cursor 2) 2047) 0))
+                  (ascent-execution-checkpoint!))
+                (unless (and (fixnum? left) (fixnum? right))
+                  (error "ASCENT ordered packet requires fixnum fields"))
+                ;; The cursor starts at two and advances by two. An admitted
+                ;; even extent leaves room for both fields at every write.
+                (##s64vector-set! packet cursor left)
+                (##s64vector-set! packet (fx+ cursor 1) right)
+                (set! cursor (fx+ cursor 2))))
+             (unless (fx= cursor size) (error "ASCENT ordered field count incomplete"))
+             (ascent-execution-checkpoint!)
+             packet)))))
+
+;; The private packet branch shares the published view's order and never
+;; invokes its list exporter. All other replies use the existing conversion.
+(def (ascent-engine-relation-answer result name packet? ordinary)
+  (or (and packet? ((.ref result 'with-ordered-binary-fields) name pack-ordered-binary-fields))
+      (let (rows ((.ref result 'rows-of) name))
+        (or (and packet? (pack-integer-rows rows)) (ordinary rows)))))
+
 ;; BEGIN GENERATED PROJECTION ROWS
 (def (pack-projection-rows! program requested)
   ;; Only fresh private wire dictionaries enter here, after complete capture.
@@ -428,7 +461,8 @@
 (def (source-run request packed-rows?)
   (let-values (((session state) (source-lookup request)))
     (let* ((queries (unique (map (cut source-name state <>) (hash-ref request "queries"))))
-           (duration (hash-ref request "timeoutNanoseconds" 1000000000)))
+           (duration (hash-ref request "timeoutNanoseconds" 1000000000))
+           (generation (source-state-generation state)))
       (unless (and (<= (length queries) 128)
                    (andmap (lambda (n) (memq n (source-state-queries state))) queries)
                    (exact-integer? duration) (<= 0 duration 1000000000))
@@ -445,24 +479,25 @@
              (scalar-projection? #t))
         (for-each
          (lambda (n)
-           (let (rows ((.ref result 'rows-of) n))
-             (hash-put! answers (source-label state n)
-               (or
+           (hash-put! answers (source-label state n)
+             (ascent-engine-relation-answer result n
                 ;; BEGIN GENERATED SOURCE ROW SELECTION
-                (and (source-row-packet? packed-rows? actor? pack?)
-                     (pack-integer-rows rows))
+                (source-row-packet? packed-rows? actor? pack?)
                 ;; END GENERATED SOURCE ROW SELECTION
-                (map (lambda (row)
-                       (map (lambda (v)
-                              (cond ((interned-symbol? v) (symbol->string v))
-                                    ((or (string? v) (exact-integer? v) (boolean? v)) v)
-                                    (else
-                                     (set! scalar-projection? #f)
-                                     (hash ("encoding" "owned-result-reference")))))
-                            row))
-                     rows)))))
+                (lambda (rows)
+                  (map (lambda (row)
+                         (map (lambda (v)
+                                (cond ((interned-symbol? v) (symbol->string v))
+                                      ((or (string? v) (exact-integer? v) (boolean? v)) v)
+                                      (else
+                                       (set! scalar-projection? #f)
+                                       (hash ("encoding" "owned-result-reference")))))
+                              row))
+                       rows)))))
          queries)
         (ascent-accept-publication!)
+        (unless (= generation (source-state-generation state))
+          (error "ASCENT source changed during result delivery"))
         (source-state-runs-set! state (+ (source-state-runs state) 1))
         (let (reused (and (.ref result 'finished) (eq? result (source-state-last-result state))))
           (when (.ref result 'finished) (source-state-last-result-set! state result))

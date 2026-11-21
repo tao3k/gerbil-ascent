@@ -23,6 +23,87 @@ Existing semantic and performance gates remain required. The million-request
 and sub-100-ms large-query targets require production evidence; neither follows
 from a model proof or the configuration checks.
 
+* Recursive query at fixed output size
+
+Run the native 10,000-row closure Suite directly:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-ten-thousand-closure-test$' benchmarks/actor-million-test.ss
+#+end_src
+
+Two Cases alternate source cuts and check every output row in each of 1,000
+complete requests. Both produce the same 10,000-row closure. Redundant edges
+in the second Case make the input non-functional. A third Case appends one
+redundant edge per request and checks both the growing source count and the
+unchanged closure. The receipts separately report the source update,
+evaluation and publication, detached export and oracle time.
+
+The serial upstream Rust Ascent comparison uses the release benchmark target
+=actor_closure=. It uses the same base, branch and sparse append datasets,
+checks the source size and verifies all result rows without sorting.
+
+#+begin_src sh
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure
+#+end_src
+
+The default Rust cases solve a fresh cut. The separate =--retained= control
+appends to the native relation and invokes =run()= on the same program.
+Native output is a detached vector of typed tuples. Gerbil output is a
+detached Scheme list of pairs. Count and value checks match across both;
+the CPU cost of these output representations is included in delivery.
+
+* SCC bridge edits and bound reads
+
+Run each Scheme query shape through the native test command. Each uses 26
+strongly connected groups of 64 vertices and the same 25 directed bridges.
+The cases time 32 removals and restorations of the central bridge. The
+double-bound case also times 1,000 same-version hits and misses.
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^scc-bound-query-test$' benchmarks/scc-bridge-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^scc-first-origin-test$' benchmarks/scc-bridge-test.ss
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-bound
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-origin
+#+end_src
+
+Use upstream Rust Ascent for the reference column in SCC benchmark results.
+It runs the same two closure rules serially using the workspace dev-dependency
+and verifies the complete sorted result on every edit after timing the first
+read. Scheme reads a retained, versioned component index through =visit-rows=.
+Rust Ascent rebuilds the explicit closure and sorts it for direct typed lookup.
+Report source replacement, publication, and first read separately, including
+the index sort in Rust publication. The direct Rust lookup and Scheme visitor
+have different interface costs. Keep these results separate from complete
+million-row detached-list export gates.
+
+For the two complete million-row cases, use the upstream serial Ascent
+reference from the same target:
+
+#+begin_src sh
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-recursive
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-projection
+#+end_src
+
+For the same workloads through upstream Ascent's Rayon evaluator:
+
+#+begin_src sh
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-recursive-rayon
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-projection-rayon
+#+end_src
+
+Both variants alternate the same two source cuts for 1,000 requests per
+case and check every detached row with a bitmap oracle. The Rayon variant
+reports the worker count selected by the pool. Report source replacement,
+evaluation, detached output, validation and total latency. Rust accounts
+separately for explicit per-request release and includes it in the total.
+Scheme GC is charged to whichever measured phase triggers it. The parallel
+Ascent relation uses its concurrent container, which is copied into a
+detached vector for the same oracle. Scheme delivers a mutable list. The
+native Scheme 100 ms verdict remains independent.
+
 * Single VM Actor components
 
 Run the source Suite through the native test entry; it does not create another
@@ -68,6 +149,38 @@ All message Cases use Gambit's monotonic counter and report its frequency in
 =ACTOR-CLOCK=. Earlier system-clock receipts remain diagnostic observations.
 
 * Concurrent native requesters
+
+Record the VM count, active VM processor count, evaluator worker count, and
+calling Actor population separately. A single VM can interleave runnable
+green threads while other Actors wait. These in-memory cases exercise
+mailbox and Session-state contention. Asynchronous I/O needs a workload with
+pending I/O and independent runnable Actors to measure that overlap.
+
+Run the separate I/O comparison through the native test entry:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-io-overlap-test.ss
+#+end_src
+
+Each Case verifies one million Session state replies and times every
+thousandth reply. In the overlap Case the reader waits on a nonblocking OS
+pipe before and after the measured requests. The Case then writes one byte
+and checks the reader's natural completion. =ACTOR-IO= reports runtime
+throughput, latency samples, CPU and GC. The byte transfer sits outside the
+measured request window.
+
+The recursive-query overlap diagnostic uses the same native entry:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-closure-state-overlap-test$' benchmarks/actor-million-test.ss
+#+end_src
+
+It verifies 64 complete recursive answers and 2,048 state replies
+across two alternating source cuts. Report the in-flight subset size
+alongside its distribution. A state reply identifies the owner's protocol
+phase. It does not identify where the evaluator was interrupted.
 
 The current single-VM Suite exercises one, up to three, and machine-capacity calling Actors
 against the same one-worker Session. Each profile completes exactly 1,200,000
@@ -143,6 +256,15 @@ timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
   -r '^actor-million-recursive-test$' benchmarks/actor-million-test.ss
 #+end_src
 
+The corresponding delivery probes are selected with
+=actor-million-list-delivery-test=, =actor-million-visit-test=, or
+=actor-million-fields-test=. Each consumes and independently checks every
+row in a fresh million-row result for 1,000 source replacements. First-row
+timing is separate from complete query timing. The original query and
+recursive suites retain their bitmap oracle and thresholds. The
+=actor-million-fields-controls-test= suite exercises callback exit,
+reentrant replacement, selected keys, and the general row representation.
+
 The base query has 1,000,000 input facts and 1,000,000 complete exported rows.
 The recursive query has 128 disjoint chains of width 128: 16,256 input facts
 and 1,040,384 exported rows. Both plan 1,000 changed-source queries, alternating
@@ -154,6 +276,10 @@ The state Suite retains 1,000,000 source facts and independently checks
 1,000,000 public state request/replies. A reply is a source generation and
 =idle=, =running= or =draining=; it contains no query result rows. Its throughput
 must never be labelled complete-query throughput.
+The =actor-million-state-contention-test= selector divides the same one
+million requests across a machine-sized set of concurrent Scheme callers
+of the one Actor Session. Each caller checks its replies and records its
+own latency samples. The caller count is a property of the workload.
 
 Preparation, one cold complete query and changed-source requests are distinct
 receipts. Complete query timing includes public Session execution and full row
@@ -161,6 +287,20 @@ export. Changed-source request latency additionally includes replacement and
 independent oracle verification. Sustained throughput includes client checks
 and progress reporting; reciprocal phase times are not throughput. The
 existing strict 100 ms P95 policy applies only to complete populations.
+
+The cold-query phase receipt measures Session run through publication, the
+result accessor, and the independent oracle on the same request. Progress
+receipts accumulate those phases and source replacement for completed
+requests only. Wall time also includes loop and progress reporting overhead.
+These receipts preserve where the workload spent time if the supervisor
+expires before the planned population completes.
+
+The query receipts bracket the run with Gambit's process counters. They
+report CPU, GC CPU and natural collections for the same set of completed
+requests, including the resident evaluator's green threads in that VM.
+Preparation, result access and the oracle sit outside the CPU bracket, and
+GC CPU is included in run CPU. The run bracket makes no claim about
+cumulative allocation when the upstream counter moves backwards.
 
 Workload-specific declaration ceilings admit the named data cardinalities.
 The existing output budget counts source and derived facts: these new profiles

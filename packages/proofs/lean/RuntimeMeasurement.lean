@@ -58,6 +58,35 @@ def Policy (minimum : Nat) (unit : Unit) (p95Bound : Nat) (e : Evidence) : Prop 
 theorem bound_itself_is_not_fast (bound : Nat) :
     ([bound].filter (fun n => decide (n < bound))).length = 0 := by simp
 
+/-- Each pair contains an enclosed phase and the remaining request time.
+If fewer than 950 of 1,000 enclosed phases are below the bound, removing
+all other work while holding those phase durations fixed cannot pass
+the native nearest-rank P95 gate. -/
+theorem bounded_phases_limit_fast_requests (bound : Nat) (durations : List (Nat × Nat)) :
+    (durations.filter (fun t => decide (t.1 + t.2 < bound))).length ≤
+      (durations.filter (fun t => decide (t.1 < bound))).length := by
+  induction durations with
+  | nil => simp
+  | cons duration rest ih =>
+    rcases duration with ⟨phase, other⟩
+    by_cases fast : phase + other < bound
+    · have phaseFast : phase < bound := by omega
+      simpa [fast, phaseFast] using Nat.succ_le_succ ih
+    · by_cases phaseFast : phase < bound
+      · simpa [fast, phaseFast] using Nat.le.step ih
+      · simpa [fast, phaseFast] using ih
+
+/-- If fewer than 95 percent of enclosed phases are below the bound,
+the strict P95 quota is impossible with those durations. -/
+theorem bounded_phase_misses_p95 (bound : Nat) (durations : List (Nat × Nat))
+    (slowPhase : 20 * (durations.filter (fun t => decide (t.1 < bound))).length <
+      19 * durations.length) :
+    ¬ (19 * durations.length ≤
+      20 * (durations.filter (fun t => decide (t.1 + t.2 < bound))).length) := by
+  intro enough
+  have fastBound := bounded_phases_limit_fast_requests bound durations
+  omega
+
 def Admitted (unit : Unit) (p95Bound : Nat) (e : Evidence) : Prop :=
   Policy 1000 unit p95Bound e
 

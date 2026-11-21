@@ -434,7 +434,8 @@ FAULTS = {'ActorReply': (('foreign', 'ExactReply', 12), ('duplicate', 'Once', 12
                      ('early', 'CompleteReturn', 12),
                      ('snapshot', 'DependencySnapshot', 12),
                      ('tail', 'CompletedDelivery', 12),
-                     ('credit', 'CompletedDelivery', 12)),
+                     ('credit', 'CompletedDelivery', 12),
+                     ('skip-frontier', 'DependencySnapshot', 12)),
  'TransitiveComponents': (('raw', 'DeltaExact', 12),
                           ('diagonal', 'DeltaExact', 12),
                           ('old', 'DeltaExact', 12),
@@ -742,7 +743,214 @@ FAULTS["OwnerAdmission"] += (("skip-snapshot-reverify", "SnapshotCurrent", 12), 
 
 FAULTS["OwnerAdmission"] += (("ready-before-metadata", "OwnerReady", 12), ("metadata-spends-scope", "LibraryScopes", 12))
 
+
+
 # Source constructor calls and overlapping runtime observations, not cycle timing.
 MODEL_ORDER += ("ActorStateCost",)
 CONFIGURATIONS["ActorStateCost"] = {"constants": 'Mutation = "none"', "invariants": "FreshEndpoints EnvelopeExact StateExact OutcomeExact ClockExact MailboxIsolation ClockBounds NoDiscountedWall"}
 FAULTS["ActorStateCost"] = (("reuse-endpoint", "FreshEndpoints", 12), ("hide-envelope", "EnvelopeExact", 12), ("hide-state-pairs", "StateExact", 12), ("hide-outcome", "OutcomeExact", 12), ("hide-clock", "ClockExact", 12), ("caller-cursor", "MailboxIsolation", 12), ("subtract-gc", "NoDiscountedWall", 12), ("report-cpu-as-wall", "NoDiscountedWall", 12))
+
+MODEL_ORDER += ("ActorStateTransport",)
+CONFIGURATIONS["ActorStateTransport"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "AuthorityExact CloseExact StateExact ReplyExact",
+}
+FAULTS["ActorStateTransport"] = (
+    ("drop-authority", "AuthorityExact", 12),
+    ("skip-close", "CloseExact", 12),
+    ("stale-state", "StateExact", 12),
+    ("foreign-reply", "ReplyExact", 12),
+)
+
+MODEL_ORDER += ("ActorLocalCredit",)
+CONFIGURATIONS["ActorLocalCredit"] = {'constants': 'Mutation = "none"', 'invariants': 'OrderedPrefix ResourceExact NoCanceledMerge YieldAtCredit PublicationExact'}
+FAULTS["ActorLocalCredit"] = (
+    ('reverse-batch', 'OrderedPrefix', 12),
+    ('skip-budget', 'ResourceExact', 12),
+    ('skip-cancel', 'NoCanceledMerge', 12),
+    ('skip-yield', 'YieldAtCredit', 12),
+    ('drop-tail', 'PublicationExact', 12),
+    ('skip-owner', 'PublicationExact', 12),
+    ('publish-canceled', 'PublicationExact', 12),
+)
+
+MODEL_ORDER += ("ActorTerminalCommit",)
+CONFIGURATIONS["ActorTerminalCommit"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "OwnsReusableLane NoLaterReader ExactFactLimit ExactPublication",
+}
+FAULTS["ActorTerminalCommit"] = (
+    ("later-reader", "NoLaterReader", 12),
+    ("borrowed-lane", "OwnsReusableLane", 12),
+    ("resume", "NoLaterReader", 12),
+    ("wrong-order", "ExactPublication", 12),
+    ("wrong-priority", "ExactFactLimit", 12),
+    ("ignore-output", "ExactFactLimit", 12),
+    ("ignore-budget", "ExactPublication", 12),
+    ("ignore-cancel", "ExactPublication", 12),
+    ("ignore-owner", "ExactPublication", 12),
+)
+
+MODEL_ORDER += ("ActorIdentityRead",)
+CONFIGURATIONS["ActorIdentityRead"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "ExactGuard PerOccurrenceCheckpoint FirstOccurrenceOrder ExactBudget ExactPublication",
+}
+FAULTS["ActorIdentityRead"] = (
+    ("unowned", "ExactGuard", 12),
+    ("wrong-slots", "ExactGuard", 12),
+    ("feedback", "ExactGuard", 12),
+    ("omit-membership", "FirstOccurrenceOrder", 12),
+    ("skip-duplicate-checkpoint", "PerOccurrenceCheckpoint", 12),
+    ("omit-budget", "ExactBudget", 12),
+    ("publish-canceled", "ExactPublication", 12),
+)
+
+MODEL_ORDER += ("ActorPairMembership",)
+CONFIGURATIONS["ActorPairMembership"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "ExactMembership ExactFirstOccurrence",
+}
+FAULTS["ActorPairMembership"] = (
+    ("unbounded", "ExactMembership", 12),
+    ("short-radix", "ExactMembership", 12),
+    ("coalesce-overflow", "ExactMembership", 12),
+    ("ignore-seeds", "ExactMembership", 12),
+)
+
+MODEL_ORDER += ("ActorRankedFunctional",)
+CONFIGURATIONS["ActorRankedFunctional"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "ExactGuard FirstOccurrenceOrder",
+}
+FAULTS["ActorRankedFunctional"] = (
+    ("ignore-shape", "ExactGuard", 12),
+    ("ignore-seeds", "ExactGuard", 12),
+    ("ignore-rank", "FirstOccurrenceOrder", 12),
+    ("ignore-origins", "FirstOccurrenceOrder", 12),
+)
+
+MODEL_ORDER += ("ActorBatchBuffer",)
+CONFIGURATIONS["ActorBatchBuffer"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "LeaseIntegrity ReadExtent ExactDeliveredPrefix ResourceExact AttemptedPrefix ExactPublication",
+}
+FAULTS["ActorBatchBuffer"] = (
+    ("overwrite-before-credit", "LeaseIntegrity", 12),
+    ("credit-before-read", "ExactDeliveredPrefix", 12),
+    ("read-past-count", "ReadExtent", 12),
+    ("drop-tail", "ExactPublication", 12),
+    ("omit-budget", "ResourceExact", 12),
+    ("skip-refused-row", "AttemptedPrefix", 12),
+    ("publish-canceled", "ExactPublication", 12),
+)
+
+MODEL_ORDER += ("ActorCompactResult",)
+CONFIGURATIONS["ActorCompactResult"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "ExactCount Budget OwnerOnly ExactExport PrivateUntilPublish",
+}
+FAULTS["ActorCompactResult"] = (
+    ("underreport", "ExactCount", 12),
+    ("adopt-over-budget", "Budget", 12),
+    ("publish-stale", "OwnerOnly", 12),
+    ("keep-emission-order", "ExactExport", 12),
+)
+
+MODEL_ORDER += ("ActorOrdinalRuns",)
+CONFIGURATIONS["ActorOrdinalRuns"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "ExactEmission ExactPublicStream",
+}
+FAULTS["ActorOrdinalRuns"] = (
+    ("keep-forward", "ExactEmission", 12),
+    ("wrong-direction", "ExactEmission", 12),
+    ("cross-boundary", "ExactEmission", 12),
+    ("keep-depth-order", "ExactPublicStream", 12),
+    ("keep-run-order", "ExactPublicStream", 12),
+)
+
+MODEL_ORDER += ("ActorSourceCertificate",)
+CONFIGURATIONS["ActorSourceCertificate"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "ExactRoot UniqueOrigins",
+}
+FAULTS["ActorSourceCertificate"] = (
+    ("ignore-order", "UniqueOrigins", 12),
+    ("match-size", "ExactRoot", 12),
+    ("carry-after-append", "ExactRoot", 12),
+)
+
+MODEL_ORDER += ("ActorPackedSource",)
+CONFIGURATIONS["ActorPackedSource"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "ExactEligibility CapturedValues ExactExport ExpectedDelivery StopsAtExit PackedReuseExact PackedWidthExact AffineCaptureExact",
+}
+FAULTS["ActorPackedSource"] = (
+    ("omit-budget", "ExactEligibility", 12),
+    ("accept-seed", "ExactEligibility", 12),
+    ("accept-deadline", "ExactEligibility", 12),
+    ("accept-observed", "ExactEligibility", 12),
+    ("borrow-caller", "CapturedValues", 12),
+    ("reverse-output", "ExactExport", 12),
+    ("follow-new-source", "ExpectedDelivery", 12),
+    ("wrong-field", "ExpectedDelivery", 12),
+    ("read-after-exit", "StopsAtExit", 12),
+    ("match-size-only", "PackedReuseExact", 12),
+    ("narrow-wide-label", "PackedWidthExact", 12),
+    ("omit-affine-last", "AffineCaptureExact", 12),
+)
+
+MODEL_ORDER += ("ActorStateLease",)
+CONFIGURATIONS["ActorStateLease"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "NoClosedAdmission NoStalePayload ExactReply ReadBeforeReturn AtMostOneEntry ReleaseMatchesReply HandlerTargetsEndpoint",
+}
+FAULTS["ActorStateLease"] = (
+    ("admit-after-close", "NoClosedAdmission", 12),
+    ("return-without-read", "ReadBeforeReturn", 12),
+    ("keep-reply", "NoStalePayload", 12),
+    ("recycle-abandoned", "ReadBeforeReturn", 12),
+    ("broadcast-writes", "NoStalePayload", 12),
+    ("reenter-retired", "AtMostOneEntry", 12),
+    ("reset-later-reply", "ReleaseMatchesReply", 12),
+    ("use-other-endpoint", "HandlerTargetsEndpoint", 12),
+)
+
+MODEL_ORDER += ("ActorStatePool",)
+CONFIGURATIONS["ActorStatePool"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "DisjointLease IdleUnique RetentionBound NoAbandonedReuse MissDoesNotReject",
+}
+FAULTS["ActorStatePool"] = (
+    ("leave-taken", "DisjointLease", 12),
+    ("retain-overflow", "RetentionBound", 12),
+    ("retain-abandoned", "NoAbandonedReuse", 12),
+    ("reject-on-miss", "MissDoesNotReject", 12),
+)
+
+MODEL_ORDER += ("ActorResidentWorker",)
+CONFIGURATIONS["ActorResidentWorker"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "SenderOwnsRun CurrentPublication CurrentFallback DrainedBeforeClose ClosedWorkerJoined",
+}
+FAULTS["ActorResidentWorker"] = (
+    ("accept-retired-worker", "SenderOwnsRun", 12),
+    ("publish-canceled", "CurrentPublication", 12),
+    ("fallback-canceled", "CurrentFallback", 12),
+    ("close-with-job", "DrainedBeforeClose", 12),
+    ("skip-join", "ClosedWorkerJoined", 12),
+)
+
+MODEL_ORDER += ("ActorCutEligibility",)
+CONFIGURATIONS["ActorCutEligibility"] = {
+    "constants": 'Mutation = "none"',
+    "invariants": "ExactCut EligibilityExact",
+}
+FAULTS["ActorCutEligibility"] = (
+    ("stale-flag", "ExactCut", 12),
+    ("inspect-initial", "EligibilityExact", 12),
+    ("foreign-cut", "EligibilityExact", 12),
+    ("skip-metadata", "EligibilityExact", 12),
+    ("skip-protocol", "EligibilityExact", 12),
+)

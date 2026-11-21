@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-case test-suite)
+        (only-in :std/sync/completion make-completion completion-wait! completion-post!)
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :gerbil-ascent/program/source-cut
                  gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
@@ -29,13 +30,86 @@
                               (list (gerbil-ascent-atom 'reach (list x y)) (gerbil-ascent-atom 'edge (list y z)))))
      input-budget budget 400000)))
 (def (rows result) ((.ref result 'rows-of) 'reach))
-(def (wait-running session)
+(def (wait-phase session phase)
   (let loop ((attempts 0))
-    (unless (eq? (cadr (gerbil-ascent-session-state session)) 'running)
-      (when (= attempts 1000) (error "actor Session did not start"))
+    (unless (eq? (cadr (gerbil-ascent-session-state session)) phase)
+      (when (= attempts 1000) (error "actor Session did not enter phase" phase))
       (thread-yield!) (loop (+ attempts 1)))))
+(def (wait-running session) (wait-phase session 'running))
+
+;; Pause at the first charged evaluation step to exercise in-flight control
+;; independently of the time it takes to compute the fixture.
+(def (start-paused-run session release)
+  (let ((entered (make-completion)) (paused? #f))
+    (def (observe work _facts)
+      (when (and (> work 0) (not paused?))
+        (set! paused? #t)
+        (completion-post! entered #t)
+        (completion-wait! release)))
+    (def (run)
+      (parameterize ((current-ascent-execution-control observe))
+        (outcome (lambda () (gerbil-ascent-session-run session)))))
+    (let (runner (spawn run))
+      (completion-wait! entered)
+      runner)))
+
+(def (wait-until-blocked thread)
+  (let loop ((remaining 1000))
+    (unless (thread-state-waiting? (thread-state thread))
+      (when (zero? remaining) (error "state caller did not suspend"))
+      (thread-yield!)
+      (loop (- remaining 1)))))
 (def ascent-actor-session-test
   (test-suite "Session actor generation and completed publication"
+    (test-case "affine replacement retires packed reuse without changing a held publication"
+      (let* ((packed (map (lambda (i) (list (* 2 i) (+ (* 2 i) 1 (modulo i 2)))) (iota 32)))
+             (first (map (lambda (i) (list (+ 100 i) (+ 101 i))) (iota 32)))
+             (second (map (lambda (i) (list (+ 200 i) (+ 201 i))) (iota 32)))
+             (x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y))
+             (declaration
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'edge 2 packed) (gerbil-ascent-relation 'reach 2 []))
+               (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'reach (list x y)))
+                                       (list (gerbil-ascent-atom 'edge (list x y)))))
+               32 32 64))
+             (session (gerbil-ascent-open-actor-session declaration workers: 1)))
+        (def (replace-with input)
+          (gerbil-ascent-session-replace-source! session 'edge input)
+          (rows (gerbil-ascent-session-run session)))
+        (try
+          (let (held (gerbil-ascent-session-run session))
+            (check-equal? (replace-with first) first)
+            (check-equal? (replace-with second) second)
+            (let (exposed (replace-with packed))
+              (check-equal? exposed packed)
+              (set-car! (car exposed) -1)
+              (check-equal? (rows held) packed)
+              (check-equal? (rows (gerbil-ascent-session-last-completed session)) packed)))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "functional origin lanes preserve holes and retained source cuts"
+      (let* ((dense (map (lambda (i)
+                           (let (label (+ 200 i (quotient i 8))) (list label (+ label 1))))
+                         (iota 32)))
+             (sparse (map (lambda (i)
+                            (let (label (+ 10000 (* 1024 i))) (list label (+ label 1))))
+                          (iota 32)))
+             (session (gerbil-ascent-open-actor-session (program dense) workers: 1)))
+        (def (at result label)
+          (let (found [])
+            ((.ref result 'visit-rows) 'reach '(0) (list label)
+              (lambda (row) (set! found (cons row found))))
+            (reverse! found)))
+        (try
+          (let (before (gerbil-ascent-session-run session))
+            (check-equal? (at before 206) '((206 208) (206 207)))
+            (check-equal? (at before 208) [])
+            (check-equal? (at before -1) [])
+            (gerbil-ascent-session-replace-source! session 'edge sparse)
+            (let (after (gerbil-ascent-session-run session))
+              (check-equal? (at after 10000) '((10000 10001)))
+              (check-equal? (at after 206) [])
+              (check-equal? (at before 206) '((206 208) (206 207)))))
+          (finally (gerbil-ascent-session-close! session)))))
     (test-case "unchanged scalar cuts reuse private closure and refresh publication"
       (let ((session (gerbil-ascent-open-actor-session (program '((0 1) (1 2))) workers: 1))
             (work 0))
@@ -81,6 +155,38 @@
                             (lambda (units facts) (when (> units 0) (set! work (+ work units))))))
               (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1))))
             (check-equal? (> work 0) #t))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "retention checks current scalar cuts instead of retired declaration rows"
+      (let* ((old-key (list 'initial))
+             (new-key (list 'current))
+             (x (gerbil-ascent-variable 'x))
+             (declared
+              (gerbil-ascent-program
+               (list (gerbil-ascent-relation 'edge 1 (list (list old-key)))
+                     (gerbil-ascent-relation 'reach 1 []))
+               (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'reach (list x)))
+                                         (list (gerbil-ascent-atom 'edge (list x))))) 10 10 20))
+             (session (gerbil-ascent-open-actor-session declared workers: 1))
+             (work 0))
+        (def (run)
+          (set! work 0)
+          (parameterize ((current-ascent-execution-control
+                          (lambda (units _facts)
+                            (when (> units 0) (set! work (+ work units))))))
+            (rows (gerbil-ascent-session-run session))))
+        (try
+          (check-equal? (run) '(((initial))))
+          (check-equal? (> work 0) #t)
+          (gerbil-ascent-session-replace-source! session 'edge '((7)))
+          (check-equal? (run) '((7)))
+          (check-equal? (> work 0) #t)
+          (check-equal? (run) '((7)))
+          (check-equal? work 0)
+          (gerbil-ascent-session-replace-source! session 'edge (list (list new-key)))
+          (check-equal? (run) '(((current))))
+          (set-car! new-key 'changed)
+          (check-equal? (run) '(((changed))))
+          (check-equal? (> work 0) #t)
           (finally (gerbil-ascent-session-close! session)))))
     (test-case "mutable literal keys cannot enter completed closure reuse"
       (let* ((key (list 'mutable))
@@ -381,21 +487,25 @@
               (check-equal? (rows (gerbil-ascent-session-run session)) '((4 5))))
             (finally (gerbil-ascent-session-close! session))))) '(1 2 4)))
     (test-case "cancel drains old work preserves publication and permits next generation"
-      (let (session (gerbil-ascent-open-actor-session (program '((0 1)))))
+      (let ((session (gerbil-ascent-open-actor-session (program '((0 1)))))
+            (release (make-completion)))
         (try
-         (let* ((first (gerbil-ascent-session-run session))
-                (edges (map (lambda (n) (list n (+ n 1))) (iota 400))))
-           (gerbil-ascent-session-replace-source! session 'edge edges)
-           (let (runner (spawn (lambda () (outcome (lambda () (gerbil-ascent-session-run session))))))
-             (wait-running session)
-             (check-equal? (outcome (lambda () (gerbil-ascent-session-append-source! session 'edge '(8 9)))) 'rejected)
-             (check-equal? (gerbil-ascent-session-cancel! session) 'draining)
-             (check-equal? (eq? first (gerbil-ascent-session-last-completed session)) #t)
-             (check-equal? (thread-join! runner 3 'timeout) 'rejected)
-             (check-equal? (cadr (gerbil-ascent-session-state session)) 'idle)
-             (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
-             (check-equal? (> (car (gerbil-ascent-session-state session)) 2) #t)))
-         (finally (gerbil-ascent-session-close! session)))))
+          (let* ((first (gerbil-ascent-session-run session))
+                 (edges (map (lambda (n) (list n (+ n 1))) (iota 400))))
+            (gerbil-ascent-session-replace-source! session 'edge edges)
+            (let (runner (start-paused-run session release))
+              (try
+                (begin
+                  (wait-running session)
+                  (check-equal? (outcome (lambda () (gerbil-ascent-session-append-source! session 'edge '(8 9)))) 'rejected)
+                  (check-equal? (gerbil-ascent-session-cancel! session) 'draining)
+                  (check-equal? (eq? first (gerbil-ascent-session-last-completed session)) #t))
+                (finally (completion-post! release #t)))
+              (check-equal? (thread-join! runner 3 'timeout) 'rejected)
+              (check-equal? (cadr (gerbil-ascent-session-state session)) 'idle)
+              (check-equal? (rows (gerbil-ascent-session-run session)) '((0 1)))
+              (check-equal? (> (car (gerbil-ascent-session-state session)) 2) #t)))
+          (finally (gerbil-ascent-session-close! session)))))
     (test-case "duplicate derivations fit the exact budget and overflow cannot publish"
       (let* ((diamond '((0 1) (0 2) (1 3) (2 3)))
              (session (gerbil-ascent-open-actor-session (program diamond 5) workers: 1)))
@@ -588,12 +698,17 @@
            (check-result first))
          (finally (gerbil-ascent-session-close! session)))))
     (test-case "close during run cancels drains and rejects further requests"
-      (let (session (gerbil-ascent-open-actor-session (program (map (lambda (n) (list n (+ n 1))) (iota 400)))))
-        (let (runner (spawn (lambda () (outcome (lambda () (gerbil-ascent-session-run session))))))
+      (let ((session (gerbil-ascent-open-actor-session (program (map (lambda (n) (list n (+ n 1))) (iota 400)))))
+            (release (make-completion)))
+        (let (runner (start-paused-run session release))
           (wait-running session)
-          (gerbil-ascent-session-close! session)
-          (check-equal? (thread-join! runner 3 'timeout) 'rejected)
-          (check-equal? (outcome (lambda () (gerbil-ascent-session-run session))) 'rejected))))
+          (let (closer (spawn (lambda () (gerbil-ascent-session-close! session) 'closed)))
+            (try
+              (wait-phase session 'draining)
+              (finally (completion-post! release #t)))
+            (check-equal? (thread-join! runner 3 'timeout) 'rejected)
+            (check-equal? (thread-join! closer 3 'timeout) 'closed)
+            (check-equal? (outcome (lambda () (gerbil-ascent-session-run session))) 'rejected)))))
     (test-case "replacement admission is atomic and caller mailbox is isolated"
       (let (session (gerbil-ascent-open-actor-session (program '((0 1)))))
         (try
@@ -623,6 +738,101 @@
               (finally
                 (thread-mailbox-rewind)
                 (unless closed? (gerbil-ascent-session-close! session)))))))))
+    (test-case "compact and authority-bearing state replies own their public values"
+      (let (session (gerbil-ascent-open-actor-session (program '((0 1)))))
+        (try
+          (let ((first (gerbil-ascent-session-state session))
+                (control (lambda (_work _facts) (error "state must not execute any rules"))))
+            (set-car! first 'caller-mutation)
+            (check-equal? (gerbil-ascent-session-state session) '(0 idle))
+            (parameterize ((current-ascent-execution-control control))
+              (check-equal? (gerbil-ascent-session-state session) '(0 idle)))
+            (gerbil-ascent-session-replace-source! session 'edge '((1 2)))
+            (let (updated (gerbil-ascent-session-state session))
+              (check-equal? updated '(1 idle))
+              (parameterize ((current-ascent-execution-control control))
+                (check-equal? (gerbil-ascent-session-state session) updated))))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "an abandoned state wait cannot recycle a pending reply"
+      (let ((session (gerbil-ascent-open-actor-session (program '((0 1))) workers: 1))
+            (entered (make-completion)) (release (make-completion)) (released? #f))
+        (try
+          (begin
+            (check-equal? (gerbil-ascent-session-state session) '(0 idle))
+            (let (writer
+                  (spawn (lambda ()
+                    (gerbil-ascent-session-replace-sources! session '((edge (2 3)))
+                      (lambda (_)
+                        (completion-post! entered #t)
+                        (completion-wait! release)
+                        #t)))))
+              (completion-wait! entered)
+              (let ((abandoned (spawn (lambda () (gerbil-ascent-session-state session))))
+                    (abort (list 'abandon-pending-state)))
+                (wait-until-blocked abandoned)
+                ;; A raising Gambit interrupt does not finish its caller
+                ;; handshake: the target exits and the handshake mutex is abandoned.
+                (check-equal?
+                  (with-catch
+                    (lambda (failure)
+                      (if (abandoned-mutex-exception? failure) 'abandoned
+                        (raise failure)))
+                    (lambda () (thread-interrupt! abandoned (lambda () (raise abort)))))
+                  'abandoned)
+                (check-equal?
+                  (with-catch
+                    (lambda (failure)
+                      (if (and (uncaught-exception? failure)
+                               (eq? abort (uncaught-exception-reason failure)))
+                        'rejected (raise failure)))
+                    (lambda () (thread-join! abandoned 3 'timeout)))
+                  'rejected))
+              (let (update
+                    (spawn (lambda () (gerbil-ascent-session-replace-source! session 'edge '((4 5))))))
+                (wait-until-blocked update)
+                (let ((first (spawn (lambda () (gerbil-ascent-session-state session))))
+                      (second (spawn (lambda () (gerbil-ascent-session-state session)))))
+                  (wait-until-blocked first)
+                  (wait-until-blocked second)
+                  (completion-post! release #t)
+                  (set! released? #t)
+                  (check-equal? (rows (thread-join! writer 3 'timeout)) '((2 3)))
+                  (check-equal? (thread-join! update 3 'timeout) (void))
+                  (let ((one (thread-join! first 3 'timeout))
+                        (two (thread-join! second 3 'timeout)))
+                    (check-equal? one '(2 idle))
+                    (check-equal? two '(2 idle))
+                    (set-car! one -1)
+                    (check-equal? two '(2 idle))
+                    (check-equal? (gerbil-ascent-session-state session) '(2 idle)))))))
+          (finally
+            (unless released? (completion-post! release #t))
+            (gerbil-ascent-session-close! session)))))
+    (test-case "close drains a queued state request through its own completion"
+      (let ((session (gerbil-ascent-open-actor-session (program '((0 1))) workers: 1))
+            (entered (make-completion)) (release (make-completion)) (released? #f))
+        (try
+          (let (writer
+                (spawn (lambda ()
+                  (gerbil-ascent-session-replace-sources! session '((edge (2 3)))
+                    (lambda (_)
+                      (completion-post! entered #t)
+                      (completion-wait! release)
+                      #t)))))
+            (completion-wait! entered)
+            (let (closer (spawn (lambda () (gerbil-ascent-session-close! session) 'closed)))
+              (wait-until-blocked closer)
+              (let (reader (spawn (lambda ()
+                      (outcome (lambda () (gerbil-ascent-session-state session))))))
+                (wait-until-blocked reader)
+                (completion-post! release #t)
+                (set! released? #t)
+                (check-equal? (rows (thread-join! writer 3 'timeout)) '((2 3)))
+                (check-equal? (thread-join! closer 3 'timeout) 'closed)
+                (check-equal? (thread-join! reader 3 'timeout) 'rejected))))
+          (finally
+            (unless released? (completion-post! release #t))
+            (with-catch void (lambda () (gerbil-ascent-session-close! session)))))))
     (test-case "batch rejection preserves generation sources and multiplicity budget"
       (let (session (gerbil-ascent-open-actor-session (program '((0 1)) 200000 2)))
         (try

@@ -1,0 +1,828 @@
+#+title: Private output work in positive SCC evaluation
+
+In =program/component-worker.ss=, the first pass runs every admitted rule
+against the complete input snapshot. Later passes read the worker's own delta.
+The coordinator receives new rows through the existing emit and credit
+protocol. It owns fact charging and transferable publication.
+
+A component with no body atom that reads a member relation reaches closure
+after its first pass. That component still needs membership covering its
+initial and emitted rows. Multiple rules can produce the same output, and a
+first-pass head can repeat an initial row. Its private pending spine, private
+index advance and local delta versions are unreachable by subsequent reads.
+Suppress these writes only for the coordinator's compact, disposable
+snapshot. The full-snapshot entry still returns its committed output vectors.
+
+Compute feedback during projection of the admitted body atoms. A rule's
+stratum-wide pivot list can also name predecessor relations, so its length
+alone cannot decide whether local output is read. The layout records whether
+a projected body atom has a member's dense relation slot. The same mapping
+assigns the worker's read and output slots.
+
+=ComponentClosure.lean= proves first-pass closure under absence of local
+dependencies and verifies the read-membership guard. The Scheme control
+leaves row novelty, first-pass order, every rule checkpoint, emit and
+coordinator credit in place. A refusal during the pass retains its original
+exception path. =ActorRoundCredits.qnt= and the native round tests cover
+coordinator ownership and draining. The new guard affects private workspace
+writes and adds no rule to that protocol.
+
+For each novel row on the disposable nonrecursive path, omit the pending
+pair and the local list copy in commit. One round-end length traversal and
+index-advance call per populated member disappear too. The coordinator's
+event and result allocations remain separate costs. Verify those savings
+against matched artifacts and measure complete million-row queries before
+claiming a throughput gain.
+
+* Transport work in the same measured phase
+
+=program/actor-round.ss= uses one candidate batch message followed by a
+credit reply for every 32 emissions. =ActorRoundCost.lean= models the
+successful =emit!= and =flush!= size transitions and proves the exact
+full-batch count. One million novel emissions produce 31,250 full batches
+and 62,500 batch and credit messages. The recursive fixture's 1,040,384
+emissions produce 65,024 messages. These counts exclude checkpoint-only
+messages, assignment and terminal traffic. They describe the source for the
+fixtures with one rule-owning component and an empty derived relation.
+
+* Placement of one admitted component
+
+For a resident Session with one VM processor and one assigned pure
+component, execute and merge in the evaluator green thread. The public
+Session owner still receives requests through its mailbox, owns the committed
+cut and validates final publication. The evaluator remains a separate
+thread so cancel and close can run while evaluation is in progress.
+
+The selection requires an owned scalar cut, an admitted pure plan, canonical
+providers, no caller execution authority, and a single rule-owning component.
+These premises exclude callbacks that could observe a changed thread context.
+Requests with external budget authority continue through the mailbox worker
+and its existing control scope. Multiworker and multicomponent work uses the
+existing ready queue.
+
+Use the same assignment's 32-row batch and 64-visit checkpoint mechanism on
+both paths. At each credit and at terminal handoff, yield to the Gerbil
+scheduler before checking the Session's cancellation token. Merge calls use
+the same coordinator procedure and its per-row charging and resource checks.
+If a merge fails, retain the first failure, unwind the private assignment, and
+return nothing to the publication boundary. After the terminal tail, check
+cancellation again before returning. The Session retains its existing
+generation and final-acceptance checks.
+
+=ActorRoundCost.lean= relates the reordered batch spine, ordered charge prefix
+and observable outcomes for arbitrary row types. =ActorLocalCredit.qnt=
+checks a finite schedule covering cancellation, budget failure and owner
+publication. The fixed row count in that model is a checker fixture. Native
+tests exercise the real scheduler and detached Session result. Lean and
+Quint do not verify Gambit's scheduling or bounds on how fast a green thread
+yields.
+
+* Engine commit after component closure
+
+=program/positive-components.ss= tracks the tentative frontier for ready
+successors. Its merge also hands each novel row to =admit-stored!= in
+=program/evaluate.ss=. The engine records a newest-first pending lane. Its
+Set commit walks that lane to rebuild membership and to prepend rows to
+the prior total. The retained lane therefore has the accepted emission
+order followed by the prior total, including any historical duplicates.
+=ActorRoundCost.lean= derives exact list equality and cardinality for this
+commit operation, independently of the chosen membership representation.
+
+An engine built with the non-Session interface exposes only =run!=. The
+resident coordinator discards its reusable engine after a source edit and
+retains a completed engine for repeated runs on the same cut. A single
+terminal stratum with exact built-in providers could therefore seal the
+already charged rows without rebuilding tables that have no later reader.
+The execution branch must establish this with its actual source-edit,
+deadline, cancellation and ready-stratum guards before reusing any spine.
+An interrupted or failed evaluation must still retire the tentative cut.
+
+Track the live readers of the pending lane, total membership, versioned
+index cursors and result representations separately. Any ownership transfer
+needs the same detached public row order and source generation, and must
+leave provenance readers on the admitted cut. Expiring, callback-bearing
+and resumable paths need their own refinement before sharing this commit.
+
+The first implementation keeps the exact per-row admission and charge.
+After all assigned components have joined, the complete sole stratum can
+transfer its private pending spine using the standard =append-reverse!=.
+Only the pending pairs change links. The historical total lane is its read-only
+suffix, and old results still observe their original cut. Install the new
+total and cardinality before constructing a detached result. The index and
+delta vectors belong to this run. After a successful terminal commit there
+is no additional stratum or resumable work to read them, and a later edit
+has a fresh evaluator. The commit is selected only for a first run with
+worker novelty, no reuse, no deadline, no caller execution control and no
+positive-plan cost observer. Keep the ordinary commit for all other paths.
+
+=ActorRoundCost.lean= proves the result of relinking the pending lane and
+the refusal behavior for arbitrary ordered rows. =ActorTerminalCommit.qnt=
+checks a finite interleaving of staging, read eligibility, cancellation
+and publication. The Scheme mapping requires the commit branch to dominate
+the end of the sole stratum and the existing owner-acceptance boundary to
+remain in place. This model does not estimate wall time or GC.
+
+* Direct scan of an identity rule
+
+The projected action in =program/component-worker.ss= already contains
+the source slot, the dense fresh variable slots and the matching head
+reads. For one rule with one unkeyed body atom and one head, compare the
+compiled slot sequence with the consecutive ordinals in both columns.
+Require the body slot to be outside the component. A permutation, repeated
+variable, constant, filter, additional rule or feedback read uses the
+ordinary frame and delta evaluator.
+
+=program/index.ss= returns the total lane unchanged for this unkeyed
+lookup. =core/positive-plan.ss= calls the checkpoint once for each input
+occurrence, then constructs the identity head. Under owned canonical
+scalar admission, that head has exactly the cells of the borrowed row.
+Visit the same ordered lane, checkpoint before testing novelty, keep the
+same membership seeded from the head's existing rows, and emit the same
+first occurrence through normal owner credit. A duplicate source occurrence
+still visits the checkpoint. All result budgets and provenance consumers
+remain at their established boundaries.
+
+The compact Actor assignment can discard its local output state after
+this pass, since there is no feedback read and the coordinator receives
+every novel row. Keep the full snapshot path, cost observers and external
+execution control on the ordinary evaluator. Borrow row cells only from
+an owned cut accepted by the Actor, and preserve detached public snapshots.
+=ComponentClosure.lean= relates the checked slot sequence to identity
+projection and its ordered checkpoint and emission trace.
+=ActorIdentityRead.qnt= exercises duplicate and seeded rows, refusal,
+mutability and the compiled slot guard on a finite stream.
+
+* Binary scalar membership in the direct scan
+
+The direct scan still performs one native table update for every input
+occurrence. For a two-column identity plan, compact nonnegative fixnum
+pairs into an exact integer key. Use radix =2^24= and require each cell
+to be smaller than that radix. The runtime must represent all keys up to
+=2^48 - 1= as fixnums. All other rows keep structural membership in their
+own table. Seed both representations through the same classifier used
+for new rows, so an admitted duplicate cannot cross the table boundary.
+Keep the original row and the same visit, emission, and owner-charge
+sequence. The key never enters a result, index descriptor or proof.
+
+=ComponentClosure.lean= verifies the radix encoding and its bound.
+The finite membership model uses a small radix to check the two-table
+classification, including distinct overflow rows and seeded duplicates.
+
+The same classification can serve the ordinary SCC workspace when a
+component already has the stable scalar membership authority. Each
+binary output slot keeps its own packed table alongside structural
+membership. Both tables refer only to the current assignment. The
+pending rows, recursive delta, physical join indexes and emitted rows
+stay in their original representation and order. A wider relation
+or a worker without this authority retains the existing lookup.
+
+The frozen Gerbil runtime's =eqv-hash= masks fixnums to 29 bits, and its
+open-addressed table starts from a power-of-two bucket index. The direct
+radix encoding places the left column above the first 24 bits. A column
+with many repeated right values can therefore concentrate starts even
+though every key remains distinct. Keep the left digit and shift the
+right digit by =left * 331804471= modulo the radix. This uses the runtime's
+existing combination multiplier. The transform preserves equality since
+the fixed left digit determines an invertible shift of the right digit.
+Before using fixnum multiplication, require the runtime to represent
+=2^53 - 1= as a fixnum. Record probe distribution and recursive runtime
+independently from the key equality proof.
+
+* Coordinator frontier with one assignment
+
+=program/actor-round.ss= removes an assignment from its ready queue
+before starting its worker. =program/positive-components.ss= transfers
+fresh snapshot vectors at that admission. With one rule-owning assignment
+and worker novelty enabled, a delivered batch cannot have a later ready
+reader of the coordinator frontier. A retained source index only reads
+source-only slots, while emitted rows belong to the assigned output slots.
+The remaining successors have no rule assignment in this round.
+
+Select the evaluator's existing admission procedure directly at this
+boundary. It still receives every ordered candidate, applies the same
+validation and fact limits, and records the only pending row spine.
+Keep the original envelope, credits, cancellation polling, tail delivery,
+completion callback, and owner publication. Assignments with other ready
+readers keep the frontier rows and sizes for their snapshots.
+
+=ComponentClosure.lean= proves that a frontier write to an output slot
+leaves all remaining readers unchanged after sole admission.
+=ReadyComponents.qnt= checks the physical frontier separately from the
+logical delivery record. A single-assignment fixture exercises the omitted
+writes. Suppressing the writes in a multi-assignment fixture must reject
+the successor snapshot.
+
+* Reusable batch buffer under the existing credit protocol
+
+Each call to =run-task= currently allocates a candidate pair and a list
+pair per emission. A private buffer for the same 32 positions can store
+the atom and row lanes directly and record the number of written slots.
+The task owns writes before sending either a full batch or its terminal
+tail. The coordinator consumes that exact prefix in order. The task may
+overwrite a full buffer only after the existing credit message, and a
+terminal tail is never reused. A refused credit still ends the assignment
+without letting a later producer overwrite slots in use.
+
+=acceptCredit= in =ActorRoundCost.lean= consumes the decoded rows with
+the existing cancellation check and budget accounting. A split buffer
+must decode to the same ordered prefix and leave any slots after the
+published count unreachable. A finite buffer model exercises delayed
+delivery, cancellation, a reused tail and budget refusal. The buffer
+changes transport storage only. The mailbox protocol and owner
+publication decision remain authoritative.
+
+Keep the fixed-arity compiled entry for list batches. The positive
+component runner selects the buffered entry only for an owned scalar
+assignment on one VM processor. A compiler fixture linked against the
+original entry can therefore exercise its original reference schedule.
+
+* Fact admission for a terminal component
+
+When =program/evaluate.ss= selects =terminal-component?=, the worker already
+owns novelty. =program/component-plan.ss= rules out custom storage and indexes,
+lattice joins and field predicates. =program/planning.ss= validates head arity.
+=core/positive-lowering.ss= builds one list cell per ordered head term; the
+identity reader in =program/component-worker.ss= instead reads a captured,
+width-checked row and checks that its compiled slots match the head. Both
+routes deliver the global head descriptor. The guard also excludes host
+execution control and the positive-plan cost collector. The ordered
+coordinator merge can therefore stage the canonical row without repeating
+provider dispatch, shape validation or dynamic checkpoint lookups.
+
+During component execution, =source-materialized-count= and =derived-count=
+are fixed. Compute the smaller remaining fact allowance before starting the
+component driver and check the same incremented pending count after each
+stage. Equal allowances select the derived-fact exception. The first failure
+still aborts the credit and leaves the owner publication unchanged. Keep row
+order, round-work marking, cancellation polls and the final owner acceptance.
+=ActorRoundCost.fact_boundary_exact= checks both arithmetic tests and error
+priority whenever the prior prefix passed. The terminal Quint model checks which prefix can
+be staged and published under each budget and owner decision.
+
+For a canonical terminal buffer, one length comparison can determine
+whether the whole batch fits. The worker keeps the existing mailbox
+buffer and polls. The coordinator selects bulk admission only for one
+assigned component and one output member on a single VM processor,
+with declared fact budgets and an initially admitted cut. Unlimited
+budgets supply no boundary. The member ordinal is bound once.
+A bulk merge writes the same ordered rows to
+the private pending lane and marks the lane on its first write.
+=ActorRoundCost.merge_prefix_exact= equates the batch prefix with the
+existing row-at-a-time check, including zero remaining facts and a short
+terminal tail. Native staging precedes the threshold comparison, so the
+rejected row is also privately staged before raising at the smaller
+boundary. =attempted_prefix_exact= accounts for that first rejected row.
+No later row is read and no refused cut is published. The coordinator
+retains the existing cancellation check before attempting the batch.
+Noncanonical provider actions and execution-control callbacks cannot use
+this arithmetic shortcut.
+
+* SCC partitioning and recursive execution costs
+
+=core/dependency-graph.ss= implements iterative Tarjan on dense relation IDs.
+=program/component-plan.ss= computes the positive-rule partition once per
+analysis identity. Its vertices are relation declarations, so replacing one
+million rows in the two-relation workload does not create one million SCC
+vertices. Strict dependencies use the same partition primitive in
+=core/rule-semantics.ss= and retain their separate cycle diagnostics. This
+matches the separation of dependency analysis from semi-naive evaluation in
+the [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Ascent paper, Section 4]]. See [[https://doi.org/10.1137/0201010][Tarjan]] for the linear traversal bound.
+
+POO revision =d7d438e53a5becf5c17bf781dc166ae54e8409ee= captures symbol keys
+as dense ordinals and stores adjacency in offset and target arrays in
+=strong-components.ss=. It has a wide Tarjan path, a compact implementation
+of [[https://arxiv.org/abs/2201.07197][Tarjan and Zwick's Algorithm T]] with the stop-when-done rule, a rank
+check that skips DFS for singletons, and an owned partition revision
+path for graph edits. Its public groups use source order. ASCENT's dense
+partition returns source-before-target order. =SccState.lean= proves the
+singleton conclusion of the earlier-to-later rank check, admitting self
+edges. Compact packed state is a separate experiment for large dependency
+graphs. [[https://whileydave.com/publications/Pea16_IPL_preprint.pdf][Pearce's SCC paper]] explains the memory savings of combining DFS state.
+
+The direct native diagnostic partitions a dense chain and ring, each with
+one million vertices. The chain oracle checks the exact singleton order.
+The ring oracle checks that one component contains every vertex exactly
+once. The existing ASCENT partition took 337 ms on the chain and 158 ms on
+the ring, corresponding to 2.96 and 6.34 million input edges per second.
+Preparation and full result verification were timed separately. Both are
+single observations with concurrent external builds. Their absolute local
+phase and process receipts are under the ignored benchmark cache.
+
+For the recursive million-output workload, =program/component-worker.ss=
+builds a frame, looks up a binding in the unchanged edge relation, stages
+novel rows, and installs each accumulated delta. Keep the same ordered
+hash-index buckets and delta pivots. A candidate for the explicitly checked
+linear binary rule can compile the two column reads and the indexed join
+once, then carry the bucket cursor through the owned delta traversal. Track
+index build, probes, visited bucket rows, duplicate heads, new rows, yield
+and credit traffic, and copied spines separately. Reject a candidate if it
+changes ordered witness occurrences, source versions, cancellation coverage,
+fact refusal or owner publication. =MillionQueryWorkload.lean= gives the
+ordered witness equivalence and exact candidate visits when a physical
+bucket equals the stable filter of its captured source. Its routed form
+also permits the accessor's small-input scan, provided matching recovers
+the same ordered bucket. The isolated Scheme prototype recognizes the
+exact projected head and two body slot maps, the pivot at the recursive
+body ordinal, and a source outside the SCC. Stratum planning can retain
+an additional pivot for an external relation. The SCC worker initializes
+its external deltas empty and writes only member deltas, as modeled in
+=ComponentClosure.external_delta_stays_empty=. The specialized path is
+dispatched only at the recursive pivot. First traversal still uses the existing
+evaluator. The specialized delta traversal visits the old source through
+its existing accessor and uses the exact same worker checkpoint and merge
+functions. There is one poll for each visited delta row and one for each
+reported candidate from the source accessor, before accepting its match.
+
+The current retained-source accessor still calls
+=gerbil-ascent-source-scalar-index-rows= in =table/access.ss= at each probe.
+That function converts an existing single row into a newly allocated
+singleton list. It returns an existing list on a multiple-row match.
+=source_bucket_visit_exact= models a direct ordered visitor of the same
+entry. A direct visitor can eliminate one outer cons per singleton hit
+without changing any row value, candidate ordering, or checkpoint. The
+first Scheme prototype still uses the original accessor and incurs this work.
+
+** Direct traversal of the retained source bucket
+
+Bind a raw bucket probe through the same versioned =with-index= admission
+in =program/index.ss=. Bind only on the recursive pivot, when the source
+is already selected for the native retained scalar index. The coordinator
+hands the worker this reader for the duration of its current assignment.
+The reader does not outlive the join, extend any source or accept any
+caller-owned value. Releases, misses, and small scans continue through
+their existing ownership and rollback boundaries.
+
+The first scalar field of an owned row cannot be a pair. Consequently
+an absent hash entry means no row, a pair-headed entry is an existing
+bucket, and every other admitted entry is one owned row. This is the
+same dispatch as =gerbil-ascent-source-scalar-index-rows=. The worker
+invokes the same per-visit checkpoint and equality match in all three
+cases, in the same order, before candidate membership and merge.
+=MillionQueryWorkload.source_bucket_visit_exact= and
+=ComponentIndex.qnt= cover ordered dispatch and source lifetime,
+respectively. Native checks must cover a missing key, singleton identity,
+duplicate buckets and replacement of the source cut.
+
+** Complete export from a captured newest-first root
+
+The completed untimed owned Actor result can publish a lazy explicit view of
+its persistent root. Full export traverses that root newest first and prepends
+a detached row to its caller-owned list. It does not construct an ordered
+intermediate spine. Selected visits still use the existing explicit reader
+and its chronological promise, which can be forced independently. Provider
+views, timed execution cuts, ordinary sessions, relation sizes, and the
+public representation observation keep their existing routes.
+
+=MillionQueryWorkload.detach_newest_first_exact= proves that the one-pass
+result is an ordered map of the same copied rows. The existing terminal
+component ownership model establishes that only the unpublished pending
+spine may be mutated. Native checks should interleave selected visits and
+complete exports with mutation and later replacement of the same session.
+
+The first route control exposed an overly narrow pivot match. After the
+correction, forcing the specialized routine to reject stopped the recursive
+workload and left the ordinary million-row workload successful. All 101
+native semantic cases passed, including ordered diamond results across a
+small source and an indexed source. The two fresh cold observations per
+side verified all 1,040,384 output rows. Mean solve and publication CPU
+fell from 924 to 695 ms, and its GC CPU fell from 195 to 105 ms. Export
+wall time rose from 13 to 112 ms. Whole-process peak RSS was about 1.00 GB
+for the reference and 1.02 GB for the prototype. External builds were
+observed during both cohorts.
+
+The compiled sustained comparison kept the original 90-second supervisor,
+2 GiB heap and 1,000 changed-source requests. The last verified markers
+were 90 requests for the reference and 120 for the prototype. Their timed
+prefixes produced 1.21 and 1.52 million verified output rows per second,
+respectively, including source replacement, evaluation, export and oracle.
+Both processes hit the original limit. The timeout receipts do not certify a
+child peak RSS or final latency distribution. Keep the prototype in the
+benchmark cache pending the complete acceptance run.
+
+** Eliminate the unread worker-local member total
+
+For one compact borrowed component with exactly one member, inspect every
+projected rule after constructing its linear pivot certificate. A rule can
+read the member total on the initial full traversal. Thereafter a certified
+linear pivot reads the member delta and an external total. A rule with no
+member pivot never runs after the initial traversal because its external
+delta is empty. If any rule has a member pivot without the checked linear
+shape, keep the existing member total and index updates for the whole SCC.
+
+=ComponentClosure.dead_member_total_preserves_reads= gives the exact
+read equality after omitting the member append under this guard. Deduplication
+still seeds from the initial member root and persists across rounds. Every
+novel row must still enter the existing delta and pass the regular merge,
+credit, resource, and publication checks. The coordinator uses its own
+frontier and releases the compact snapshot after joining the worker.
+
+** Retire pair membership only for a certified functional DAG
+
+The residual inner loop records every derived pair in membership, even when
+an external column has one distinct successor per source and a strict rank
+on every edge. Admit that graph shape while capturing the static input and
+require an empty initial head plus the exact base projection and linear
+recursive rule. A frontier then has at most one row per origin, and an
+origin cannot repeat its destination at two different distances.
+=MillionQueryWorkload.successor_distance_no_repeat= states the latter
+property for arbitrary ranks. Acyclic branching, cycles, seed rows and
+other rules still require the general membership path. Preserve source
+occurrences, frontier order, the owner check for every admitted row and the
+existing credit and cancellation events before implementing this path.
+
+Capture the certificate in the existing base projection's candidate
+callback. Only an exact two-rule, one-member assignment with an empty
+member cut may try it. The base always uses ordinary membership and
+emission. A temporary immediate-key table checks first-coordinate
+occurrences, and the same callback checks each edge for strictly
+increasing nonnegative fixnums. An invalid row or repeated origin
+discards the certificate and retains the ordinary membership path.
+The checks run after the base visitor's existing per-candidate polls.
+
+After a successful base, the worker can release the pair membership table.
+It substitutes the existing staging callback for membership on the
+certified recursive pivot. The index lookup and recursive checkpoints
+remain the same, including visits from an unfiltered small source.
+The coordinator still charges, merges and publishes the same ordered
+facts. The Lean frontier proofs check deterministic extension, within-round
+uniqueness, and disjointness from every earlier depth. The Quint control
+checks the observed frontier against first occurrence and exercises
+missing rank, duplicate source, and seed guards.
+
+The isolated implementation passed 113 native semantic cases, including
+cuts that alternate between certified and fallback execution, existing
+seeds and a refused derived-fact budget. Injecting refusal at certificate
+completion stopped the recursive million-row workload and left the
+nonrecursive control successful. The full Lean build and the Quint
+model with four fault controls passed.
+
+Two cold observations reduced run and publication CPU from 514 to 405 ms.
+The original sustained workload verified 160 reference and 200 prototype
+queries before the 90-second deadline. Throughput in the reported
+prefixes was 1.93 and 2.36 queries per second, respectively. Observed
+build activity differed across the arms. Neither arm supplied a complete
+latency distribution or reached the 1,000-query gate. Disjoint ten-query
+phase totals give a lower bound of 391 ms on the prototype prefix P95,
+so even that prefix misses the unchanged 100 ms limit. The prototype
+remains in the ignored benchmark cache.
+
+** Storage prototype measurements
+
+Two cold observations per arm gave 916 to 603 ms of solve and publication
+CPU for direct bucket access. Native refusal on the direct probe stopped
+the recursive workload while the base-only control still completed.
+Direct export lowered its measured phase from 130 to 11 ms, but solve and
+export CPU combined was 668 versus 663 ms. The collection boundary moved,
+so the isolated export time is insufficient to choose this variant.
+
+Under the original compiled 90-second sustained workload, the direct
+bucket reference verified 160 complete queries in its reported 84.48 s
+prefix. Omitting the unread total verified 150 in its 81.19 s prefix.
+Both arms were refused by the deadline before 1,000 requests. The sampled
+process peaks were 1.58 and 1.65 GiB respectively, with foreign builds
+observed on both arms. Preserve the direct bucket prototype for further
+qualification and retain the two negative comparisons. No latency
+distribution is available from those incomplete acceptance windows.
+[[https://www.cs.utexas.edu/ftp/techreports/tr86-25.pdf][Linear recursive query evaluation]] supplies a basis for the linear case.
+[[https://arxiv.org/abs/1210.0481][Leapfrog Triejoin]] is a separate comparator for cyclic joins with three or more inputs.
+
+The Dusa forward engine dispatches new facts through stored prefixes and
+new prefixes through existing facts. The local Racket miniDusa reference
+uses a distinct rule-selection loop in =private/runtime.rkt=. The two
+implementations can inform trigger and oracle design respectively. Branch
+constraints follow the [[https://arxiv.org/abs/2405.19040][finite-choice fixed-point semantics]] and keep branch-owned indexes and provenance.
+
+Report the million-per-second target with a unit. Session state counts one
+verified request and reply. A changed-cut query counts one replacement, run
+and full export, while exported-row throughput counts every verified row
+in that result. At 1,000 measured queries of at least 1,000,000 rows within
+90 seconds, the sustained gate requires over 11.1 million verified output
+rows per second even before accounting for preparation. Report the verifier
+as its own phase without reducing its validation or excluding it from the
+supervisor. Report partition cost separately on a dependency graph whose
+vertex and edge counts scale independently of the fact workload.
+
+** Production query and result ownership
+
+In =benchmarks/actor-million-test.ss=, every sustained sample replaces the
+source cut with a disjoint input, runs the Session, calls =rows-of=, and
+checks every delivered row against the independent oracle. The fixture
+alternates values with the same graph shape. General replacement must
+continue to admit the submitted values, including equal values in a
+different source order. A repeated-query benchmark should instead use a
+completed cut and exercise the existing =result= request and keyed
+=visit-rows= method. For a 10,000-row workload, measure full list export of
+that size separately from those reads. Measure a small edit of a large cut
+as a third workload alongside disjoint replacement.
+
+=program/actor-session.ss= clears its retained evaluator on replacement.
+The owner commits a result only when the generation and worker agree and
+the authority accepts publication. =program/execution-publication.ss=
+already accepts a =relation-view= at the cut boundary. The view can serve
+keyed reads and full ordered exports through the existing Result methods
+in =program/result.ss=. Keep public row ownership independent of internal
+storage. Returning an existing caller-editable Result or sharing its
+mutable row spines would violate that boundary.
+
+The positive Set routes should construct fewer physical tuples. An
+identity projection can share the frozen source carrier after verifying
+uniqueness and the required order. For the certified ranked functional
+rule, the unique successor and per-origin suffix length describe the
+closure without constructing every pair while solving it. Keep only the
+source root, its successor index and bounded traversal state. The
+descriptor needs an ordered visitor that emits each row once on explicit
+export. =MillionQueryWorkload.successor_frontiers_exact= proves the
+alternating order induced by prepending into each new delta.
+=MillionQueryWorkload.successor_rows_length_exact= proves that a table
+satisfying the terminal and successor length equations counts each
+frontier exactly. A concrete descriptor, construction and validation of
+that table, evaluation budget and cancellation trace, and provenance
+reconstruction remain obligations before this route can publish.
+Opaque providers, unproved graph shapes and observable rule callbacks
+require the general path. A small source change requires invalidating
+supports in affected indexes and SCCs, including removal of supports for
+retracted facts.
+
+The batch-credit prototype reduced solve and publication CPU from
+489 to 349 ms across two cold observations per arm. In the sustained
+90-second prefixes, the recursive case improved from 2.12 to 2.95
+complete queries per second, and the million-input projection from 1.73
+to 2.43. The candidate's average solve and publish times were 268 and
+314 ms, with full export of 56 and 62 ms respectively. The candidate
+spent more GC CPU per query inside solve and publication in both cases.
+Sampled foreign build activity differed across arms. Neither workload
+reached 1,000 verified queries. Disjoint ten-query groups establish
+prefix P95 lower bounds of 339 and 399 ms respectively. The recorded
+process peaks include storage outside the Gambit heap.
+
+In the matched 4,096-edge Session window, both arms completed all
+1,000 verified cycles. Whole-cycle
+throughput rose from 108.27 to 114.46 cycles per second. Replacement
+transaction CPU fell from 3.572 to 3.242 seconds while its P95 rose
+from 3.343 to 4.374 ms. The scope of the prototype must account for this
+tail before adoption. Allocation deltas were negative on both arms and
+cannot support an allocation improvement claim.
+
+The 16,384-edge typed production path completed 1,000 verified cycles
+per arm. =interface/engine-api.ss= implements eager =source-replace=
+and lets =source-run= read the completed version. =source-replace=
+also copies the admitted rows into the interface source history after
+the Actor captured its own source rows. Reuse of a single immutable
+source block must preserve that history's generation and provenance
+and continue to detach externally mutable values.
+
+Measure the whole transaction alongside its phases. Complete read P95
+was 0.522 to 0.492 ms, and replace-and-export P95 was 53.969 to
+50.739 ms. Throughput was 41.48 to 45.62 complete cycles per second.
+The maximum rose from 76.018 to 113.864 ms. In the prototype 152 of
+157 transactions taking at least 20 ms spent most of that time in GC.
+The stock allocation counter returned negative deltas. The sandbox
+denied process sampling for the 4,096- and 16,384-edge observations,
+so their native timings do not establish process RSS or isolation
+from foreign builds.
+
+** Terminal Set result views
+
+Build the private result on the assigned Scheme worker. Only the
+untimed, single-processor terminal assignment may offer a view. The
+canonical scalar route already excludes user callbacks and work
+observers. The sole output member must have an empty seed lane. The
+identity projection checks distinct ordered integer origins before it
+borrows the source rows. The recursive projection uses the existing
+exact compiler shape and checks unique nonnegative integer origins and
+strictly rising targets. Its private index maps each origin to the
+ordinal of its edge. The successor-length recurrence visits each edge
+for admission without constructing the transitive pairs.
+
+The assigned worker polls through the existing credit round during
+admission. It transfers the descriptor only through the joined
+assignment; the coordinator checks cancellation before acceptance.
+The Session generation and final authority still govern publication.
+An over-budget result is evaluated by the existing row-wise budget
+route, so refusal retains its original first failure and the previous
+committed version. The prefix-fit proof covers the accepted route.
+
+The terminal evaluator publishes the count and detached snapshot
+through the existing Result. Public row spines are freshly constructed.
+The compact snapshot preserves the ordinary Set representation
+observation and complete ordered export. Each visit owns its cursors.
+Full export prepends fresh tuples in worker order, thereby applying the
+same final reversal as the terminal Set lane. The Lean frontier,
+cardinality and terminal export lemmas correspond to these three
+steps. =ActorCompactResult= exercises wrong counts, refusal, stale
+generation and reversed-order publication as negative controls. The
+existing explanation surface still receives the same result and source
+generation, including when a later update is refused.
+
+In the original 90-second compiled workloads, the recursive reference
+verified 290 changed-cut queries, and the compact view verified 980.
+Their reported prefixes sustained 3.36 and 11.29 complete queries per
+second. Average evaluation and publication fell from 229.19 to
+3.64 ms; export rose from 56.42 to 73.43 ms. Process peak samples fell
+from 1,614 to 765 MiB. The corresponding projection comparison
+verified 200 and 670 requests at 2.35 and 7.85 queries per second.
+Projection evaluation and publication fell from 325.91 to 48.91 ms,
+with 38.68 ms in replacement and 28.57 ms in export for the compact
+view. Source capture still copies the full input on every change and
+the stock GC can charge those retained roots during evaluation.
+
+Build activity differed across the four arms. Each was stopped by the
+unchanged supervisor before 1,000 verified requests. Prefix throughput
+can locate the changed cost, but the prefixes do not provide the final
+latency distribution or qualify the 100 ms gate.
+
+The fused export loop moves the public list accumulator through the
+same traversal that compacts the active origins. The unfiltered export
+no longer calls a collector or tests a selection on every row. The
+packed cursor proof establishes that writes in either direction leave
+unread slots unchanged. The source index still selects an origin for
+keyed visits and the visitor emits freshly constructed rows.
+
+With the same compiled recursive workload the fused version verified
+all 1,000 requests in 81.0 seconds. The native process exited in
+85.8 seconds. Median latency was 60.95 ms, P95 was 120.32 ms, and
+maximum latency was 315.46 ms. The original P95 assertion failed.
+The complete requests sustained 12.35 per second, or 12.84 million
+verified rows per second. Evaluation and publication averaged
+4.01 ms and export averaged 64.42 ms. The full window recorded 444
+natural collections and 21.60 seconds of GC wall time. The raw
+allocation counter was negative, so only the GC and process resource
+observations are usable. The original failed outcomes and the fused
+result are retained under the ignored measurement cache.
+
+** Ordered ordinal runs
+
+The functional view already owns the complete successor ordinal table
+before publication. A uniform adjacent successor direction partitions
+the source order into independent contiguous runs. Admit this layout
+only when every link is a terminator or a step of the same unit
+direction. Integer labels need not be consecutive and remain in the
+original frozen vectors. Arbitrary links continue through the
+gathering cursor.
+
+For an admitted run =ordinal_run_reaches= equates displacement with
+successor iteration while the final slot remains inside the run.
+=ordinal_run_no_cross= covers the run boundary. During export, each round
+visits live runs in the same alternating orientation as the row
+frontier. It enumerates the eligible origin interval directly and
+retires a run once it can no longer contribute. The per-row loop
+reads the labels and creates only the public tuple and its list cell.
+It no longer reads or writes two moving cursor slots for every row.
+Budget checks still use the existing suffix count. The optional
+layout is prepared by the same worker and crosses the same join,
+cancellation and owner publication checks as the functional view.
+
+The unchanged recursive suite passed all 1,000 queries with the
+90-second supervisor and the 2 GiB heap limit. Its timed window took
+51.67 seconds, sustained 19.35 complete queries per second, and
+verified 20.13 million rows per second. P50, P95, and maximum were
+34.26, 90.07, and 187.30 ms respectively. Mean export fell from
+64.42 to 34.63 ms versus the earlier fused run. The candidate's CPU
+time was 50.34 seconds, natural GC wall time was 22.95 seconds, and
+sampled process peak was 1,078 MiB. The uninstrumented runs observed
+different foreign compiler activity.
+
+Both instrumented arms saved 1,000 per-request export samples. With
+no collection during export, median export fell from 42.47 to
+12.69 ms. Median raw allocation-counter readings in those samples
+were 149,947,872 and 149,818,768 bytes respectively. The allocator
+still builds the complete public row and list spines. The measured
+GC wall time during export rose from 14.27 to 27.05 seconds, and
+the instrumented P95 rose from 118.76 to 144.67 ms. The candidate
+arm observed 910 foreign compiler identities versus 203 for the
+reference. The traced windows establish phase costs and the
+remaining sensitivity to GC and load. They do not isolate the
+cause of every tail observation. The cumulative Gambit allocation
+counter remained negative and is unavailable as allocation evidence.
+
+Native equivalence exercises both successor directions, unequal
+lengths, nonconsecutive labels and the nonadjacent fallback.
+The route refusal interrupts the large recursive export and leaves
+the identity projection and ordinary components operational.
+The original projection workload retains its outstanding
+source-copy and GC costs.
+
+** Certificates captured with the source
+
+Keep source validation, duplicate-replacement checks, and the input
+limit check before copying. The canonical binary capture can record
+strict first-column order while it allocates the detached rows. The
+certificate describes the copied root, never the caller's list.
+=ordered_capture_nodup= proves that a uniform strict comparison of
+adjacent keys excludes duplicate rows. A repeated key, change of
+direction, or append receives no certificate. Such cuts remain
+eligible for the original evaluation path.
+
+The terminal identity worker checks the exact stored root at its
+relation ordinal. A matching source certificate replaces the
+worker's order scan. Use the exact cardinalities already recorded at
+initialization so the coordinator does not count the copied lists
+again. Admission still checks the exact input and output limits.
+An uncertified view can use the former scan, and an over-limit view
+uses the former failure route. The existing ready checks, end-of-task
+cancellation check, join, and owner publication protect the smaller
+assignment. A detached result retains only its source snapshot.
+Provenance remains bound to the published source generation.
+
+The same root check can carry the source slot's existing chronological
+promise into the execution result. A source relation whose rows are
+unchanged by evaluation needs no eager reversal at publication.
+Forcing or scanning the promise must still detach the public tuples.
+When the relation has added derived facts, its root and exact count
+no longer identify the source slot and the existing publication path
+continues to reverse the full relation.
+
+In the original 90-second projection windows, the reference
+verified 520 requests and the source-capture prototype verified 510.
+Mean evaluation and publication fell from 60.20 to 27.42 ms, with
+CPU falling from 52.27 to 17.20 ms. Mean replacement rose from
+46.29 to 51.42 ms and export from 36.99 to 53.11 ms. Both timed
+out and supplied no complete latency distribution. The prototype
+and reference observed 1,342 and 446 foreign compiler identities
+respectively. The recursive regression verified all 1,000 rows-of
+requests and missed P95 at 177.74 ms with 1,021 foreign compiler
+identities observed. Preserve the separately passed ordinal
+prototype and retain this regression.
+
+The separate 64-request phase diagnostic verified every million-row
+result in each arm. CPU per request for evaluation and publication
+fell from 53.15 to 15.57 ms. That phase recorded nine collections
+in the reference and none in the prototype. The replacement phase
+recorded five and thirteen collections respectively. The export
+phase still spent about 1.73 seconds in GC across 64 prototype
+requests. For replacement and export intervals without a collection,
+the prototype's mean raw counter readings were approximately
+144 million bytes per operation. The reference's corresponding
+readings were of the same size. These scoped readings do not establish
+cumulative allocation. Evaluation savings leave the detached input
+tuples and public output tuples as the primary allocation paths.
+
+** Packed binary source cuts
+
+One admitted binary identity rule with an external input and one
+terminal member can capture ordered fixnum rows in a private signed
+integer vector. The source slot still holds the exact occurrence count
+and both ordinary list orientations as promises. The input list and
+row pairs must validate before capture. If values or ordering fail
+the packed guard, capture with the existing detached-list path.
+Append and timed, observed, seeded, or over-limit evaluation keep
+the existing row semantics.
+
+After budget and eligibility checks, initialize the canonical source
+lane with the frozen chronological view. The terminal worker borrows
+the exact view from the same source slot and publishes it through the
+joined receive path. Both relation names preserve their public order
+and cardinality. Every export constructs fresh list and tuple cells.
+No indexed rule consumer or dependent component can receive the packed
+lane. The existing commit and cancellation checks still run.
+=packed_capture_roundtrip= and =packed_capture_exact_extent= model
+the cell layout and bounds. The compact release model checks that the
+result remains detached from caller edits and only publishes in the
+admitted runtime case.
+
+The retained evaluator already checks the current private cut for
+scalar values. For the packed case, this same cut can satisfy the
+scalar-row requirement of update selection. The declaration tree,
+fields, providers, and rule predicates still pass their existing
+eligibility checks. Scanning the declaration's initial row list
+would inspect a different root after the first source replacement.
+Trust the captured root only on the untimed, unobserved packed route.
+The packed loop can use Gambit's internal signed-vector access once
+it has checked the buffer type, extent, and captured fixnum values.
+=packed_row_indices_fit= relates the two cell offsets to each row
+ordinal. The public keyed path supplies ordinals from a half-open
+search window, and the forward and reverse exporters stop at the
+respective ends of the private vector.
+
+Both packed candidates passed 133 native semantic cases. The first
+prototype kept the declaration scan and the checked vector calls.
+It verified 780 projections within the original supervisor. In
+the same 64-request attribution workload, the mean raw source
+capture counter for samples without GC fell from about 144 million
+bytes to about 16 million bytes. Capturing was still CPU-bound.
+
+The revision that uses the exact admitted cut and the checked
+cell offsets verified all 1,000 projections in 47.65 seconds.
+Replacement averaged 10.64 ms, evaluation and publication 0.34 ms,
+and export 25.57 ms. Median latency was 22.08 ms, P95 was 135.10 ms,
+and maximum was 148.68 ms. The P95 assertion failed. The 247 natural
+collections consumed 25.53 seconds of wall time. The cumulative
+allocation counter is unavailable across collections, regardless
+of its sign in an individual run.
+
+The same revision passed the native recursive window at 21.27
+complete queries per second with P95 of 89.33 ms. It also completed
+one million verified Session state requests at 621,440 replies per
+second with 0.875 microseconds P95. These windows observed different
+foreign build activity. Scope both passing results to their exact
+fixtures and retain the projection failure.
+
+The separate export trace captured all 1,000 projections. Among
+248 requests exceeding 100 ms, 225 overlapped a collection during
+export. Forty-eight of the 50 slowest requests overlapped such a
+collection. The recorded export GC wall time was 23.66 seconds.
+Without an export collection, median export was 2.21 ms. The traced
+P95 was 134.38 ms and still missed the original gate. This isolates
+the major remaining tail to collections during materialization of
+the complete public list. The raw allocation counter across either
+full run remains unqualified.

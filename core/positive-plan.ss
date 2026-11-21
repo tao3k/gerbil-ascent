@@ -36,7 +36,7 @@
 
 (defstruct native-plan-cost (counts prefixes started? visits) final: #t)
 (def (make-positive-plan-cost (record-prefixes? #t) (record-visits? #f))
-  (make-native-plan-cost (make-vector 31 0)
+  (make-native-plan-cost (make-vector 32 0)
                         (and record-prefixes? (make-hash-table)) #f (and record-visits? [])))
 ;;; Diagnostic values are detached on read; no callback observes a live frame.
 (def (positive-plan-cost-visits cost)
@@ -64,7 +64,9 @@
 (def (positive-plan-cost-index! kind (rows []))
   (alet (cost (current-positive-plan-cost))
     (case kind
-      ((build) (cost-add! cost 14 (length rows)))
+      ((build)
+       (cost-add! cost 14 (length rows))
+       (cost-add! cost 31))
       ((extend) (cost-add! cost 15 (length rows)))
       ((probe) (cost-add! cost 16))
       ((membership) (cost-add! cost 17 (length rows)))
@@ -90,8 +92,9 @@
          index-build-input-rows index-extend-input-rows physical-index-probes old-membership-input-rows
          empty-cell-tests empty-key-comparisons empty-cell-hits empty-cell-writes empty-cell-entries
          empty-version-comparisons empty-field-stores
-         prefix-state-tests prefix-build-input-rows prefix-slot-stores prefix-state-replays prefix-slot-restores old-tail-hits)
-       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30)))
+         prefix-state-tests prefix-build-input-rows prefix-slot-stores prefix-state-replays prefix-slot-restores old-tail-hits
+         index-builds)
+       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31)))
 (def (cost-prefix! cost kind index signature rows owner)
   (alet (seen (native-plan-cost-prefixes cost))
     (let* ((key (list kind signature rows))

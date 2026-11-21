@@ -140,42 +140,96 @@ resource-limit and stale-provenance controls remain required.
 Repeat the complete production workload with the original controls. A partial
 timed-out trace is diagnostic evidence, never performance acceptance.
 
-* Remaining Actor work-counter boundary
+* Ordered binary views at the reply boundary
 
-=program/engine-state.ss= currently refuses =current-positive-plan-cost= for
-an engine with cancellation, reuse, Session state or multiple workers. An
-attempt to attach that mutable collector to a real Actor evaluation was
-correctly rejected. Do not relax this guard to obtain measurements. Native
-stack samples and completed-call brackets are available, but Actor join/index
-counts require a separately justified owner-local observation design. The
-existing serial counter tests do not close that production-path obligation.
+The affine and packed integer source views own two field readers and the
+published row count. Their full visitor advances by increasing ordinal.
+Their list exporter advances backwards and prepends, yielding the same
+order. Bind the optimization to that exact exporter and its field visitor.
+Replacing an exporter removes this permission unless the exporter is the
+same procedure. General view selection and list consumers keep their
+existing paths.
 
-Full semantic, formal and performance acceptance is required for the exact
-published head. The Contract aggregate's cumulative-allocation failure remains
-upstream-owned; passing other modules does not close that lane.
+An eligible complete Result hands the existing integer packet writer the
+captured count and two positional fields per row. Validate a positive
+count and the fixnum allocation extent before constructing the signed
+64-bit vector. Bound every write by the declared count and require exact
+delivery. Check the existing cancellation and deadline authority in the
+writer. Each packet belongs to its invocation. Publication still happens
+at the existing reply acceptance point, after every requested relation
+has produced its complete payload.
 
-* Production Actor selection and matched recursive control
+The Lean correspondence is in =MillionQueryWorkload.lean=.
+=binary_reply_matches_complete_export= states the order and decoding
+equivalence. =binary_reply_writes_fit= and =binary_reply_refuses_partial=
+cover the bounded writer and canceled or short reply.
+=binary_reply_keeps_capture= states the result-version frame. The proof
+models the ordered field sequence and its allocation bounds. Native tests
+check selection of the exact exporter, interruption, and old reply
+isolation at the Scheme boundary.
 
-Keep the typed constructor fixture as an ordinary-Session control. Add an
-explicit =ASCENT_BENCH_DSL=ascent= selection to the existing production
-throughput benchmark. It loads the same two closure rules through the public
-=Engine.load_sources= interface. Scheme execution must report =executionRuntime=
-from the actual =api-session-actor?= branch used by =source-run=. Assert this
-diagnostic for every completed Scheme request. Native tests independently
-observe the evaluation thread for both choices. The label is diagnostic;
-completion, cancellation, budget and proof authority remain separate.
+The private writer polls the current execution authority before allocating,
+at 1,024-row intervals when an authority is present, and after traversal.
+These are zero-work checks on already admitted rows. The Session's
+work and fact budgets retain their original meaning. The engine compares
+the generation captured at request entry with the generation at reply
+acceptance. A reentrant replacement during a checkpoint can therefore
+advance the Session without relabeling the in-progress packet.
 
-The grouped closure remains 256 chains of width 16, with 3,840 input edges and
-30,720 output rows per changed request. Keep the Rust independent complete
-pair oracle, all finite resource prechecks, original limits and explicit
-result release. The Rust oracle avoids attributing source-interpreted Scheme
-benchmark validation to the production evaluator. Report client population
-explicitly; default it to the machine's available Rust parallelism and permit
-an experimental override for matched one-client and saturation measurements.
-This is a workload population, not a limit on the Actor protocol.
+The qualification Case drives =source-run= through a committed identity
+projection with descending origins. It compares complete list order,
+rejects a replacement beyond the existing fact budget, interrupts the
+writer after its first block, and changes the source during another
+packet. An already returned packet keeps its original fields. Separate
+controls replace the view's list exporter and inject count underflow and
+overflow. The reordered view uses the existing list writer.
 
-The direct source-entry recursive diagnostic exceeded its unchanged 90-second
-limit. Its native sample includes GC scanning and Scheme evaluator frames.
-No completed distribution or attribution of the whole timeout to the query
-kernel follows. Preserve that prototype and receipt in =.cache/=; do not add
-it to the required suite as a purported passing performance qualification.
+The million-row delivery Cases reuse the two alternating inputs and the
+existing Actor publication. They live in a separate test module so the
+original list gate keeps its imports and suite unchanged. Both use the
+same production packet encoder.
+The list arm declines the capability, and the ordered arm gives the list
+exporter a refusal stub. Both check the packet's count and width and
+decode every signed cell into the same ordered Scheme consumer. The
+request timer includes replacement, publication, packing, decoding and
+delivery. Rust's VM transfer and PyO3 are outside this native timing.
+The ordered path applies to completed views carrying the certificate.
+Results produced by other evaluators, including timed results without
+the certificate, retain the existing packet writer.
+
+The frozen Gerbil =1cfb032= and Gambit =ea114fc= runs used one VM
+processor, the 2 GiB heap cap and the 90-second process limit. The first
+1,000-request trials stopped before completion. The last recorded
+markers were 400 for the list arm and 900 for the ordered arm. A
+subsequent single 256-request list window was also stopped. The final
+comparison uses separate 128-request windows in the order list, view,
+view, list. Each request still consumes one million rows, and each arm
+consumes 256 million verified rows in total. The original 1,000-request
+mutable-list acceptance test is independent of this comparison.
+
+| Measured phase | List staging | Direct ordered view |
+|----------------+--------------+---------------------|
+| Complete request P95 | 439.13-465.95 ms | 86.71-98.39 ms |
+| Packing P95 | 415.87-437.74 ms | 49.42-59.95 ms |
+| Decode and delivery P95 | 25.44-29.41 ms | 42.26-43.58 ms |
+| Maximum complete request | 535.42 ms | 278.03 ms |
+| Verified rows per second | 3.51-3.55 million | 16.79-17.72 million |
+| Collections per 128 requests | 44 | 3 |
+
+All four windows exited normally after independently checking every row.
+Subphase percentiles are measured from their own samples. The complete
+request percentile includes the source update and publication. The
+ordered writer avoids the temporary detached list, and its maximum still
+reflects long requests in the observed windows. The frozen mutable-list
+gate remains pending the next Gambit release, per the current test scope.
+
+The interface, condensed Session and positive provenance suites passed 28
+native cases. Lean Guard built all 196 jobs, and its rendered row-packet
+selection exactly matched the generated Scheme region. Raw receipts are
+under =.cache/ascent/ordered-packet/=.
+
+#+begin_src sh
+gerbil test t/qualification/ascent-engine-interface-test.ss
+gerbil -:max-heap=2G test -r '^actor-million-integer-list-test$' benchmarks/actor-integer-reply-test.ss
+gerbil -:max-heap=2G test -r '^actor-million-integer-view-test$' benchmarks/actor-integer-reply-test.ss
+#+end_src

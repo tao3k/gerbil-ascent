@@ -1,0 +1,112 @@
+#+TITLE: Bound reachability across graph versions
+
+* Research and scope
+
+[[https://doi.org/10.1145/6012.15399][Magic Sets (Bancilhon et al., 1986)]] propagates bindings from a declared query into bottom-up deduction. With a fixed origin =s=, the two positive transitive rules specialize to =reachable(y) :- edge(s, y)= and =reachable(z) :- reachable(y), edge(y, z)=. A fixed target lets evaluation return on discovery. This design covers that rule pair over directed integer edges.
+
+[[https://kmicinski.com/assets/byods.pdf][BYODS (Sahebolamri et al., 2023)]], Sections 5.3 and 5.4, motivates choosing a representation for the operations the relation needs. The existing condensed implementation is a good fit when it can amortize closure across probes. This workload favors a shared adjacency index and work proportional to demand after a single-edge edit. The physical index contains successor lists, rather than closure rows or a mask per SCC.
+
+* Contracts and proof obligations
+
+The query asks whether at least one edge connects the bound origin to the bound target through a directed walk. For a self-query, a self-loop or a cycle suffices. An empty pending list gives a completed miss. Discovering the target gives a hit whose reverse predecessor chain records edges from the same graph. A resource failure or cancellation aborts without returning a miss or publishing a graph.
+
+An index snapshot owns two cold integer-key hash tables and two persistent trees of changed buckets. A changed edge replaces one successor bucket and one predecessor bucket. A deletion that empties a bucket masks the cold entry. A successful edit issues a fresh identity even if its edge set is unchanged. An older graph remains usable and can verify its own witnesses. Other versions and branches reject the witness even if the path still exists. Witness vertices are returned as a caller-owned list. This interface supplies one positive path witness. General ASCENT provenance and existing result traversal continue through their existing interfaces.
+
+The one-way reference rejects an empty successor or predecessor bucket before creating a worklist. For a distinct target with one predecessor, it starts from that predecessor and walks the transpose. Other queries start from the origin's successors. Both directions use the Gerbil standard FIFO queue and mark before enqueue. A self-query can only return after discovering an edge into the origin. The reverse search normalizes its chain before issuing a witness.
+
+| Native operation | Lean correspondence |
+|------------------+---------------------|
+| Scan the origin's successors before entering the worklist | =seed_iff=, positive rather than reflexive reachability |
+| Mark on discovery and enqueue a pending vertex at most once | =GraphWorklist.enqueue_wellformed= and the order-independent =RuleGraphClosure.visit_invariant= |
+| Stop at target discovery or empty pending queue | =chain_positive= for a hit and =exhausted_fifo_iff= for a miss |
+| Reject an empty target bucket, or traverse the transpose | =no_incoming_is_miss= and =reversed_index_exact= |
+| Shadow the affected buckets and insert or delete just one edge | =index_write_exact=, =set_edge_exact= and =edit_preserves_mirror= |
+| Normalize a reverse witness and replay it against the same version | =reverse_chain_checks=, =check_positive=, =witness_sound= and =other_version_rejected= |
+| Abort after a checkpoint or budget failure | =failed_not_miss=, with native exception paths tested independently |
+
+The kernel checks the abstract worklist and pointwise bucket update. =GraphWorklist= uses a list order. The =RuleGraphClosure= invariant used by the native FIFO is independent of the choice of pending vertex. Gerbil hash equality, tree ownership, queue operations and dynamic cancellation are checked through source review and native tests. No extraction of Scheme code is part of the proof.
+
+* Scheme interface and cost
+
+The =gerbil-ascent/program/api= module exports the opt-in graph interface. Open accepts a proper list of two-fixnum rows, removes duplicates and admits each row against the work budget and each distinct edge against the edge budget. Edit returns the new immutable graph, changed bucket count and actual old-edge reads. Query returns a witness or false, and actual searched edges. Path export returns independently owned pairs, and replay checks the version before reading its edges. The work budget charges every build row, bucket edge visit or copied prefix cell, pending dequeue and witness copy or edge comparison. The existing execution control also receives these work checkpoints.
+
+Cold construction makes one pass over the input with expected linear hash work. Each changed edit examines at most the two endpoint degrees, copies at most those two prefixes and path-copies the affected red-black tree branches. Each query examines only the chosen reachable region and stops on discovery. Its worst case still reaches the whole region, with one queue admission per discovered vertex. It retains no per-query cache on the graph. A retained witness owns its chain and a version token, rather than a reference to the source index.
+
+* Experiment and cost accounting
+
+Use the complete [[https://snap.stanford.edu/data/p2p-Gnutella25.html][SNAP Gnutella25 snapshot]] with 22,687 endpoints and 54,705 directed edges. Record the compressed SHA-256. Select origins of different out-degrees, unreachable pairs, self-cycles and single-edge deletions/restorations. Generate edits from the snapshot and describe their selection. This is a real topology with controlled edits. The snapshot alone does not establish historical edge churn.
+
+Compare the existing direct Scheme and Actor Sessions using both forward-bound and reverse-bound unary rules and a singleton answer relation. Delete by replacing the source and restore by the existing single-row append. Use a standalone full FIFO traversal over a dense vector as the dataset oracle, and Boolean matrix closure for exhaustive small graphs. Record cold preparation, update, first query and witness separately. Report per-sample combined latency before taking quantiles. Record positive-plan work in a separate fresh serial solve, where the existing collector is supported. The retained Session timing lane supplies Boolean answers and does not expose path witnesses or physical index counters for this rule.
+
+A hundred-fold performance claim requires comparable measured wall time on the same work and a successful baseline. An edge-count ratio alone is a work reduction. Exporting every row retains its output-size lower bound.
+
+* Observed results
+
+Measured on macOS 26.6.1 arm64 with Gerbil =1cfb032= and Gambit =ea114fc=. The benchmark starts from the complete input. Delete and restore the sole outgoing edge of vertex 680, which enters the large reachable region through 681. The near probe asks for 681 and the far probe for 22686. The cold index was measured 16 times, the fixed edits 1,000 times each, and each existing Session and direction 12 times. With 12 or 16 observations, nearest-rank P95 is also the sample maximum. The two Session implementations bind a literal and publish a singleton answer. The fastest applicable Session and direction are selected per endpoint and operation.
+
+| Phase | Indexed Scheme P95 | Strongest measured Session P95 | Ratio (Session / indexed) |
+|-------+--------------------+--------------------------------+---------------------------|
+| Cold open through near answer | 238.832 ms | Actor reverse, 115.888 ms | 0.49x |
+| Delete through near miss | 0.017292 ms | Actor forward, 86.027 ms | 4975x |
+| Restore through near hit | 0.021625 ms | Direct reverse, 7.954 ms | 368x |
+| Restore through far hit | 0.542833 ms | Direct reverse, 2.713 ms | 5.0x |
+
+The indexed cold build P50/P95 was 47.245/238.696 ms, and its first near query P95 was 0.136 ms. Delete and restore themselves had P95 of 0.014916 and 0.004125 ms. The first query after restore had near/far P95 of 0.017333/0.541417 ms. Near witness export/verification P95 was 0.625/0.708 microseconds, and far witness export/verification P95 was 1.917/8.542 microseconds. The existing Session supplies the Boolean answer, so the update-to-answer comparison excludes explicit path export and verification. The indexed delete through miss and restore through far hit had outliers of 156.926 and 66.499 ms. These data support a steady-state improvement for selective queries and cheap edits. They do not establish a cold-build or maximum-latency improvement.
+
+The independent forward oracle examined 50,817 edges to complete the bound origin. The indexed path examined one edge for the near hit, 635 for the far hit and zero for the bridge deletion. The prior forward-only experiment examined 50,825 edges for the unrelated miss =(0,680)=; the empty predecessor check reduces this to zero. A changed edit rebuilds exactly two adjacency buckets with no full index rebuild. Deletion inspects two old bucket entries in steady state, with 17 on the first edit; restoration inspects 17. Existing source replacement receives 54,704 rows for the delete, and its restore receives one appended row.
+
+The positive-plan diagnostic counted one physical index build over 54,704 rows on the deleted graph, with no edge candidates from the bound forward origin. On the restored graph the forward rule processed 50,817 edge candidates and 13 physical index builds over 75,981 input rows. The reverse rule processed 18,881 candidates and nine builds over 60,212 rows for the near target, and 18,864 candidates and nine builds over 60,180 rows for the far target. These are work counts for a fresh solve over those exact versions. Retained Sessions can reuse or extend their indexes, so these counts do not describe the timed append path.
+
+A second workload deletes and restores 32 edges at zero-based file positions =1723 * i=. After deletion, 24 original edge endpoints remain connected by another path. The graph update P95 is 0.013584 ms and the combined update and first-query P95 is 9.152 ms. First queries inspect 32,836 edges at P95 and 43,243 in the worst sample. The bridge case therefore supports a hundred-fold claim for selective queries on an already indexed graph. On the mixed sample the important next boundary is the remaining search region after an edge disappears.
+
+The original million-row export gates still require P95 below 100 ms. Their unchanged workload on this run returned 198.213 ms for projection and 117.949 ms for recursive export. Both failed the threshold after verifying all 1,000 replies. These are independent of the opt-in graph path.
+
+* Two-frontier candidate
+
+For distinct endpoints, start one rooted FIFO at each endpoint. The second FIFO traverses the transpose. Advance the FIFO with fewer pending vertices, preferring the forward queue on a tie. The first scan uses the reverse root when its bucket has one edge and the forward root has more than one. Each scan looks for the other side's seen set before admitting a new vertex. A meeting across a scanned edge supplies a nonempty directed path. The witness combines the forward chain with the backward chain after removing the duplicate meeting vertex. An emptied FIFO proves absence only after a complete scan and while the two seen sets are disjoint. Equal endpoint queries keep the existing positive one-way search, which detects a real self-loop or cycle.
+
+The algorithm reuses both existing versioned adjacency indexes. It adds query-local state only. Empty source and target buckets still return immediately after the cancellation check. A singleton outgoing bucket is charged and scanned before allocating either frontier. When its edge leads elsewhere, the forward queue starts at the resulting successor. Each examined edge, non-root dequeue and witness-copy step still charges the existing work budget. The first bucket scan at either root is initialization. An exhausted or canceled operation yields no answer.
+
+Both frontiers use one integer-key seen table. Forward chains are nonempty pairs and backward chains use a private tagged record. A lookup therefore gives the absent, same-side, or opposite-side case without a second hash probe. A self-query uses the reverse root tag as a target marker and has no reverse FIFO.
+
+In Lean, =meeting_positive= proves the edge join, =exhausted_disjoint_miss= proves queue exhaustion independent of scheduling order, and =stitch_checked= aligns the witness list with the existing verifier. =edit_preserves_mirror= is the index premise and =shared_seen_disjoint= ties the tagged lookup to the two disjoint seen sets. =failed_not_miss= and =other_version_rejected= continue to apply. These are proofs over the corresponding transitions and lists. The native tests check queue operations, mutable hash tables, checkpoint sequencing and witness ownership.
+
+An independent edge-count screen held the 32 file positions fixed. Nearest-rank P95 was 32,836 edge visits for the one-way reference, 1,920 when selecting by the next bucket degree, 633 when weighting pending vertices by that degree, and 551 when selecting by pending vertices alone. Selection uses queue length because it had the smallest measured P95 and reads the queue's stored length to decide which queue to advance.
+
+** Native comparison
+
+The reference and candidate loaded the same compiled benchmark module, input, and locked Gerbil runtime. Only the bound query module changed. Runs used the order reference, candidate, candidate, reference. Each ran the same 32 independent deletes, 64 hits and 64 misses on the synthetic shape, 1,000 repetitions of the real bridge probes, and 16 cold builds. The table gives the range of per-run P95s. Maximums are the largest observed sample across the two runs of each variant.
+
+| Phase | One-sided P95 | Two-frontier P95 | One-sided max | Two-frontier max |
+|-------+---------------+------------------+---------------+------------------|
+| Mixed update | 6.33-7.25 us | 7.58-9.75 us | 8.92 us | 10.38 us |
+| Mixed first query | 4.824-4.926 ms | 0.147-0.164 ms | 6.069 ms | 0.195 ms |
+| Mixed update through answer | 4.826-4.928 ms | 0.149-0.166 ms | 6.072 ms | 0.203 ms |
+| Mixed witness export | 1.83-2.75 us | 0.625-0.708 us | 2.75 us | 0.958 us |
+| Mixed witness replay | 4.42-6.92 us | 4.00-4.50 us | 7.29 us | 5.54 us |
+| Near first query after restoring bridge | 2.96-9.33 us | 0.458-0.958 us | 35.38 us | 9.83 us |
+| Far first query after restoring bridge | 0.128-0.217 ms | 0.053-0.084 ms | 49.96 ms | 0.477 ms |
+| Synthetic long hit | 11.61-12.13 ms | 6.51-11.61 ms | 51.08 ms | 44.62 ms |
+| Synthetic disconnected miss | 3.83-4.46 ms | 2.96-4.16 ms | 48.95 ms | 8.72 ms |
+| Cold index construction | 57.21-85.79 ms | 69.09-69.50 ms | 85.79 ms | 69.50 ms |
+
+The 32 mixed cases retained the same 24 alternate paths accepted by the independent oracle. P95 edge examines dropped from 32,836 to 551 and maximum examines from 43,243 to 617. The far bridge probe dropped from 635 to 119 edges. Both versions update exactly two adjacency buckets and perform zero full index rebuilds. Index construction is identical and the cold samples are too small to distinguish latency variation from an indexing effect.
+
+The synthetic shape contains 22,687 vertices in two sparse directed rings with two edges per vertex and one bridge. It gives both frontiers long, narrow searches. Edge counts for the hit were 45,172 and 45,170, and for the miss 22,688 and 22,692. The earlier trial with separate seen tables raised long-hit P95 to 19.39-19.45 ms. The shared table removed one lookup per non-meeting edge and recovered the long-hit median to 5.64-5.92 ms, close to the one-sided 5.23-5.76 ms. The control shows where the cost of two-frontier traversal can outweigh its work reduction.
+
+On the final runtime, the original million-row recursive export passed its 100 ms P95 gate at 88.167 ms. The original projection export recorded 118.052 ms and failed the same gate. Those suites continue to exercise their existing export paths.
+
+* Reproduce
+
+Place the decompressed [[https://snap.stanford.edu/data/p2p-Gnutella25.txt.gz][SNAP edge file]] under =.cache= and point =ASCENT_GNUTELLA25= at it. The official compressed SHA-256 is =9fdf733d3edc66aab475518f23e2d74532a839f2a53e8a2c7200f3bd7bcbd1b2=. Use the project's existing Gerbil package environment. Each suite can be selected with the original Gerbil test command.
+
+#+begin_src sh
+gerbil test t/qualification/ascent-bound-reachability-test.ss
+gerbil -:max-heap=2G test -r '^bound-reachability-demand-test$' benchmarks/bound-reachability-test.ss
+gerbil -:max-heap=2G test -r '^bound-reachability-session-test$' benchmarks/bound-reachability-test.ss
+gerbil -:max-heap=2G test -r '^bound-reachability-counter-test$' benchmarks/bound-reachability-test.ss
+gerbil -:max-heap=2G test -r '^bound-reachability-edits-test$' benchmarks/bound-reachability-test.ss
+gerbil -:max-heap=2G test -r '^bound-reachability-shape-test$' benchmarks/bound-reachability-test.ss
+#+end_src
+
+For the measured runs, benchmark code was compiled once with Gerbil optimization, and =gerbil test= loaded that module. Each invocation used the same 2 GiB heap cap and 90-second process timeout. Acquisition, module loading and independent-oracle checks are outside the per-operation timers.

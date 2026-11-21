@@ -7,7 +7,8 @@
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?
                  gerbil-ascent-canonical-view-storage-provider?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
-(export gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
+(export gerbil-ascent-run-actor-round! gerbil-ascent-run-actor-ready-round!
+        gerbil-ascent-actor-round-eligible?)
 
 ;; gerbil-ascent-actor-round-eligible?
 ;; : (forall (r s i l f) (-> [r] (Vector s) (Vector i) (Vector l) (Vector f) Boolean))
@@ -108,6 +109,11 @@
 (def (gerbil-ascent-run-actor-round! key tasks jobs execute merge (canceled? (lambda () #f))
                                      (ready? (lambda (_) #t))
                                      (completed! (lambda (_) (void))))
+  (gerbil-ascent-run-actor-ready-round! key tasks jobs execute merge canceled? ready? completed! #f))
+
+;; The optional queue is owned by the coordinator once the round starts.
+;; It holds unique tasks from tasks, and returns #f when none is ready.
+(def (gerbil-ascent-run-actor-ready-round! key tasks jobs execute merge canceled? ready? completed! dequeue-ready!)
   (unless (and (exact-integer? jobs) (> jobs 0))
     (error "invalid ASCENT worker capacity" jobs))
   (let (result
@@ -118,14 +124,19 @@
               (lambda ()
                 (let ((owner (current-thread))
                       ;; The sentinel and spine belong to this coordinator alone.
-                      (pending (cons #f (map values tasks)))
+                      (pending (and (not dequeue-ready!) (cons #f (map values tasks))))
+                      (task-count (and dequeue-ready! (length tasks)))
                       (assigned (make-hash-table-eq))
                       (active (make-hash-table-eq)) (active-count 0) (completed-count 0)
                       (workers []) (idle []) (awaiting #f) (failed? #f) (failure #f))
                   (def (stop! exception)
                     (unless failed? (set! failure exception) (set! failed? #t))
-                    (set-cdr! pending []))
-                  (def (take-ready!)
+                    (when pending (set-cdr! pending [])))
+                  (def (pending?)
+                    (if pending
+                      (pair? (cdr pending))
+                      (< (hash-length assigned) task-count)))
+                  (def (scan-ready!)
                     (let scan ((previous pending) (rest (cdr pending)))
                       (cond
                        ((null? rest) #f)
@@ -139,6 +150,15 @@
                             (hash-put! assigned task #t))
                           task))
                        (else (scan rest (cdr rest))))))
+                  (def (take-ready!)
+                    (if dequeue-ready!
+                      (let (task (dequeue-ready!))
+                        (when task
+                          (when (or (hash-get assigned task) (not (ready? task)))
+                            (error "invalid ASCENT ready task"))
+                          (hash-put! assigned task #t))
+                        task)
+                      (scan-ready!)))
                   (def (make-worker!)
                     (let* ((worker
                             (spawn/name 'ascent-round-worker
@@ -180,7 +200,7 @@
                          (unless failed?
                            (when (canceled?) (error "ASCENT actor round canceled"))
                            (let admit ()
-                             (when (and (pair? (cdr pending)) (< active-count jobs))
+                             (when (and (pending?) (< active-count jobs))
                                (let (task (take-ready!))
                                  (when task (start! task) (admit))))))
                          (unless (zero? active-count)
@@ -226,7 +246,7 @@
                   (try
                    (run!)
                    (cond (failed? (raise failure))
-                         ((pair? (cdr pending)) (error "ASCENT ready task dependency deadlock")))
+                         ((pending?) (error "ASCENT ready task dependency deadlock")))
                    (finally
                     (for-each (lambda (entry) (thread-send (car entry) 'stop)) workers)
                     (for-each (lambda (entry) (thread-join! (cdr entry))) workers)))
@@ -234,7 +254,9 @@
                   ;; original exception, including dependency deadlock.
                   (unless (and (= active-count (hash-length active))
                                (gerbil-ascent-joined-round (hash-length assigned) completed-count
-                                 active-count (length (cdr pending)) failed? #t))
+                                 active-count (if pending (length (cdr pending))
+                                                (- task-count (hash-length assigned)))
+                                 failed? #t))
                     (error "ASCENT actor completion certificate rejected")))))))))
     (if (and (pair? result) (eq? (car result) 'failed))
       (raise (cdr result)) result)))

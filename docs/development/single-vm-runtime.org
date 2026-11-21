@@ -2,13 +2,20 @@
 
 * Decision
 
-The primary target is one resident VM, owned by one OS thread, serving multiple
-Gerbil Actors. Gerbil owns green-thread scheduling, mailboxes, continuations,
-exceptions and GC. ASCENT coordinator Actors own ready SCCs, delta rounds,
-Session cuts and completed publication. Actor capacity follows admitted work
-and resource credits, not VM or CPU count. Rayon executes only Rust-owned pure
-data. A Scheme root, continuation or mutable index never moves to Rayon.
-Multiple VMs remain a separate isolation and scale-out experiment.
+The primary target is one resident Gerbil VM serving multiple concurrent
+Actors. The VM is the ownership boundary for Scheme values and continuations.
+Gerbil schedules green threads and mailbox waits, and can run another ready
+Actor while one waits for asynchronous I/O. Processor count is a separate
+property of the runtime configuration. A one-processor benchmark still runs
+multiple green threads in the same VM.
+
+ASCENT coordinator Actors own ready SCCs, delta rounds, Session cuts and
+completed publication. The Session owner is an Actor, and evaluation and
+monitoring run in separate Gerbil green threads. Evaluator worker capacity is
+separate from the number of Actors or callers. Rayon executes only pure work
+over Rust-owned data. Scheme roots, continuations and mutable indexes stay
+within their VM. Multiple VMs remain a separate isolation and scale-out
+experiment.
 
 This supersedes the historical test-carrier direction in
 [[file:../scheme-actor-runtime-design.org][the Actor protocol history]]. Its ownership, cancellation and publication
@@ -113,6 +120,22 @@ Nine passed. The lifecycle suite failed the nonnegative cumulative
 allocation check in =scheme-library-contract-fixture.ss= with exit 70.
 The original test receipt establishes the negative delta without recording
 its magnitude. The entire command, including preparation, took 224.61 s.
+
+The candidate rebuilt on PR head =90af6adc= reached all ten modules
+in 91.95 s after 87.66 s of separate test preparation. It reported
+27 passing Cases. The lifecycle allocation assertion was the only
+failure. The fixture records the raw before and after readings, the
+signed delta and the pair and mode on a backward reading. It verifies
+the application result before applying the original nonnegative
+allocation requirement. A backward reading still fails the gate.
+
+On the same built image the instrumented fixture recorded pair 0,
+retained mode, before =-160458544=, after =-507714776=, and raw
+delta =-347256232=. It reached the existing allocation assertion
+after checking the application result. The reading remains invalid
+as an allocation measurement. The uninstrumented aggregate receipt
+remains the gate result.
+
 The independent 12-worker native source semantics run completed all 183
 modules in 363.87 s under the existing 600 s wall gate and 2 GiB heap
 limit. Its preparation command took 55.40 s, with 6.28 s in make and no
@@ -133,6 +156,32 @@ receive native execution opportunities while Rust input, output or clients
 wait. Native readiness, host recovery and client consumption are separate
 events. Cancellation must remain admissible under full data credits. Close
 joins accepted work before releasing roots. Only complete current cuts publish.
+
+* Resident terminal evaluator
+
+The Session coordinator admits at most one run. It hands a certified
+terminal computation to one lazily started Gerbil worker through the
+worker's native mailbox. That worker remains on the existing VM. A single
+monitor joins the worker at retirement. Calls with an execution authority,
+deadline, rule-cost observer or conditional acceptance use the ordinary
+per-run worker and monitor.
+
+The resident worker can return a complete terminal result, decline the
+optimized path, or report failure. Only the coordinator may publish. It
+checks the original epoch and worker identity and calls the existing
+publication admission. A current decline starts ordinary evaluation with
+the same admitted cut, token and epoch. Cancellation fences off both
+publication and a late decline. Retirement discards the worker and rejects
+its active run. Close drains the active job and joins the idle worker
+before replying to the closing callers. The worker receives the existing
+resource and cancellation token. It does not take ownership of provenance
+or modify the certified planner's result.
+
+=ActorStateCost.lean= checks the disposition of stale generations, retired
+workers and current declines. =ActorResidentWorker.qnt= checks admission,
+fallback, worker loss and close, and includes mutations of each of those
+boundaries. The original dispatcher and result admission remain the
+source authority for requests routed to ordinary evaluation.
 
 * Measurement contract
 

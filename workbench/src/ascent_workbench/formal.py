@@ -122,6 +122,8 @@ def obligations(base: Configuration) -> tuple[Obligation, ...]:
         result.append(Obligation(mutation, fault, 12, "Safety"))
     if model in ("ActorRoundCredits", "ActorTestPool", "ReadyComponents"):
         result.extend(Obligation(f"capacity-{n}", base.changed(Capacity=n)) for n in (1, 3))
+    if model == "ReadyComponents":
+        result.append(Obligation("sole-assignment", base.changed(Tasks="{1}", Capacity=1)))
     if model == "LatticeProjection":
         result.extend(Obligation(f"remaining-{n}", base.changed(Remaining=n)) for n in (0, 1))
     if model == "EvidenceLifecycle":

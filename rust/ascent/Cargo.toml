@@ -43,3 +43,7 @@ workspace = true
 name = "runtime_comparison"
 harness = false
 required-features = ["rayon"]
+
+[[bench]]
+name = "actor_closure"
+harness = false

@@ -25,16 +25,20 @@ experiments, not interchangeable acceptance results.
 | Frozen =std/sync/completion.ss= | Construct Completion, mutex and condition variable; wait under the mutex, recheck readiness after wake, post once and broadcast |
 | =program/actor-session.ss: dispatch-request!= | Execute only on owner, construct generation/status pair and success outcome, post private endpoint |
 
-The Completion cannot be reset or shared between requests. Its native ready
-flag remains set after waiting; private protocol consumption is distinct from
-the standard object's state. =ActorReply.lean= and =ActorReply.qnt= preserve
+The current Actor constructs a fresh Completion for each request. Its native
+ready flag remains set after waiting; private protocol consumption is
+distinct from the standard object's state. The frozen Gerbil release also
+exports =completion-reset!=. That macro writes the ready flag, value and
+exception with no lock of its own. Reuse would require an exclusively
+held endpoint and proof that the previous post and waiter can no longer
+write its state. =ActorReply.lean= and =ActorReply.qnt= preserve
 that distinction, exact authority and outcome, mailbox/cursor isolation,
 duplicate refusal and close/drain obligations. Cost work does not relax the
 existing ActorSession, ActorRound, resource or provenance checks.
 
 * Models and limits
 
-=ActorStateCost.lean= counts source constructor calls: one Completion, mutex
+=ActorStateCost.lean= records the checkpoint constructor calls: one Completion, mutex
 and condition-variable constructor, five envelope pairs, two state pairs and
 one outcome vector for each successful state request. The timed caller also
 constructs two clock buffers per request. These are source-level constructors,
@@ -96,6 +100,173 @@ raw evidence under =.cache=; retain failures, natural termination, exact source
 and binary identities and whole-process resource observations. A negative
 Gambit allocation counter is unavailable evidence, never zero allocation.
 
+* Single spare Completion
+
+Only an argument-free state read without execution authority may borrow
+the Session's single spare request record. A compare-and-swap removes the
+spare before admission. Another caller receives a distinct request if
+that slot is empty or its compare-and-swap loses. The owner receives the
+same logical state request at the same mailbox position and posts a new
+public generation/status list. The ordinary lifecycle mutex gates both
+admission and close. Pending compact requests receive the same closed
+error during drain.
+
+Use Gerbil's one-shot unwind protection around the borrowed request.
+An exceptional exit or an abandoned continuation discards the record.
+Only a completed read clears the standard Completion and returns it
+to the spare slot. The standard poster sets readiness and payload under
+the Completion mutex. A broadcast after that mutex is released can
+wake a later waiter but cannot post a value for that later request.
+The standard wait loop rechecks readiness after any such wake. The
+Completion-lease models cover early return, use after abandonment,
+stale payload, late notification, and admission after close. The
+authority-bearing path keeps the ordinary request representation.
+
+The stamped variant stores the one-shot state on the reusable request
+itself. Each caller closes over its original base stamp. Entry admits
+that exact stamp once, a successful wait advances it to consumed, and
+unwind retires either an abandoned or a consumed lifetime. The next
+caller uses the retired stamp as a new base. A continuation captured by
+an earlier call cannot reenter that lifetime or retire a later one.
+Exact integer stamps have no wraparound. Only the consumed transition
+can reset and republish the standard Completion.
+
+The stamped implementation completed one million verified mailbox
+round trips with one million resident facts. The timed run reached
+859,718 replies per second against 670,813 for its matched reference.
+Both measured 791 ns P95. Maximum latency rose from 58.46 to 81.70 ms
+while the number of collections fell from 14 to 8. The window-only
+test with the same retained facts reached 840,710 replies per second.
+Keep the standard unwind implementation as the reference candidate.
+Its earlier observation reached 910,044 replies per second with less
+lifetime machinery. These are observations from separate windows.
+
+* Recycle after guarded return
+
+Keep the standard one-shot unwind protection around the mailbox send and
+Completion wait. Let exceptions and escapes leave the endpoint private.
+After a normal return, the caller has the exact fresh list posted to
+that Completion. An interrupt-free owner-VM release step clears and
+returns the endpoint only if it still holds that same list by identity.
+The list is already required by the public state API, so it also acts as
+the reclaim witness without a mutable flag or a separate stamp. A resumed
+post-return continuation holding an older list cannot reset a later post.
+
+Gerbil's Completion stores its value before publishing readiness. Its
+late broadcast does not write the reply. The reclaimer makes no waiting
+calls and runs only on the guarded single-processor path. Admission,
+authority-bearing requests and close drain continue through the same
+owner mailbox and lifecycle gate.
+
+The mailbox owner can initialize the success and error handlers once on
+each private state message. The handlers capture that message's
+Completion and the owner's state reader. The reader still evaluates
+generation and status at dispatch. Only the owner accesses the cached
+handlers, and the close drain uses the same Completion. No handler
+selects a reply through a shared mutable current-message variable.
+
+A bound submit procedure can also be created with that private message.
+It captures its own Completion, the fixed Session owner and the
+lifecycle gate. Every call still checks closure under that gate and
+uses a fresh standard one-shot guard. A pending or abandoned call never
+makes the bound submit procedure available to another caller.
+
+** Native observations
+
+The returned-reply release reached 908,444 replies per second against
+855,340 for the original lease in the paired timed windows. Both
+verified one million replies with one million resident facts. P95 stayed
+at 750 ns. Collections fell from eight to seven, and GC wall time from
+0.473 to 0.414 seconds.
+
+In the later paired serial window, cached owner handlers reached
+923,480 replies per second and binding the submit procedure as well
+reached 904,427. Both measured 708 ns P95. The window-only benchmark with
+one million retained facts observed 816,839 and 906,650 replies per
+second respectively. The two measurements use distinct caller timing
+profiles.
+
+The new contention selector split exactly one million requests across
+12 callers on this host. The original lease completed 949,078 requests
+per second at 9.63 us P95. The fully bound candidate completed 868,589
+requests per second at 22.13 us P95. The two windows observed 22 and
+111 foreign compiler identities respectively. The serial results and
+the contention comparison do not establish a winner across workloads.
+
+The native interrupt control throws from an otherwise unmodified
+Gambit thread waiting on a standard Completion. It establishes the
+caller-side abandoned mutex and the target-side uncaught reason
+separately. The production abandonment case checks both conditions
+and verifies subsequent mailbox progress. The private diagnostic
+also passes two equal-valued, distinct public lists through the same
+release routine and checks that an earlier one cannot clear the later
+reply.
+
+* Machine-sized idle Completion pool
+
+The Session keeps a vector with a populated prefix of reset, idle state
+messages. Its length comes from the host CPU count. A take removes the
+last occupied entry and clears that vector slot. With no idle entry the
+caller constructs a fresh message and proceeds through the same mailbox.
+A successful return checks the exact posted reply identity before
+resetting the Completion and pushing it if space remains. At capacity
+the returned message is discarded. Capacity controls retention of idle
+objects, while the lifecycle gate and mailbox still admit requests.
+
+The take and return routines use Gerbil's interrupt-disabled declaration
+and check that the VM has a single enabled processor before touching the
+pool. The vector operations and typed field reads and writes do not wait.
+The standard one-shot guard, lifecycle mutex, Completion wait and
+owner-side exception handling remain on the existing paths.
+=ActorStateCost.lean= proves disjointness and capacity for the occupied
+prefix. =ActorStatePool.qnt= exercises two idle positions and overlapping
+requests, including an allocation at an empty pool and overflow on return.
+
+The one-million-request concurrent comparison shared a resident Session
+across 12 callers on this host. The original single spare reached
+1,015,460 replies per second at 8.875 us P95. The owner-handler variant
+reached 994,770 at 9.250 us P95, and the vector pool reached 999,753 at
+9.291 us P95. The pool also matched the single-spare handler within
+0.2 percent in the serial comparison. Both concurrent pool and original
+lease windows ran six collections.
+
+An instrumented diagnostic of the same concurrent requests counted 43
+misses with one spare and 12 with the pool. This explains the small
+potential benefit from retaining more idle endpoints for this workload.
+The serial and concurrent measurements favor keeping the original
+single-spare lease. The thousand-row and million-row query gates and the
+separate original 120-second aggregate retain their established
+acceptance criteria.
+
+** PR-head integration comparison
+
+A source archive of PR 2 at =5f9a825a= takes only the standard lease and
+its two ownership tests. A fresh native =gerbil build= compiled that
+tree with the existing Gerbil release and external dependency cohort.
+The comparison uses one caller build and one production dependency
+image. The reference replaces only the Actor Session module with the
+unmodified PR source compiled using the same optimization mode.
+
+| Load                       | Reference replies/s | Lease replies/s | Reference P95 | Lease P95 |
+|----------------------------+---------------------+-----------------+---------------+-----------|
+| Sequential                 |             639,941 |         725,511 |       1.25 us |   1.13 us |
+| 12 concurrent callers      |             675,549 |         819,290 |      21.17 us |   9.63 us |
+
+Each arm verified one million replies with one million resident facts.
+Both variants were observed alongside other compilers. In the sequential
+case, the maximum increased from 98.07 to 116.94 ms. In the concurrent
+case, the maximum fell from 103.02 to 93.26 ms and GC wall time from
+0.743 to 0.544 seconds. The rebuilt PR still misses the million-reply
+throughput target. The separate packed experimental image's 1,015,460
+replies per second belongs to its own dependency and source cohort.
+
+The first cold diagnostic reached its 90-second wall limit before any
+Case. A native sample placed the main thread inside Gambit's dynamic
+load and dyld's segment mapping. The semantic supervisor is distinct
+from these wall-bounded runtime probes. Native fixture preparation then
+reported =production-rebuilt=0=, and all nine selected semantic modules
+completed with 118 passing Cases and natural exit.
+
 * Changes require evidence
 
 First distinguish caller instrumentation/interpretation, endpoint construction,
@@ -105,6 +276,26 @@ the mailbox for a cheap state read and call that Actor throughput. Any pooling,
 batching, endpoint reuse or root retirement requires separate authority,
 linearization, cancellation, late reply and lifetime arguments plus the same
 complete queries and original gates.
+
+* Compact state request candidate
+
+Encode the argument-free state request with no execution authority as a
+private typed message containing its original Completion. The owner observes
+state at the usual position in its mailbox. Its ambient execution authority
+is already false outside ordinary request dispatch. The compact handler uses
+that scope, the same exception-to-reply path and the same fresh public state
+list. An authority-bearing request still enters ordinary dispatch with its
+original authority. The close drain accepts both representations and rejects
+each pending state request through its original endpoint.
+
+The encoding uses one record constructor in place of five list pairs on the
+compact path and avoids one dynamic parameter binding. The standard
+Completion, lifecycle gate and owner mailbox continue to define the handoff.
+The Lean codec gives an exact decoded request and identical dispatch or drain
+decision for arbitrary identities. The finite Quint check includes the
+authority-bearing route and a close before reply. Native validation exercises
+the actual dispatcher and caller mailbox. These checks leave Gerbil's
+mailbox, dynamic scope and constructor allocation as runtime boundaries.
 
 * Regression checkpoint
 
@@ -145,3 +336,122 @@ resident facts, verified reply count, Gerbil release and machine conditions.
 Record both throughput and GC costs, with complete semantic checks for
 cancellation, resource accounting and provenance. Keep the raw measurements
 and binary identities in the local benchmark cache.
+
+* Caller clock allocation control
+
+The official timed state window allocates two scalar clock buffers per
+verified request. The earlier one-million-row clock-only control ran
+without collections and reported 96,003,984 allocation bytes. Use a
+second timed control with one private clock buffer per caller. Retain
+the same monotonic reads, request boundary, oracle, sample array and
+mailbox path. This changes measurement allocation and can expose
+collector overhead introduced by the observer. It leaves the original
+state window and its thresholds in place.
+
+On the previous native image both controls verified 1,000,000 replies.
+Reusing the clock buffer increased verified throughput from 707,426 to
+757,201 replies/s and reduced P95 from 833 to 750 ns. Both arms had
+11 natural collections and an unavailable cumulative allocation count.
+The monitor observed 36 and 40 foreign compiler identities. Removing
+the clock allocation did not reach the million-reply target.
+
+* Single entry advance
+
+Read a reusable request's entry stamp in the same interrupt-free
+extent that takes its spare slot. The before thunk of native
+=dynamic-wind= admits that stamp once and advances it. A continuation
+from the earlier lease cannot send the message again. The after thunk
+has no operation. Only a normally returned fresh reply is eligible
+to clear the standard Completion, using exact list identity as its
+witness. An exception or a continuation escape leaves the pending
+request private. A resumed post-return continuation cannot clear a
+later reply or an empty endpoint.
+
+The stamp is an exact natural stored in the already allocated
+request. Gerbil still owns the dynamic extent, mailbox, Completion
+wait and close drain. Lean checks one entry per stamp and the
+returned-reply reset separately. The existing =ActorStateLease=
+mutations exercise reentry, abandoned reuse and clearing a later reply.
+
+The candidate passed 128 native Cases, including abandonment, close
+draining, detached replies and caller authority. Each timed arm then
+verified one million production state responses on the earlier
+dependency image.
+
+| Workload          | Standard replies/s | Entry stamp replies/s | Standard P95 | Entry stamp P95 |
+|-------------------+--------------------+-----------------------+--------------+-----------------|
+| One caller        |            813,264 |               763,321 |     0.875 us |        0.833 us |
+| Concurrent callers|            962,893 |               895,738 |     9.625 us |        8.958 us |
+
+The stamp reduced observed P95 and maximum latency. It also increased
+GC wall time from 0.510 to 0.610 s in the one-caller windows and from
+0.381 to 0.486 s in the concurrent windows. Foreign compiler counts
+were 12 to 15 across the four windows. Keep the standard guard as the
+integration candidate. The stamp remains an isolated experiment
+because it reduced the measured completed-work throughput in both loads.
+
+* Native package on PR head 90af6adc
+
+The full candidate package on Yuanxu =46a12b01= and POO =187fc0eb=
+kept the standard guard. Both state windows verified one million
+responses with one million source rows and the original caller.
+
+| Workload                  | Replies/s |   P50 |    P95 |       Max |   Window | GC wall |
+|---------------------------+-----------+-------+--------+-----------+----------+---------|
+| One caller                |   550,772 | 0.833 us | 1.75 us | 115.99 ms | 1.8156 s | 0.8099 s |
+| 12 callers, one resident VM | 627,816 | 9.791 us | 14.33 us | 96.97 ms | 1.5928 s | 0.6639 s |
+
+Neither measured window reached the throughput target. Both Gambit
+allocation deltas were negative. GC occupied 44.6 percent and 41.7
+percent of their observed windows respectively.
+
+** Retained input declarations
+
+A separate native weak-key probe opened a Session over one million
+binary rows. Its caller dropped the declaration and row references
+before observation. The returned Session still kept the Program,
+source declaration, input outer pair, and first input tuple live
+alongside the private capture. Closing the Session dropped all four
+weak entries while the caller still held the closed Session handle.
+The separate control kept a strong sentinel and collected an
+unreferenced sentinel.
+
+The probe uses explicit collections outside the performance gates.
+It identifies declaration retention during an open Session's lifetime.
+It does not establish the retained byte count or a leak after close.
+In =program/actor-session.ss=, the owner holds the original Program
+and relation receivers for the guarded ordinary and staged evaluation
+paths. Receipt of a state message itself needs neither declaration
+nor source traversal. Any attempt to release these roots must
+preserve edits and receiver semantics for externally retained POO
+objects, and keep the existing foreign declaration and getter tests.
+
+The root comparison used the existing public Session operations.
+One arm opened with the million-row declaration. The other opened
+the same declaration with empty sources. Both then performed one
+source replacement, published generation two, and checked all
+1,000,000 committed rows in order before timing state requests.
+Both discarded the caller input after preparation and used the same
+mailboxes, state verification and per-request clocks. The comparison
+performed no explicit collections. It is separate from the original
+large-declaration throughput gate.
+
+| State workload | Replies/s with declaration | Replies/s with cut only | P95 with declaration | P95 with cut only | GC wall with declaration | GC wall with cut only |
+|----------------+----------------------------+-------------------------+----------------------+-------------------+--------------------------+-----------------------|
+| One caller     |                    732,953 |                 917,662 |             0.750 us |          0.875 us |                  0.624 s |               0.317 s |
+| 12 callers     |                    864,646 |               1,119,927 |             9.333 us |          9.375 us |                  0.493 s |               0.237 s |
+
+Each arm verified one million replies. Both one-caller arms collected
+ten times. Both concurrent arms collected eight times. Maximum
+response time fell from 63.48 to 34.49 ms for one caller and from
+63.71 to 30.36 ms for concurrent callers. Peak process RSS fell from
+923,844,608 to 767,066,112 bytes and from 920,797,184 to 765,034,496
+bytes respectively. The monitor observed four to ten foreign
+compiler identities per arm. All four raw cumulative allocation
+deltas were negative and cannot supply a byte count.
+
+=ActorStateCost.lean= expresses the source =read-state= projection
+using only generation and the active run's epoch. Its committed
+root control holds the published cut fixed. This proof establishes
+the equality of the timed state replies. It supplies no authority
+to drop declaration receivers on future evaluation requests.

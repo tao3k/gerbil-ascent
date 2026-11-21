@@ -21,6 +21,7 @@
                  gerbil-ascent-branching-result-view gerbil-ascent-replay-branching-frontier)
         (only-in "condensed-closure.ss" gerbil-ascent-condense-closure
                  gerbil-ascent-extend-condensed-closure condensed-closure?
+                 gerbil-ascent-condensed-same-partition?
                  gerbil-ascent-remove-condensed-edge
                  condensed-closure-source condensed-closure-size gerbil-ascent-condensed-closure-view
                  gerbil-ascent-condensed-witness gerbil-ascent-verify-condensed-witness)
@@ -127,11 +128,16 @@
                     (and edge
                          (alet (index (gerbil-ascent-extend-condensed-closure
                                        previous source size edge check! (and visit-binary #t)))
-                           (cons index (if visit-binary 'inserted 'appended))))))
+                           (cons index
+                             (if (gerbil-ascent-condensed-same-partition? previous index)
+                               (if visit-binary 'inserted 'appended)
+                               'rebuilt))))))
                  ((-1)
                   (alet* ((edge (source-slot-packed-extra prior source check!))
                           (index (gerbil-ascent-remove-condensed-edge previous source size edge check!)))
-                    (cons index 'removed)))
+                    (cons index
+                      (if (gerbil-ascent-condensed-same-partition? previous index)
+                        'removed 'rebuilt))))
                  (else #f)))))
       (alet (index (gerbil-ascent-condense-closure source size
                     (or visit-binary

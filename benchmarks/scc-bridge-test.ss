@@ -11,7 +11,7 @@
                  gerbil-ascent-session-replace-source!)
         (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-condensed-actor-session
                  gerbil-ascent-session-close!))
-(export scc-bound-query-test scc-first-origin-test)
+(export scc-bound-query-test scc-first-origin-test scc-split-merge-test)
 
 (def vertices 1664)
 (def group-width 64)
@@ -26,17 +26,19 @@
   (##get-monotonic-time! clock 0)
   (u64vector-ref clock 0))
 
-(def (inputs omit-bridge?)
+(def (inputs omit-bridge? (return-bridge? #f))
   (let (edges [])
     (for (v (in-range vertices))
       (let* ((from (* group-width (quotient v group-width))) (to (+ from group-width)))
         (for (w (in-range from to))
           (unless (= v w) (set! edges (cons (list v w) edges))))
         (when (and (= v (- to 1)) (< to vertices) (not (and omit-bridge? (= v split-source))))
-          (set! edges (cons (list v to) edges)))))
+          (set! edges (cons (list v to) edges)))
+        (when (and return-bridge? (= v (- vertices 1)))
+          (set! edges (cons (list v 0) edges)))))
     (reverse! edges)))
 
-(def (program facts)
+(def (program facts (room logical-rows))
   (let* ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y))
          (z (gerbil-ascent-variable 'z))
          (edge (gerbil-ascent-atom 'edge (list x y)))
@@ -46,7 +48,7 @@
       (list (gerbil-ascent-rule (list reach) (list edge))
             (gerbil-ascent-rule (list (gerbil-ascent-atom 'reach (list x z)))
               (list reach (gerbil-ascent-atom 'edge (list y z)))))
-      (length facts) logical-rows (+ (length facts) logical-rows))))
+      (length facts) room (+ (length facts) room))))
 
 (def (report name samples)
   (let* ((ordered (list-sort < samples)) (count (length ordered))
@@ -145,4 +147,56 @@
             (set! restored (cons (first-origin session intact 1664) restored)))
           (report 'removed-first-origin separated)
           (report 'restored-first-origin restored)
+          (finally (gerbil-ascent-session-close! session)))))))
+
+;; The return bridge closes the entire chain of cliques into one SCC.
+;; Unlike the central one-way bridge, either edit requires a new partition.
+(def scc-split-merge-test
+  (test-suite "Split and merge a published component using a return bridge"
+    (test-case "Measure publication and first ordered origin query on both versions"
+      (check (##current-vm-processor-count) => 1)
+      (let* ((intact (inputs #f #t)) (split (inputs #f))
+             (session (gerbil-ascent-open-condensed-actor-session
+                        (program intact (* vertices vertices))))
+             (from (- vertices 1))
+             (split-publish []) (merge-publish []) (split-query []) (merge-query []))
+        (def (edit cut merging?)
+          (gerbil-ascent-session-replace-source! session 'edge cut)
+          (let* ((start (tick)) (result (gerbil-ascent-session-run session)) (published (tick))
+                 (visit (.ref result 'visit-rows))
+                 (next (if merging? 0 (- vertices group-width)))
+                 (query-start (tick)))
+            (visit 'reach '(0) (list from)
+              (lambda (left right)
+                (unless (and (= left from) (= right next)) (error "incorrect first origin" left right))
+                (set! next (+ next 1)))
+              fields?: #t)
+            (let (elapsed (- (tick) query-start))
+              (check next => vertices)
+              (check (.ref result 'evaluation-path) => 'condensed-closure)
+              (check (.ref result 'closure-update) => 'rebuilt)
+              (if merging?
+                (begin
+                  (set! merge-publish (cons (- published start) merge-publish))
+                  (set! merge-query (cons elapsed merge-query)))
+                (begin
+                  (set! split-publish (cons (- published start) split-publish))
+                  (set! split-query (cons elapsed split-query))))
+              result)))
+        (try
+          (let* ((original (gerbil-ascent-session-run session))
+                 (proof ((.ref original 'closure-witness) from 0 128)))
+            (check ((.ref original 'verify-closure-witness) proof) => #t)
+            (for (_ (in-range 32))
+              (let* ((separated (edit split #f)) (restored (edit intact #t))
+                     (fresh ((.ref restored 'closure-witness) from 0 128)))
+                (check ((.ref separated 'closure-witness) from 0 128) => #f)
+                (check ((.ref separated 'verify-closure-witness) proof) => #f)
+                (check ((.ref restored 'verify-closure-witness) proof) => #f)
+                (check ((.ref restored 'verify-closure-witness) fresh) => #t)))
+            (check ((.ref original 'verify-closure-witness) proof) => #t)
+            (report 'split-publish split-publish)
+            (report 'split-first-origin split-query)
+            (report 'merge-publish merge-publish)
+            (report 'merge-first-origin merge-query))
           (finally (gerbil-ascent-session-close! session)))))))

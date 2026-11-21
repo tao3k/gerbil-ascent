@@ -9,6 +9,7 @@
 ;;; apply only to these dense traversal counters, never to caller edge labels.
 (import (only-in "scc-state.ss" gerbil-ascent-scc-state))
 (export gerbil-ascent-graph-components gerbil-ascent-graph-components/checkpoint
+        gerbil-ascent-graph-components/borrowed
         gerbil-ascent-graph-close!)
 
 (defstruct graph-frame (node remaining parent) final: #t)
@@ -127,5 +128,69 @@
       (when (fx< root count)
         (when checkpoint! (checkpoint!))
         (unless (vector-ref indices root) (traverse root))
+        (roots (fx+ root 1))))
+    components))
+
+;; The low-word and follower transitions are adapted from POO's
+;; compact-discover. Active cursors retain suffixes of admitted adjacency
+;; rows, so returning from a child requires neither an arc-ID nor CSR.
+(def (gerbil-ascent-graph-components/borrowed successors checkpoint!)
+  (let* ((count (vector-length successors))
+         (infinity (+ (* 2 count) 1))
+         (lows (make-u32vector count 0))
+         (links (make-u32vector count 0))
+         (resume (make-vector count []))
+         (clock 0) (followers 0) (components []))
+    (unless (and (fixnum? infinity) (<= infinity #xffffffff))
+      (error "ASCENT SCC discovery extent" count))
+    (def (enter! node parent)
+      (set! clock (fx+ clock 2))
+      (u32vector-set! lows node clock)
+      (u32vector-set! links node parent)
+      clock)
+    (def (retire! leader low)
+      (let pop ((members []))
+        (let (member (fx- followers 1))
+          (if (and (not (fx= followers 0))
+                   (fx>= (u32vector-ref lows member) low))
+            (begin
+              (checkpoint!)
+              (set! followers (u32vector-ref links member))
+              (u32vector-set! lows member infinity)
+              (pop (cons member members)))
+            (begin
+              (u32vector-set! lows leader infinity)
+              (set! components (cons (cons leader members) components)))))))
+    (def (walk node edges low)
+      (checkpoint!)
+      (if (pair? edges)
+        (let* ((target (car edges)) (other (u32vector-ref lows target)) (rest (cdr edges)))
+          (if (fx= other 0)
+            (begin
+              (vector-set! resume node rest)
+              (u32vector-set! lows node low)
+              (let (entered (enter! target (fx+ node 1)))
+                (walk target (vector-ref successors target) entered)))
+            (walk node rest (if (fx< other low) (fxior other 1) low))))
+        ;; Read the active parent before installing a follower link.
+        (let ((parent (u32vector-ref links node)) (leader? (fx= (fxand low 1) 0)))
+          (if leader?
+            (retire! node low)
+            (begin
+              (u32vector-set! lows node low)
+              (u32vector-set! links node followers)
+              (set! followers (fx+ node 1))))
+          (unless (fx= parent 0)
+            (let* ((p (fx- parent 1)) (prior (u32vector-ref lows p)))
+              (walk p (vector-ref resume p)
+                (if (and (not leader?) (fx< low prior)) (fxior low 1) prior)))))))
+    (let roots ((root 0))
+      (when (fx< root count)
+        (checkpoint!)
+        (when (fx= (u32vector-ref lows root) 0)
+          (let (entered (enter! root 0))
+            (walk root (vector-ref successors root) entered))
+          (unless (fx= followers 0)
+            (error "ASCENT SCC did not retire all followers" root)))
         (roots (fx+ root 1))))
     components))

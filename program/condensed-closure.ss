@@ -3,11 +3,13 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/iter for in-range)
-        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components/checkpoint)
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components/checkpoint
+                 gerbil-ascent-graph-components/borrowed)
         (only-in :gerbil-ascent/core/view-value make-relation-view make-part-visitors))
 (export gerbil-ascent-condense-closure gerbil-ascent-extend-condensed-closure
         gerbil-ascent-remove-condensed-edge
         condensed-closure? condensed-closure-source condensed-closure-size
+        gerbil-ascent-condensed-same-partition?
         gerbil-ascent-condensed-closure-view gerbil-ascent-condensed-witness
         gerbil-ascent-verify-condensed-witness condensed-witness-vertices)
 
@@ -29,21 +31,20 @@
              (i (- (integer-length (bitwise-xor other remaining)) 1)))
         (loop other (consume i acc))))))
 
-(def (build-condensed-order labels positions owner checkpoint!)
-  (let (ordered (list-sort < (vector->list labels)))
-    ;; Run boundaries share the immutable ordered label spine.
-    (let scan ((rest ordered) (start ordered) (group #f) (runs []) (count 0))
-      (checkpoint!)
-      (if (null? rest)
-        (if group
-          (make-condensed-order ordered (reverse! (cons (make-condensed-run group start rest) runs))
-            (+ count 1))
-          (make-condensed-order ordered [] 0))
-        (let (next (vector-ref owner (hash-get positions (car rest))))
-          (cond ((not group) (scan (cdr rest) rest next runs count))
-                ((= next group) (scan (cdr rest) start group runs count))
-                (else (scan (cdr rest) rest next
-                        (cons (make-condensed-run group start rest) runs) (+ count 1)))))))))
+(def (build-condensed-order ordered positions owner checkpoint!)
+  ;; Run boundaries share the immutable ordered label spine.
+  (let scan ((rest ordered) (start ordered) (group #f) (runs []) (count 0))
+    (checkpoint!)
+    (if (null? rest)
+      (if group
+        (make-condensed-order ordered (reverse! (cons (make-condensed-run group start rest) runs))
+          (+ count 1))
+        (make-condensed-order ordered [] 0))
+      (let (next (vector-ref owner (hash-get positions (car rest))))
+        (cond ((not group) (scan (cdr rest) rest next runs count))
+              ((= next group) (scan (cdr rest) start group runs count))
+              (else (scan (cdr rest) rest next
+                      (cons (make-condensed-run group start rest) runs) (+ count 1))))))))
 
 (def (visit-condensed-runs (order :- condensed-order) mask consume)
   (for-each
@@ -78,43 +79,60 @@
            (set! edges (cons pair edges))
            (set! count (+ count 1)))))
       (unless (= count size) (decline #f))
-      (let ((adjacent (make-vector width [])) (owner (make-vector width #f)))
+      (let (adjacent (make-vector width []))
         (for-each (lambda (pair)
                     (checkpoint!)
                     (let ((from (quotient pair dense-limit)) (to (remainder pair dense-limit)))
                       (vector-set! adjacent from (cons to (vector-ref adjacent from)))))
                   edges)
-        (let* ((members (list->vector (gerbil-ascent-graph-components/checkpoint adjacent checkpoint!)))
-               (groups (vector-length members))
-               (direct (make-vector groups 0)) (cyclic? #f))
-          (for (g (in-range groups))
-            (for-each (lambda (v) (checkpoint!) (vector-set! owner v g))
-                      (vector-ref members g)))
-          (for (v (in-range width))
-            (let (g (vector-ref owner v))
-              (for-each (lambda (target)
-                          (checkpoint!)
-                          (let (h (vector-ref owner target))
-                            (when (= g h) (set! cyclic? #t))
-                            (vector-set! direct g (bitwise-ior (slot-bit h) (vector-ref direct g)))))
-                        (vector-ref adjacent v))))
-          (unless cyclic? (decline #f))
-          (let (reach (vector-copy direct))
-            (let close ((g (- groups 1)))
-              (when (>= g 0)
-                (checkpoint!)
-                (let (mask (vector-ref direct g))
-                  (vector-set! reach g
-                    (fold-members mask
-                      (lambda (h out)
-                        (checkpoint!)
-                        (bitwise-ior out (vector-ref reach h)))
-                      mask)))
-                (close (- g 1))))
-            (let (labels (list->vector (reverse! vertices)))
-              (make-condensed-closure source size positions labels
-                adjacent members owner direct reach
-                (build-condensed-order labels positions owner checkpoint!)))))))))
+        (let (labels (list->vector (reverse! vertices)))
+          (condense-adjacent source size positions labels adjacent #f
+            gerbil-ascent-graph-components/checkpoint checkpoint!))))))
+
+;; Consume the admitted adjacency directly. The partitioner returns each
+;; component before its quotient successors.
+(def (condense-adjacent source size positions labels adjacent ordered partition checkpoint!)
+  (let* ((members (list->vector (partition adjacent checkpoint!)))
+         (groups (vector-length members))
+         (owner (make-vector (vector-length adjacent) #f))
+         (direct (make-vector groups 0)) (cyclic? #f))
+    (for (g (in-range groups))
+      (for-each (lambda (v) (checkpoint!) (vector-set! owner v g))
+                (vector-ref members g)))
+    (for (v (in-range (vector-length adjacent)))
+      (let (g (vector-ref owner v))
+        (for-each (lambda (target)
+                    (checkpoint!)
+                    (let (h (vector-ref owner target))
+                      (when (= g h) (set! cyclic? #t))
+                      (vector-set! direct g (bitwise-ior (slot-bit h) (vector-ref direct g)))))
+                  (vector-ref adjacent v))))
+    (and cyclic?
+         (let (reach (vector-copy direct))
+           (let close ((g (- groups 1)))
+             (when (>= g 0)
+               (checkpoint!)
+               (let (mask (vector-ref direct g))
+                 (vector-set! reach g
+                   (fold-members mask
+                     (lambda (h out)
+                       (checkpoint!)
+                       (bitwise-ior out (vector-ref reach h)))
+                     mask)))
+               (close (- g 1))))
+           (make-condensed-closure source size positions labels
+             adjacent members owner direct reach
+             (build-condensed-order (or ordered (list-sort < (vector->list labels)))
+               positions owner checkpoint!))))))
+
+(def (repair-partition (prior :- condensed-closure) source size adjacent checkpoint!)
+  (condense-adjacent source size prior.positions prior.labels adjacent
+    (condensed-order-labels prior.order)
+    gerbil-ascent-graph-components/borrowed checkpoint!))
+
+(def (gerbil-ascent-condensed-same-partition? (prior :- condensed-closure)
+                                             (next :- condensed-closure))
+  (eq? prior.owner next.owner))
 
 (def (insert-adjacent edges target successor checkpoint!)
   (checkpoint!)
@@ -131,25 +149,24 @@
          (x (and (fixnum? left) (hash-get prior.positions left)))
          (y (and (fixnum? right) (hash-get prior.positions right))))
     (and x y (not (memv y (vector-ref prior.adjacent x)))
-         (let ((a (vector-ref prior.owner x)) (b (vector-ref prior.owner y)))
-           (and (or (= a b) (not (bit-set? a (vector-ref prior.reach b))))
-                (let* ((adjacent (vector-copy prior.adjacent))
-                       (direct (vector-copy prior.direct))
-                       (reach (vector-copy prior.reach))
-                       (suffix (bitwise-ior (slot-bit b) (vector-ref reach b))))
-                  (let (edges (vector-ref adjacent x))
-                    (vector-set! adjacent x
-                      (if packed-edit?
-                        (let (next (caddr row))
-                          (insert-adjacent edges y (and next (hash-get prior.positions next)) checkpoint!))
-                        (cons y edges))))
-                  (vector-set! direct a (bitwise-ior (slot-bit b) (vector-ref direct a)))
-                  (for (g (in-range (vector-length reach)))
-                    (checkpoint!)
-                    (when (or (= g a) (bit-set? a (vector-ref prior.reach g)))
-                      (vector-set! reach g (bitwise-ior (vector-ref prior.reach g) suffix))))
-                  (make-condensed-closure source size prior.positions prior.labels
-                    adjacent prior.members prior.owner direct reach prior.order)))))))
+         (let* ((a (vector-ref prior.owner x)) (b (vector-ref prior.owner y))
+                (adjacent (vector-copy prior.adjacent)) (edges (vector-ref adjacent x)))
+           (vector-set! adjacent x
+             (if packed-edit?
+               (let (next (caddr row))
+                 (insert-adjacent edges y (and next (hash-get prior.positions next)) checkpoint!))
+               (cons y edges)))
+           (if (and (not (= a b)) (bit-set? a (vector-ref prior.reach b)))
+             (repair-partition prior source size adjacent checkpoint!)
+             (let* ((direct (vector-copy prior.direct)) (reach (vector-copy prior.reach))
+                    (suffix (bitwise-ior (slot-bit b) (vector-ref reach b))))
+               (vector-set! direct a (bitwise-ior (slot-bit b) (vector-ref direct a)))
+               (for (g (in-range (vector-length reach)))
+                 (checkpoint!)
+                 (when (or (= g a) (bit-set? a (vector-ref prior.reach g)))
+                   (vector-set! reach g (bitwise-ior (vector-ref prior.reach g) suffix))))
+               (make-condensed-closure source size prior.positions prior.labels
+                 adjacent prior.members prior.owner direct reach prior.order)))))))
 
 (def (remove-adjacent edges target checkpoint!)
   (checkpoint!)
@@ -189,23 +206,29 @@
     (for (g (in-range (vector-length reach))) (refresh! g))
     reach))
 
-;; A cross-edge removal cannot split an SCC. Requiring both groups to
-;; have internal cycles also keeps the vertex domain unchanged.
+;; A non-self edge inside a component may split it, but both endpoints
+;; remain incident. A cross-edge edit retains both cyclic owner domains.
 (def (gerbil-ascent-remove-condensed-edge (prior :- condensed-closure) source size row checkpoint!)
   (let ((x (hash-get prior.positions (car row))) (y (hash-get prior.positions (cadr row))))
     (and x y (memv y (vector-ref prior.adjacent x))
          (let ((a (vector-ref prior.owner x)) (b (vector-ref prior.owner y)))
-           (and (not (= a b)) (bit-set? a (vector-ref prior.direct a)) (bit-set? b (vector-ref prior.direct b))
-                (let ((adjacent (vector-copy prior.adjacent))
-                      (direct prior.direct)
-                      (reach prior.reach))
-                  (vector-set! adjacent x (remove-adjacent (vector-ref adjacent x) y checkpoint!))
-                  (unless (has-cross-edge? adjacent prior.members prior.owner a b checkpoint!)
-                    (set! direct (vector-copy direct))
-                    (vector-set! direct a (bitwise-and (vector-ref direct a) (bitwise-not (slot-bit b))))
-                    (set! reach (withdrawal-reach direct reach a checkpoint!)))
-                  (make-condensed-closure source size prior.positions prior.labels
-                    adjacent prior.members prior.owner direct reach prior.order)))))))
+           (cond
+            ((and (= a b) (not (= x y)))
+             (let (adjacent (vector-copy prior.adjacent))
+               (vector-set! adjacent x (remove-adjacent (vector-ref adjacent x) y checkpoint!))
+               (repair-partition prior source size adjacent checkpoint!)))
+            ((and (not (= a b)) (bit-set? a (vector-ref prior.direct a)) (bit-set? b (vector-ref prior.direct b)))
+             (let ((adjacent (vector-copy prior.adjacent))
+                   (direct prior.direct)
+                   (reach prior.reach))
+               (vector-set! adjacent x (remove-adjacent (vector-ref adjacent x) y checkpoint!))
+               (unless (has-cross-edge? adjacent prior.members prior.owner a b checkpoint!)
+                 (set! direct (vector-copy direct))
+                 (vector-set! direct a (bitwise-and (vector-ref direct a) (bitwise-not (slot-bit b))))
+                 (set! reach (withdrawal-reach direct reach a checkpoint!)))
+               (make-condensed-closure source size prior.positions prior.labels
+                 adjacent prior.members prior.owner direct reach prior.order)))
+            (else #f))))))
 
 ;; Group masks are exact, including the self bit only for a nonempty path.
 (def (gerbil-ascent-condensed-closure-view (index :- condensed-closure) version room checkpoint!)

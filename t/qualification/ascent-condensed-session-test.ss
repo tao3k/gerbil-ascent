@@ -5,6 +5,7 @@
 (import (only-in :std/test check test-case test-suite)
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :clan/poo/object .ref)
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components/borrowed)
         (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-variable gerbil-ascent-rule gerbil-ascent-atom)
         (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
@@ -86,6 +87,65 @@
 
 (def ascent-condensed-session-test
   (test-suite "Versioned condensed binary closure in an Actor Session"
+    (test-case "borrowed SCCs match independent reachability and quotient order"
+      (for-each
+       (lambda (mask)
+         (let ((adjacent (make-vector 3 [])) (edges []))
+           (for-each
+            (lambda (bit)
+              (when (bit-set? bit mask)
+                (let ((a (quotient bit 3)) (b (modulo bit 3)))
+                  (set! edges (cons (list a b) edges))
+                  (vector-set! adjacent a (cons b (vector-ref adjacent a))))))
+            (iota 9))
+           (let* ((saved (vector-copy adjacent))
+                  (groups (gerbil-ascent-graph-components/borrowed adjacent void))
+                  (owner (make-vector 3 #f))
+                  (reached (closure-oracle 3 edges)))
+             (for-each
+              (lambda (group rank)
+                (for-each (lambda (v)
+                            (check (vector-ref owner v) => #f)
+                            (vector-set! owner v rank))
+                          group))
+              groups (iota (length groups)))
+             (for-each (lambda (v) (check (eq? (vector-ref saved v) (vector-ref adjacent v)) => #t))
+                       (iota 3))
+             (for-each
+              (lambda (a)
+                (for-each
+                 (lambda (b)
+                   (let ((x (vector-ref owner a)) (y (vector-ref owner b)))
+                     (check (and (fixnum? x) (fixnum? y)) => #t)
+                     (check (= x y)
+                            => (or (= a b) (and (member (list a b) reached)
+                                                (member (list b a) reached) #t)))
+                     (when (member (list a b) edges)
+                       (check (<= x y) => #t))))
+                 (iota 3)))
+              (iota 3)))))
+       (iota 512)))
+    (test-case "every borrowed traversal checkpoint can refuse without editing adjacency"
+      (let* ((adjacent (vector (list 1 1 2) (list 2) (list 0 3) (list 3)))
+             (saved (vector-copy adjacent))
+             (steps 0)
+             (groups (gerbil-ascent-graph-components/borrowed adjacent
+                       (lambda () (set! steps (+ steps 1))))))
+        (check (map (lambda (group) (list-sort < group)) groups) => '((0 1 2) (3)))
+        (for-each
+         (lambda (stop)
+           (let ((at 0) (cause (list 'stop)))
+             (check (eq? cause
+                      (with-catch values
+                        (lambda ()
+                          (gerbil-ascent-graph-components/borrowed adjacent
+                            (lambda ()
+                              (set! at (+ at 1))
+                              (when (= at stop) (raise cause))))))) => #t)
+             (for-each
+              (lambda (v) (check (eq? (vector-ref saved v) (vector-ref adjacent v)) => #t))
+              (iota 4))))
+         (iota steps 1))))
     (test-case "Reuse and delta append keep the exact rows and isolate older versions"
       (let* ((edges (append (cycle 20 0) (cycle 20 20)))
              (joined (append edges '((19 20))))
@@ -194,7 +254,7 @@
             (check (replay original old-proof) => #t)
             (check-result original (closure-oracle 20 both) 'rebuilt))
           (finally (gerbil-ascent-session-close! session)))))
-    (test-case "Packed intra-component deletion rebuilds and splits the component"
+    (test-case "Packed intra-component edits split and merge without changing old witnesses"
       (let* ((linked (filter (lambda (row)
                               (or (not (memv 19 row))
                                   (equal? row '(17 19)) (equal? row '(19 17))))
@@ -210,7 +270,14 @@
               (check-result next (closure-oracle 20 split) 'rebuilt)
               (check (selected-rows next '(0 1) '(19 1)) => [])
               (check (replay next proof) => #f)
-              (check (replay prior proof) => #t)))
+              (check (replay prior proof) => #t)
+              (gerbil-ascent-session-replace-source! session 'edge linked)
+              (let* ((restored (gerbil-ascent-session-run session))
+                     (fresh (witness restored 19 1 200)))
+                (check-result restored (closure-oracle 20 linked) 'rebuilt)
+                (check (replay restored proof) => #f)
+                (check (replay restored fresh) => #t)
+                (check (condensed-witness-vertices fresh) => (condensed-witness-vertices proof)))))
           (finally (gerbil-ascent-session-close! session)))))
     (test-case "Derived and output exhaustion preserve the last committed index and witness"
       (let* ((edges (append (cycle 20 0) (cycle 20 20)))
@@ -236,6 +303,29 @@
                 (finally (gerbil-ascent-session-close! session)))))
           '((800 1700 "ASCENT derived fact budget exceeded")
             (1600 840 "ASCENT output fact budget exceeded")))))
+    (test-case "Split-merge repair under either fact limit keeps the published version"
+      (let ((split (append (cycle 20 0) (cycle 20 20) '((19 20)))))
+        (for-each
+         (lambda (limits)
+           (let (session (gerbil-ascent-open-condensed-actor-session
+                           (program split 64 (car limits) (cadr limits))))
+             (try
+               (let* ((first (gerbil-ascent-session-run session))
+                      (proof (witness first 19 39 80)))
+                 (check (replay first proof) => #t)
+                 (gerbil-ascent-session-append-source! session 'edge '(39 0))
+                 (let (failure
+                       (with-catch
+                         (lambda (cause)
+                           (call-with-output-string (lambda (port) (display-exception cause port))))
+                         (lambda () (gerbil-ascent-session-run session) "returned")))
+                   (check (and (string-contains failure (caddr limits)) #t) => #t))
+                 (check (eq? first (gerbil-ascent-session-last-completed session)) => #t)
+                 (check (replay first proof) => #t)
+                 (check (selected-rows first '(0 1) '(39 0)) => []))
+               (finally (gerbil-ascent-session-close! session)))))
+         '((1300 1700 "ASCENT derived fact budget exceeded")
+           (1600 1260 "ASCENT output fact budget exceeded")))))
     (test-case "Cancel stops large tentative graph and keeps the prior completed version"
       (let* ((size 180)
              (before (cycle 36 0))

@@ -2,9 +2,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :tao3k/yuanxu/module-system/selection/init-syntax yuanxu!))
-;; Production capabilities own native roots; Core derives their source closure.
 (yuanxu!
-  :build-roots ("init")
   :load-modules "."
   mode: explicit
   mount: Library

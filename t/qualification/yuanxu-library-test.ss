@@ -55,9 +55,9 @@
         (check-equal? ((.ref ((.ref left '.run)) 'rows-of) 'seed) '((7)))))
     (test-case "native compiler projection derives every owner from the same init"
       (let (modules (gerbil-ascent-library-modules))
-        ;; The published Rules operations must own their native implementation;
-        ;; a linked ABI import must not rely on a previous package installation.
-        (check-equal? (and (member "init" modules) #t) #t)
+        ;; The source init publishes the selection. Its Module owners provide
+        ;; the native targets required by library and linked ABI consumers.
+        (check-equal? (member "init" modules) #f)
         (check-equal? (and (member "rules/module" modules) #t) #t)
         (for-each (lambda (owner)
           (let (entry (string-append (symbol->string owner) "/interface"))

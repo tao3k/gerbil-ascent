@@ -34,9 +34,9 @@ an external source or a changing relation.
 | =interface/request.ss= | Inert request projection | Bind downstream request identity without granting source authority |
 
 The ASCENT package owns rule admission, finite relational evaluation,
-snapshot-local temporal predicates and candidate support status.  POO Flow's
-=temporal-causality= module owns domain-neutral causal event graphs, committed
-causal cuts, trajectory assessment and inert Impact classification.  MRR owns
+snapshot-local temporal predicates and candidate support status. In the Agentic
+AI Lab integration, its =temporal-causality= module owns causal cuts and
+trajectory assessment for the Lab. MRR owns
 semantic source binding, canonical FactId/DerivationId lineage and admission.
 Vertical code supplies event meaning, modality, clock interpretation and risk;
 the Runtime/Host owns effects.  An ASCENT result is an analysis input to those
@@ -191,7 +191,7 @@ counterfactual-causation claim to that gate.
    to full recomputation on the same corpus.
 
 Before code, decide the source owner's clock-domain conversion policy and the
-wire identity of =G= and =C= with POO Flow/MRR.  The evaluator must not invent
+wire identity of =G= and =C= with the downstream integration and MRR.  The evaluator must not invent
 either.  A second decision is whether interval endpoints need exact discrete
 positions only in the first gate or a domain-specific ordered value Provider.
 The finite reference model can begin with exact nonnegative positions while

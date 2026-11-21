@@ -157,7 +157,7 @@ checks input inclusion, rule closure and tuple absence for a finite
 positive program relative to one snapshot. It does not assert that
 the caller supplied every real-world source fact.
 MRR remains the later
-semantic admission owner, while POO Flow owns caller context and
+semantic admission owner, while the downstream library owns its caller context and
 effect handoff.
 
 * Current design choices for discussion

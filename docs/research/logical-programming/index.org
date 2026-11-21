@@ -1,7 +1,7 @@
 #+title: Logical programming and provenance research
 
 These readings concern rule semantics and generic derivation provenance.
-Application Evidence and model efficacy studies are owned by POO Flow; see
+Application evidence policy and model efficacy studies belong to their downstream libraries. See
 [[file:../../library-boundary.org][the Library boundary]].
 
 | Library question | Reading | Native owner | Formal scope |

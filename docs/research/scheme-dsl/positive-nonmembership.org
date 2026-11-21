@@ -44,9 +44,9 @@ checker establishes the invariant without trusting how =C= was produced.
 This is a closed-world claim *inside the supplied snapshot*. ASCENT
 does not certify that the source list captures all events, that the
 caller has authority to assert it complete, or that no revision arrived
-later. POO Flow Temporal owns those completeness, revision and admission
-conditions. The certificate binds local content, not an authenticated
-external source identity.
+later. The downstream source and temporal admission owners establish those
+completeness and revision conditions. The certificate binds the admitted
+snapshot content.
 
 * API and statuses
 :PROPERTIES:
@@ -98,7 +98,7 @@ generation and two-source atomic cut replacement, proof computation,
 bounded failure, publishing and using a certificate. A stale
 computation may finish after a source swap but cannot publish or be
 used as current. This is an ASCENT-local lifecycle model. It does not
-represent POO Flow's source authority, evidence assessment, or
+model the downstream libraries' source authority, evidence assessment or
 cross-GQL admission.
 
 =just check-nonmembership-formal= compiles the Lean file and explores

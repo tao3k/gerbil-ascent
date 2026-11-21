@@ -3,11 +3,11 @@
 
 # ASCENT
 
-ASCENT is a [Gerbil Scheme](https://cons.io/) library for relational and logical
-programming. It brings checked rule declarations, fixed-point evaluation,
-versioned sessions, and derivation evidence into Scheme. Its research asks how
-an engine can reuse work across changes while keeping the meaning and evidence
-of each result explicit.
+ASCENT is a public, reusable [Gerbil Scheme](https://cons.io/) library for
+relational and logical programming. It brings checked rule declarations,
+fixed-point evaluation, versioned sessions, and derivation evidence into
+Scheme. Its research asks how an engine can reuse work across changes while
+keeping the meaning and evidence of each result explicit.
 
 ## Research directions
 
@@ -24,8 +24,9 @@ of each result explicit.
 - **Evidence and time.** Bounded derivation witnesses and replay are tied to
   a source version. Temporal queries use an explicit event cut. Verification
   of a derivation establishes support under the admitted rules and source
-  facts. Application policies and agent workflows belong to
-  [Agentic AI Lab](https://github.com/tao3k/agentic-ai-lab).
+  facts. Downstream libraries own their application policies.
+  [Agentic AI Lab](https://github.com/tao3k/agentic-ai-lab) is one integration
+  example. See the [library boundary](docs/library-boundary.org).
 - **Validation and cost.** Lean checks mathematical obligations, Quint
   explores protocol behavior, and native tests compare execution with
   independent oracles. Benchmarks distinguish construction, updates, first

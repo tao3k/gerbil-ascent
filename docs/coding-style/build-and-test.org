@@ -80,7 +80,7 @@ All generated Libraries, receipts, logs and source snapshots stay under ignored
 =.cache/= or the existing package prefix. Historical results below retain their
 original source revision and do not qualify the current checkout.
 
-* Test startup and the POO Flow Core Case dependency
+* Historical test startup with a downstream Core Case import
 
 The installed Gerbil v0.19 =tools/gxtest.ss= calls =import-module=
 with evaluation for each test source before it prints =HARNESS=. Its

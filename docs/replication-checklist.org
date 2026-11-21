@@ -20,8 +20,7 @@ close a whole feature family. All required items below must be checked before
 calling *Rust 0.8.0 replication* complete. This historical comparison is a
 separate research claim from admission of the Scheme-native Library; its open
 items do not automatically block that Library's PR. The native admission
-contract is [[file:library-acceptance.org][tracked separately]]. Keep new Agent research and broader POO Flow
-integration outside the replication claim.
+contract is [[file:library-acceptance.org][tracked separately]]. Track agent research and downstream integrations separately from replication.
 
 * P0: Inventory and language surface
 
@@ -64,7 +63,7 @@ The current executable map is:
 - [X] Use ASP's standard SS profile with 1000 samples and Foundation Observability memory/duration guards; retain the existing budgets. Evidence: =just performance= and =t/scenarios/performance/=.
 - [ ] Measure each completed feature family at representative 1000- and 10000-row/key scales where applicable. The composed generator/guard/negation/recursion/grouped-aggregate family has exact complete-output Rust/Scheme/model checks at both sizes. The =eqrel=/recursive-minimum/negation/count family has the same checks at 1000 and 10000 disjoint edge pairs, with 5n source rows, 8n+1 public output rows and a derived budget of 14n+1 that allows at most two lattice updates per node. Both use the same Scheme rule module as their smaller corpus. Diagnose algorithmic gaps using Standard Library and Provider/index choices; record time and memory on exact source heads without changing budgets to hide regressions. Other families and connected-component scale remain.
 - [ ] On the final ASCENT head, run =just build=, =just test=, =just oracle=, =just performance= and the repository policy gates; require the exact-head Ubuntu CI to pass. A prior green head is insufficient.
-- [ ] Pin that final ASCENT commit in the POO Flow consumer, run its exact pinned Linux integration, resolve review threads, then record both immutable heads and CI receipts before squash. macOS is not a release gate for this work.
+- [ ] For a downstream integration claim, qualify the consumer's resolved ASCENT pin on Linux and record both source heads and CI receipts. Agentic AI Lab is one such integration target.
 
 The local macOS performance gate is not currently green on this source: one
 full run failed the existing table-expression 2 ms p95 limit at 10.477 ms;

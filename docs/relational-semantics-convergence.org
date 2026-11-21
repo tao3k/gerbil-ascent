@@ -30,7 +30,7 @@ relocation is authorized here. Future replacements must migrate consumers
 directly, without compatibility parsers, aliases, or silent backend fallback.
 
 ASCENT owns admission, inference, computational state, results and computational
-evidence. Hosts, MRR and POO Flow own source selection, external completeness
+evidence. Downstream hosts and libraries own source selection, external completeness
 claims, canonical fact identities, persistent history, causal commits, business
 publication and authorization. Local generations, content bindings, cache
 invalidation and failure recovery remain necessary Library mechanisms.
@@ -1205,7 +1205,7 @@ extension support is retained and must not be deleted merely to pass the baselin
 | ASCENT Rust core | Owned logical values, restricted data lowering, boundary checks, physical plans/indexes/Rayon and lifetimes; generated scalar body execution once qualified |
 | Python and C ABI | Preserve current routing, ownership, typed transport and errors; no backend guessing or semantic repair |
 | Independent checker | Reconstruct consequences from bound program/source; validate proofs without invoking the production expression evaluator |
-| Host/MRR/POO Flow | Source/coverage authority, canonical lineage, persistence, causal/business policy and application coordination |
+| Downstream hosts and libraries | Source/coverage authority, canonical lineage, persistence, causal/business policy and application coordination |
 
 | Duplication | Disposition and limit of claim |
 |-------------+--------------------------------|

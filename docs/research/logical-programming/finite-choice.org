@@ -114,6 +114,6 @@ branches must agree with an independent fresh oracle. Keep cancellation,
 incomplete closure and stale-publication cases as failures. Shared-prefix and
 disjoint-prefix controls distinguish useful sharing from bookkeeping overhead.
 
-POO Flow continues to own model conversations, semantic thinking annotation and
-budgeted application studies, as specified by [[file:../../library-boundary.org][the Library boundary]].
+Downstream libraries own their model conversations, semantic annotations and
+budgeted application studies. See [[file:../../library-boundary.org][the ASCENT library boundary]].
 The upstream solver is a research reference, not a new ASCENT dependency.

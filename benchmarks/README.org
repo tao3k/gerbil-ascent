@@ -55,9 +55,10 @@ the CPU cost of these output representations is included in delivery.
 
 * SCC bridge edits and bound reads
 
-Run each Scheme query shape through the native test command. Each uses 26
-strongly connected groups of 64 vertices and the same 25 directed bridges.
-The cases time 32 removals and restorations of the central bridge. The
+Run each Scheme query shape through the native test command.
+The million-row controls use 26 strongly connected groups of 64 vertices
+and the same 25 directed bridges. The bound-read cases time 32 removals
+and restorations of the central bridge. The
 double-bound case also times 1,000 same-version hits and misses.
 The split/merge case uses a return bridge from the last group to the
 first. Its removal splits one component into 26 and its restoration
@@ -65,12 +66,20 @@ joins them again. It times 32 publications and first ordered origin
 queries in each direction. Witness creation and replay are checked
 outside the timers. Its full closure contains 1,664 squared rows.
 
-Use the ten-million-row case for current split/merge measurements.
-It uses 50 groups of 64 vertices and 201,649 or 201,650 input facts.
-The split has 5,222,400 logical output rows and the merged closure has
-10,240,000. The test checks both cardinalities from the published
-result and materializes only the selected first-origin query. The
-million-row cases remain available for comparison.
+Use the ten-million-row cases for current split/merge measurements.
+The global fixture uses 50 groups of 64 vertices and 201,649 or 201,650
+input edges. Its logical closure grows from 5,222,400 to 10,240,000 rows.
+The local fixture uses 71 groups of 64 vertices and 286,342 or 286,343
+edges. Only the final two groups merge and the closure grows from
+10,469,376 to 10,473,472 rows. Each case checks both cardinalities, the
+selected first-origin result in order, and witnesses from both versions.
+The benchmark reports replacement, publication and first-origin wall
+time, process CPU, cumulative allocation and GC separately. Each
+=TIMING= line reports phase, sample count, wall P95 and wall maximum.
+Each =EDIT-SAMPLE= reports direction, phase, wall ms, CPU ms, bytes,
+GC ms and collections for one measurement. The allocation summary also counts
+negative raw deltas from the runtime counter. The million-row cases
+remain available for regression checks.
 
 #+begin_src sh
 timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
@@ -81,6 +90,8 @@ timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
   -r '^scc-split-merge-test$' benchmarks/scc-bridge-test.ss
 timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
   -r '^scc-ten-million-split-merge-test$' benchmarks/scc-bridge-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^scc-ten-million-local-split-merge-test$' benchmarks/scc-bridge-test.ss
 cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-bound
 cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-origin
 #+end_src

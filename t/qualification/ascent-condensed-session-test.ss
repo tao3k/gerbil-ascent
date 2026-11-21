@@ -254,6 +254,16 @@
             (check (replay original old-proof) => #t)
             (check-result original (closure-oracle 20 both) 'rebuilt))
           (finally (gerbil-ascent-session-close! session)))))
+    (test-case "Direct masks preserve singleton loops and combine redundant cross edges"
+      (let* ((edges (append (cycle 32 0) '((0 32) (31 32) (32 32) (32 33))))
+             (session (gerbil-ascent-open-condensed-actor-session (program edges 40 1200 1240))))
+        (try
+          (let (result (gerbil-ascent-session-run session))
+            (check-result result (closure-oracle 34 edges) 'rebuilt)
+            (check (selected-rows result '(0 1) '(32 32)) => '((32 32)))
+            (check (selected-rows result '(0 1) '(33 33)) => [])
+            (check (replay result (witness result 30 33 8)) => #t))
+          (finally (gerbil-ascent-session-close! session)))))
     (test-case "Packed intra-component edits split and merge without changing old witnesses"
       (let* ((linked (filter (lambda (row)
                               (or (not (memv 19 row))

@@ -142,3 +142,55 @@ before publication. The native graph oracle checks the complete mutual
 reachability partition and quotient order independently of the
 implementation's discovery state. These obligations do not constitute a
 proof of the complete SCC implementation.
+
+** Quotient construction and first-origin cost
+
+The SCC traversal in =core/dependency-graph.ss= inspects the admitted
+adjacency with cancellation checkpoints. Its result supplies a dense
+owner for each vertex. In =program/condensed-closure.ss=,
+=condense-adjacent= then constructs direct component masks, closes them
+in reverse topological order, and indexes runs of ordered labels. Those
+are separate costs. =source-slot-packed-extra= checks the full ordered
+one-edge edit before either graph stage.
+
+=QuotientConstruction= in =packages/proofs/lean/ComponentClosure.lean=
+connects the direct-mask changes to concrete edges. A partition with
+one component and a nonempty adjacency has exactly one direct bit. A
+nontrivial component has an internal edge, so its self bit can be seeded
+once. Singletons still require an explicit loop. An inter-component
+edge contributes the same bit whether it is the first or a subsequent
+concrete edge between its owners. The cost model counts a quotient
+arc probe per stored edge for a multi-component rebuild, and zero for
+a one-component rebuild. The latter still runs the partitioner and
+still checks the token, label order, fact limits and publication.
+
+The first single-origin visit goes through =gerbil-ascent-visit-snapshot!=
+and =parts= to the retained run index or the deferred per-group target
+list. The ordered-run route pays one mask probe per run and visits each
+selected label once. An unchanged binding emits each visited label. =ordered_runs_select_exact= and
+=single_origin_run_cost= capture the selected order and number of
+emissions. On the global restoration workload, all 3,200 labels belong
+to one run. That route performs no deferred target sort. A native
+source benchmark also includes the client callback and scheduler time.
+Record wall, process CPU, allocation and GC for the same query sample
+before attributing a tail to any of those costs. A source-loaded versus
+compiled client control holds the production provider fixed and
+changes only the client module, including its visitor call site and
+callback. The retained Result's witness still traverses that
+publication's original adjacency.
+
+The local reference packs 71 cliques of 64 vertices in a one-way chain.
+A return edge between the final two cliques changes only their SCCs.
+The independent count is the sum of the triangular chain rectangles
+plus one rectangle of 64 squared rows when the edge is present. It has
+10,469,376 and 10,473,472 logical rows respectively. This case compares
+global rebuild cost with an update whose affected component membership
+is small, even though reachability has a large predecessor cone.
+
+Local partition repair would restrict traversal to the 128 affected
+vertices and their 8,065 or 8,066 internal edges. Reusing an unchanged
+component also requires preserving its outgoing edge summary and
+relating its owner ordinal to the next version. A local partition by
+itself leaves whole-cut validation, source replacement and remapping
+the reachability masks outside that region in place. Measure these
+costs separately before choosing the update path.

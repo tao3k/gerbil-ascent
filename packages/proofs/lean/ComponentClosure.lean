@@ -214,6 +214,90 @@ theorem component_self_path_exact {Vertex Group : Type} {edge : Vertex → Verte
   · rintro ⟨first, witness, internal⟩
     exact nonempty_component_cycle connect internal witness
 
+section QuotientConstruction
+
+/-- An admitted nontrivial SCC always has an internal edge. Follow a
+path from one member to a distinct member. Its first step cannot leave
+the component because the target can return to the origin. -/
+theorem nontrivial_component_has_internal_edge {Vertex Group : Type}
+    {edge : Vertex → Vertex → Prop} {owner : Vertex → Group} {a b : Vertex}
+    (separate : ∀ source target, EdgePath edge source target →
+      EdgePath edge target source → owner source = owner target)
+    (forward : EdgePath edge a b) (backward : EdgePath edge b a) :
+    ∃ first, edge a first ∧ owner first = owner a := by
+  obtain ⟨first, step, rest⟩ := path_first_step forward
+  refine ⟨first, step, ?_⟩
+  have back : EdgePath edge first a := by
+    rcases rest with same | onward
+    · exact same.symm ▸ backward
+    · exact .append onward backward
+  exact separate first a back (.step step)
+
+/-- Seeding the self bit once is equivalent to projecting every
+internal edge into it. The remaining scan contributes cross bits. -/
+theorem seeded_self_bit_exact {Group : Type} [DecidableEq Group]
+    (group : Group) (targets : List Group) (internal : group ∈ targets)
+    (target : Group) :
+    target ∈ group :: targets.filter (fun h => decide (h ≠ group)) ↔ target ∈ targets := by
+  by_cases same : target = group
+  · subst target
+    simp [internal]
+  · simp [same]
+
+/-- Two edges with the same quotient target set the same mask bit. -/
+theorem repeated_quotient_target_exact {Group : Type} [DecidableEq Group]
+    (target candidate : Group) (mask : List Group) :
+    candidate ∈ (if target ∈ mask then mask else target :: mask) ↔
+      candidate ∈ target :: mask := by
+  by_cases recorded : target ∈ mask
+  · simp only [ite_eq_left recorded, List.mem_cons]
+    exact ⟨Or.inr, fun present => present.elim (fun same => same ▸ recorded) id⟩
+  · simp [recorded]
+
+/-- A nonempty admitted adjacency with one SCC has exactly the self
+bit in its direct mask. The reverse topological union has that same bit. -/
+theorem one_component_direct_mask {Group : Type} (group : Group) (targets : List Group)
+    (nonempty : targets ≠ []) (oneOwner : ∀ target ∈ targets, target = group)
+    (target : Group) :
+    target ∈ targets ↔ target ∈ [group] := by
+  cases targets with
+  | nil => exact False.elim (nonempty rfl)
+  | cons first rest =>
+    constructor
+    · intro present
+      simpa using oneOwner target present
+    · intro present
+      have same : first = group := oneOwner first (List.mem_cons_self)
+      have targetGroup : target = group := by simpa using present
+      exact List.mem_cons.mpr (.inl (targetGroup.trans same.symm))
+
+/-- The old scan visits each arc to accumulate its mask. The one-SCC
+route has zero quotient arc probes after the partition is available.
+The SCC traversal's probes are charged separately. -/
+def quotientArcProbes (componentCount : Nat) (degrees : List Nat) : Nat :=
+  if componentCount = 1 then 0 else degrees.sum
+
+theorem one_component_quotient_cost (degrees : List Nat) : quotientArcProbes 1 degrees = 0 := by
+  simp [quotientArcProbes]
+
+theorem multiple_component_quotient_cost (components : Nat) (notOne : components ≠ 1)
+    (degrees : List Nat) : quotientArcProbes components degrees = degrees.sum := by
+  simp [quotientArcProbes, notOne]
+
+/-- Filtering an ordered run list is a first-query traversal, not
+closure materialization. Each selected run contributes its labels once. -/
+theorem single_origin_run_cost {Group Vertex : Type}
+    (runs : List (Group × List Vertex)) (allowed : Group → Bool) :
+    (runs.flatMap (fun (g, labels) => if allowed g then labels else [])).length =
+      (runs.map (fun (g, labels) => if allowed g then labels.length else 0)).sum := by
+  induction runs with
+  | nil => rfl
+  | cons head tail ih =>
+    rcases head with ⟨group, labels⟩
+    cases selected : allowed group <;> simp [selected, ih]
+
+end QuotientConstruction
+
 /-- One source group has one target set. A group product can be charged
 before any pair in it is expanded. Uniqueness of the admitted member
 and target lists is a separate obligation of the partition. -/

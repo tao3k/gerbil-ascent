@@ -95,18 +95,37 @@
   (let* ((members (list->vector (partition adjacent checkpoint!)))
          (groups (vector-length members))
          (owner (make-vector (vector-length adjacent) #f))
-         (direct (make-vector groups 0)) (cyclic? #f))
+         (direct (make-vector groups 0))
+         (single? (= groups 1))
+         (cyclic? (and single? (> size 0))))
+    ;; A nonempty graph with one SCC has just the self bit.
+    (when cyclic? (vector-set! direct 0 1))
     (for (g (in-range groups))
-      (for-each (lambda (v) (checkpoint!) (vector-set! owner v g))
-                (vector-ref members g)))
-    (for (v (in-range (vector-length adjacent)))
-      (let (g (vector-ref owner v))
-        (for-each (lambda (target)
-                    (checkpoint!)
-                    (let (h (vector-ref owner target))
-                      (when (= g h) (set! cyclic? #t))
-                      (vector-set! direct g (bitwise-ior (slot-bit h) (vector-ref direct g)))))
-                  (vector-ref adjacent v))))
+      (let (vertices (vector-ref members g))
+        ;; Each nontrivial SCC already witnesses a nonempty internal path.
+        (when (and (not single?) (pair? (cdr vertices)))
+          (vector-set! direct g (slot-bit g))
+          (set! cyclic? #t))
+        (for-each (lambda (v) (checkpoint!) (vector-set! owner v g)) vertices)))
+    (unless single?
+      (for (v (in-range (vector-length adjacent)))
+        (let* ((g (vector-ref owner v))
+               (nontrivial? (pair? (cdr (vector-ref members g)))))
+          (let walk ((edges (vector-ref adjacent v)) (mask (vector-ref direct g)))
+            (if (null? edges)
+              (vector-set! direct g mask)
+              (begin
+                (checkpoint!)
+                (let* ((h (vector-ref owner (car edges)))
+                       (next
+                        (cond ((fx= g h)
+                               (if nontrivial? mask
+                                 (begin
+                                   (set! cyclic? #t)
+                                   (bitwise-ior (slot-bit g) mask))))
+                              ((bit-set? h mask) mask)
+                              (else (bitwise-ior (slot-bit h) mask)))))
+                  (walk (cdr edges) next))))))))
     (and cyclic?
          (let (reach (vector-copy direct))
            (let close ((g (- groups 1)))

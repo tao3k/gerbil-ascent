@@ -78,7 +78,7 @@ questions and the corresponding implementation and evidence.
 
 ## Selected papers
 
-- Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski. [Seamless Deductive Inference via Macros](https://doi.org/10.1145/3497776.3517779), CC 2022.
+- Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski. [Seamless Deductive Inference via Macros](https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf), CC 2022.
 - Chris Martens, Robert J. Simmons, and Michael Arntzenius. [Finite-Choice Logic Programming](https://arxiv.org/abs/2405.19040v3), POPL 2025.
 - Ashish Gupta, Inderpal Singh Mumick, and V. S. Subrahmanian. [Maintaining Views Incrementally](https://sigmodrecord.org/1993/06/03/maintaining-views-incrementally/), SIGMOD 1993.
 - Todd J. Green, Grigoris Karvounarakis, and Val Tannen. [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf), PODS 2007.

@@ -24,9 +24,8 @@ of each result explicit.
 - **Evidence and time.** Bounded derivation witnesses and replay are tied to
   a source version. Temporal queries use an explicit event cut. Verification
   of a derivation establishes support under the admitted rules and source
-  facts. Applications such as [POO Flow](https://github.com/tao3k/poo-flow)
-  decide how to interpret and act on that support.
-  [Library boundary](docs/library-boundary.org)
+  facts. Application policies and agent workflows belong to
+  [Agentic AI Lab](https://github.com/tao3k/agentic-ai-lab).
 - **Validation and cost.** Lean checks mathematical obligations, Quint
   explores protocol behavior, and native tests compare execution with
   independent oracles. Benchmarks distinguish construction, updates, first

@@ -263,3 +263,49 @@ cursor suffix, splice order and unchanged rows. The same model counts
 201,713 successor pairs across the fixture's two initially held
 adjacencies and 3,201 buffers for the packed form. The latter store
 unboxed ordinals. Neither object count measures collector scan bytes.
+
+** Timing a versioned Actor edit
+
+The public call enters =request= in =program/actor-session.ss=. It
+captures the authority and reply completion, takes the lifecycle
+mutex, and sends one envelope. The owner takes the envelope in
+=dispatch-request!=, checks the completed Result, and prepares the
+prospective source cut. =start-resident!= makes the job visible to
+the resident worker. The worker takes the job and computes the next
+index and Result in its own dynamic extent.
+
+The worker sends the outcome back to =finish-resident!=. The owner
+accepts and publishes in =finish!=, after checking epoch, worker,
+completion and authority. Completion posting then makes the reply
+available to the original caller. The boundary between publishing
+and delivery is distinct from the boundary between finishing
+evaluation and the owner taking the outcome.
+
+A diagnostic can place monotonic marks before both sends, at both
+receives, at evaluator entry and exit, at owner publication and at
+completion delivery. Additional marks separate mutex acquisition,
+enqueue return and completion posting. =edge_edit_clock_partitions=
+proves the principal intervals sum to an individual edit. Process
+CPU and GC counters at the same marks help distinguish work from
+wall time outside measured CPU. Interval percentiles are considered
+separately and are never added into an end-to-end percentile.
+
+The operating-system diagnostic optionally reads the current task's
+runnable counter alongside the Scheme marks. On Darwin that counter
+aggregates runnable thread time in Mach clock ticks, including CPU
+time. Counter updates can straddle an interval boundary. It cannot
+identify a competing task or assign the entire elapsed gap to one
+thread. Keep this diagnostic out of the acceptance run.
+[[https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/task.c#L6386-L6434][XNU task accounting]]
+
+During evaluator admission, =gerbil-ascent-condensed-closure-view=
+determines the number of target vertices in each reach mask before
+accepting the derived and output counts. The sum is the population of
+the mask times a common component size, plus the signed deviations of
+selected components from that size. =centered_target_count= proves the
+equality, including negative deviations. An edit without an external
+work meter can use this count when checking the deviations costs less
+than walking the selected components. It still checks cancellation
+before each mask and while traversing deviations. An edit with a work
+meter keeps the original per-target work checkpoints. Query order,
+source ownership, and witness traversal use the same packed index.

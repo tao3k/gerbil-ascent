@@ -396,6 +396,38 @@ theorem replacement_publishes_atomically {Cut : Type} (prior proposed : Cut)
       if current && accepted && finished then (proposed, proposed) else (prior, prior) := by
   cases current <;> cases accepted <;> cases finished <;> rfl
 
+/-- Principal marks on the successful, resident edge edit path. The
+first mark precedes the lifecycle lock, and delivery follows the
+caller's observation of the completion. -/
+structure EdgeEditClock where
+  request : Nat
+  sendOwner : Nat
+  takeOwner : Nat
+  sendWorker : Nat
+  takeWorker : Nat
+  finishWork : Nat
+  takeResult : Nat
+  publish : Nat
+  deliver : Nat
+
+def EdgeEditClock.ordered (s : EdgeEditClock) : Prop :=
+  s.request ≤ s.sendOwner ∧ s.sendOwner ≤ s.takeOwner ∧
+  s.takeOwner ≤ s.sendWorker ∧ s.sendWorker ≤ s.takeWorker ∧
+  s.takeWorker ≤ s.finishWork ∧ s.finishWork ≤ s.takeResult ∧
+  s.takeResult ≤ s.publish ∧ s.publish ≤ s.deliver
+
+/-- The principal intervals partition a single edit. A measurement
+compares completed per-edit sums before taking a percentile. -/
+theorem edge_edit_clock_partitions (s : EdgeEditClock) (ordered : s.ordered) :
+    (s.sendOwner - s.request) + (s.takeOwner - s.sendOwner) +
+    (s.sendWorker - s.takeOwner) + (s.takeWorker - s.sendWorker) +
+    (s.finishWork - s.takeWorker) + (s.takeResult - s.finishWork) +
+    (s.publish - s.takeResult) + (s.deliver - s.publish) =
+      s.deliver - s.request := by
+  unfold EdgeEditClock.ordered at ordered
+  obtain ⟨a, b, c, d, e, f, g, h⟩ := ordered
+  omega
+
 /-- A suspended evaluator is eligible only on the same owned source cut.
 Resume selects the new request's authorization independently of the old run. -/
 def resumable {Cut : Type} [DecidableEq Cut] (saved pending : Cut)

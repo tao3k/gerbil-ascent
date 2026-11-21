@@ -193,7 +193,9 @@
                                               (build-condensed-closure source count visit-binary
                                                 previous-frontier check!)))
                                            (index (car candidate))
-                                           (view (gerbil-ascent-condensed-closure-view index version room check!)))
+                                           ;; Keep the metered walk's exact per-target charges.
+                                           (view (gerbil-ascent-condensed-closure-view index version room check!
+                                                   (and edit (not (current-ascent-execution-control))))))
                                      (set! condensed index)
                                      (set! update-kind (cdr candidate))
                                      (unless (source-slot-view source)

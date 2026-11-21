@@ -298,6 +298,22 @@ theorem single_origin_run_cost {Group Vertex : Type}
 
 end QuotientConstruction
 
+/-- Sum the vertex count of the selected groups by counting set bits
+at a common size and adding only the deviations. This is an exact
+rewrite even when a selected group is smaller than the common size. -/
+theorem centered_target_count (groups : List (Bool × Int)) (common : Int) :
+    (groups.map (fun g => if g.1 then g.2 else 0)).sum =
+      ((groups.filter Prod.fst).length : Int) * common +
+        (groups.map (fun g => if g.1 then g.2 - common else 0)).sum := by
+  induction groups with
+  | nil => simp
+  | cons group tail ih =>
+    rcases group with ⟨selected, size⟩
+    cases selected
+    · simpa using ih
+    · simp [ih, Int.add_mul]
+      omega
+
 /-- One source group has one target set. A group product can be charged
 before any pair in it is expanded. Uniqueness of the admitted member
 and target lists is a separate obligation of the partition. -/

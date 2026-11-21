@@ -411,16 +411,34 @@
              (else #f)))))))
 
 ;; Group masks are exact, including the self bit only for a nonempty path.
-(def (gerbil-ascent-condensed-closure-view (index :- condensed-closure) version room checkpoint!)
+(def (gerbil-ascent-condensed-closure-view (index :- condensed-closure) version room checkpoint!
+                                            (count-by-size? #f))
   (let/cc decline
     (let* ((labels index.labels) (positions index.positions) (owner index.owner)
            (members index.members) (reach index.reach) (groups (vector-length members))
            (order index.order)
-           (sizes (vector-map length members)) (target-counts (make-vector groups 0)) (count 0))
+           (sizes (vector-map length members)) (target-counts (make-vector groups 0))
+           (common (and count-by-size? (> groups 0) (vector-ref sizes 0)))
+           (deviations []) (deviation-count 0) (count 0))
+      (when common
+        (for (g (in-range 1 groups))
+          (checkpoint!)
+          (let (delta (- (vector-ref sizes g) common))
+            (unless (= delta 0)
+              (set! deviations (cons (cons g delta) deviations))
+              (set! deviation-count (+ deviation-count 1))))))
+      (def (count-targets mask)
+        (let (selected (and common (bit-count mask)))
+          (if (and selected (<= deviation-count selected))
+            (foldl
+              (lambda (change n)
+                (checkpoint!)
+                (if (bit-set? (car change) mask) (+ n (cdr change)) n))
+              (* selected common) deviations)
+            (fold-members mask (lambda (h n) (checkpoint!) (+ n (vector-ref sizes h))) 0))))
       (for (g (in-range groups))
         (checkpoint!)
-        (let (targets (fold-members (vector-ref reach g)
-                        (lambda (h n) (checkpoint!) (+ n (vector-ref sizes h))) 0))
+        (let (targets (count-targets (vector-ref reach g)))
           (vector-set! target-counts g targets)
           (set! count (+ count (* (vector-ref sizes g) targets)))
           (when (> count room) (decline #f))))

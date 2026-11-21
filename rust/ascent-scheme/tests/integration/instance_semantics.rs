@@ -1,5 +1,7 @@
 #![cfg(all(feature = "instances", target_os = "macos"))]
 //! The identical semantic cases through the upstream independent-VM adapter.
+#[path = "actor_sessions.rs"]
+mod actor_sessions;
 #[path = "aggregate_constructors.rs"]
 mod aggregate_constructors;
 #[path = "constructor_sessions.rs"]

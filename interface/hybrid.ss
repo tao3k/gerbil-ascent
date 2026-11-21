@@ -6,6 +6,10 @@
         (only-in :gerbil/runtime/loader set-load-path!)
         (only-in :gerbil/runtime/mop slot-ref)
         :gerbil/runtime/gambit
+        (only-in :std/os/device OSDevice __open-raw-device __close-fd DIRECTION-INOUT
+                 device-wait-input! device-wait-output! device-close)
+        (only-in :std/os/fcntl __fcntl2 F_DUPFD_CLOEXEC)
+        (only-in :std/time/timeout !NoTimeout)
         :gerbil-ascent/core/execution-control)
 (extern namespace: #f gerbil-ascent/interface/hybrid#checkpoint
                        gerbil-ascent/interface/hybrid#bind-checkpoint)
@@ -65,14 +69,28 @@
         ;; request state, including when they arrive during the next ABI call.
         (set! active #f)
         (thread-terminate! monitor)))))
-(def (invoke request)
+(def (invoke packet)
   (with-catch
     (lambda (failure) (vector #f (failure-message failure)))
     (lambda ()
-      (let (control (hash-ref request "executionControl" #f))
+      (let* ((packed-rows? (and (vector? packet) (= (vector-length packet) 1)))
+             (request (if packed-rows? (vector-ref packet 0) packet))
+             (control (hash-ref request "executionControl" #f)))
         (hash-remove! request "executionControl")
-        (let (execute (lambda () (vector #t (ascent-engine-call request))))
+        (let (execute (lambda () (vector #t (ascent-engine-call request packed-rows?))))
           (if control (controlled-call control execute) (execute)))))))
+
+(def (open-process-wait descriptor)
+  (let* ((fd (__fcntl2 descriptor F_DUPFD_CLOEXEC 0))
+         (raw (with-catch (lambda (failure) (__close-fd fd) (raise failure))
+                (lambda () (__open-raw-device 'ascent-process fd DIRECTION-INOUT))))
+         (device (OSDevice raw fd DIRECTION-INOUT)))
+    (lambda (direction)
+      (case direction
+        ((#t) (device-wait-output! device !NoTimeout))
+        ((#f) (device-wait-input! device !NoTimeout))
+        (else (device-close device))))))
+
 (begin-foreign
   (c-declare "#include <stdint.h>
 typedef int (*ascent_check_type)(int64_t, int64_t, int64_t);
@@ -108,4 +126,7 @@ void ascent_hybrid_set_checkpoint(ascent_check_type fn) { ascent_check_fn = fn; 
   (define checkpoint (c-lambda (int64 int64 int64) int "___return(ascent_check_fn ? ascent_check_fn(___arg1, ___arg2, ___arg3) : 5);"))
   (c-define (invoke request) (int64) int64 "ascent_hybrid_call" "extern"
     (gerbil-scheme-rust/scheme/runtime#gerbil-rs-rooted-call request
-      gerbil-ascent/interface/hybrid#invoke)))
+      gerbil-ascent/interface/hybrid#invoke))
+  (c-define (process-wait descriptor) (int64) int64 "ascent_hybrid_process_wait" "extern"
+    (gerbil-scheme-rust/scheme/runtime#gerbil-rs-rooted-call descriptor
+      gerbil-ascent/interface/hybrid#open-process-wait)))

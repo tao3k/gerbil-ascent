@@ -2,10 +2,11 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import "func.ss" "scheme-checked.ss" "scheme-admission.ss"
+(import "func.ss" "scheme-checked.ss" "scheme-admission.ss" "scheme-choice.ss"
         (only-in :clan/poo/object .ref))
 
 (export relational-program relational-fragment
+        relational-choice-program relational-choice-solve RelationalChoiceLimit?
         relational-lattice-fragment relational-finite-view
         relational-export relational-compose relational-admit
         relational-admit/report
@@ -355,6 +356,18 @@
 
 ;; END GENERATED DSL-OWNED
 
+;; BEGIN GENERATED DSL-CLOSED-RULES
+(defsyntax (relational-closed-rules-program stx)
+  (syntax-case stx ()
+    ((_ relations rules input derived output handles)
+     (syntax (let* ((relation-values relations)
+                    (rule-values (gerbil-ascent-construct-inert-rules
+                                  (lambda () rules))))
+               (gerbil-ascent-program relation-values rule-values
+                                     input derived output handles))))))
+
+;; END GENERATED DSL-CLOSED-RULES
+
 ;; relational-program
 ;; : (forall (s) (-> s s))
 ;; : (-> ProgramSyntax ProgramConstructionSyntax)
@@ -374,8 +387,9 @@
 ;;; Invariant: opaque source expressions stay lexical and are evaluated once.
 ;; BEGIN GENERATED DSL-SELECT
 (defsyntax (relational-program stx)
-  (def (closed-positive? clauses)
+  (def (closed-constructor clauses)
     (def has-rule? #f)
+    (def stratified? #f)
     (def names
       (let (index (make-hash-table-eq))
         (for-each (lambda (form)
@@ -406,6 +420,40 @@
            (and (hash-get names name) (not (memq name '(where compute not reduce)))
                 (andmap term? (syntax->list (syntax (term ...)))))))
         (_ #f)))
+    (def (variable? form)
+      (and (identifier? form) (term? form)
+           (not (eq? (syntax->datum form) '?_))))
+    (def (closed-inputs? inputs)
+      (andmap (lambda (input)
+                (if (identifier? input) (variable? input) (term? input)))
+              inputs))
+    (def (closed-operation? operation inputs signatures)
+      (let (signature (assq (syntax->datum operation) signatures))
+        (and (identifier? operation) signature
+             (= (length inputs) (cdr signature))
+             (closed-inputs? inputs))))
+    (def (nonpositive? form)
+      (syntax-case form (not where compute reduce)
+        ((not atom)
+         (atom? (syntax atom)))
+        ((where (operation input ...))
+         (closed-operation? (syntax operation) (syntax->list (syntax (input ...)))
+                            '((even? . 1) (< . 2))))
+        ((compute output (operation input ...))
+         (and (variable? (syntax output))
+              (closed-operation? (syntax operation) (syntax->list (syntax (input ...)))
+                                 '((+ . 2) (identity . 1)))))
+        ((reduce output (mode input ...) atom)
+         (let* ((inputs (syntax->list (syntax (input ...))))
+                (signature (assq (syntax->datum (syntax mode))
+                                 '((count . 0) (sum . 1) (min . 1) (max . 1)))))
+           (and (variable? (syntax output)) (identifier? (syntax mode)) signature
+                (= (length inputs) (cdr signature)) (andmap variable? inputs)
+                (atom? (syntax atom)))))
+        (_ #f)))
+    (def (body-clause? form)
+      (or (atom? form)
+          (and (nonpositive? form) (begin (set! stratified? #t) #t))))
     (and has-rule?
       (andmap (lambda (form)
         (syntax-case form (relation rule limits)
@@ -416,14 +464,66 @@
            (and (identifier? (syntax name))
                 (andmap identifier? (syntax->list (syntax (column ...))))))
           ((limits input derived output) #t)
-          ((rule head body ...) (andmap atom? (syntax->list (syntax (head body ...)))))
-          (_ #f))) clauses)))
+          ((rule head body ...)
+           (and (atom? (syntax head)) (andmap body-clause? (syntax->list (syntax (body ...))))))
+          (_ #f))) clauses)
+      (if stratified? 'stratified 'positive)))
   (syntax-case stx ()
     ((_ clause ...)
-     (if (closed-positive? (syntax->list (syntax (clause ...))))
-       (syntax (relational-collect relational-owned-program () () clause ...))
-       (syntax (relational-collect gerbil-ascent-program () () clause ...))))))
+     (case (closed-constructor (syntax->list (syntax (clause ...))))
+       ((positive) (syntax (relational-collect relational-owned-program () () clause ...)))
+       ((stratified) (syntax (relational-collect relational-closed-rules-program () () clause ...)))
+       (else (syntax (relational-collect gerbil-ascent-program () () clause ...)))))))
 ;; END GENERATED DSL-SELECT
+
+;; Choice declarations are source-owned within one search. Deterministic
+;; rules and offer rules use the same checked atom lowering and planner.
+(defsyntax (relational-choice-program stx)
+  (syntax-case stx ()
+    ((_ clause ...)
+     (syntax (relational-choice-collect () () () clause ...)))))
+
+(defsyntax (relational-choice-rule stx)
+  (syntax-case stx ()
+    ((_ kind name (key ...) (value ...) head body ...)
+     (with-syntax ((origin (datum->syntax #f
+                             (vector (stx-source (syntax head))
+                                     (map stx-source (syntax->list (syntax (body ...))))))))
+       (syntax (make-relational-choice-head 'kind 'name
+                (list (relational-term key) ...) (list (relational-term value) ...)
+                (list (relational-atom body) ...) 'origin))))))
+
+(defsyntax (relational-choice-collect stx)
+  (syntax-case stx (relation choice rule open closed limits)
+    ((_ (ordinary ...) (names ...) (heads ...)
+        (choice name (key ... value)) rest ...)
+     (and (identifier? (syntax name))
+          (andmap identifier? (syntax->list (syntax (key ... value)))))
+     (syntax (relational-choice-collect (ordinary ... (relation name (key ... value)))
+              (names ... name) (heads ...) rest ...)))
+    ((_ (ordinary ...) (names ...) (heads ...)
+        (rule (closed (name key ...) (value ...)) body ...) rest ...)
+     (syntax (relational-choice-collect (ordinary ...) (names ...)
+              (heads ... (relational-choice-rule closed name (key ...) (value ...)
+                           (closed (name key ...) (value ...)) body ...)) rest ...)))
+    ((_ (ordinary ...) (names ...) (heads ...)
+        (rule (open (name key ...) value) body ...) rest ...)
+     (syntax (relational-choice-collect (ordinary ...) (names ...)
+              (heads ... (relational-choice-rule open name (key ...) (value)
+                           (open (name key ...) value) body ...)) rest ...)))
+    ((_ (ordinary ...) names heads (rule head body ...) rest ...)
+     ;; The ordinary collector retains rule origins and declaration checks.
+     (syntax (relational-choice-collect (ordinary ... (rule head body ...)) names heads rest ...)))
+    ((_ (ordinary ...) names heads (relation name columns option ...) rest ...)
+     (syntax (relational-choice-collect (ordinary ... (relation name columns option ...)) names heads rest ...)))
+    ((_ (ordinary ...) (names ...) (heads ...) (limits input derived output))
+     (syntax (lower-relational-choice-program
+              (relational-program ordinary ... (limits input derived output))
+              '(names ...) (list heads ...))))
+    ((_ _ _ _ bad rest ...)
+     (raise-syntax-error #f "expected relation, choice, rule, or final limits" (syntax bad)))
+    ((_ _ _ _)
+     (raise-syntax-error #f "relational-choice-program requires final limits" stx))))
 
 ;; relational-fragment
 ;;   : (-> Syntax FirstClassFragmentExpression)

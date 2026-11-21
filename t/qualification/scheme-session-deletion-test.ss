@@ -427,6 +427,31 @@
                   (check-equal? successors graph-before)))
               (iota 3))))
          (iota 64))))
+    (test-case "retained Set source membership preserves repeats and charges only derived rows"
+      (let* ((program
+              (relational-program
+               (relation archive (value) '((0) (0) (1)))
+               (relation seed (value) '((1) (2)))
+               (relation input (value) '((10)))
+               (relation output (value))
+               (rule (archive ?v) (seed ?v))
+               (rule (output ?v) (input ?v))
+               (limits 8 2 10)))
+             (session (gerbil-ascent-open-session program))
+             (old (gerbil-ascent-session-run session))
+             (replaced (gerbil-ascent-session-replace-sources! session '((input (11)))))
+             (exposed (rows replaced 'archive)))
+        (check-equal? exposed '((0) (0) (1) (2)))
+        (set-car! (car exposed) 'changed)
+        (set-cdr! exposed [])
+        (check-equal? (rows old 'archive) '((0) (0) (1) (2)))
+        (check-equal? (rows replaced 'archive) '((0) (0) (1) (2)))
+        (check-equal? (rows replaced 'output) '((11)))
+        (check-exception
+         (gerbil-ascent-session-replace-sources! session '((input (11) (12)))) true)
+        (check-equal? (eq? replaced (gerbil-ascent-session-run session)) #t)
+        (check-equal? (rows (gerbil-ascent-session-replace-sources! session '((input (12))))
+                       'output) '((12)))))
     (test-case "unchanged lattice source joins consume no reused derived budget"
       (let* ((program
               (relational-program

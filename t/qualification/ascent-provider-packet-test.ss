@@ -3,9 +3,12 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test
  (only-in :clan/poo/object .o .ref .putslot! $constant-slot-spec compute-precedence-list!)
- (only-in :clan/poo/mop validate)
+ (only-in :clan/poo/type validate)
  :gerbil-ascent/table/provider
  (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
+ (only-in :gerbil-ascent/program/api gerbil-ascent-program gerbil-ascent-relation
+          gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-variable
+          gerbil-ascent-literal gerbil-ascent-wildcard gerbil-ascent-evaluate-program)
  (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows)
  (only-in :gerbil-ascent/t/performance/index-entry-benchmark measure measure-pair paired allocation-interval-verdict)
  (only-in :gerbil-ascent/table/funs gerbil-ascent-index-row-snapshot/arity)
@@ -176,6 +179,51 @@
       (append (list cycle (make-list (+ width 1) #f) 'atom)
        (if (zero? width) [] (list (make-list (- width 1) #f) (cons #f 'improper)))))))
     (iota 257)))
+  (test-case "compiled wide packets isolate retained spines and preserve field identity"
+   (let* ((retained #f)
+          (mutated? #f)
+          (borrowed (vector 'field))
+          (returned (vector 'field))
+          (ids (iota 32))
+          (rows (map (lambda (id) (cons* 0 id borrowed (make-list 61 9))) ids))
+          (wide-provider
+           (.o (:: @ gerbil-ascent-hash-index-provider)
+               (.build-index
+                (lambda (batch _columns)
+                  ;; Use a structurally equal field with distinct identity.
+                  ;; The packed result must retain the returned field value.
+                  (for-each (lambda (row) (set-car! (cddr row) returned)) batch)
+                  (set! retained batch)
+                  batch))
+               (.lookup-index (lambda (index _key) (if mutated? rows index)))))
+          (mutating-provider
+           (.o (:: @ gerbil-ascent-hash-index-provider)
+               (.lookup-index
+                (lambda (index key)
+                  (unless mutated?
+                    (set! mutated? #t)
+                    (set-car! (cdr (list-ref retained 1)) 'changed)
+                    (set-cdr! retained []))
+                  ((.ref gerbil-ascent-hash-index-provider '.lookup-index) index key)))))
+          (id (gerbil-ascent-variable 'id))
+          (field (gerbil-ascent-variable 'field))
+          (terms (cons* (gerbil-ascent-literal 0) id field
+                        (make-list 61 (gerbil-ascent-wildcard))))
+          (program (gerbil-ascent-program
+                    (list (gerbil-ascent-relation 'wide 64 rows wide-provider)
+                          (gerbil-ascent-relation 'keys 1 (map list ids) mutating-provider)
+                          (gerbil-ascent-relation 'answer 2 []))
+                    (list (gerbil-ascent-rule
+                           (list (gerbil-ascent-atom 'answer (list id field)))
+                           (list (gerbil-ascent-atom 'wide terms)
+                                 (gerbil-ascent-atom 'keys (list id)))))
+                    128 128 128))
+          (answers ((.ref (gerbil-ascent-evaluate-program program) 'rows-of) 'answer)))
+     (check-equal? mutated? #t)
+     (check-equal? (list-sort < (map car answers)) ids)
+     (check-equal? (andmap (lambda (row) (eq? (cadr row) returned)) answers) #t)
+     (check-equal? (andmap (lambda (row) (eq? (caddr row) borrowed)) rows) #t)
+     (check-equal? (map cadr rows) ids)))
   (test-case "complete warm lookup agrees with frozen owner and independent checksum"
    (for-each (lambda (width)
     (for-each (lambda (count)

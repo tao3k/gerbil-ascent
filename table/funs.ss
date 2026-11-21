@@ -6,7 +6,8 @@
 
 (export gerbil-ascent-index-build gerbil-ascent-index-extend! gerbil-ascent-index-order!
         gerbil-ascent-index-key gerbil-ascent-index-row-snapshot
-        gerbil-ascent-index-row-snapshot/arity gerbil-ascent-index-batch!)
+        gerbil-ascent-index-row-snapshot/arity gerbil-ascent-index-row-vector/arity
+        gerbil-ascent-index-batch!)
 
 ;;; Native update invokes the callback synchronously. Bind each row in the
 ;;; caller's key expression, while one private slot/callback belongs to the
@@ -40,16 +41,17 @@
 ;; : (forall (v) (-> [[v]] [[v]]))
 ;; : (-> Rows DetachedRowSpines)
 (def (gerbil-ascent-index-row-snapshot rows)
-  (map (lambda (row) (map values row)) rows))
+  (map list-copy rows))
 
 ;;; Admit and detach the whole provider packet before membership or callbacks.
 ;;; The width bounds traversal even for cyclic/improper rows. Each copied
 ;;; suffix is admitted before its prefix is constructed; failed packets escape
 ;;; no row spines. Field values remain borrowed, including mutable values.
 ;; : (-> ProperRowPacket Nat DetachedRowSpines)
-(def (gerbil-ascent-index-row-snapshot/arity rows width)
-  (def (wrong-arity)
-    (error "ASCENT index provider returned wrong row arity" width))
+(def (gerbil-ascent-index-row-snapshot/arity rows width
+                                            (wrong-arity
+                                             (lambda ()
+                                               (error "ASCENT index provider returned wrong row arity" width))))
   (def (copy row left)
     (if (zero? left)
       (if (null? row) [] (wrong-arity))
@@ -57,6 +59,21 @@
         ([value . rest] (cons value (copy rest (- left 1))))
         (else (wrong-arity)))))
   (map (cut copy <> width) rows))
+
+;;; Only the compiled provider consumer takes this detached vector. Copy
+;;; field references in order, including mutable field values. No provider
+;;; pair survives into the packed representation.
+(def (gerbil-ascent-index-row-vector/arity row width)
+  (def fields (make-vector width))
+  (def (wrong-arity)
+    (error "ASCENT index provider returned wrong row arity" width))
+  (let loop ((rest row) (column 0))
+    (cond
+     ((fx= column width) (if (null? rest) fields (wrong-arity)))
+     ((pair? rest)
+      (vector-set! fields column (car rest))
+      (loop (cdr rest) (fx+ column 1)))
+     (else (wrong-arity)))))
 
 ;; : (-> (List Row) (List ColumnIndex) Index)
 (def (gerbil-ascent-index-build rows columns)

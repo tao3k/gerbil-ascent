@@ -49,6 +49,7 @@
              (names (make-vector count #f))
              (arity (make-vector count #f))
              (field-checkers (make-vector count #f))
+             (field-predicates (make-vector count []))
              (positions (make-hash-table-eq))
              (index-providers (make-vector count #f))
              (storage-extensions (make-vector count #f))
@@ -75,6 +76,7 @@
              (vector-set! kinds index kind)
              (hash-put! positions name (+ index 1))
              (when (pair? predicates)
+               (vector-set! field-predicates index predicates)
                (vector-set! field-checkers index
                  (lambda (row)
                    (for-each
@@ -97,6 +99,6 @@
          relations (iota count))
         (let (fresh (vector relations names arity field-checkers positions
                             index-providers storage-extensions lattice-joins
-                            kinds storage-providers))
+                            kinds storage-providers field-predicates))
           (hash-put! +program-schema-cache+ program fresh)
           fresh)))))

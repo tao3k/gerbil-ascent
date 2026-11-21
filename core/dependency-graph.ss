@@ -8,7 +8,8 @@
 ;;; by vector-length, including the final count sentinel. Checked fx operations
 ;;; apply only to these dense traversal counters, never to caller edge labels.
 (import (only-in "scc-state.ss" gerbil-ascent-scc-state))
-(export gerbil-ascent-graph-components gerbil-ascent-graph-close!)
+(export gerbil-ascent-graph-components gerbil-ascent-graph-components/checkpoint
+        gerbil-ascent-graph-close!)
 
 (defstruct graph-frame (node remaining parent) final: #t)
 
@@ -65,6 +66,9 @@
 ;;       ```
 ;;     %
 (def (gerbil-ascent-graph-components successors)
+  (gerbil-ascent-graph-components/checkpoint successors #f))
+
+(def (gerbil-ascent-graph-components/checkpoint successors checkpoint!)
   (let* ((count (vector-length successors))
          (next-index 0)
          (indices (make-vector count #f))
@@ -113,6 +117,7 @@
     (def (traverse root)
       (let walk ((frame (enter root #f)))
         (when frame
+          (when checkpoint! (checkpoint!))
           ;; Every frame is constructed by enter; no caller value enters here.
           (using (frame :- graph-frame)
             (walk (if (pair? frame.remaining)
@@ -120,6 +125,7 @@
                     (leave frame.node frame.parent)))))))
     (let roots ((root 0))
       (when (fx< root count)
+        (when checkpoint! (checkpoint!))
         (unless (vector-ref indices root) (traverse root))
         (roots (fx+ root 1))))
     components))

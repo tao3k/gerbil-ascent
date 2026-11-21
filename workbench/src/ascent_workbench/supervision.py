@@ -39,10 +39,13 @@ def forward_output(destination, chunk: bytes, timeout: float) -> None:
         os.set_blocking(descriptor, blocking)
 
 
-def group_cpu(group: int) -> dict[int, float]:
-    """Count live and reaped compiler CPU, with native Linux tick precision."""
+def group_cpu(group: int, *, include_children: bool = True) -> dict[int, float]:
+    """Sample group CPU, optionally including reaped children, at native precision."""
     if Path('/proc/self/stat').exists():
-        return proc_group_cpu(Path('/proc'), group, os.sysconf('SC_CLK_TCK'))
+        return proc_group_cpu(Path('/proc'), group, os.sysconf('SC_CLK_TCK'),
+                              include_children=include_children)
+    if sys.platform == 'darwin':
+        return darwin_group_cpu(group, include_children=include_children)
     listing = subprocess.check_output(
         ["ps", "-axo", "pid=,pgid=,time="], text=True, timeout=5
     )
@@ -51,18 +54,47 @@ def group_cpu(group: int) -> dict[int, float]:
         pid, pgid, elapsed = line.split()
         if int(pgid) != group:
             continue
-        if sys.platform == 'darwin':
-            try:
-                result[int(pid)] = darwin_process_cpu(int(pid))
-            except ProcessLookupError:
-                pass
-            continue
         days, separator, elapsed_time = elapsed.rpartition("-")
         parts = [float(part) for part in elapsed_time.split(":")]
         seconds = 0.0
         for part in parts:
             seconds = seconds * 60 + part
         result[int(pid)] = seconds + (int(days) * 86400 if separator else 0)
+    return result
+
+
+@cache
+def darwin_group_pids():
+    library = ctypes.CDLL('/usr/lib/libproc.dylib', use_errno=True)
+    read = library.proc_listpgrppids
+    read.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_int]
+    read.restype = ctypes.c_int
+    return read
+
+
+def darwin_group_cpu(group: int, *, include_children: bool = True) -> dict[int, float]:
+    read = darwin_group_pids()
+    capacity = read(group, None, 0)
+    if capacity <= 0:
+        code = ctypes.get_errno()
+        raise OSError(code, os.strerror(code), str(group))
+    while True:
+        buffer = (ctypes.c_int * capacity)()
+        ctypes.set_errno(0)
+        count = read(group, buffer, ctypes.sizeof(buffer))
+        code = ctypes.get_errno()
+        if count < 0 or (count == 0 and code):
+            raise OSError(code, os.strerror(code), str(group))
+        if count < capacity:
+            break
+        # Forks between sizing and reading can fill the snapshot.
+        capacity *= 2
+    result = {}
+    for pid in buffer[:count]:
+        try:
+            result[pid] = darwin_process_cpu(pid, include_children=include_children)
+        except ProcessLookupError:
+            pass  # A compiler can exit between enumeration and accounting.
     return result
 
 
@@ -99,16 +131,19 @@ def darwin_cpu_seconds_per_tick() -> float:
     return info.numer / info.denom / 1e9
 
 
-def darwin_process_cpu(pid: int) -> float:
+def darwin_process_cpu(pid: int, *, include_children: bool = True) -> float:
     usage = RusageInfoV1()
     if darwin_rusage()(pid, 1, ctypes.byref(usage)) != 0:  # RUSAGE_INFO_V1
         code = ctypes.get_errno()
         raise OSError(code, os.strerror(code), str(pid))
-    return ((usage.user + usage.system + usage.child_user + usage.child_system)
-            * darwin_cpu_seconds_per_tick())
+    ticks = usage.user + usage.system
+    if include_children:
+        ticks += usage.child_user + usage.child_system
+    return ticks * darwin_cpu_seconds_per_tick()
 
 
-def proc_group_cpu(root: Path, group: int, ticks: int) -> dict[int, float]:
+def proc_group_cpu(root: Path, group: int, ticks: int, *,
+                   include_children: bool = True) -> dict[int, float]:
     result = {}
     for entry in root.iterdir():
         if not entry.name.isdecimal():
@@ -118,10 +153,20 @@ def proc_group_cpu(root: Path, group: int, ticks: int) -> dict[int, float]:
             # ')' start at state (3); pgrp is 5 and CPU fields are 14..17.
             fields = (entry / 'stat').read_text().rsplit(')', 1)[1].split()
             if int(fields[2]) == group:
-                result[int(entry.name)] = sum(map(int, fields[11:15])) / ticks
+                result[int(entry.name)] = sum(map(int, fields[11:15 if include_children else 13])) / ticks
         except (FileNotFoundError, ProcessLookupError):
             continue  # A compiler can exit between directory and stat reads.
     return result
+
+
+def cpu_advance(previous_own: dict[int, float], current_own: dict[int, float],
+                total: float, high_water: float) -> tuple[float, float]:
+    # Darwin exec can reset a PID's counters; group snapshots can also lose an
+    # exited member before its parent is sampled. Neither creates CPU work.
+    # A surviving process's own increase remains real work despite that debt.
+    own = sum(max(0, value - previous_own[pid]) for pid, value in current_own.items()
+              if pid in previous_own)
+    return max(0, total - high_water, own), max(high_water, total)
 
 
 def signal_group(group: int, signum: int) -> None:
@@ -191,6 +236,7 @@ def main() -> int:
     last_output = time.monotonic()
     saw_output = False
     cpu_high_water = 0.0
+    previous_own_cpu: dict[int, float] = {}
     last_cpu_sample = 0.0
     signal.signal(signal.SIGTERM, lambda _signum, _frame: sys.exit(124))
     try:
@@ -205,14 +251,19 @@ def main() -> int:
                 total = sum(current_cpu.values())
                 # Reaping transfers CPU from a child to its parent. Compare
                 # group totals, so that transfer alone cannot invent activity.
-                advance = max(0, total - cpu_high_water)
-                cpu_high_water = max(cpu_high_water, total)
+                group_advance = max(0, total - cpu_high_water)
+                own_cpu = group_cpu(child.pid, include_children=False)
+                advance, cpu_high_water = cpu_advance(previous_own_cpu, own_cpu, total, cpu_high_water)
+                previous_own_cpu = own_cpu
                 last_cpu_sample = time.monotonic()
                 if advance > 0:
                     last_output = last_cpu_sample
                     saw_output = True
+                    basis = "own" if advance > group_advance else "group"
                     print(f"[build-activity] cpu-advance={advance:.3f}s "
-                          f"processes={len(current_cpu)}", file=sys.stderr, flush=True)
+                          f"processes={len(current_cpu)} basis={basis} "
+                          f"group-cpu={total:.3f}s peak={cpu_high_water:.3f}s",
+                          file=sys.stderr, flush=True)
             if ready:
                 for key, _events in ready:
                     chunk = os.read(key.fd, 65536)

@@ -44,6 +44,10 @@
 ;;; These are the unchanged Rust differential fixtures, compiled into the
 ;;; native entry. The command transports stdin/rows; fixture semantics stay
 ;;; Scheme-owned and Rust still checks every original expected row.
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-aggregate-program-output
+                           (main aggregate-main)) aggregate-main))
+(import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-derived-aggregate-program-output
+                           (main derived-aggregate-main)) derived-aggregate-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-byods-session-output (main byods-session-main)) byods-session-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-steensgaard-output (main steensgaard-main)) steensgaard-main))
 (import (only-in (rename-in :gerbil-ascent/t/qualification/ascent-multi-source-session-output (main multi-source-session-main)) multi-source-session-main))
@@ -86,6 +90,8 @@
     (["--oracle" name]
      (check-scheme-oracle!)
      (case (string->symbol name)
+       ((aggregate) (aggregate-main))
+       ((derived-aggregate) (derived-aggregate-main))
        ((byods-query) (byods-query-main))
        ((byods-session) (byods-session-main))
        ((steensgaard) (steensgaard-main))
@@ -108,7 +114,6 @@
 (def (run-suites args)
   (let* ((entries
           (list
-                (cons "t/qualification/scheme-closure-contract-test.ss" scheme-closure-contract-test)
                 (cons "t/qualification/scheme-artifact-test.ss" scheme-artifact-test)
                 (cons "t/qualification/scheme-provenance-graph-test.ss" scheme-provenance-graph-test)
                 (cons "t/qualification/scheme-higher-order-test.ss" scheme-higher-order-test)
@@ -122,7 +127,10 @@
                 (cons "t/qualification/scheme-library-contract-test.ss" scheme-library-contract-test)
                 (cons "t/qualification/scheme-operator-retained-test.ss" scheme-operator-retained-test)
                 (cons "t/qualification/ascent-finite-evidence-test.ss" ascent-finite-evidence-test)
-                (cons "t/qualification/ascent-positive-nonmembership-test.ss" ascent-positive-nonmembership-test)))
+                (cons "t/qualification/ascent-positive-nonmembership-test.ss" ascent-positive-nonmembership-test)
+                ;; Editing a shared Contract can revoke its initial protocol
+                ;; even after restoring its classifier. Test revocation last.
+                (cons "t/qualification/scheme-closure-contract-test.ss" scheme-closure-contract-test)))
          (selected (match args
                      ([] entries)
                      ([name]

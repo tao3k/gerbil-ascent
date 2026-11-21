@@ -6,9 +6,9 @@
 use super::common::scheme_output;
 use std::{
     env, fs,
-    io::Write,
     path::{Path, PathBuf},
     process::{Command, Output, Stdio},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 const VALID: &str = r#"
@@ -442,63 +442,84 @@ ascent! {
     ),
 ];
 
-fn compile(source: &str, library: &Path, dependencies: &Path) -> Output {
-    let output_path = env::temp_dir().join(format!(
-        "ascent-invalid-program-{}.rmeta",
-        std::process::id()
-    ));
-    let mut child = Command::new(env::var_os("RUSTC").unwrap_or_else(|| "rustc".into()))
-        .args(["--edition=2024", "--crate-type=lib", "--emit=metadata"])
-        .args(["--crate-name", "ascent_invalid_program_probe"])
-        .arg("--extern")
-        .arg(format!("ascent={}", library.display()))
-        .arg("-L")
-        .arg(format!("dependency={}", dependencies.display()))
-        .arg("-o")
-        .arg(&output_path)
-        .arg("-")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("launch Rust compiler for Ascent macro probe");
-    child
-        .stdin
-        .take()
-        .expect("probe stdin")
-        .write_all(source.as_bytes())
-        .expect("write Ascent macro probe");
-    let output = child.wait_with_output().expect("collect Rust diagnostic");
-    let _ = fs::remove_file(output_path);
-    output
+fn compile(source: &str, project: &Path, locked: bool) -> Output {
+    fs::write(project.join("tests/probe.rs"), source).expect("write Ascent macro probe");
+    // Cargo owns the dependency layout and proc-macro search paths.
+    let mut command = Command::new(env::var_os("CARGO").unwrap_or_else(|| "cargo".into()));
+    command
+        .args(["check", "--offline", "--test", "probe"])
+        .arg("--manifest-path")
+        .arg(project.join("Cargo.toml"))
+        .arg("--target-dir")
+        .arg(project.join("target"))
+        .env("CARGO_BUILD_BUILD_DIR", project.join("target"))
+        .current_dir(project)
+        .stdin(Stdio::null());
+    if locked {
+        command.arg("--locked");
+    }
+    command.output().expect("collect Cargo macro diagnostic")
 }
 
-fn pinned_ascent_library(dependencies: &Path) -> PathBuf {
-    let mut candidates: Vec<_> = fs::read_dir(dependencies)
-        .expect("read Cargo dependency artifacts")
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| name.starts_with("libascent-") && name.ends_with(".rlib"))
-        })
-        .collect();
-    candidates.sort();
-    candidates
-        .into_iter()
-        .find(|library| compile(VALID, library, dependencies).status.success())
-        .expect("a valid pinned Ascent macro must compile before rejection probes")
+fn macro_probe_project() -> PathBuf {
+    let probes = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.cache/ascent/macro-probes");
+    fs::create_dir_all(&probes).expect("create macro probe cache");
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("macro probe clock")
+        .as_nanos();
+    let project = probes.join(format!("{}-{nonce}", std::process::id()));
+    fs::create_dir(&project).expect("create private macro probe project");
+    fs::create_dir(project.join("tests")).expect("create macro probe target");
+    fs::write(
+        project.join("Cargo.toml"),
+        r#"[package]
+name = "ascent-invalid-program-probe"
+version = "0.0.0"
+edition = "2024"
+
+[dev-dependencies]
+ascent = "=0.8.0"
+
+[workspace]
+"#,
+    )
+    .expect("declare pinned macro probe dependency");
+    // Seed the complete pinned dependency graph. Cargo adapts its root package
+    // once for VALID, then every rejection probe uses that locked graph.
+    fs::write(project.join("Cargo.lock"), include_str!("../../Cargo.lock"))
+        .expect("seed macro probe lockfile");
+    project
+}
+
+#[test]
+fn pinned_macro_admission_matches_reference_diagnostics() {
+    let project = macro_probe_project();
+    let valid = compile(VALID, &project, false);
+    assert!(
+        valid.status.success(),
+        "a valid pinned Ascent macro must compile before rejection probes: {}\n{}",
+        valid.status,
+        String::from_utf8_lossy(&valid.stderr)
+    );
+    for (name, _, diagnostic, source) in INVALID {
+        let result = compile(source, &project, true);
+        let stderr = String::from_utf8(result.stderr).expect("Rust diagnostic is UTF-8");
+        if matches!(name, "duplicate-relation" | "lattice-projection-feedback") {
+            // Ascent 0.8.0 accepts duplicate declarations and feedback from
+            // a lattice value through an ordinary relation. Scheme rejects
+            // both before evaluation: the former has ambiguous public schema;
+            // the latter needs a strict stratum to preserve joined values.
+            assert!(result.status.success(), "{name}: {stderr}");
+        } else {
+            assert!(!result.status.success(), "{name} unexpectedly compiled");
+            assert!(stderr.contains(diagnostic), "{name}: {stderr}");
+        }
+    }
 }
 
 #[test]
 fn invalid_program_admission_matches_or_records_rust_differences() {
-    let dependencies = env::current_exe()
-        .expect("test executable path")
-        .parent()
-        .expect("Cargo dependency directory")
-        .to_path_buf();
-    let library = pinned_ascent_library(&dependencies);
     let request = format!(
         "({})\n",
         INVALID
@@ -511,20 +532,7 @@ fn invalid_program_admission_matches_or_records_rust_differences() {
     let mut scheme: Vec<_> = output.lines().collect();
     assert_eq!(scheme.pop(), Some("END"));
     assert_eq!(scheme.len(), INVALID.len());
-
-    for (index, (name, category, diagnostic, source)) in INVALID.iter().enumerate() {
-        let result = compile(source, &library, &dependencies);
-        let stderr = String::from_utf8(result.stderr).expect("Rust diagnostic is UTF-8");
-        if matches!(*name, "duplicate-relation" | "lattice-projection-feedback") {
-            // Ascent 0.8.0 accepts duplicate declarations and feedback from
-            // a lattice value through an ordinary relation. Scheme rejects
-            // both before evaluation: the former has ambiguous public schema;
-            // the latter needs a strict stratum to preserve joined values.
-            assert!(result.status.success(), "{name}: {stderr}");
-        } else {
-            assert!(!result.status.success(), "{name} unexpectedly compiled");
-            assert!(stderr.contains(diagnostic), "{name}: {stderr}");
-        }
-        assert_eq!(scheme[index], format!("{name}\t{category}"));
+    for (row, (name, category, _, _)) in scheme.iter().zip(INVALID) {
+        assert_eq!(*row, format!("{name}\t{category}"));
     }
 }

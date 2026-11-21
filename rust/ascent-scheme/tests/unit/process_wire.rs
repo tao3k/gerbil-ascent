@@ -124,6 +124,121 @@ fn buffered_packets_do_not_lose_readahead_or_direction_changes() {
 }
 
 #[test]
+fn resident_reader_keeps_partial_frames_and_releases_the_borrow_while_waiting() {
+    use crate::process_wire::{Connection, ResidentIo};
+    use std::{cell::RefCell, io::Write, os::unix::net::UnixStream};
+
+    let _setup = crate::process_wire::PROCESS_FIXTURE_SETUP.lock().unwrap();
+    let (mut writer, reader) = UnixStream::pair().unwrap();
+    reader.set_nonblocking(true).unwrap();
+    let socket = RefCell::new(Connection::new(reader));
+    let value = Data::from("resident payload".repeat(256));
+    let mut bytes = Vec::new();
+    send(&mut bytes, &Frame::Request(value.clone())).unwrap();
+    send(&mut bytes, &Frame::Decision(7)).unwrap();
+    writer.write_all(&bytes[..3]).unwrap();
+
+    let mut chunks = [3..12, 12..bytes.len()].into_iter();
+    let mut resident = ResidentIo {
+        socket: &socket,
+        wait: |output: bool| {
+            assert!(!output);
+            assert!(socket.try_borrow_mut().is_ok());
+            writer.write_all(&bytes[chunks.next().expect("unexpected input wait")])
+        },
+    };
+    let Frame::Request(decoded) = receive(&mut resident).unwrap() else {
+        panic!("expected a complete request");
+    };
+    assert_eq!(decoded, value);
+    assert!(chunks.next().is_none());
+    assert!(matches!(
+        socket.borrow_mut().receive().unwrap(),
+        Frame::Decision(7)
+    ));
+}
+
+#[test]
+fn resident_reader_reports_eof_in_a_partial_frame() {
+    use crate::process_wire::{Connection, ResidentIo};
+    use std::{
+        cell::RefCell,
+        io::{ErrorKind, Write},
+        net::Shutdown,
+        os::unix::net::UnixStream,
+    };
+
+    let _setup = crate::process_wire::PROCESS_FIXTURE_SETUP.lock().unwrap();
+    let (mut writer, reader) = UnixStream::pair().unwrap();
+    reader.set_nonblocking(true).unwrap();
+    let socket = RefCell::new(Connection::new(reader));
+    writer.write_all(&[1, 2, 3]).unwrap();
+    let mut resident = ResidentIo {
+        socket: &socket,
+        wait: |output: bool| {
+            assert!(!output);
+            writer.shutdown(Shutdown::Write)
+        },
+    };
+    assert!(
+        matches!(receive(&mut resident), Err(error) if error.kind() == ErrorKind::UnexpectedEof)
+    );
+}
+
+#[test]
+fn resident_writer_resumes_a_backpressured_reply_at_the_same_offset() {
+    use crate::process_wire::{Connection, ResidentIo};
+    use std::{
+        cell::RefCell,
+        io::{self, Read},
+        os::{fd::AsRawFd, unix::net::UnixStream},
+    };
+
+    let _setup = crate::process_wire::PROCESS_FIXTURE_SETUP.lock().unwrap();
+    let (writer, mut reader) = UnixStream::pair().unwrap();
+    let capacity: libc::c_int = 4096;
+    // SAFETY: capacity and its byte length describe one readable socket option.
+    let status = unsafe {
+        libc::setsockopt(
+            writer.as_raw_fd(),
+            libc::SOL_SOCKET,
+            libc::SO_SNDBUF,
+            (&raw const capacity).cast(),
+            size_of_val(&capacity).try_into().unwrap(),
+        )
+    };
+    assert_eq!(status, 0);
+    writer.set_nonblocking(true).unwrap();
+    reader.set_nonblocking(true).unwrap();
+    let socket = RefCell::new(Connection::new(writer));
+    let frame = Frame::Reply {
+        value: Ok(Data::from("x".repeat(128 * 1024))),
+        elapsed_ns: 9,
+    };
+    let mut expected = Vec::new();
+    send(&mut expected, &frame).unwrap();
+    let mut observed = Vec::new();
+    let mut waits = 0;
+    let mut drain = || match reader.read_to_end(&mut observed) {
+        Err(error) if error.kind() == io::ErrorKind::WouldBlock => Ok(()),
+        result => result.map(drop),
+    };
+    let mut resident = ResidentIo {
+        socket: &socket,
+        wait: |output: bool| {
+            assert!(output);
+            assert!(socket.try_borrow_mut().is_ok());
+            waits += 1;
+            drain()
+        },
+    };
+    send(&mut resident, &frame).unwrap();
+    assert!(waits > 0);
+    drain().unwrap();
+    assert_eq!(observed, expected);
+}
+
+#[test]
 fn checkpoint_liveness_detects_eof_without_consuming_a_pending_frame() {
     use crate::process_wire::Connection;
     for attempt in 0..10_000 {
@@ -145,10 +260,7 @@ fn checkpoint_liveness_detects_eof_without_consuming_a_pending_frame() {
 #[test]
 fn peer_probe_preserves_buffered_hangup_half_close_and_descriptor_flags() {
     use crate::process_wire::Connection;
-    use std::{
-        net::Shutdown,
-        os::{fd::AsRawFd, unix::net::UnixStream},
-    };
+    use std::{net::Shutdown, os::unix::net::UnixStream};
     let _setup = crate::process_wire::PROCESS_FIXTURE_SETUP.lock().unwrap();
     for queued in [false, true] {
         for readahead in [false, true] {
@@ -177,7 +289,7 @@ fn peer_probe_preserves_buffered_hangup_half_close_and_descriptor_flags() {
                     2 => drop(writer.take()),
                     _ => (),
                 }
-                let descriptor = reader.0.get_ref().as_raw_fd();
+                let descriptor = reader.descriptor();
                 // SAFETY: F_GETFL only reads this live owned descriptor's flags.
                 let before = unsafe { libc::fcntl(descriptor, libc::F_GETFL) };
                 assert_eq!(
@@ -200,9 +312,8 @@ fn peer_probe_preserves_buffered_hangup_half_close_and_descriptor_flags() {
 
 // Frozen pre-optimization control: independent poll-first observation.
 fn original_peer_closed(connection: &crate::process_wire::Connection) -> std::io::Result<bool> {
-    use std::os::fd::AsRawFd;
     let mut fd = libc::pollfd {
-        fd: connection.0.get_ref().as_raw_fd(),
+        fd: connection.descriptor(),
         events: libc::POLLIN,
         revents: libc::POLLIN,
     };

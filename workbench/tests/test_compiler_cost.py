@@ -6,8 +6,10 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from ascent_workbench.preparation_work import gcc_ggc_bytes, gcc_pass_costs, gcc_ggc_complete, generated_scheme_input, generated_source_producer, compiler_output_paths, compiler_allocation_total, source_cost_coverage
 
@@ -87,30 +89,43 @@ class CompilerCostTests(unittest.TestCase):
             for name in ['a-test.ss', 'b-test.ss']:
                 (source / name).touch()
             log = root / 'run.log'
-            valid = 'TEST-DISPATCH modules=2 batches=12 workers=12 max-batch-modules=1 mode=batched heap=2G\nMODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
-            valid += 'VM-RUNTIME processors=1\n' * 12
+            valid = 'TEST-DISPATCH modules=2 batches=2 workers=2 max-batch-modules=1 mode=batched heap=2G\nMODULE-OK t/qualification/b-test.ss\nMODULE-OK t/qualification/a-test.ss\nCASE-OK full case\n'
+            valid += 'VM-RUNTIME processors=1\n' * 2
+            for name in ['a-test.ss', 'b-test.ss']:
+                owner = 't/qualification/' + name
+                ratio = 90 if sys.platform == 'darwin' else 50
+                valid += (f'TEST-BATCH-START {owner}\n'
+                          f'TEST-WORK batch={owner} VM-GC-RUNTIME live-ratio={ratio}\n')
+            valid += ''.join(f'TEST-BATCH-COMPLETE t/qualification/{name}\n'
+                             for name in ['a-test.ss', 'b-test.ss'])
+            valid += 'TEST-SERIAL-BARRIER pending=0\n'
             log.write_text(valid)
-            self.assertEqual(check(root, log)['cases'], 1)
-            for invalid in [valid.replace('max-batch-modules=1', 'max-batch-modules=2'), valid.replace('processors=1', 'processors=2'), valid.replace('VM-RUNTIME processors=1\n', '', 1), valid.replace('workers=12', 'workers=3'), valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
+            self.assertEqual(check(root, log, capacity=2)['cases'], 1)
+            for invalid in [valid.replace('max-batch-modules=1', 'max-batch-modules=2'), valid.replace('processors=1', 'processors=2'), valid.replace('VM-RUNTIME processors=1\n', '', 1), valid.replace('workers=2', 'workers=3'), valid.replace('b-test.ss', 'a-test.ss'), valid.replace('CASE-OK full case', 'SKIPPED'),
                             valid.replace('MODULE-OK t/qualification/b-test.ss\n', '')]:
                 log.write_text(invalid)
                 with self.subTest(log=invalid), self.assertRaises(ValueError):
-                    check(root, log)
+                    check(root, log, capacity=2)
             log.write_text(valid)
             compiled = root / '.gerbil/lib/gerbil-ascent/t/qualification/a-test.ssi'
             compiled.parent.mkdir(parents=True)
             compiled.touch()
             with self.assertRaises(ValueError):
-                check(root, log)
+                check(root, log, capacity=2)
 
     def test_native_refinement_width_covers_empty_and_complete_source_selection(self):
         import runpy
         width = runpy.run_path('tools/ci/build-cost-control.py')['source_batch_width']
-        self.assertEqual(width(width(174, 12), 12), 2)
-        for workers in [1, 2, 3, 12, 48]:
-            for entries in [0, 1, 2, 12, 37, 174, 253]:
-                self.assertEqual(width(entries, workers), (entries + workers - 1) // workers)
-                self.assertLessEqual(width(width(entries, workers), workers), width(entries, workers))
+        for platform in ['linux', 'darwin']:
+            with patch.object(sys, 'platform', platform):
+                for workers in [1, 2, 3, 12, 48]:
+                    for entries in [0, 1, 2, 12, 37, 174, 253]:
+                        native = (entries + workers - 1) // workers
+                        expected = min(8, native) if platform == 'darwin' else native
+                        with self.subTest(platform=platform, workers=workers, entries=entries):
+                            self.assertEqual(width(entries, workers), expected)
+                            self.assertLessEqual(width(width(entries, workers), workers),
+                                                 width(entries, workers))
 
     def test_generated_scheme_cost_requires_unique_containing_input(self):
         scheme = {'path': '/build/module~0.scm', 'sha256': 'source', 'bytes': 17}
@@ -286,7 +301,7 @@ class CompilerCostTests(unittest.TestCase):
     def test_sdk_net_stack_counter_is_not_cumulative_allocation(self):
         import os
         sdk = Path(subprocess.check_output(['gxi', '-e', '(display (gerbil-home))'], text=True).strip())
-        fixture = Path('workbench/tests/fixtures/allocation-stack.scm').read_bytes()
+        fixture = Path('workbench/tests/fixtures/allocation-stack.ss').read_bytes()
         with tempfile.TemporaryDirectory() as folder:
             source = Path(folder) / 'allocation-stack.scm'
             source.write_bytes(fixture)

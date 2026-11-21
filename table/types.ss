@@ -3,10 +3,10 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :clan/poo/object .cc)
-        (only-in :clan/poo/mop Type.)
+        (only-in :clan/poo/type Type.)
         (only-in :clan/poo/type Record)
-        (only-in :gerbil-ascent/table/provider GerbilAscentIndexProviderContract)
-        (only-in :gerbil-ascent/table/storage GerbilAscentStorageProviderContract))
+        (only-in "provider.ss" GerbilAscentIndexProviderContract)
+        (only-in "storage.ss" GerbilAscentStorageProviderContract))
 
 (export TableScopeContract)
 

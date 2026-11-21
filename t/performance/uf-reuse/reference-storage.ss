@@ -9,8 +9,9 @@
 (import (only-in :gerbil-ascent/core/relation-view gerbil-ascent-row-count)
         (only-in :gerbil/runtime/gambit fx-)
         (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop .defgeneric define-type validate)
-        (only-in :tao3k/yuanxu/object-types/contracts
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type define-type validate)
+        (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/eqrel gerbil-ascent-eqrel-state

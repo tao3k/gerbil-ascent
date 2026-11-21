@@ -58,9 +58,9 @@ def main():
     parser.add_argument("--reference-build", type=Path, required=True)
     parser.add_argument("--candidate-build", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--expected-cpus", type=int, required=True)
+    parser.add_argument("--expected-cpus", type=int)
     args = parser.parse_args()
-    if os.cpu_count() != args.expected_cpus:
+    if args.expected_cpus is not None and os.cpu_count() != args.expected_cpus:
         raise SystemExit("unexpected CPU population; no measurement admitted")
     roots = {"reference": args.reference_source.resolve(strict=True), "candidate": Path.cwd()}
     source_heads = {label: head(root) for label, root in roots.items()}
@@ -82,15 +82,17 @@ def main():
                "dependency_sha256": digest(Path("rust/Cargo.lock")), "executables": identities,
                "harness_sha256": digest(Path(__file__)),
                "row_harness_sha256": digest(Path(MATRIX.__file__)),
-               "scope": "fixed ABBA, original large workload, 12 clients, 5 samples and 30s soak; no global speedup theorem",
+               "available_cpus": MATRIX.available_cpus(),
+               "scope": "fixed ABBA, large workload, machine-capacity clients, 5 samples and 30s soak; no global speedup theorem",
                "work_distribution": os.environ.get("ASCENT_WORK_DISTRIBUTION", "adaptive"), "runs": []}
-    for threads in (12, 1):
+    populations = sorted({1, MATRIX.available_cpus()}, reverse=True)
+    for threads in populations:
         for ordinal, label in enumerate(("reference", "candidate", "candidate", "reference")):
             output = args.output / f"t{threads}-{ordinal}-{label}"
             output.mkdir()
             row = MATRIX.run_case(SimpleNamespace(output=output, benchmark=pairs[label]["process_throughput"],
                                                  worker=pairs[label]["ascent-scheme-worker"]),
-                                  ("parallel-closure", 24, 256, 16), ("rayon", 1, threads),
+                                  ("parallel-closure", max(24, MATRIX.available_cpus()), 256, 16), ("rayon", 1, threads),
                                   receipt["work_distribution"])
             row.update(arm=ordinal, implementation=label)
             if row["valid"]:
@@ -101,14 +103,14 @@ def main():
             (args.output / "result.json").write_text(json.dumps(receipt, indent=2) + "\n")
     hashes = [{sample["sample"]: sample["answer_sha"] for sample in row["samples"]}
               for row in receipt["runs"]]
-    matched = len(hashes) == 8 and len(hashes[0]) == 5 and all(value == hashes[0] for value in hashes)
+    matched = len(hashes) == 4 * len(populations) and len(hashes[0]) == 5 and all(value == hashes[0] for value in hashes)
     receipt["matched_complete_answers"] = matched
     receipt["executables_current"] = all(digest(pairs[label][name]) == item["sha256"]
                                           for label, pair in identities.items() for name, item in pair.items())
     receipt["complete"] = matched and receipt["executables_current"] and all(row["valid"] for row in receipt["runs"])
     if receipt["complete"]:
         receipt["comparisons"] = []
-        for threads in (12, 1):
+        for threads in populations:
             rows = [row for row in receipt["runs"] if row["rust_threads"] == threads]
             for metric in ("median_throughput_per_second", "median_p95_request_ms",
                            "soak_throughput_per_second", "soak_p95_lower_ms", "soak_p95_upper_ms"):

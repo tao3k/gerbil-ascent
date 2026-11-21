@@ -6,25 +6,25 @@
 ;;; Exact finite replay for the inspected candidate subset. This is a
 ;;; snapshot-relative model check, not general recursive provenance.
 ;;; The replay does not call the ASCENT planner, evaluator or solver.
-(import :gerbil-ascent/candidate/finite-plan
-        (only-in :gerbil-ascent/candidate/grounding-plan prepare-grounding-atom)
-        (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
-        (only-in :gerbil-ascent/candidate/certificate-limits
+(import "finite-plan.ss"
+        (only-in "grounding-plan.ss" prepare-grounding-atom)
+        (only-in "datum.ss" candidate-copy-pairs)
+        (only-in "certificate-limits.ss"
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
                  bounded-list-length unique-rows? certificate-for-each-while
                  make-certificate-material-budget certificate-material-reserve!)
-        (only-in :gerbil-ascent/candidate/program-identity
+        (only-in "program-identity.ss"
                  candidate-finite-program-fingerprint)
-        (only-in :gerbil-ascent/candidate/types
+        (only-in "types.ss"
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
                  reasoning-snapshot-valid?
                  reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query
                  reasoning-candidate-limits)
-        (only-in :gerbil-ascent/candidate/program scalar?)
-        (only-in :gerbil-ascent/candidate/funs
+        (only-in "program.ss" scalar?)
+        (only-in "funs.ss"
                  candidate-same-row-set?
                  candidate-schema-of candidate-required-entry
                  candidate-strata-of))

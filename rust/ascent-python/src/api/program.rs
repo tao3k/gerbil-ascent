@@ -47,7 +47,7 @@ impl RuleSession {
         cancellation: Option<PyRef<'_, Cancellation>>,
     ) -> PyResult<Bound<'py, PyDict>> {
         let limits = sources::runtime_limits(timeout_nanoseconds)?;
-        let cancel = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let cancel = cancellation.map_or_else(Default::default, |c| c.0.clone());
         let observation = py
             .detach(|| self.0.run(queries.as_deref(), &limits, &cancel))
             .map_err(source_error)?;
@@ -90,7 +90,7 @@ impl RuleSession {
                 .collect::<PyResult<Vec<_>>>()?;
             updates.insert(name.extract::<String>()?, rows);
         }
-        let cancel = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let cancel = cancellation.map_or_else(Default::default, |c| c.0.clone());
         let generation = py
             .detach(|| self.0.replace(updates, &limits, &cancel))
             .map_err(source_error)?;
@@ -163,8 +163,8 @@ impl RuleResult {
         cancellation: Option<PyRef<'_, Cancellation>>,
     ) -> PyResult<super::provenance::Provenance> {
         self.result.rows(relation).map_err(source_error)?;
-        let limits = limits.map(|l| l.0.clone()).unwrap_or_default();
-        let cancel = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |l| l.0.clone());
+        let cancel = cancellation.map_or_else(Default::default, |c| c.0.clone());
         py.detach(|| {
             self.owner
                 .provenance(self.handle, relation, &limits, &cancel)

@@ -232,7 +232,7 @@ impl Graph {
         limits: Option<PyRef<'_, crate::rust_components::Policy>>,
     ) -> PyResult<RuleSession> {
         self.check()?;
-        let limits = limits.map(|p| p.0).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |p| p.0);
         let relation = self.relation()?;
         py.detach(|| {
             self.engine

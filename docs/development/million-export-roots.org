@@ -1,0 +1,219 @@
+#+title: Live roots during million-row Actor export
+
+* Recursive export
+
+The original 81.51 ms and 109.60 ms runs verified the same 1,000
+answers, each with 1,040,384 rows. The GC count changed from 447 to
+493 and cumulative GC elapsed time changed from 20.38 to 30.30
+seconds. At the earlier mean pause, the 46 additional collections
+account for about 2.1 seconds. The remaining 7.8 seconds reflect a
+higher mean pause. The old aggregate receipts do not record the live
+prefix length at those collection boundaries.
+
+The phase probe records 455 collections inside export and two during
+the independent oracle across 1,000 requests. Its 19.86 seconds of
+export GC elapsed include 19.44 seconds of GC CPU. Source replacement
+and evaluation record no collections. This is a diagnostic cohort.
+
+The held-root control closes the Session, then selectively retains the
+published view, the two caller inputs and the suffix which matches the
+exporter's backward accumulator. It verifies the complete output before
+extracting the suffix and retains each selected root through a separate
+cohort of 16 collections. The controls isolate costs of these roots in
+the same loaded benchmark. They do not reconstruct the exact heap of
+either earlier natural run.
+
+| Held roots | Accounted live MiB | Median GC CPU ms |
+|------------+--------------------+------------------|
+| Loaded modules and test roots | 144.72 | 30.58 |
+| Two inputs, published view | 150.27 | 32.03 |
+| Half output | 216.43 | 45.37 |
+| Half output, published view | 217.51 | 46.15 |
+| Half output, two inputs | 220.92 | 47.34 |
+| Half output, two inputs, published view | 221.99 | 48.83 |
+| Full output, two inputs, published view | 293.71 | 62.76 |
+
+=recursive_root_probe_pair_words= models 292,608 pair words for the
+caller cuts and 4,681,728 for the half output. Scheme inputs remain
+caller-owned. The export accumulator remains reachable until delivery
+of the fresh mutable result. The native loader owns the module roots.
+The published view contributes about 1.07 MiB in the matched half-output
+control, mostly in the collector's still-object category. This figure
+includes the compact source view and the arrays of the functional result.
+
+A separate native diagnostic registered a post-collection hook through
+the SDK's existing =##add-gc-interrupt-job!=. The cached worker copied
+the current completed prefix length and active run width as integers.
+The widest active run in the observed windows had 121 rows.
+The hook tracks only counters and keeps no additional result rows. All
+rows of 64 alternating complete requests passed the independent oracle.
+There were 23 observations during natural collections in the exporter.
+The observed prefix range was about 100,000 to 1,035,000 rows. A fit of
+the runtime's accounted live-byte counter to the prefix midpoint gave
+144.56 bytes per row, with correlation above 0.99999, while the still
+byte counter stayed constant. The 18 observations under 250,000 rows
+had 36.32 ms median GC CPU, and the three at or above 500,000 rows had
+63.90 ms. The slope uses the runtime's live counter convention; it is
+not a count of bytes physically copied or scanned. The trace confirms
+that the variable live extent is the reachable result prefix in this
+cohort. Older aggregate clocks cannot recover their exact prefix mix.
+
+* Published functional origin index
+
+=gerbil-ascent-functional-result-view= builds the origin-to-ordinal map
+to check uniqueness and link successors. =make-functional-view= then
+only requires the map for the first lookup of a bound origin. A compact
+interval of nonnegative labels can retain an =s32vector= whose entries
+are the same ordinals. Unassigned entries use -1, and out-of-bounds
+keys return absence. Sparse labels still require the general hash map.
+=functional_origin_slot= and =dense_origin_lookup_exact= check the
+slot and lookup equations. =functional_origin_replacement= checks that
+the identical starting ordinal yields the same successor walk.
+
+The dense lane is snapshot-owned. It is built with cancellation checks
+before linking successors and captures only the immutable lane and its
+label bounds. Its capacity is at most two slots per input row. By choosing
+it before constructing the public closures, the
+temporary table and its pointer-bearing backing stores can die with
+the constructor. The existing row exporter, source representations,
+retained witness paths and terminal admission limits stay in place.
+
+With the same two inputs and half-output suffix, retaining the view adds
+1.074 MiB in the reference and 0.636 MiB after compaction. The view's
+incremental accounted live extent falls by 0.438 MiB. Median GC CPU
+increases by 1.49 ms when the old view is held and 1.03 ms when the new
+view is held. These are effects in the held-root controls. They cannot
+explain an eleven-second difference between natural GC totals on their
+own.
+
+* Complete export with serial upstream Rust Ascent
+
+The native Scheme gates run with Gerbil =1cfb032= on Gambit =ea114fc=,
+the locked PR #2 dependencies, a 2 GiB heap cap and a 90-second external
+deadline. The separate serial Rust executable depends on upstream Ascent
+0.8.1 as a dev-dependency. Both verify all rows in each of 1,000 alternating
+requests per case. The Rust executable runs the two upstream Ascent rule
+declarations directly.
+
+| Phase mean ms per request | Scheme recursive | Rust recursive | Scheme projection | Rust projection |
+|---------------------------+------------------+----------------+-------------------+-----------------|
+| Replace | 0.21 | 0.01 | 2.30 | 0.37 |
+| Evaluate and publish | 4.13 | 110.31 | 0.20 | 44.46 |
+| Detached output | 33.45 | 1.18 | 25.89 | 1.10 |
+| Independent oracle | 12.85 | 1.80 | 11.86 | 2.34 |
+| Explicit release | - | 1.10 | - | 0.002 |
+| Complete request P95 ms | 93.91 | 159.20 | 128.04 | 56.04 |
+
+The labels compare the same observable work within each phase. Scheme
+constructs a detached mutable list; Rust clones a typed tuple vector.
+The Scheme GC time is included where incurred. Rust releases its detached
+output and evaluator explicitly within each measured request. The
+candidate recursive gate passed at 93.91 ms with 18.95 seconds of GC.
+The prior release evidence includes both 81.51 and 109.60 ms P95, so the
+latest gate pass cannot be assigned to the smaller view alone. Pure
+projection has no functional origin map. Its unchanged export missed
+the 100 ms gate at 128.04 ms with 23.23 seconds of GC across 1,000 requests.
+PR #2 publication remains blocked.
+
+The independent SCC bridge guard still passed. Removal and restoration
+publication took 1.155 ms and 1.213 ms at P95; the corresponding first
+origin reads took 16.83 us and 24.08 us. The separate condensed Session
+suite preserved order, versioned witnesses, cancellation and limits.
+The full native Scheme qualification passed 185 modules and 1,575 cases.
+The guarded Lean proof library and its tests built successfully (195 jobs).
+
+Raw observations and separate native process receipts are held in
+=.cache/ascent/million-export-roots/=. The first Scheme launcher attempt
+failed before fixture execution because the compiled caller's library was
+absent from =GERBIL_LOADPATH=. Those receipts are retained. The timed
+native gates above each executed once after fixing the load path.
+
+* Release a packed source buffer when entering the affine representation
+
+=gerbil-ascent-source-cut-update= chooses the new source slot only after
+shape, duplicate-replacement and input-budget checks. An affine slot
+contains numeric descriptors and promises, without a packed backing
+vector. Its published =relation-view= holds no detached rows. A previously
+published packed view can still own its backing through its own result.
+
+The previous transition remembered a packed backing as =alternate= when
+the next affine slot became current. On another affine replacement both
+slots had =cells = #f=. Their equality carried the stale alternate
+forward. The root probe loaded the fixed native source-cut code, registered
+the packed backing as a weak key and kept only the second affine source
+cut. Two collections left the key live. The retained buffer contained
+two million signed 64-bit cells and added 16,000,256 accounted live bytes
+relative to the all-affine arm. The all-affine arm had no alternate on
+either transition.
+
+The revised cut retains a packed alternate only while the new slot itself
+uses a packed vector. Entering the affine representation drops the cache
+edge. A later packed replacement still verifies the entire occurrence
+stream and can recapture its private backing. =affine_drops_packed_alternate=
+proves equality of the resulting cells with and without the cached
+backing. The theorem applies to optional reuse after validation. Existing
+committed cuts, held results, cancellation and admission boundaries
+continue to have their own ownership. Packed-to-packed reuse retains the
+same cap and matching rules.
+
+The matched candidate cleared the weak key. Its mixed arm used
+148,316,152 accounted live bytes versus 164,314,856 in the prior mixed
+arm. The candidate all-affine control used 148,315,768 bytes. The
+semantic regression retains a packed result across two affine commits,
+then re-admits the original packed rows and checks both exports after
+mutating the new detached list.
+
+An independent native Actor Session probe registered the initial backing
+as a weak key inside the source-cut constructor. It held the Session open
+through two complete affine publications and two explicit collections.
+The reference retained one packed key and the candidate retained zero.
+Both Sessions continued to publish the same relation sizes.
+
+The original pure projection fixture starts affine and alternates two
+affine source cuts. Source replacement already releases cached fallback
+relations, and a successful publication overwrites the previous result.
+The affine result captures numeric fields; detached exports keep only
+their invocation-local accumulated list. The caller independently keeps
+both million-row inputs. The packed-root savings apply to mixed source
+histories. The gate uses affine descriptors on both versions.
+The fixed native gate again checked 1,000 complete results in each case.
+Recursive P95 was 80.65 ms. Pure projection P95 was 124.48 ms, with
+21.92 seconds of GC, and failed the unchanged 100 ms bound. The lower
+projection P95 than the previous 128.04 ms is an observation on the
+unchanged affine path.
+
+The native Scheme qualification passed 185 modules and 1,576 cases.
+The guarded Lean proof library and its tests built successfully (195 jobs).
+The SCC control first recorded a restore publication P95 of 6.736 ms.
+The isolated reference/candidate comparison varied only the source-cut
+module with the same compiled benchmark. Reference restore P95 values
+were 1.763 and 1.133 ms; candidate values were 1.418 and 2.033 ms. All
+arms passed the local-edit assertions. The candidate deletion P95 values
+were 1.326 and 1.153 ms. First-origin P95 values in the production run
+were 15.08 us after deletion and 25.79 us after restoration.
+The pure projection failure blocks promotion to PR #2.
+
+* Upstream Ascent with Rayon on the same two workloads
+
+The upstream =ascent_par!= variant selects the default Rayon pool and
+reports 12 threads on this machine. It uses the upstream concurrent
+relation container. The benchmark exports it to a detached tuple vector
+and checks the same bitmap oracle as the serial =ascent!= variant. There
+are 1,000 independently verified replacements per case. This measures
+the upstream parallel evaluator and its representation together.
+
+| Case | Evaluator | Replace mean ms | Solve mean ms | Export mean ms | Oracle mean ms | Release mean ms | Request P95 ms |
+|------+-----------+-----------------+---------------+----------------+----------------+-----------------+----------------|
+| Recursive | Scheme | 0.198 | 3.829 | 29.172 | 11.385 | - | 80.653 |
+| Recursive | Upstream serial | 0.008 | 110.147 | 1.117 | 1.808 | 0.956 | 127.851 |
+| Recursive | Upstream Rayon | 0.083 | 253.875 | 1.819 | 1.813 | 1.332 | 361.785 |
+| Projection | Scheme | 2.224 | 0.210 | 24.299 | 11.810 | - | 124.482 |
+| Projection | Upstream serial | 0.375 | 47.366 | 1.119 | 2.430 | 0.002 | 61.998 |
+| Projection | Upstream Rayon | 4.548 | 247.667 | 1.886 | 1.728 | 0.034 | 290.331 |
+
+In this run the parallel path was 2.83 times slower at recursive request
+P95 and 4.68 times slower at projection request P95 than upstream serial.
+The evaluation phase accounts for most of the increase. The timing
+combines scheduling and relation-container costs for the default
+12-worker pool on this workload. All raw receipts are under
+=.cache/ascent/projection-owned-roots/=.

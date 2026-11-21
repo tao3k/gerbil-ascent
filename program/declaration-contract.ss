@@ -3,10 +3,10 @@
 ;;; Declaration descriptors and current protocol guards; no engine buffers.
 (import (only-in :std/list/list delete-duplicates/hash)
         (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
-        (only-in :clan/poo/mop define-type element? validate Type. Any)
+        (only-in :clan/poo/type define-type element? validate Type. Any)
         (only-in :clan/poo/type Record)
         (only-in :clan/poo/object-contract ObjectContract.)
-        (only-in :tao3k/yuanxu/object-types/contracts
+        (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract. YuanxuContract.
                  yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/provider

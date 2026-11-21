@@ -196,7 +196,7 @@ impl SourceSession {
     ) -> PyResult<Bound<'py, PyDict>> {
         let mut limits = runtime_limits(timeout_nanoseconds)?;
         let deadline = super::types::admission_deadline(limits.timeout).map_err(source_error)?;
-        let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let cancellation = cancellation.map_or_else(Default::default, |c| c.0.clone());
         let descriptors = py
             .detach(|| {
                 super::types::lock_before(&self.0, deadline, &cancellation)
@@ -227,7 +227,7 @@ impl SourceSession {
     ) -> PyResult<Bound<'py, PyDict>> {
         let mut limits = runtime_limits(timeout_nanoseconds)?;
         let deadline = super::types::admission_deadline(limits.timeout).map_err(source_error)?;
-        let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let cancellation = cancellation.map_or_else(Default::default, |c| c.0.clone());
         let result = py.detach(|| {
             let mut session = super::types::lock_before(&self.0, deadline, &cancellation)
                 .map_err(source_error)?;
@@ -258,9 +258,9 @@ impl SourceSession {
         cancellation: Option<PyRef<'_, Cancellation>>,
     ) -> PyResult<super::provenance::Provenance> {
         let handle = super::types::result_handle(&receipt.get_item("resultHandle")?)?;
-        let mut limits = limits.map(|l| l.0.clone()).unwrap_or_default();
+        let mut limits = limits.map_or_else(Default::default, |l| l.0.clone());
         let deadline = super::types::admission_deadline(limits.timeout).map_err(source_error)?;
-        let cancel = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let cancel = cancellation.map_or_else(Default::default, |c| c.0.clone());
         py.detach(|| {
             let session =
                 super::types::lock_before(&self.0, deadline, &cancel).map_err(source_error)?;

@@ -78,6 +78,11 @@
            (error "ASCENT source replacement changed fixed-point semantics"))))
      prepared)
     (unless (benchmark-receipt-pass? receipt)
+      (displayln "[gerbil-ascent-benchmark] ascent-nonpositive-session-update failed p95="
+                 (benchmark-fixture-ref receipt 'elapsed)
+                 " budget=" (benchmark-fixture-ref receipt 'max_total)
+                 " runtimeStats=" (benchmark-fixture-ref receipt 'runtimeStats))
+      (force-output)
       (error "ASCENT nonpositive update exceeded the benchmark budget"
              receipt))
     (display "[gerbil-ascent-benchmark] ascent-nonpositive-session-update p95=")

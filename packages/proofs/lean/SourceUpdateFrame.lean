@@ -143,6 +143,139 @@ theorem admitted_source_budget (before removed added limit count : Nat)
   dsimp only [prepareSourceCount] at accepted
   split at accepted <;> simp_all
 
+/-! The native preflight checks the outer proper list once, then counts
+occurrences in the same loop that validates each width. A row observation
+describes its pair prefix and whether it ends at the empty list. A cycle
+has a pair at the requested end and therefore fails the bounded check. -/
+def sourceTupleValid (closedTail : Bool) : Nat → List Row → Bool
+  | 0, [] => closedTail
+  | width + 1, _ :: rest => sourceTupleValid closedTail width rest
+  | _, _ => false
+
+theorem source_tuple_valid_exact (closedTail : Bool) (width : Nat) (row : List Row) :
+    sourceTupleValid closedTail width row = true ↔ closedTail = true ∧ row.length = width := by
+  induction row generalizing width with
+  | nil => cases width <;> simp [sourceTupleValid]
+  | cons value rest ih =>
+      cases width with
+      | zero => simp [sourceTupleValid]
+      | succ width => simpa [sourceTupleValid] using ih width
+
+def checkedSourceCount (width : Nat) : List (List Row × Bool) → Nat → Option Nat
+  | [], count => some count
+  | (row, closedTail) :: rest, count =>
+      if sourceTupleValid closedTail width row then checkedSourceCount width rest (count + 1) else none
+
+theorem checked_source_count_exact (width : Nat) (rows : List (List Row × Bool)) (prior count : Nat) :
+    checkedSourceCount width rows prior = some count ↔
+      (∀ row ∈ rows, row.2 = true ∧ row.1.length = width) ∧ count = prior + rows.length := by
+  induction rows generalizing prior with
+  | nil =>
+      simpa [checkedSourceCount] using (eq_comm : prior = count ↔ count = prior)
+  | cons row rest ih =>
+      obtain ⟨row, tail⟩ := row
+      simp only [checkedSourceCount, List.length_cons]
+      split
+      · rename_i accepted
+        have shape := (source_tuple_valid_exact tail width row).mp accepted
+        rw [ih]
+        simp [shape, Nat.add_left_comm, Nat.add_comm]
+      · rename_i rejected
+        constructor
+        · intro impossible
+          cases impossible
+        · intro accepted
+          exact (rejected ((source_tuple_valid_exact tail width row).mpr
+            (accepted.1 _ List.mem_cons_self))).elim
+
+def detachedSourcePairs (rows : List (List Row)) : Nat :=
+  rows.foldr (fun row rest => row.length + 1 + rest) 0
+
+theorem detached_source_pairs_exact (width : Nat) (rows : List (List Row))
+    (arity : ∀ row ∈ rows, row.length = width) :
+    detachedSourcePairs rows = rows.length * (width + 1) := by
+  induction rows with
+  | nil => simp [detachedSourcePairs]
+  | cons row rest ih =>
+      have head := arity row (List.mem_cons_self)
+      have tail := ih fun other member => arity other (List.mem_cons_of_mem _ member)
+      change row.length + 1 + detachedSourcePairs rest = (rest.length + 1) * (width + 1)
+      simp [head, tail, Nat.add_mul, Nat.add_comm]
+
+/-! Actor source admission uses the owned newest-first lane in
+`program/source-cut.ss` and marks writes from every compiled rule head in
+`program/initialization.ss`. The Actor supplies the exact owned cut only
+for current canonical Program and relation declarations. A slot must contain
+immutable scalar values, have no field callback, and use canonical Set
+storage before it can borrow. Every input occurrence survives. Membership
+writes are skipped for read-only slots. -/
+def prependSource (prior incoming : List Row) : List Row :=
+  incoming.foldl (fun before row => row :: before) prior
+
+theorem prepend_source_keeps_old_suffix (prior incoming : List Row) :
+    prependSource prior incoming = incoming.reverse ++ prior := by
+  induction incoming generalizing prior with
+  | nil => rfl
+  | cons row rest ih =>
+      change prependSource (row :: prior) rest = _
+      rw [ih]
+      simp [List.reverse_cons, List.append_assoc]
+
+theorem borrowed_lane_is_initial_lane (prior incoming : List Row) :
+    prependSource prior incoming = (prior.reverse ++ incoming).reverse := by
+  rw [prepend_source_keeps_old_suffix, List.reverse_append, List.reverse_reverse]
+
+theorem borrowed_lane_charges_duplicates (prior incoming : List Row) :
+    (prependSource prior incoming).length = prior.length + incoming.length := by
+  rw [prepend_source_keeps_old_suffix]
+  simp [Nat.add_comm]
+
+def markWriters [DecidableEq Key] (prior : Key → Bool) (heads : List Key) : Key → Bool :=
+  heads.foldl (fun mask head key => if key = head then true else mask key) prior
+
+theorem mark_writers_exact [DecidableEq Key] (prior : Key → Bool) (heads : List Key)
+    (key : Key) :
+    markWriters prior heads key = true ↔ prior key = true ∨ key ∈ heads := by
+  induction heads generalizing prior with
+  | nil => simp [markWriters]
+  | cons head rest ih =>
+      change markWriters (fun target => if target = head then true else prior target) rest key =
+        true ↔ _
+      rw [ih]
+      by_cases same : key = head
+      · simp [same]
+      · simp [same]
+
+theorem writer_mask_covers_every_head [DecidableEq Key] (heads : List (List Key))
+    (rule : List Key) (key : Key) (ruleKnown : rule ∈ heads) (headKnown : key ∈ rule) :
+    markWriters (fun _ => false) (heads.flatMap id) key = true := by
+  apply (mark_writers_exact _ _ _).mpr
+  exact Or.inr (List.mem_flatMap.mpr ⟨rule, ruleKnown, headKnown⟩)
+
+theorem source_budget_batch_checks_all_prefixes (used size limit : Nat) :
+    used + size ≤ limit ↔ ∀ count ≤ size, used + count ≤ limit := by
+  constructor
+  · intro total count inside
+    omega
+  · intro every
+    exact every size (Nat.le_refl size)
+
+/-- Source-loop costs only. The previous admission conses one outer pair and
+writes one membership entry per occurrence, even on a read-only relation.
+An exact owned lane reuses the headers and omits the read-only writes. This
+counts operations in the admission loop, not provider buckets or heap bytes. -/
+def sourceAdmissionWork (rows : Nat) (borrowed writer : Bool) : Nat × Nat :=
+  (if borrowed then 0 else rows, if borrowed && !writer then 0 else rows)
+
+theorem read_only_admission_work (rows : Nat) :
+    sourceAdmissionWork rows false false = (rows, rows) ∧
+    sourceAdmissionWork rows true false = (0, 0) := by
+  simp [sourceAdmissionWork]
+
+theorem writable_admission_retains_membership (rows : Nat) :
+    sourceAdmissionWork rows true true = (0, rows) := by
+  simp [sourceAdmissionWork]
+
 /-! The update benchmark times ten complete transactions per observation.
 Its native path checks eligibility, compares ordered source logs, and closes
 the dependency mask before creating the engine. Running and observing the
@@ -245,5 +378,119 @@ theorem summary_frame {Key : Type} (adj : Key → Key → Prop)
   · intro reusable origin path
     exact ⟨((same origin path).1).mpr (reusable origin path).1,
       ((same origin path).2).mpr (reusable origin path).2⟩
+
+namespace RetainedSetSeed
+
+def firstOccurrences {Row : Type} [DecidableEq Row] (seen : List Row) : List Row → List Row
+  | [] => []
+  | row :: rest =>
+      if seen.contains row then firstOccurrences seen rest
+      else row :: firstOccurrences (row :: seen) rest
+
+theorem first_occurrences_bound {Row : Type} [DecidableEq Row] (seen completed : List Row) :
+    (firstOccurrences seen completed).length ≤ completed.length := by
+  induction completed generalizing seen with
+  | nil => simp [firstOccurrences]
+  | cons row rest ih =>
+      simp only [firstOccurrences, List.length_cons]
+      split
+      · exact Nat.le_succ_of_le (ih seen)
+      · exact Nat.succ_le_succ (ih (row :: seen))
+
+/-- Source `present` and completed `present` have separate roles. The
+completed membership table suppresses repeated budget charges, while the
+source membership table determines whether each distinct row is derived. -/
+def derivedRows {Row : Type} [DecidableEq Row] (sourceContains : Row → Bool)
+    (completed : List Row) : List Row :=
+  (firstOccurrences [] completed).filter fun row => !sourceContains row
+
+theorem indexed_derived_rows {Row : Type} [DecidableEq Row]
+    (base completed : List Row) (lookup : Row → Bool)
+    (exactLookup : ∀ row, lookup row = base.contains row) :
+    derivedRows lookup completed = derivedRows base.contains completed := by
+  unfold derivedRows
+  apply List.filter_congr
+  intro row _
+  rw [exactLookup]
+
+theorem indexed_budgets {Row : Type} [DecidableEq Row] (base completed : List Row)
+    (lookup : Row → Bool) (exactLookup : ∀ row, lookup row = base.contains row)
+    (derivedBefore sourceCount deriveLimit outputLimit : Nat) :
+    (let derived := derivedBefore + (derivedRows lookup completed).length
+     derived ≤ deriveLimit ∧ sourceCount + derived ≤ outputLimit) ↔
+    (let derived := derivedBefore + (derivedRows base.contains completed).length
+     derived ≤ deriveLimit ∧ sourceCount + derived ≤ outputLimit) := by
+  rw [indexed_derived_rows _ _ _ exactLookup]
+
+/-- Work in the alternative source-list lookup. The accumulator and the
+returned row spine stay unchanged by the lookup choice. -/
+def comparisons {Row : Type} [DecidableEq Row] (row : Row) : List Row → Nat
+  | [] => 0
+  | first :: rest => 1 + if row = first then 0 else comparisons row rest
+
+theorem absent_comparisons {Row : Type} [DecidableEq Row]
+    (row : Row) (base : List Row) (absent : row ∉ base) :
+    comparisons row base = base.length := by
+  induction base with
+  | nil => rfl
+  | cons first rest ih =>
+      have different : row ≠ first := fun equal => absent (List.mem_cons.mpr (Or.inl equal))
+      have missing : row ∉ rest := fun member => absent (List.mem_cons.mpr (Or.inr member))
+      simp [comparisons, different, ih missing, Nat.add_comm]
+
+/-- Distinct completed rows are looked up once. Construction offers one
+insertion per source occurrence. These are engine operations, independent
+of the cost of structural hashing, collisions, and resizing. -/
+def indexedOperations {Row : Type} [DecidableEq Row] (base completed : List Row) : Nat :=
+  base.length + (firstOccurrences [] completed).length
+
+theorem indexed_operations_bound {Row : Type} [DecidableEq Row] (base completed : List Row) :
+    indexedOperations base completed ≤ base.length + completed.length :=
+  Nat.add_le_add_left (first_occurrences_bound [] completed) _
+
+end RetainedSetSeed
+
+/-! Private scalar classification is pure on a captured, read-only row spine.
+These sequential transition laws assume that purity and ownership; they do
+not verify Gambit's promise implementation or permit mutable caller roots.
+The released make-atomic-promise allocates two promises and one mutex, while
+make-promise allocates one promise. Closure and collector costs are excluded. -/
+namespace ScalarMemo
+
+def force (value : Bool) (cached : Option Bool) : Bool × Option Bool :=
+  let result := cached.getD value
+  (result, some result)
+
+def forceAtomic (value : Bool) (cached : Option Bool) (locked : Bool) :
+    Option ((Bool × Option Bool) × Bool) :=
+  if locked then none else some (force value cached, false)
+
+theorem unlocked_atomic_refines_force (value : Bool) (cached : Option Bool) :
+    forceAtomic value cached false = some (force value cached, false) := rfl
+
+theorem force_is_idempotent (value : Bool) (cached : Option Bool) :
+    force value (force value cached).2 = force value cached := by
+  cases cached <;> rfl
+
+theorem owned_classification_exact (value : Bool) (cached : Option Bool)
+    (valid : cached = none ∨ cached = some value) :
+    (force value cached).1 = value := by
+  rcases valid with h | h <;> simp [force, h]
+
+def constructorRecords (atomic : Bool) (materializations : Nat) : Nat :=
+  materializations * if atomic then 3 else 1
+
+theorem unused_atomic_records_removed (materializations : Nat) :
+    constructorRecords false materializations + 2 * materializations =
+      constructorRecords true materializations := by
+  simp [constructorRecords]
+  omega
+
+def schemeSource : String :=
+  "(def (capture-source-materialization base additions rows)\n" ++
+  "  (make-source-materialization base additions rows\n" ++
+  "    (delay (andmap (cut andmap relational-scalar? <>) rows))))\n"
+
+end ScalarMemo
 
 end Ascent.SourceUpdateFrame

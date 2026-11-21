@@ -24,9 +24,11 @@
 ;;; classification invokes no user code and does not replace row admission.
 ;; : (forall (r) (-> [r] [r] [r] (SourceMaterialization r)))
 ;; : (-> SourceBase ReversedAdditions OrderedSourceRows SourceMaterialization)
+;; BEGIN GENERATED SCALAR MATERIALIZATION
 (def (capture-source-materialization base additions rows)
   (make-source-materialization base additions rows
-    (delay-atomic (andmap (cut andmap relational-scalar? <>) rows))))
+    (delay (andmap (cut andmap relational-scalar? <>) rows))))
+;; END GENERATED SCALAR MATERIALIZATION
 
 ;; : (forall (r) (-> [r] [r] (SourceMaterialization r) (SourceMaterialization r)))
 ;; : (-> SourceBase ReversedAdditions SourceMaterialization SourceMaterialization)

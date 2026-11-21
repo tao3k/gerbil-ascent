@@ -23,8 +23,11 @@ pub(super) struct ProcessPool(ascent_scheme::ProcessPool);
 #[pymethods]
 impl ProcessPool {
     #[new]
-    #[pyo3(signature=(owners=12))]
-    fn new(py: Python<'_>, owners: usize) -> PyResult<Self> {
+    #[pyo3(signature=(owners=None))]
+    fn new(py: Python<'_>, owners: Option<usize>) -> PyResult<Self> {
+        let owners = owners.unwrap_or_else(|| {
+            std::thread::available_parallelism().map_or(1, std::num::NonZero::get)
+        });
         py.detach(|| ascent_scheme::ProcessPool::new(owners))
             .map(Self)
             .map_err(super::types::source_error)
@@ -157,7 +160,7 @@ impl Engine {
         program: &Bound<'_, PyAny>,
         limits: Option<PyRef<'_, sources::FactLimits>>,
     ) -> PyResult<Py<PyAny>> {
-        let policy = limits.map(|p| p.0).unwrap_or_default();
+        let policy = limits.map_or_else(Default::default, |p| p.0);
         if let Ok(program) = program.extract::<PyRef<'_, Program>>() {
             let mut owned = program.0.clone();
             drop(program);
@@ -201,7 +204,7 @@ impl Engine {
         limits: Option<PyRef<'_, sources::FactLimits>>,
     ) -> PyResult<Py<PyAny>> {
         let texts = sources::texts(texts)?;
-        let policy = limits.map(|p| p.0).unwrap_or_default();
+        let policy = limits.map_or_else(Default::default, |p| p.0);
         let loaded = py
             .detach(|| self.0.load_sources(&texts, policy, false))
             .map_err(super::types::source_error)?;
@@ -222,7 +225,7 @@ impl Engine {
         limits: Option<PyRef<'_, sources::FactLimits>>,
     ) -> PyResult<Py<PyAny>> {
         let texts = sources::texts(texts)?;
-        let policy = limits.map(|p| p.0).unwrap_or_default();
+        let policy = limits.map_or_else(Default::default, |p| p.0);
         let loaded = py
             .detach(|| self.0.load_sources(&texts, policy, true))
             .map_err(super::types::source_error)?;
@@ -330,7 +333,7 @@ impl Engine {
                 "trusted host Scheme execution must be explicitly authorized",
             ));
         }
-        let policy = limits.map(|v| v.0).unwrap_or_default();
+        let policy = limits.map_or_else(Default::default, |v| v.0);
         let args = super::module_values::arguments(arguments)?;
         py.detach(|| {
             let module = self.0.load_definitions(source)?;
@@ -400,7 +403,7 @@ impl Session {
     ) -> PyResult<Snapshot> {
         let timeout = Duration::try_from_secs_f64(timeout_seconds)
             .map_err(|_| PyValueError::new_err("invalid timeout"))?;
-        let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let cancellation = cancellation.map_or_else(Default::default, |c| c.0.clone());
         let mut limits = engine::Limits {
             timeout,
             max_facts,
@@ -464,8 +467,8 @@ impl Snapshot {
             .collect()
     }
 }
-#[pyo3::pyfunction]
-fn _scheme_process_worker(path: std::path::PathBuf, domain: u64) -> PyResult<()> {
+#[pyo3::pyfunction(name = "_scheme_process_worker")]
+fn scheme_process_worker(path: std::path::PathBuf, domain: u64) -> PyResult<()> {
     ascent_scheme::serve_process_worker(path, domain).map_err(super::types::source_error)
 }
 #[pymodule(name = "_core")]
@@ -480,7 +483,7 @@ fn ascent(module: &Bound<'_, PyModule>) -> PyResult<()> {
     arguments.extend(paths.into_iter().map(std::ffi::OsString::from));
     ascent_scheme::configure_worker(ascent_scheme::WorkerProgram::new(executable, arguments))
         .map_err(super::types::source_error)?;
-    module.add_function(pyo3::wrap_pyfunction!(_scheme_process_worker, module)?)?;
+    module.add_function(pyo3::wrap_pyfunction!(scheme_process_worker, module)?)?;
     module.add(
         "EngineError",
         module.py().get_type::<super::types::EngineError>(),
@@ -513,7 +516,7 @@ fn ascent(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<super::instances::InstancePool>()?;
     #[cfg(all(feature = "instances", target_os = "macos"))]
     module.add_class::<super::instances::InstancePackage>()?;
-    module.add_function(pyo3::wrap_pyfunction!(super::scheme::_scheme_call, module)?)?;
+    module.add_function(pyo3::wrap_pyfunction!(super::scheme::scheme_call, module)?)?;
     module.add_class::<Session>()?;
     module.add_class::<Snapshot>()?;
     module.add_class::<Cancellation>()?;

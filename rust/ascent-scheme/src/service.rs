@@ -674,8 +674,12 @@ pub(crate) fn abandoned_request(request: &Data, value: &Data) -> Option<Data> {
 }
 
 pub(crate) fn trace_retirement(pid: u32, event: &str) {
-    if std::env::var_os("ASCENT_PROCESS_TRACE").is_some() {
-        eprintln!("ASCENT-PROCESS-RETIRE pid={pid} event={event}");
+    if crate::diagnostics::enabled() {
+        let stamp = crate::process_control::clock_ns()
+            .map_or_else(|_| "unavailable".to_owned(), |ns| ns.to_string());
+        crate::diagnostics::emit(format!(
+            "ASCENT-PROCESS-RETIRE pid={pid} event={event} monotonic_ns={stamp}"
+        ));
     }
 }
 
@@ -694,6 +698,9 @@ fn await_child(child: &Mutex<Child>, pid: u32, graceful: bool) {
         match status {
             Ok(Ok(None)) => thread::sleep(Duration::from_millis(1)),
             Ok(Ok(Some(status))) => {
+                if status.success() {
+                    trace_retirement(pid, "process-exited");
+                }
                 if graceful && !status.success() {
                     eprintln!("ASCENT-PROCESS-SHUTDOWN-ERROR pid={pid} status={status}");
                 }

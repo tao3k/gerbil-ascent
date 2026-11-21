@@ -1,5 +1,5 @@
 //! Saturated, fixed-work production API throughput; all native rows checked in Rust.
-use ascent_scheme::{Engine, RuleSession};
+use ascent_scheme::{Backend, Engine, RuleSession, Source};
 use gerbil_ascent::{
     Cancellation, Data, FactLimits, Limits, ObjectInput, Row, SourceSession, Value,
 };
@@ -36,8 +36,9 @@ impl Pool {
     }
 }
 const SOURCE: &str = "(define-program (make) (sources edge) (outputs reach) (relation edge ((a exact-integer?) (b exact-integer?))) (relation reach ((a exact-integer?) (b exact-integer?))) ((reach a b) <-- (edge a b)) ((reach a c) <-- (reach a b) (edge b c)))";
+const ACTOR_SOURCE: &str = "(ascent (relation edge (a b)) (relation reach (a b)) ((reach a b) <-- (edge a b)) ((reach a c) <-- (reach a b) (edge b c)))";
 enum Session {
-    Scheme(RuleSession),
+    Scheme(RuleSession, &'static str),
     Rayon(Box<SourceSession>),
 }
 struct Observation {
@@ -77,10 +78,11 @@ fn execute(session: &mut Session, task: usize, groups: usize, width: usize) -> O
     let input = edges(groups, width, offset);
     let limits = Limits::default();
     let cancel = Cancellation::default();
+    let queries = ["reach".to_owned()];
     let replaced;
     let mut answer: Vec<(usize, usize)>;
     match session {
-        Session::Scheme(session) => {
+        Session::Scheme(session, runtime) => {
             session
                 .replace(
                     BTreeMap::from([(
@@ -100,8 +102,12 @@ fn execute(session: &mut Session, task: usize, groups: usize, width: usize) -> O
                 )
                 .unwrap();
             replaced = start.elapsed().as_nanos();
-            let result = session.run(None, &limits, &cancel).unwrap();
+            let result = session.run(Some(&queries), &limits, &cancel).unwrap();
             assert_eq!(result.field("complete").unwrap(), &Data::Bool(true));
+            assert_eq!(
+                result.field("executionRuntime").unwrap().text().unwrap(),
+                *runtime
+            );
             answer = result
                 .field("relations")
                 .unwrap()
@@ -131,7 +137,7 @@ fn execute(session: &mut Session, task: usize, groups: usize, width: usize) -> O
                 .replace(BTreeMap::from([("edge".into(), rows)]), &limits, &cancel)
                 .unwrap();
             replaced = start.elapsed().as_nanos();
-            let result = session.run(None, &limits, &cancel).unwrap();
+            let result = session.run(Some(&queries), &limits, &cancel).unwrap();
             assert!(result.complete);
             answer = result.relations["reach"]
                 .iter()
@@ -454,7 +460,51 @@ fn prepare_session(value: &ascent_scheme::ModuleValue, mode: &str) -> Session {
             .unwrap();
         Session::Rayon(Box::new(session))
     } else {
-        Session::Scheme(value.open_session(FactLimits::default()).unwrap())
+        Session::Scheme(
+            value.open_session(FactLimits::default()).unwrap(),
+            "session",
+        )
+    }
+}
+fn prepare_client(
+    engine: &Engine,
+    dsl: &str,
+    mode: &str,
+) -> (
+    Session,
+    Option<(ascent_scheme::Module, ascent_scheme::ModuleValue)>,
+) {
+    if dsl == "ascent" {
+        let scoped = engine.clone().with_backend(if mode == "rayon" {
+            Backend::Rayon
+        } else {
+            Backend::Scheme
+        });
+        let session = match scoped
+            .load_sources(&[ACTOR_SOURCE.into()], FactLimits::default(), false)
+            .unwrap()
+        {
+            Source::Scheme(session) => Session::Scheme(session, "actor"),
+            Source::Rayon(mut session) => {
+                // SourceSession requires its admitted initial cut to run before
+                // the first replacement, just like the typed fixture above.
+                let initial = session
+                    .run(
+                        Some(&["reach".into()]),
+                        &SourceSession::default_limits(),
+                        &Cancellation::default(),
+                    )
+                    .unwrap();
+                assert!(initial.complete && initial.relations["reach"].is_empty());
+                session.result(initial.result_handle).unwrap().close();
+                Session::Rayon(session)
+            }
+        };
+        (session, None)
+    } else {
+        let module = engine.load_definitions(SOURCE).unwrap();
+        let value = module.call("make", &[], None).unwrap();
+        (prepare_session(&value, mode), Some((module, value)))
     }
 }
 fn main() {
@@ -479,17 +529,28 @@ fn main() {
         threads,
         "actual caller-owned Rayon pool size"
     );
-    let clients = 12;
+    let clients = std::env::var("ASCENT_BENCH_CLIENTS").map_or_else(
+        |_| std::thread::available_parallelism().unwrap().get(),
+        |value| {
+            value
+                .parse::<usize>()
+                .expect("positive ASCENT_BENCH_CLIENTS")
+        },
+    );
+    let dsl = std::env::var("ASCENT_BENCH_DSL").unwrap_or_else(|_| "typed".into());
+    assert!(
+        dsl == "typed" || dsl == "ascent",
+        "ASCENT_BENCH_DSL=typed|ascent"
+    );
+    assert!(clients > 0);
     assert!(tasks >= clients);
     let mut sessions = Vec::new();
     let mut retained = Vec::new();
     for client in 0..clients {
         let scoped = pool.bind(engine.clone(), client % owners);
-        let module = scoped.load_definitions(SOURCE).unwrap();
-        let value = module.call("make", &[], None).unwrap();
-        let session = prepare_session(&value, mode);
+        let (session, declarations) = prepare_client(&scoped, &dsl, mode);
         sessions.push(session);
-        retained.push((scoped, module, value));
+        retained.push((scoped, declarations));
     }
     for (i, session) in sessions.iter_mut().enumerate() {
         execute(session, samples * tasks + i, groups, width);
@@ -500,7 +561,7 @@ fn main() {
         compiled_checkpoint_transport()
     };
     eprintln!(
-        "PROCESS-READY mode={mode} vms={owners} rust_threads={threads} clients={clients} checkpoint_transport={checkpoint_transport} work_distribution={distribution_name} startup_ns={}",
+        "PROCESS-READY mode={mode} dsl={dsl} vms={owners} rust_threads={threads} clients={clients} checkpoint_transport={checkpoint_transport} work_distribution={distribution_name} startup_ns={}",
         startup.elapsed().as_nanos()
     );
     println!("sample\ttask\tlatency_ns\tcompletion_ns\treplace_ns\trun_export_ns\tanswer_sha");
@@ -512,7 +573,7 @@ fn main() {
             &pool,
             elapsed,
             &format!(
-                "sample={sample} mode={mode} vms={owners} rust_threads={threads} clients={clients}"
+                "sample={sample} mode={mode} dsl={dsl} vms={owners} rust_threads={threads} clients={clients}"
             ),
         );
         for row in observations {
@@ -537,7 +598,7 @@ fn main() {
             width,
             samples * tasks + clients,
             duration,
-            &format!("mode={mode} vms={owners} rust_threads={threads} clients={clients}"),
+            &format!("mode={mode} dsl={dsl} vms={owners} rust_threads={threads} clients={clients}"),
         );
     }
     close_sessions(sessions, retained);
@@ -548,17 +609,22 @@ fn main() {
 
 fn close_sessions(
     sessions: Vec<Session>,
-    retained: Vec<(Engine, ascent_scheme::Module, ascent_scheme::ModuleValue)>,
+    retained: Vec<(
+        Engine,
+        Option<(ascent_scheme::Module, ascent_scheme::ModuleValue)>,
+    )>,
 ) {
     for session in sessions {
         match session {
-            Session::Scheme(s) => s.close(),
+            Session::Scheme(s, _) => s.close(),
             Session::Rayon(mut s) => s.close(),
         }
     }
-    for (scoped, module, value) in retained {
-        value.close();
-        module.close();
+    for (scoped, declarations) in retained {
+        if let Some((module, value)) = declarations {
+            value.close();
+            module.close();
+        }
         scoped.shutdown();
     }
 }

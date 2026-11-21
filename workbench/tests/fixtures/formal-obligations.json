@@ -1,4 +1,37 @@
 {
+  "ActorReply": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactReply Once NoEarlyReply MailboxIsolation DrainedClose EndpointOwnership"
+    },
+    "faults": [
+      [
+        "foreign",
+        "ExactReply",
+        12
+      ],
+      [
+        "duplicate",
+        "Once",
+        12
+      ],
+      [
+        "early",
+        "NoEarlyReply",
+        12
+      ],
+      [
+        "cursor",
+        "MailboxIsolation",
+        12
+      ],
+      [
+        "retire",
+        "DrainedClose",
+        12
+      ]
+    ]
+  },
   "ActorRound": {
     "configuration": {
       "constants": "Workers = {1,2}\nGenerationCutoff = $actor_cutoff\nRoundCutoff = $round_cutoff\nMutation = \"none\"",
@@ -39,8 +72,8 @@
   "ActorSession": {
     "configuration": {
       "constants": "Cuts = {0,1}\nGenerationCutoff = $session_cutoff\nMutation = \"none\"",
-      "constraint": "Exploration",
-      "invariants": "ConsistentPublication NoStalePublication DrainedClose"
+      "invariants": "ConsistentPublication NoStalePublication DrainedClose AuthorityExact ReuseExact PartialPrivate ReplacementPrivate",
+      "constraint": "Exploration"
     },
     "faults": [
       [
@@ -51,6 +84,41 @@
       [
         "early",
         "DrainedClose",
+        12
+      ],
+      [
+        "creation-authority",
+        "AuthorityExact",
+        12
+      ],
+      [
+        "final-authority",
+        "AuthorityExact",
+        12
+      ],
+      [
+        "changed-reuse",
+        "ReuseExact",
+        12
+      ],
+      [
+        "opaque-reuse",
+        "ReuseExact",
+        12
+      ],
+      [
+        "partial-publication",
+        "PartialPrivate",
+        12
+      ],
+      [
+        "stale-partial",
+        "PartialPrivate",
+        12
+      ],
+      [
+        "eager-pending",
+        "ReplacementPrivate",
         12
       ]
     ]
@@ -620,7 +688,7 @@
   "ComponentIndex": {
     "configuration": {
       "constants": "Fault = \"none\"",
-      "invariants": "Consistent PrivateExtension HeldStable ViewConsistent",
+      "invariants": "Consistent PrivateExtension HeldStable ViewConsistent BorrowedCut",
       "main": "ComponentIndexFixture"
     },
     "faults": [
@@ -688,6 +756,11 @@
         "held-columns",
         "HeldStable",
         12
+      ],
+      [
+        "mutate-borrowed",
+        "BorrowedCut",
+        12
       ]
     ]
   },
@@ -743,6 +816,11 @@
       [
         "overlap",
         "UniqueWitness",
+        12
+      ],
+      [
+        "prune-live",
+        "Complete",
         12
       ]
     ]
@@ -831,7 +909,7 @@
     "configuration": {
       "constants": "GenerationCutoff = $cutoff\nInputLimit = 0\nMutation = \"none\"",
       "constraint": "ExplorationBound",
-      "invariants": "TypeOK CurrentResult IndependentExplanation FrozenObservation RejectionAtomic ClosedOwners"
+      "invariants": "TypeOK CurrentResult IndependentExplanation FrozenObservation RejectionAtomic ClosedOwners CompleteProofScope"
     },
     "faults": [
       [
@@ -857,6 +935,11 @@
       [
         "close",
         "ClosedOwners",
+        12
+      ],
+      [
+        "partial-scope",
+        "CompleteProofScope",
         12
       ]
     ]
@@ -1242,9 +1325,19 @@
   "PreparationWork": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained SourceQueueCoverage SourceGcIsolation"
+      "invariants": "InterfaceSelectionExact IndexedDispatchExact JobsExact ImportsExact HeapLimitUnchanged HeapSelectionBounded CumulativeCapabilityRequired AllocationNotNested CompilerCpuPartition RestoredSourceClock RestoredSourceCurrent CompilerWorkComplete Complete Current OrderedCounter InventoryDataOnly OnlyDemandedCompilation SourceCarriersRemainSource ReuseCurrentInputs ContentKeyExact CompleteCacheBundle PackedStartupCount BoundedSourceEntries ExitedVmReleasesEntries OnlyConsumerRoots UnadmittedCatalogPresent DemandedSupportRetained CachedSupportRetained SourceQueueCoverage SourceGcIsolation SourceMachineCapacity"
     },
     "faults": [
+      [
+        "fixed-twelve-source",
+        "SourceMachineCapacity",
+        12
+      ],
+      [
+        "darwin-source-roots",
+        "BoundedSourceEntries",
+        12
+      ],
       [
         "compact-isolated-source",
         "SourceGcIsolation",
@@ -1886,6 +1979,11 @@
       [
         "credit",
         "CompletedDelivery",
+        12
+      ],
+      [
+        "skip-frontier",
+        "DependencySnapshot",
         12
       ]
     ]
@@ -2553,7 +2651,7 @@
   "CheckpointTransport": {
     "configuration": {
       "constants": "Mutation = \"none\"",
-      "invariants": "TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll WaitTypeOK TransientRechecks FatalStaysFatal ChangedNeverBackoff RetryNoDecision NoLostRegisteredWake NoticeTypeOK NoExtraWake"
+      "invariants": "TypeOK StablePeerDecision NoConsume FaultClosed IdleNoPoll EofNoPoll WaitTypeOK TransientRechecks FatalStaysFatal ChangedNeverBackoff RetryNoDecision NoLostRegisteredWake NoticeTypeOK NoExtraWake ResidentWaitOutsideAuthority WaitPreservesCursor"
     },
     "faults": [
       [
@@ -2624,6 +2722,16 @@
       [
         "double-wake",
         "NoExtraWake",
+        12
+      ],
+      [
+        "wait-with-authority",
+        "ResidentWaitOutsideAuthority",
+        12
+      ],
+      [
+        "consume-on-wake",
+        "WaitPreservesCursor",
         12
       ]
     ]
@@ -3030,6 +3138,463 @@
         "LibraryScopes",
         12
       ]
+    ]
+  },
+  "RuntimeMeasurement": {
+    "configuration": {
+      "constants": "PlannedCounts = {1,2,3}\nMinSamples = 2\nLoadCutoff = 2\nMutation = \"none\"",
+      "invariants": "TypeOK RuntimeExact",
+      "constraint": "Exploration"
+    },
+    "faults": [
+      [
+        "unit",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "missing",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "few",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "unchecked",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "owner",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "drain",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "tail",
+        "RuntimeExact",
+        12
+      ],
+      [
+        "wall",
+        "RuntimeExact",
+        12
+      ]
+    ]
+  },
+  "SourceRowTransfer": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "SelectionExact TransportOptIn Representable RowsPreserved CompletionPreserved CancellationPreserved ResourcePreserved ProvenancePreserved GenerationPreserved OccurrencesPreserved ColumnsPreserved RulesPreserved QueriesPreserved PoolPreserved ProjectionSelectionExact ProjectionTransportOptIn ProjectionRepresentable ProjectionPath OrdinaryValuesOpaque RelationMetadataOpaque"
+    },
+    "faults": [
+      [
+        "actor-only",
+        "SelectionExact",
+        12
+      ],
+      [
+        "missing-optin",
+        "TransportOptIn",
+        12
+      ],
+      [
+        "unsupported-packet",
+        "Representable",
+        12
+      ],
+      [
+        "reverse-rows",
+        "RowsPreserved",
+        12
+      ],
+      [
+        "force-complete",
+        "CompletionPreserved",
+        12
+      ],
+      [
+        "clear-cancel",
+        "CancellationPreserved",
+        12
+      ],
+      [
+        "clear-resource",
+        "ResourcePreserved",
+        12
+      ],
+      [
+        "forge-provenance",
+        "ProvenancePreserved",
+        12
+      ],
+      [
+        "stale-generation",
+        "GenerationPreserved",
+        12
+      ],
+      [
+        "erase-occurrences",
+        "OccurrencesPreserved",
+        12
+      ],
+      [
+        "change-columns",
+        "ColumnsPreserved",
+        12
+      ],
+      [
+        "change-rules",
+        "RulesPreserved",
+        12
+      ],
+      [
+        "change-queries",
+        "QueriesPreserved",
+        12
+      ],
+      [
+        "change-pool",
+        "PoolPreserved",
+        12
+      ],
+      [
+        "missing-projection-route",
+        "ProjectionPath",
+        12
+      ],
+      [
+        "packet-in-arbitrary-value",
+        "OrdinaryValuesOpaque",
+        12
+      ],
+      [
+        "metadata-row-alias",
+        "RelationMetadataOpaque",
+        12
+      ],
+      [
+        "couple-projection-completion",
+        "ProjectionSelectionExact",
+        12
+      ],
+      [
+        "skip-projection-optin",
+        "ProjectionTransportOptIn",
+        12
+      ],
+      [
+        "unsupported-projection-packet",
+        "ProjectionRepresentable",
+        12
+      ]
+    ]
+  },
+  "ActorStateCost": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "FreshEndpoints EnvelopeExact StateExact OutcomeExact ClockExact MailboxIsolation ClockBounds NoDiscountedWall"
+    },
+    "faults": [
+      [
+        "reuse-endpoint",
+        "FreshEndpoints",
+        12
+      ],
+      [
+        "hide-envelope",
+        "EnvelopeExact",
+        12
+      ],
+      [
+        "hide-state-pairs",
+        "StateExact",
+        12
+      ],
+      [
+        "hide-outcome",
+        "OutcomeExact",
+        12
+      ],
+      [
+        "hide-clock",
+        "ClockExact",
+        12
+      ],
+      [
+        "caller-cursor",
+        "MailboxIsolation",
+        12
+      ],
+      [
+        "subtract-gc",
+        "NoDiscountedWall",
+        12
+      ],
+      [
+        "report-cpu-as-wall",
+        "NoDiscountedWall",
+        12
+      ]
+    ]
+  },
+  "ActorStateTransport": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "AuthorityExact CloseExact StateExact ReplyExact"
+    },
+    "faults": [
+      [
+        "drop-authority",
+        "AuthorityExact",
+        12
+      ],
+      [
+        "skip-close",
+        "CloseExact",
+        12
+      ],
+      [
+        "stale-state",
+        "StateExact",
+        12
+      ],
+      [
+        "foreign-reply",
+        "ReplyExact",
+        12
+      ]
+    ]
+  },
+  "ActorLocalCredit": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "OrderedPrefix ResourceExact NoCanceledMerge YieldAtCredit PublicationExact"
+    },
+    "faults": [
+      [
+        "reverse-batch",
+        "OrderedPrefix",
+        12
+      ],
+      [
+        "skip-budget",
+        "ResourceExact",
+        12
+      ],
+      [
+        "skip-cancel",
+        "NoCanceledMerge",
+        12
+      ],
+      [
+        "skip-yield",
+        "YieldAtCredit",
+        12
+      ],
+      [
+        "drop-tail",
+        "PublicationExact",
+        12
+      ],
+      [
+        "skip-owner",
+        "PublicationExact",
+        12
+      ],
+      [
+        "publish-canceled",
+        "PublicationExact",
+        12
+      ]
+    ]
+  },
+  "ActorTerminalCommit": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "OwnsReusableLane NoLaterReader ExactFactLimit ExactPublication"
+    },
+    "faults": [
+      ["later-reader", "NoLaterReader", 12],
+      ["borrowed-lane", "OwnsReusableLane", 12],
+      ["resume", "NoLaterReader", 12],
+      ["wrong-order", "ExactPublication", 12],
+      ["wrong-priority", "ExactFactLimit", 12],
+      ["ignore-output", "ExactFactLimit", 12],
+      ["ignore-budget", "ExactPublication", 12],
+      ["ignore-cancel", "ExactPublication", 12],
+      ["ignore-owner", "ExactPublication", 12]
+    ]
+  },
+  "ActorIdentityRead": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactGuard PerOccurrenceCheckpoint FirstOccurrenceOrder ExactBudget ExactPublication"
+    },
+    "faults": [
+      ["unowned", "ExactGuard", 12],
+      ["wrong-slots", "ExactGuard", 12],
+      ["feedback", "ExactGuard", 12],
+      ["omit-membership", "FirstOccurrenceOrder", 12],
+      ["skip-duplicate-checkpoint", "PerOccurrenceCheckpoint", 12],
+      ["omit-budget", "ExactBudget", 12],
+      ["publish-canceled", "ExactPublication", 12]
+    ]
+  },
+  "ActorPairMembership": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactMembership ExactFirstOccurrence"
+    },
+    "faults": [
+      ["unbounded", "ExactMembership", 12],
+      ["short-radix", "ExactMembership", 12],
+      ["coalesce-overflow", "ExactMembership", 12],
+      ["ignore-seeds", "ExactMembership", 12]
+    ]
+  },
+  "ActorRankedFunctional": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactGuard FirstOccurrenceOrder"
+    },
+    "faults": [
+      ["ignore-shape", "ExactGuard", 12],
+      ["ignore-seeds", "ExactGuard", 12],
+      ["ignore-rank", "FirstOccurrenceOrder", 12],
+      ["ignore-origins", "FirstOccurrenceOrder", 12]
+    ]
+  },
+  "ActorBatchBuffer": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "LeaseIntegrity ReadExtent ExactDeliveredPrefix ResourceExact AttemptedPrefix ExactPublication"
+    },
+    "faults": [
+      ["overwrite-before-credit", "LeaseIntegrity", 12],
+      ["credit-before-read", "ExactDeliveredPrefix", 12],
+      ["read-past-count", "ReadExtent", 12],
+      ["drop-tail", "ExactPublication", 12],
+      ["omit-budget", "ResourceExact", 12],
+      ["skip-refused-row", "AttemptedPrefix", 12],
+      ["publish-canceled", "ExactPublication", 12]
+    ]
+  },
+  "ActorCompactResult": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactCount Budget OwnerOnly ExactExport PrivateUntilPublish"
+    },
+    "faults": [
+      ["underreport", "ExactCount", 12],
+      ["adopt-over-budget", "Budget", 12],
+      ["publish-stale", "OwnerOnly", 12],
+      ["keep-emission-order", "ExactExport", 12]
+    ]
+  },
+  "ActorOrdinalRuns": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactEmission ExactPublicStream"
+    },
+    "faults": [
+      ["keep-forward", "ExactEmission", 12],
+      ["wrong-direction", "ExactEmission", 12],
+      ["cross-boundary", "ExactEmission", 12],
+      ["keep-depth-order", "ExactPublicStream", 12],
+      ["keep-run-order", "ExactPublicStream", 12]
+    ]
+  },
+  "ActorSourceCertificate": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactRoot UniqueOrigins"
+    },
+    "faults": [
+      ["ignore-order", "UniqueOrigins", 12],
+      ["match-size", "ExactRoot", 12],
+      ["carry-after-append", "ExactRoot", 12]
+    ]
+  },
+  "ActorPackedSource": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactEligibility CapturedValues ExactExport ExpectedDelivery StopsAtExit PackedReuseExact PackedWidthExact AffineCaptureExact"
+    },
+    "faults": [
+      ["omit-budget", "ExactEligibility", 12],
+      ["accept-seed", "ExactEligibility", 12],
+      ["accept-deadline", "ExactEligibility", 12],
+      ["accept-observed", "ExactEligibility", 12],
+      ["borrow-caller", "CapturedValues", 12],
+      ["reverse-output", "ExactExport", 12],
+      ["follow-new-source", "ExpectedDelivery", 12],
+      ["wrong-field", "ExpectedDelivery", 12],
+      ["read-after-exit", "StopsAtExit", 12],
+      ["match-size-only", "PackedReuseExact", 12],
+      ["narrow-wide-label", "PackedWidthExact", 12],
+      ["omit-affine-last", "AffineCaptureExact", 12]
+    ]
+  },
+  "ActorStateLease": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "NoClosedAdmission NoStalePayload ExactReply ReadBeforeReturn AtMostOneEntry ReleaseMatchesReply HandlerTargetsEndpoint"
+    },
+    "faults": [
+      ["admit-after-close", "NoClosedAdmission", 12],
+      ["return-without-read", "ReadBeforeReturn", 12],
+      ["keep-reply", "NoStalePayload", 12],
+      ["recycle-abandoned", "ReadBeforeReturn", 12],
+      ["broadcast-writes", "NoStalePayload", 12],
+      ["reenter-retired", "AtMostOneEntry", 12],
+      ["reset-later-reply", "ReleaseMatchesReply", 12],
+      ["use-other-endpoint", "HandlerTargetsEndpoint", 12]
+    ]
+  },
+  "ActorStatePool": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "DisjointLease IdleUnique RetentionBound NoAbandonedReuse MissDoesNotReject"
+    },
+    "faults": [
+      ["leave-taken", "DisjointLease", 12],
+      ["retain-overflow", "RetentionBound", 12],
+      ["retain-abandoned", "NoAbandonedReuse", 12],
+      ["reject-on-miss", "MissDoesNotReject", 12]
+    ]
+  },
+  "ActorResidentWorker": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "SenderOwnsRun CurrentPublication CurrentFallback DrainedBeforeClose ClosedWorkerJoined"
+    },
+    "faults": [
+      ["accept-retired-worker", "SenderOwnsRun", 12],
+      ["publish-canceled", "CurrentPublication", 12],
+      ["fallback-canceled", "CurrentFallback", 12],
+      ["close-with-job", "DrainedBeforeClose", 12],
+      ["skip-join", "ClosedWorkerJoined", 12]
+    ]
+  },
+  "ActorCutEligibility": {
+    "configuration": {
+      "constants": "Mutation = \"none\"",
+      "invariants": "ExactCut EligibilityExact"
+    },
+    "faults": [
+      ["stale-flag", "ExactCut", 12],
+      ["inspect-initial", "EligibilityExact", 12],
+      ["foreign-cut", "EligibilityExact", 12],
+      ["skip-metadata", "EligibilityExact", 12],
+      ["skip-protocol", "EligibilityExact", 12]
     ]
   }
 }

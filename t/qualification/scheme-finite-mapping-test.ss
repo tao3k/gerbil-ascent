@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test test-suite test-case check-equal?)
         (only-in :clan/poo/object .ref .o)
-        (only-in :clan/poo/mop element?)
+        (only-in :clan/poo/type element?)
         (only-in :gerbil-ascent/program/types GerbilAscentRelationContract)
         (only-in :gerbil-ascent/table/provider
                  GerbilAscentIndexProviderContract gerbil-ascent-hash-index-provider

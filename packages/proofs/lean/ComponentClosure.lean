@@ -2,11 +2,465 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import SemiNaive
 import FiniteHeight
+import MillionQueryWorkload
 
 /-! Ground positive rules, component-local saturation and least closure.
 This is semantic decomposition, not a scheduler state machine. Grounding,
 native SCC projection and general non-ground termination are separate obligations. -/
 namespace Ascent.ComponentClosure
+
+section BoundSelection
+
+/-- For one already bound origin, a unique target list yields zero or
+one row. The bit test is on that same published cut. -/
+theorem bound_target_filter {Vertex : Type} [DecidableEq Vertex]
+    (targets : List Vertex) (unique : targets.Nodup) (target : Vertex) :
+    targets.filter (fun v => decide (v = target)) =
+      if target ∈ targets then [target] else [] := by
+  induction targets with
+  | nil => simp
+  | cons first rest ih =>
+    obtain ⟨absent, uniqueRest⟩ := List.nodup_cons.mp unique
+    by_cases same : first = target
+    · subst first
+      simp [ih uniqueRest, absent]
+    · simp [same, Ne.symm same, ih uniqueRest]
+
+theorem bound_pair_bit_test {Vertex : Type} [DecidableEq Vertex]
+    (targets : List Vertex) (unique : targets.Nodup) (origin target : Vertex)
+    (reachable : Bool) (exact : reachable = true ↔ target ∈ targets) :
+    (targets.filter (fun v => decide (v = target))).map (fun v => (origin, v)) =
+      if reachable then [(origin, target)] else [] := by
+  rw [bound_target_filter targets unique]
+  simp [← exact]
+  split <;> rfl
+
+/-- After the singleton callback, a changed caller-owned key or column
+list must resume the original walk after the row already consumed. -/
+theorem bound_pair_callback_suffix (before after : List Int) (target : Int)
+    (earlier : ∀ v ∈ before, v < target) (later : ∀ v ∈ after, target < v) :
+    (before ++ target :: after).filter (fun v => decide (target < v)) = after := by
+  have skip : before.filter (fun v => decide (target < v)) = [] := by
+    apply List.filter_eq_nil_iff.mpr
+    intro v present
+    simp [Int.not_lt.mpr (Int.le_of_lt (earlier v present))]
+  have keep : after.filter (fun v => decide (target < v)) = after := by
+    apply List.filter_eq_self.mpr
+    intro v present
+    simp [later v present]
+  simp [skip, keep]
+
+end BoundSelection
+
+/-- A completion changes readiness only on its outgoing edges. A successor
+becomes newly ready exactly when that completion consumes its last credit. -/
+theorem completion_unlocks_last_predecessor (remaining : Nat) (hasEdge : Bool)
+    (credit : hasEdge = true → 0 < remaining) :
+    (0 < remaining ∧ (if hasEdge then remaining - 1 else remaining) = 0) ↔
+      (hasEdge = true ∧ remaining = 1) := by
+  cases hasEdge with
+  | false => simp; omega
+  | true => simp; omega
+
+/-- On the original increasing task order, the first ready task is the
+minimum ready ordinal. An ordered ready queue may make the same choice. -/
+theorem first_ready_is_minimum (ready : Nat → Bool) (pending : List Nat)
+    (ordered : pending.Pairwise (· < ·)) (task : Nat)
+    (first : pending.find? ready = some task) :
+    ready task = true ∧ ∀ other ∈ pending, ready other = true → task ≤ other := by
+  induction pending with
+  | nil => simp at first
+  | cons head tail ih =>
+    rw [List.pairwise_cons] at ordered
+    by_cases isReady : ready head = true
+    · have same : head = task := by simpa [List.find?, isReady] using first
+      subst task
+      refine ⟨isReady, ?_⟩
+      intro other present _
+      simp only [List.mem_cons] at present
+      rcases present with rfl | inTail
+      · exact Nat.le_refl _
+      · exact Nat.le_of_lt (ordered.1 other inTail)
+    · have tailFirst : tail.find? ready = some task := by
+        simpa [List.find?, isReady] using first
+      obtain ⟨selected, minimum⟩ := ih ordered.2 tailFirst
+      refine ⟨selected, ?_⟩
+      intro other present available
+      simp only [List.mem_cons] at present
+      rcases present with rfl | inTail
+      · exact (isReady available).elim
+      · exact minimum other inTail available
+
+/-- Nonempty data-graph reachability. Rule SCCs are independent of this
+relation, which may be used only by a recognized transitive rule. -/
+inductive EdgePath {Vertex : Type} (edge : Vertex → Vertex → Prop) : Vertex → Vertex → Prop
+  | step {source target} : edge source target → EdgePath edge source target
+  | append {source middle target} :
+      EdgePath edge source middle → EdgePath edge middle target → EdgePath edge source target
+
+def CrossEdge {Vertex Group : Type} (edge : Vertex → Vertex → Prop) (owner : Vertex → Group)
+    (origin destination : Group) : Prop :=
+  origin ≠ destination ∧
+    ∃ source target, edge source target ∧ owner source = origin ∧ owner target = destination
+
+private theorem cross_path_target_owner {Vertex Group : Type} {edge : Vertex → Vertex → Prop}
+    {owner : Vertex → Group} {origin destination : Group}
+    (path : EdgePath (CrossEdge edge owner) origin destination) :
+    ∃ vertex, owner vertex = destination := by
+  induction path with
+  | step cross =>
+    obtain ⟨_, _, target, _, _, targetOwner⟩ := cross
+    exact ⟨target, targetOwner⟩
+  | append _ _ _ next => exact next
+
+/-- A quotient path lifts for every representative at either endpoint.
+Each cross edge has a concrete witness, and paths inside a component
+connect consecutive witnesses. The lifted path is necessarily nonempty. -/
+theorem lift_cross_component_path {Vertex Group : Type} {edge : Vertex → Vertex → Prop}
+    {owner : Vertex → Group}
+    (connect : ∀ source target, owner source = owner target → source = target ∨ EdgePath edge source target)
+    {origin destination : Group} (path : EdgePath (CrossEdge edge owner) origin destination) :
+    ∀ source target, owner source = origin → owner target = destination → EdgePath edge source target := by
+  induction path with
+  | step cross =>
+    intro source target sourceOwner targetOwner
+    obtain ⟨_, entry, exit, witness, entryOwner, exitOwner⟩ := cross
+    have enter : EdgePath edge source exit := by
+      rcases connect source entry (sourceOwner.trans entryOwner.symm) with same | before
+      · subst entry
+        exact .step witness
+      · exact .append before (.step witness)
+    rcases connect exit target (exitOwner.trans targetOwner.symm) with same | after
+    · subst target
+      exact enter
+    · exact .append enter after
+  | append firstPath _ prior next =>
+    intro source target sourceOwner targetOwner
+    -- Every group appearing between two steps has a representative,
+    -- since each quotient edge is witnessed by a concrete input edge.
+    obtain ⟨vertex, vertexOwner⟩ := cross_path_target_owner firstPath
+    exact .append (prior source vertex sourceOwner vertexOwner)
+      (next vertex target vertexOwner targetOwner)
+
+/-- Each concrete step stays in its group or contributes one quotient
+edge. Removing the internal steps preserves every cross-group path. -/
+theorem collapse_cross_component_path {Vertex Group : Type} {edge : Vertex → Vertex → Prop}
+    (owner : Vertex → Group) {source target : Vertex} (path : EdgePath edge source target) :
+    owner source = owner target ∨ EdgePath (CrossEdge edge owner) (owner source) (owner target) := by
+  induction path with
+  | @step a b witness =>
+    by_cases internal : owner a = owner b
+    · exact Or.inl internal
+    · exact Or.inr (.step ⟨internal, _, _, witness, rfl, rfl⟩)
+  | append _ _ prior next =>
+    rcases prior with samePrior | crossPrior <;> rcases next with sameNext | crossNext
+    · exact Or.inl (samePrior.trans sameNext)
+    · exact Or.inr (by rwa [samePrior])
+    · exact Or.inr (by rwa [← sameNext])
+    · exact Or.inr (.append crossPrior crossNext)
+
+theorem cross_component_path_exact {Vertex Group : Type} {edge : Vertex → Vertex → Prop}
+    {owner : Vertex → Group}
+    (connect : ∀ source target, owner source = owner target → source = target ∨ EdgePath edge source target)
+    {source target : Vertex} (distinct : owner source ≠ owner target) :
+    EdgePath edge source target ↔ EdgePath (CrossEdge edge owner) (owner source) (owner target) := by
+  constructor
+  · intro path
+    exact (collapse_cross_component_path owner path).resolve_left distinct
+  · intro path
+    exact lift_cross_component_path connect path source target rfl rfl
+
+/-- A diagonal output requires a nonempty cycle. A singleton without
+an internal edge cannot justify a reflexive tuple by its membership. -/
+theorem nonempty_component_cycle {Vertex Group : Type} {edge : Vertex → Vertex → Prop}
+    {owner : Vertex → Group}
+    (connect : ∀ source target, owner source = owner target → source = target ∨ EdgePath edge source target)
+    {source target : Vertex} (internal : owner target = owner source) (first : edge source target) :
+    EdgePath edge source source := by
+  rcases connect target source internal with same | back
+  · subst target
+    exact .step first
+  · exact .append (.step first) back
+
+private theorem path_first_step {Vertex : Type} {edge : Vertex → Vertex → Prop}
+    {source target : Vertex} (path : EdgePath edge source target) :
+    ∃ first, edge source first ∧ (first = target ∨ EdgePath edge first target) := by
+  induction path with
+  | step witness => exact ⟨_, witness, Or.inl rfl⟩
+  | append _ tail head _ =>
+    obtain ⟨first, witness, rest⟩ := head
+    refine ⟨first, witness, Or.inr ?_⟩
+    rcases rest with equal | onward
+    · exact equal.symm ▸ tail
+    · exact .append onward tail
+
+/-- The diagonal case has its own criterion. This rules out spurious
+reflexive results for an isolated singleton or a singleton with only
+external successors. -/
+theorem component_self_path_exact {Vertex Group : Type} {edge : Vertex → Vertex → Prop}
+    {owner : Vertex → Group}
+    (connect : ∀ source target, owner source = owner target → source = target ∨ EdgePath edge source target)
+    (separate : ∀ source target, EdgePath edge source target →
+      EdgePath edge target source → owner source = owner target)
+    (source : Vertex) :
+    EdgePath edge source source ↔ ∃ target, edge source target ∧ owner target = owner source := by
+  constructor
+  · intro cycle
+    obtain ⟨first, witness, rest⟩ := path_first_step cycle
+    refine ⟨first, witness, ?_⟩
+    rcases rest with same | back
+    · rw [same]
+    · exact separate first source back (.step witness)
+  · rintro ⟨first, witness, internal⟩
+    exact nonempty_component_cycle connect internal witness
+
+/-- One source group has one target set. A group product can be charged
+before any pair in it is expanded. Uniqueness of the admitted member
+and target lists is a separate obligation of the partition. -/
+theorem factored_group_row_count {Vertex : Type} (origins targets : List Vertex) :
+    (origins.flatMap fun source => targets.map fun target => (source, target)).length =
+      origins.length * targets.length := by
+  induction origins with
+  | nil => simp
+  | cons source rest count =>
+    simp [count, Nat.succ_mul, Nat.add_comm]
+
+private def ReachOrSame {V : Type} (edge : V → V → Prop) (a b : V) : Prop :=
+  a = b ∨ EdgePath edge a b
+
+/-- The packed-source reader advances matching rows and checks the entire
+suffix after its one skipped row. The model stores pairs as single rows. -/
+def orderedExtra {Row : Type} [DecidableEq Row] : List Row → List Row → Option Row
+  | [], _ => none
+  | row :: tail, [] => if tail = [] then some row else none
+  | row :: tail, next :: rest =>
+    if row = next then orderedExtra tail rest
+    else if tail = next :: rest then some row else none
+
+theorem ordered_extra_exact {Row : Type} [DecidableEq Row]
+    (long short : List Row) (added : Row) (accepted : orderedExtra long short = some added) :
+    ∃ before after, long = before ++ added :: after ∧ short = before ++ after := by
+  induction long generalizing short with
+  | nil => simp [orderedExtra] at accepted
+  | cons row tail ih =>
+    cases short with
+    | nil =>
+      by_cases empty : tail = []
+      · have same : row = added := by simpa [orderedExtra, empty] using accepted
+        exact ⟨[], [], by simp [empty, same], rfl⟩
+      · simp [orderedExtra, empty] at accepted
+    | cons next rest =>
+      by_cases same : row = next
+      · subst next
+        have acceptedTail : orderedExtra tail rest = some added := by
+          simpa [orderedExtra] using accepted
+        obtain ⟨before, after, lt, st⟩ := ih rest acceptedTail
+        exact ⟨row :: before, after, by simp [lt], by simp [st]⟩
+      · by_cases aligned : tail = next :: rest
+        · have picked : row = added := by
+            simpa [orderedExtra, same, aligned] using accepted
+          exact ⟨[], next :: rest, by simp [picked, aligned], by simp⟩
+        · simp [orderedExtra, same, aligned] at accepted
+
+def DeleteEdge {V : Type} (edge : V → V → Prop) (x y a b : V) : Prop :=
+  edge a b ∧ (a ≠ x ∨ b ≠ y)
+
+/-- The packed splice inserts the edge at its original position in the
+origin's adjacency. A fresh rebuild projects the very same sequence. -/
+theorem ordered_adjacency_splice {V : Type} [DecidableEq V]
+    (before after : List (V × V)) (origin target : V) :
+    (((before ++ (origin, target) :: after).filter
+        (fun row => decide (row.1 = origin))).map Prod.snd) =
+      ((before.filter (fun row => decide (row.1 = origin))).map Prod.snd) ++
+        target :: ((after.filter (fun row => decide (row.1 = origin))).map Prod.snd) := by
+  simp [List.filter_append]
+
+/-- A deleted cross edge leaves the internal edges of every SCC unchanged.
+The quotient cannot gain a return path by deletion. -/
+theorem cross_delete_keeps_internal {V Group : Type} (owner : V → Group)
+    (edge : V → V → Prop) (x y a b : V)
+    (cross : owner x ≠ owner y) (internal : owner a = owner b) :
+    DeleteEdge edge x y a b ↔ edge a b := by
+  constructor
+  · exact And.left
+  · intro old
+    refine ⟨old, ?_⟩
+    by_cases origin : a = x
+    · right
+      intro dest
+      exact cross (by simpa [origin, dest] using internal)
+    · exact .inl origin
+
+/-- A row outside the old predecessor cone of the deleted edge cannot
+have used that edge. Its old closure row remains exact. -/
+theorem delete_unaffected_path {V : Type} {edge : V → V → Prop} {start finish : V}
+    (path : EdgePath edge start finish) (x y : V)
+    (noAccess : ¬ ReachOrSame edge start x) :
+    EdgePath (DeleteEdge edge x y) start finish := by
+  induction path with
+  | step one =>
+    exact .step ⟨one, .inl (fun h => noAccess (.inl h))⟩
+  | append leading trailing first second =>
+    apply EdgePath.append (first noAccess)
+    apply second
+    intro fromMiddle
+    exact noAccess (.inr (by
+      rcases fromMiddle with h | reach
+      · simpa [h] using leading
+      · exact .append leading reach))
+
+/-- For a fixed published mask, evaluating a group on demand enumerates
+the same ordered result as the eager group table. -/
+theorem deferred_group_selection {Group Row : Type} (groups : List Group)
+    (orderedRows : Group → List Row) :
+    ((groups.map (fun g => fun () => orderedRows g)).map (fun build => build ())).flatten =
+      (groups.map orderedRows).flatten := by
+  simp [List.map_map, Function.comp_def]
+
+/-- A run is a consecutive portion of the numerically ordered vertex
+sequence. Its labels all belong to the run's fixed SCC. Only the mask
+changes while the published partition remains the same. -/
+theorem ordered_runs_select_exact {Group Vertex : Type}
+    (runs : List (Group × List Vertex)) (owner : Vertex → Group)
+    (allowed : Group → Bool)
+    (oneOwner : ∀ run ∈ runs, ∀ v ∈ run.2, owner v = run.1) :
+    runs.flatMap (fun (group, labels) => if allowed group then labels else []) =
+      (runs.flatMap Prod.snd).filter (fun v => allowed (owner v)) := by
+  induction runs with
+  | nil => rfl
+  | cons first rest ih =>
+    have onRest : ∀ run ∈ rest, ∀ v ∈ run.2, owner v = run.1 := by
+      intro run inRest v inRun
+      exact oneOwner run (List.mem_cons_of_mem _ inRest) v inRun
+    have onFirst : ∀ v ∈ first.2, owner v = first.1 :=
+      oneOwner first List.mem_cons_self
+    simp only [List.flatMap_cons, List.filter_append, ih onRest]
+    congr 1
+    cases selected : allowed first.1 with
+    | false =>
+      simp only [Bool.false_eq_true, ite_false]
+      symm
+      apply List.filter_eq_nil_iff.mpr
+      intro v present
+      simp [onFirst v present, selected]
+    | true =>
+      simp only [ite_true]
+      symm
+      apply List.filter_eq_self.mpr
+      intro v present
+      simp [onFirst v present, selected]
+
+private theorem extend_path {V : Type} {edge : V → V → Prop}
+    {a b c : V} (prefixPath : ReachOrSame edge a b) (suffixPath : EdgePath edge b c) :
+    EdgePath edge a c := by
+  rcases prefixPath with rfl | prior
+  · exact suffixPath
+  · exact .append prior suffixPath
+
+private theorem restrict_path {V : Type} {edge : V → V → Prop}
+    {a b c : V} (prefixPath : EdgePath edge a b) (suffixPath : ReachOrSame edge b c) :
+    EdgePath edge a c := by
+  rcases suffixPath with rfl | rest
+  · exact prefixPath
+  · exact .append prefixPath rest
+
+private def InsertEdge {V : Type} (edge : V → V → Prop) (x y a b : V) : Prop :=
+  edge a b ∨ (a = x ∧ b = y)
+
+private theorem unchanged_path_after_insert {V : Type} {edge : V → V → Prop}
+    {a b : V} (path : EdgePath edge a b) (x y : V) :
+    EdgePath (InsertEdge edge x y) a b := by
+  induction path with
+  | step witness => exact .step (.inl witness)
+  | append _ _ before after => exact .append before after
+
+/-- The delta of one admitted edge is the product of old predecessors of
+its origin and old successors of its target, including the endpoints.
+Even a path using the new edge more than once needs it only once. -/
+theorem insert_edge_exact {V : Type} {edge : V → V → Prop} (x y a b : V) :
+    EdgePath (InsertEdge edge x y) a b ↔
+      EdgePath edge a b ∨ (ReachOrSame edge a x ∧ ReachOrSame edge y b) := by
+  constructor
+  · intro path
+    induction path with
+    | step one =>
+      rcases one with old | ⟨rfl, rfl⟩
+      · exact .inl (.step old)
+      · exact .inr ⟨.inl rfl, .inl rfl⟩
+    | append _ _ left right =>
+      rcases left with oldLeft | ⟨fromLeft, toMiddle⟩ <;>
+        rcases right with oldRight | ⟨fromMiddle, toRight⟩
+      · exact .inl (.append oldLeft oldRight)
+      · exact .inr ⟨.inr (restrict_path oldLeft fromMiddle), toRight⟩
+      · exact .inr ⟨fromLeft, .inr (extend_path toMiddle oldRight)⟩
+      · exact .inr ⟨fromLeft, toRight⟩
+  · rintro (old | ⟨fromLeft, toRight⟩)
+    · exact unchanged_path_after_insert old x y
+    · have newEdge : EdgePath (InsertEdge edge x y) x y := .step (.inr ⟨rfl, rfl⟩)
+      have leading : ReachOrSame (InsertEdge edge x y) a x :=
+        fromLeft.imp id (fun p => unchanged_path_after_insert p x y)
+      have trailing : ReachOrSame (InsertEdge edge x y) y b :=
+        toRight.imp id (fun p => unchanged_path_after_insert p x y)
+      exact restrict_path (extend_path leading newEdge) trailing
+
+/-- The native group-mask assignment keeps every old bit and installs
+the delta targets only for a group that can reach the new edge's origin. -/
+theorem append_mask_member (old successors target column : Nat) (affected : Bool) :
+    (if affected then old ||| (successors ||| 2 ^ target) else old).testBit column =
+      (old.testBit column || (affected && (successors.testBit column || decide (target = column)))) := by
+  cases affected <;> simp [Nat.testBit_two_pow]
+
+/-- A dense lookup may narrow the visitor only when the inverse map
+recovers the selected key. Missing keys and aliased ordinals establish
+no membership. -/
+theorem dense_key_match {Key : Type} [BEq Key] [LawfulBEq Key]
+    (labels : List Key) (distinct : labels.Nodup) (key : Key) (ordinal : Nat)
+    (inBounds : ordinal < labels.length) (index : Key → Option Nat)
+    [Decidable (key ∈ labels)]
+    (lookup : index key = if key ∈ labels then some (labels.idxOf key) else none) :
+    index key = some ordinal ↔ labels[ordinal] = key := by
+  rw [lookup]
+  by_cases found : key ∈ labels
+  · simp [found]
+    constructor
+    · intro located
+      have valid : labels.idxOf key < labels.length := located.symm ▸ inBounds
+      have recovered := List.getElem_idxOf valid
+      subst ordinal
+      exact recovered
+    · intro recovered
+      rw [← recovered]
+      exact distinct.idxOf_getElem ordinal inBounds
+  · simp [found]
+    exact fun same => found (same ▸ List.getElem_mem inBounds)
+
+/-- Replacing a source by a cut that deletes edges can invalidate old
+reachability. Rebuilding from the new adjacency cannot invent an edge
+path outside the old graph when the whole update consists of deletes. -/
+theorem reach_after_delete {V : Type} {old new : V → V → Prop}
+    (subset : ∀ a b, new a b → old a b) {source target : V}
+    (path : EdgePath new source target) : EdgePath old source target := by
+  induction path with
+  | step edge => exact .step (subset _ _ edge)
+  | append _ _ before after => exact .append before after
+
+/-- The native source slot is an owned identity. A revision is attached
+on successful publication. Proof replay requires both coordinates and
+checks every concrete edge in that same version. -/
+def ReplaysCut {V Cut : Type} (read : Cut → V → V → Prop)
+    (expected captured : Cut × Nat) (a b : V) : Prop :=
+  expected = captured ∧ EdgePath (read captured.1) a b
+
+theorem replay_rejects_other_cut {V Cut : Type} {read : Cut → V → V → Prop}
+    {expected captured : Cut × Nat} {a b : V} (different : expected ≠ captured) :
+    ¬ ReplaysCut read expected captured a b := fun h => different h.1
+
+theorem replay_uses_published_edges {V Cut : Type} {read : Cut → V → V → Prop}
+    {expected captured : Cut × Nat} {a b : V} (replays : ReplaysCut read expected captured a b) :
+    EdgePath (read expected.1) a b := by
+  rw [replays.1]
+  exact replays.2
+
 variable {Fact Component : Type}
 abbrev Database (Fact : Type) := Fact → Prop
 structure Rule (Fact : Type) where
@@ -89,6 +543,210 @@ theorem stable_closed (rules : List (Rule Fact)) (owner : Fact → Component)
     Or.inr ⟨rule, member, owned, body, rfl⟩
   rw [stable] at generated
   exact generated
+
+/-- When no rule reads a local output, a completed first pass already proves
+closure. Every premise in the enlarged cut came from the original input. -/
+theorem one_pass_closed (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (database : Database Fact)
+    (noFeedback : ¬ Depends rules owner component component) :
+    ClosedAt rules owner component (step rules owner component database) := by
+  intro rule member owned body
+  refine Or.inr ⟨rule, member, owned, ?_, rfl⟩
+  intro fact present
+  have foreign : owner fact ≠ component := fun same =>
+    noFeedback ⟨rule, member, owned, fact, present, same⟩
+  exact (iterate_frame rules owner component database 1 fact foreign).mp (body fact present)
+
+theorem no_second_pass (rules : List (Rule Fact)) (owner : Fact → Component)
+    (component : Component) (database : Database Fact)
+    (noFeedback : ¬ Depends rules owner component component) (fact : Fact) :
+    step rules owner component (step rules owner component database) fact ↔
+      step rules owner component database fact := by
+  constructor
+  · rintro (old | ⟨rule, member, owned, body, rfl⟩)
+    · exact old
+    · exact one_pass_closed rules owner component database noFeedback rule member owned body
+  · exact Or.inl
+
+def commitPrivateOutput [DecidableEq Relation]
+    (retain : Bool) (members reads : List Relation) : Bool :=
+  retain || reads.any (fun relation => members.contains relation)
+
+theorem skipped_private_output [DecidableEq Relation]
+    (retain : Bool) (members reads : List Relation)
+    (skip : commitPrivateOutput retain members reads = false) :
+    retain = false ∧ ∀ relation ∈ reads, relation ∉ members := by
+  simpa [commitPrivateOutput] using skip
+
+inductive SlotRole where
+  | fresh | bound | other
+  deriving DecidableEq
+
+abbrev SlotTerm := SlotRole × Nat
+
+def consecutiveSlots (role : SlotRole) (start : Nat) : Nat → List SlotTerm
+  | 0 => []
+  | width + 1 => (role, start) :: consecutiveSlots role (start + 1) width
+
+/-- Compiled terms from the two descriptors are checked before any row read. -/
+def checkIdentitySlots (start : Nat) : List SlotTerm → List SlotTerm → Bool
+  | [], [] => true
+  | input :: more, output :: rest =>
+      decide (input = (.fresh, start) ∧ output = (.bound, start)) &&
+        checkIdentitySlots (start + 1) more rest
+  | _, _ => false
+
+theorem checked_identity_slots (start : Nat) (input output : List SlotTerm)
+    (checked : checkIdentitySlots start input output = true) :
+    input = consecutiveSlots .fresh start input.length ∧
+      output = consecutiveSlots .bound start input.length := by
+  induction input generalizing start output with
+  | nil => cases output <;> simp_all [checkIdentitySlots, consecutiveSlots]
+  | cons term remaining ih =>
+      cases output with
+      | nil => simp [checkIdentitySlots] at checked
+      | cons head more =>
+          simp only [checkIdentitySlots, Bool.and_eq_true, decide_eq_true_eq] at checked
+          obtain ⟨⟨source, target⟩, rest⟩ := checked
+          obtain ⟨inputTail, outputTail⟩ := ih (start + 1) more rest
+          simpa only [List.length_cons, consecutiveSlots, source, target, List.cons.injEq,
+            true_and] using And.intro inputTail outputTail
+
+inductive ScanEvent (Row : Type) where
+  | checkpoint
+  | emit (row : Row)
+
+/-- Seeded membership suppresses repeated heads, while every occurrence
+still yields a checkpoint before novelty and owner budget charging. -/
+def scanIdentity [DecidableEq Cell] (project : List Cell → List Cell)
+    (known : List (List Cell)) : List (List Cell) → List (ScanEvent (List Cell))
+  | [] => []
+  | row :: rest =>
+      let head := project row
+      .checkpoint :: if head ∈ known then scanIdentity project known rest
+                     else .emit head :: scanIdentity project (head :: known) rest
+
+theorem borrowed_scan_keeps_order [DecidableEq Cell] (known rows : List (List Cell)) :
+    scanIdentity Ascent.RowRepresentation.projectIdentity known rows = scanIdentity id known rows := by
+  have equal : Ascent.RowRepresentation.projectIdentity = (id : List Cell → List Cell) :=
+    funext Ascent.RowRepresentation.identity_projection_preserves_tuple
+  rw [equal]
+
+abbrev PairRadix : Nat := 2 ^ 24
+
+/-- The worker may normalize a pair only inside its exact fixnum domain.
+The fallback stores the original row in a separate membership table. -/
+def workerPairKey (left right : Nat) : Nat :=
+  Ascent.MillionQueryWorkload.bitmapIndex PairRadix left right
+
+theorem worker_pair_key_exact (left right otherLeft otherRight : Nat)
+    (rightBound : right < PairRadix) (otherBound : otherRight < PairRadix) :
+    workerPairKey left right = workerPairKey otherLeft otherRight ↔
+      left = otherLeft ∧ right = otherRight := by
+  constructor
+  · exact Ascent.MillionQueryWorkload.bitmap_index_injective _ _ _ _ _ rightBound otherBound
+  · rintro ⟨rfl, rfl⟩
+    rfl
+
+theorem worker_pair_fits_word (left right : Nat)
+    (leftBound : left < PairRadix) (rightBound : right < PairRadix) :
+    workerPairKey left right ≤ 2 ^ 48 - 1 := by
+  simp only [workerPairKey, Ascent.MillionQueryWorkload.bitmapIndex, PairRadix] at *
+  omega
+
+/-- Gerbil's table hashes inspect only the low bits of a fixnum. Move the
+left coordinate into the low radix digit, leaving the high digit intact. -/
+def mixedWorkerPairKey (left right : Nat) : Nat :=
+  workerPairKey left ((right + (left * 331804471) % PairRadix) % PairRadix)
+
+theorem mixed_worker_pair_key_exact (left right otherLeft otherRight : Nat)
+    (rightBound : right < PairRadix) (otherBound : otherRight < PairRadix) :
+    mixedWorkerPairKey left right = mixedWorkerPairKey otherLeft otherRight ↔
+      left = otherLeft ∧ right = otherRight := by
+  constructor
+  · intro equal
+    have positive : 0 < PairRadix := by decide
+    have encoded := (worker_pair_key_exact left _ otherLeft _
+      (Nat.mod_lt _ positive) (Nat.mod_lt _ positive)).mp equal
+    rcases encoded with ⟨sameLeft, mixed⟩
+    subst otherLeft
+    generalize saltEq : (left * 331804471) % PairRadix = salt at mixed
+    have saltBound : salt < PairRadix := saltEq ▸ Nat.mod_lt _ positive
+    change (right + salt) % 16777216 = (otherRight + salt) % 16777216 at mixed
+    change right < 16777216 at rightBound
+    change otherRight < 16777216 at otherBound
+    change salt < 16777216 at saltBound
+    exact ⟨rfl, by omega⟩
+  · rintro ⟨rfl, rfl⟩
+    rfl
+
+theorem mixed_worker_pair_fits_word (left right : Nat) (bound : left < PairRadix) :
+    mixedWorkerPairKey left right ≤ 2 ^ 48 - 1 :=
+  worker_pair_fits_word _ _ bound (Nat.mod_lt _ (by decide))
+
+theorem mixed_worker_intermediate_fits (left right : Nat)
+    (leftBound : left < PairRadix) (rightBound : right < PairRadix) :
+    left * 331804471 + right ≤ 2 ^ 53 - 1 := by
+  change left < 16777216 at leftBound
+  change right < 16777216 at rightBound
+  change left * 331804471 + right ≤ 9007199254740991
+  omega
+
+/-- A coordinator's extra frontier is read at later ready admission or
+through a borrow of a source-only slot. Its merge targets are output slots. -/
+def updateFrontier {Slot Row : Type} [DecidableEq Slot]
+    (rows : Slot → List Row) (target : Slot) (row : Row) (read : Slot) : List Row :=
+  if read = target then row :: rows read else rows read
+
+theorem sole_assignment_frontier_readers {Slot Task Row : Type} [DecidableEq Slot]
+    (rows : Slot → List Row) (target : Slot) (row : Row) (admitted : Task)
+    (inputs : Task → List Slot) (sourceOnly : List Slot) (foreign : target ∉ sourceOnly) :
+    ∀ read ∈ ([admitted].tail.flatMap inputs ++ sourceOnly),
+      updateFrontier rows target row read = rows read := by
+  intro read live
+  have source : read ∈ sourceOnly := by simpa using live
+  have different : read ≠ target := fun same => foreign (same ▸ source)
+  simp [updateFrontier, different]
+
+/-- The closing loop writes a delta root and count only for its members.
+The initialization of the other slots is independent of their total roots. -/
+def installDeltaRoots {Slot Row : Type} [DecidableEq Slot] (roots : Slot → List Row)
+    (writes : List (Slot × List Row)) : Slot → List Row :=
+  writes.foldl (fun prior (target, batch) read => if read = target then batch else prior read) roots
+
+theorem external_delta_stays_empty {Slot Row : Type} [DecidableEq Slot]
+    (roots : Slot → List Row) (writes : List (Slot × List Row))
+    (members : List Slot) (external : Slot) (missing : external ∉ members)
+    (owned : ∀ write ∈ writes, write.1 ∈ members) (empty : roots external = []) :
+    installDeltaRoots roots writes external = [] := by
+  induction writes generalizing roots with
+  | nil => exact empty
+  | cons write rest ih =>
+      have distinct : external ≠ write.1 := fun same => missing (same ▸ owned write (by simp))
+      simp only [installDeltaRoots, List.foldl_cons]
+      exact ih _ (fun row inside => owned row (by simp [inside])) (by simp [distinct, empty])
+
+inductive ClosureRead where
+  | memberTotal | memberDelta | externalTotal
+  deriving DecidableEq
+
+def readClosure (memberTotal memberDelta externalTotal : List Row) : ClosureRead → List Row
+  | .memberTotal => memberTotal
+  | .memberDelta => memberDelta
+  | .externalTotal => externalTotal
+
+/-- After the full traversal, an exact linear pivot reads member delta and
+external total. Other rules with only external pivots have no later visits. -/
+theorem dead_member_total_preserves_reads (total delta external : List Row)
+    (reads : List ClosureRead) (noTotal : .memberTotal ∉ reads) :
+    reads.map (readClosure (delta ++ total) delta external) =
+      reads.map (readClosure total delta external) := by
+  induction reads with
+  | nil => rfl
+  | cons head tail ih =>
+    have different : head ≠ .memberTotal := fun same => noTotal (by simp [same])
+    have rest := ih (fun present => noTotal (by simp [present]))
+    cases head <;> simp_all [readClosure]
 
 /-- No backward read edge lets a later local solve preserve earlier closure. -/
 theorem preserve_closed (rules : List (Rule Fact)) (owner : Fact → Component)

@@ -79,7 +79,7 @@
              candidate-receipt))
     (unless (< (benchmark-fixture-ref candidate-receipt 'p95Ns)
                (benchmark-fixture-ref baseline-receipt 'p95Ns))
-      (error "ASCENT indexed projection did not improve the persistent baseline"
+      (error "ASCENT indexed projection did not improve the sort-merge control"
              baseline-receipt candidate-receipt))
     (display "[gerbil-ascent-benchmark] ascent-table-expression baseline-p95=")
     (display (benchmark-fixture-ref baseline-receipt 'elapsed))

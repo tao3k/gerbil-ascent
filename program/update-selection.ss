@@ -6,6 +6,7 @@
 ;;; reuse capsules, mutable rows, budget accounting and atomic publication.
 (import (only-in :std/list/list-builder with-list-builder)
         (only-in "source-log.ss" gerbil-ascent-source-log-equal?)
+        (only-in "source-cut.ss" gerbil-ascent-source-cut-scalar?)
         (only-in "source-snapshot.ss" gerbil-ascent-source-log-snapshot-equal?
                  gerbil-ascent-source-snapshot-scalar?)
         (only-in "activation.ss" gerbil-ascent-activate-rule)
@@ -16,15 +17,16 @@
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?))
-(export gerbil-ascent-update-eligible? gerbil-ascent-update-selection
+(export gerbil-ascent-update-eligible? gerbil-ascent-actor-update-eligible?
+        gerbil-ascent-update-selection
         gerbil-ascent-update-active-plans gerbil-ascent-select-rule-plans)
 
 ;; gerbil-ascent-update-eligible?
 ;; : (forall (p s) (-> p (Maybe s) Boolean))
 ;; : (-> Program (Maybe SourceSnapshot) Boolean)
 ;; | doc m%
-;;     Check declaration eligibility without constructing a source snapshot,
-;;     reading rows or computing dependency closure. Rule callbacks and lattice
+;;     Check declaration eligibility without constructing a source snapshot
+;;     or computing dependency closure. Rule callbacks and lattice
 ;;     joins must be registered closed procedures; storage and index providers
 ;;     must be the built-ins. This predicate invokes no callback. Only
 ;;     immutable scalar source and literal values may enter completed-result
@@ -41,7 +43,17 @@
 ;;     ;; => #t for declarations supporting completed-closure reuse
 ;;     ```
 ;;   %
-(def (gerbil-ascent-update-eligible? candidate (source-cut #f))
+(def (gerbil-ascent-update-eligible? candidate (source-snapshot #f))
+  (update-eligible? candidate source-snapshot #f))
+
+;; The Actor caller pairs this cut with the declarations used by its engine.
+;; Only the cut's values participate in initialization. Predicates, providers
+;; and rules still pass the same current eligibility checks.
+(def (gerbil-ascent-actor-update-eligible? candidate cut)
+  (and (gerbil-ascent-source-cut-scalar? cut)
+       (update-eligible? candidate #f #t)))
+
+(def (update-eligible? candidate source-snapshot actor-scalar?)
   (def (pure-terms? terms)
     (andmap (lambda (term)
               (let (kind (.ref term 'kind))
@@ -59,9 +71,10 @@
            ;; only this unchecked case; checked scalar declarations already
            ;; established the invariant during source admission.
            (or (pair? predicates)
-               (and source-cut
+               actor-scalar?
+               (and source-snapshot
                     (gerbil-ascent-source-snapshot-scalar?
-                     source-cut candidate index (.ref relation 'rows)))
+                     source-snapshot candidate index (.ref relation 'rows)))
                (andmap (lambda (row) (andmap relational-scalar? row))
                        (.ref relation 'rows))))))
   (def (stable-clause? clause)

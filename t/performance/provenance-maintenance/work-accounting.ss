@@ -1,0 +1,45 @@
+;;; -*- Gerbil -*-
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+(import (only-in :gerbil-ascent/candidate/provenance positive-proof-roots)
+        (only-in :gerbil-ascent/candidate/provenance-graph
+                 positive-provenance-alternatives positive-provenance-witness))
+(export expected-work)
+
+;; A naive fixed-point closure, independent of the indexed withdrawal queue.
+(def (affected-closure edges selectors)
+  (let (affected (make-hash-table-eqv))
+    (for-each (lambda (edge)
+      (when (and (eq? (cadr edge) 'source) (member (caddr edge) selectors))
+        (hash-put! affected (car edge) #t))) edges)
+    (let close ()
+      (let (changed? #f)
+        (for-each (lambda (edge)
+          (when (and (eq? (cadr edge) 'rule)
+                     (not (hash-get affected (car edge)))
+                     (ormap (lambda (id) (hash-get affected id)) (cadddr edge)))
+            (hash-put! affected (car edge) #t)
+            (set! changed? #t))) edges)
+        (when changed? (close))))
+    affected))
+
+(def (expected-work graph selectors)
+  (let* ((edges (positive-provenance-alternatives graph))
+         (rules (filter (lambda (e) (eq? (cadr e) 'rule)) edges))
+         (affected (affected-closure edges selectors))
+         (premises (foldl (lambda (e n) (+ n (length (cadddr e)))) 0 rules))
+         (dependents 0)
+         (roots (length (positive-proof-roots (positive-provenance-witness graph)))))
+    ;; This audit covers the benchmark's unary, non-rederiving subcuts.
+    ;; Refuse other graphs instead of silently applying the closed form.
+    (for-each (lambda (edge)
+      (unless (= (length (cadddr edge)) 1) (error "audit requires unary rules"))
+      (let ((head? (and (hash-get affected (car edge)) #t))
+            (premise? (and (hash-get affected (car (cadddr edge))) #t)))
+        (unless (eq? head? premise?) (error "audit has a rederivable alternative"))
+        (when premise? (set! dependents (+ dependents 1))))) rules)
+    (for-each (lambda (edge)
+      (when (and (eq? (cadr edge) 'source) (hash-get affected (car edge))
+                 (not (member (caddr edge) selectors)))
+        (error "audit retains an affected source alternative"))) edges)
+    (+ (* 3 (length edges)) premises (* 2 (hash-length affected))
+       (* 2 dependents) roots)))

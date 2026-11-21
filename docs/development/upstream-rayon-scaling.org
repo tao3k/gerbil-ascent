@@ -1,0 +1,155 @@
+#+title: Upstream Ascent Rayon scaling on million-row Actor workloads
+
+* Workloads and controls
+
+The benchmark uses the release build of upstream Ascent 0.8.1 from the
+existing Rust development dependency. The projection workload copies the
+million source edges of a two-column identity rule. The recursive workload
+closes 128 independent chains of width 128, producing 1,040,384 rows from
+16,256 input edges. Each uninstrumented configuration verifies every output
+row on each of 1,000 alternating source replacements. The comparison uses
+separate processes with 3, 6 and 12 Rayon threads. The 12-thread receipt
+comes from the preceding run of the same pinned benchmark executable.
+The evaluator reports its actual worker count. The benchmark times source
+replacement, solve, detached export, independent verification and release.
+
+#+begin_src sh
+RAYON_NUM_THREADS=3 cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-recursive-rayon
+RAYON_NUM_THREADS=3 cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-projection-rayon
+#+end_src
+
+The upstream parallel relation uses a boxcar vector. Its hash indexes
+use DashMap shards. =c_rel_index.rs:shards_count= rounds four times the
+worker count up to a power of two, giving 4, 16, 32 or 64 shards in this
+matrix. =c_rel_no_index.rs= also allocates a row-index stripe per worker.
+The uninstrumented matrix therefore measures the production combination of
+parallel traversal and container geometry.
+
+The diagnostic builds use the same compiler and Rust dependency sources
+in a cache-only copy. Generated evaluator timers enclose initial index
+construction and rule execution. Time charged to each rule SCC outside
+the rule timers includes its setup, freezing, delta shifts and merges.
+The 3-thread concurrent and synchronous-traversal diagnostics both use
+these timers and verify the same rows on 128 alternating replacements each.
+
+At a fixed worker count, the synchronous-traversal control retains the
+concurrent relation types, the same shard and stripe counts, the same
+duplicate tests and concurrent write APIs. It substitutes ordinary
+iteration for parallel iteration in the generated initial-index scan,
+body traversal and hash-shard merging. It leaves the compiled rule
+declarations and independent oracle in place. The difference measures
+the net effect of choosing parallel traversal at that container geometry,
+including any work redistribution, cache behavior and contention induced
+by that choice. The serial versus synchronous-concurrent difference also
+includes other differences in their generated evaluator paths. Absolute
+costs by phase and the combined diagnostic differences have separate
+interpretations.
+
+* Full-workload Rayon comparison
+
+| Shape | Threads | Replace mean ms | Solve mean ms | Export mean ms | Oracle mean ms | Release mean ms | Request P95 ms |
+|-------+---------+-----------------+---------------+----------------+----------------+-----------------+----------------|
+| Recursive | 3 | 0.088 | 328.347 | 2.023 | 2.118 | 1.408 | 531.726 |
+| Recursive | 6 | 0.082 | 241.668 | 1.842 | 1.839 | 1.319 | 347.214 |
+| Recursive | 12 | 0.083 | 253.875 | 1.819 | 1.813 | 1.332 | 361.785 |
+| Projection | 3 | 4.574 | 266.176 | 1.918 | 2.598 | 0.038 | 334.739 |
+| Projection | 6 | 4.337 | 247.214 | 1.770 | 1.594 | 0.021 | 292.743 |
+| Projection | 12 | 4.548 | 247.667 | 1.886 | 1.728 | 0.034 | 290.331 |
+
+The observed gain flattens at six threads. Three to six reduces P95 by
+34.7 percent for recursion and 12.5 percent for projection. At twelve
+threads the recursive tail rises by 4.2 percent and projection improves
+by 0.8 percent while its average request time rises slightly. These are
+same-build observations from the listed runs. The preceding serial Ascent
+P95 values of 127.85 and 62.00 ms remain the evaluator reference points.
+
+* Attribution with the concurrent representation held fixed
+
+| Shape | Three-worker control | Initial indexes mean ms | Rule body mean ms | Other SCC mean ms | Solve mean ms |
+|-------+----------------------+-------------------------+-------------------+-------------------+---------------|
+| Projection | Synchronous traversal | 40.169 | 46.721 | 0.006 | 86.896 |
+| Projection | Upstream parallel traversal | 90.548 | 159.171 | 0.156 | 249.876 |
+| Recursive | Synchronous traversal | 0.883 | 90.080 | 54.877 | 145.849 |
+| Recursive | Upstream parallel traversal | 2.852 | 236.812 | 55.037 | 294.712 |
+
+The net parallel-traversal difference at the same geometry is 162.98 ms
+for projection and 148.86 ms for recursion. The projection difference
+splits into 50.38 ms in initial indexing and 112.45 ms in rule bodies.
+For recursion the 146.73 ms rule-body difference dominates. Its remaining
+SCC work is about 55 ms under both traversals. These means expose the
+cost of index construction and rule execution, and include interactions
+between parallel traversal, locking, placement and locality.
+
+The first comparison builds shared a Cargo target and reused one executable
+hash. Those receipts are excluded. The table uses independent targets with
+distinct executable hashes and matching resolved dependency versions. Both
+shapes finish 128 full oracle checks in each corrected arm. The ablation
+is diagnostic code in the ignored cache; the uninstrumented matrix uses
+the upstream evaluator unchanged.
+
+* Scheme projection export
+
+In the fixed fixture, the source cuts are affine. The view created by
+=actor-terminal-result= refers to a numeric source descriptor, and
+=binary-source-view= reads those numbers into an invocation-local list.
+The two caller source lists remain independently reachable, and the
+public result must keep every cell of its partial list until handoff.
+The earlier weak-root probes confirm that a discarded detached list can
+be collected while the Session and its immutable view remain live.
+=projection_accumulator_order= identifies the live partial list as a
+suffix of the public output. =redundant_projection_root_no_reachable_saving=
+accounts for a reference that aliases caller-owned input. The strict
+latency implication is checked by =bounded_phase_misses_p95= for enclosed
+GC durations. It applies to the actual observed clock brackets.
+
+The native acceptance workloads retain the original 90-second watchdog,
+2 GiB heap cap and strict 100 ms P95 threshold. The separately compiled
+prefix probe uses the existing SDK GC interrupt hook. It saves integers
+for the completed suffix and at most one 1,024-row window, with neither
+additional result rows nor caller inputs as probe roots. The diagnostic
+keeps the same dataset and oracle and is separate from acceptance.
+It paired all 220 projection-export collections across 1,000 requests
+with the observed result suffix at the collection:
+
+| Completed suffix | Pairs of clock and prefix receipts | Median GC CPU | GC CPU at least 100 ms |
+|------------------+------------------------------------+---------------+------------------------|
+| Under 250,000 rows | 120 | 95.05 ms | 4 |
+| 250,000 to under 500,000 rows | 73 | 102.00 ms | 47 |
+| At least 500,000 rows | 27 | 105.70 ms | 27 |
+
+Total accounted live extent ranged from 420.76 to 557.42 MiB. The fit
+against the suffix midpoint had an intercept of 420.71 MiB and a slope
+of 144.55 bytes per emitted row under the SDK's counter convention.
+Still-object extent stayed at about 7.54 MiB. GC wall alone reached
+100 ms in 110 requests, including all 78 with at least 100 ms of GC CPU.
+Those wall brackets leave at most 890 fast requests, below the 950
+required by =bounded_phase_misses_p95=. The 19
+observations with fewer than 32,768 emitted rows had median GC CPU of
+91.10 ms. Their median sum of GC CPU and the measured elapsed work outside
+that export collection was 106.70 ms. This uses each request's measured
+parts for the existing collection schedule.
+
+Summing source replacement, evaluation and full export before the oracle
+gave 110.69 ms P95. The 780 requests whose exports recorded no GC had
+6.01 ms P95 over these same phases. The export's own time after
+subtracting recorded GC had 3.20 ms P95 over all 1,000 cases. These
+clock splits leave the acceptance verdict intact and identify the tail
+within the production part of the request.
+
+The paused Rust subprocess initially remained alive under =timeout=.
+The affected native timing receipts were retained and excluded from release
+qualification. The next native run started after that subprocess was
+confirmed gone. Projection P95 was 124.26 ms and recursive P95 was
+75.86 ms with every row verified. Projection GC wall was 21.77 seconds.
+The independently run SCC control publishes a removed/restored bridge in
+1.153/1.156 ms P95. The source audit and paired trace point to retained
+caller inputs, the loader and the required detached result suffix as the
+dominant live objects. The fixed workload uses the existing affine export
+path. Production Scheme, the inputs and the SDK stayed at the preceding
+source and binary digests during these observations.
+
+The native qualification completed all 185 modules and 1,576 cases.
+The guarded Lean build completed all 195 jobs. The failed projection
+latency gate blocks publication to PR #2.
+
+Raw receipts are under =.cache/ascent/rayon-scaling/=.

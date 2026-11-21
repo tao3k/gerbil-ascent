@@ -43,7 +43,7 @@ class StudyProfileTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 return result.stdout
             invoke(f'''(import :std/make
- (only-in {json.dumps(str(project / 'build.ss'))} gerbil-ascent-compiler-options))
+ (only-in {json.dumps(str(project / 'interface/build.ss'))} gerbil-ascent-compiler-options))
 (make (list (append '(gxc: "core/relation-view") gerbil-ascent-compiler-options)
         "t/performance/profile-reference") srcdir: {json.dumps(str(root))}
  libdir: {json.dumps(str(library))} optimize: #t parallelize: 3)

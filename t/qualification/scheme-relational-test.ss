@@ -8,7 +8,7 @@
         (only-in :std/error exception->string)
         (only-in :gerbil-ascent/program/scheme-checked
                  relational-compute relational-where relational-operator-literal)
-        (only-in :clan/poo/mop element?)
+        (only-in :clan/poo/type element?)
         (only-in :gerbil-ascent/program/types
                  GerbilAscentFragmentContract)
         (only-in :gerbil-ascent/program/func

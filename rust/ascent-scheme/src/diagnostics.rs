@@ -59,6 +59,8 @@ pub(crate) struct Request<'a> {
     owner: &'a gerbil_scheme::GerbilRuntime,
     before: Option<([f64; 4], [u64; 4])>,
     started: Instant,
+    encoded: Option<Instant>,
+    returned: Option<Instant>,
     operation: String,
     control: usize,
 }
@@ -71,6 +73,8 @@ impl<'a> Request<'a> {
             owner,
             before: usage(owner),
             started: Instant::now(),
+            encoded: None,
+            returned: None,
             control: request_control(request.get("executionControl")),
             operation: request
                 .get("operation")
@@ -79,16 +83,30 @@ impl<'a> Request<'a> {
                 .to_owned(),
         })
     }
+    pub(crate) fn after_encoding(&mut self) {
+        self.encoded = Some(Instant::now());
+    }
+
+    pub(crate) fn after_call(&mut self) {
+        self.returned = Some(Instant::now());
+    }
 }
 impl Drop for Request<'_> {
     fn drop(&mut self) {
+        let finished = Instant::now();
         if let Some(((before_gc, before_os), (gc, os))) = self.before.zip(usage(self.owner)) {
+            let micros = |bounds: Option<(Instant, Instant)>| {
+                bounds.map_or_else(
+                    || "unavailable".to_owned(),
+                    |(start, end)| end.duration_since(start).as_micros().to_string(),
+                )
+            };
             crate::diagnostics::emit(format!(
-                "ASCENT-VM-PHASE pid={} control={} operation={} elapsed_us={} cpu_us={} gc_count={} gc_cpu_us={} gc_wall_us={} voluntary_switches={} involuntary_switches={} heap_capacity={} rss_high_water={}",
+                "ASCENT-VM-PHASE pid={} control={} operation={} elapsed_us={} cpu_us={} gc_count={} gc_cpu_us={} gc_wall_us={} voluntary_switches={} involuntary_switches={} heap_capacity={} rss_high_water={} encode_us={} call_us={} decode_and_release_us={}",
                 std::process::id(),
                 self.control,
                 self.operation,
-                self.started.elapsed().as_micros(),
+                finished.duration_since(self.started).as_micros(),
                 os[0].saturating_sub(before_os[0]) / 1000,
                 gc[0] - before_gc[0],
                 (gc[1] - before_gc[1]) * 1e6,
@@ -96,7 +114,10 @@ impl Drop for Request<'_> {
                 os[2].saturating_sub(before_os[2]),
                 os[3].saturating_sub(before_os[3]),
                 gc[3],
-                os[1]
+                os[1],
+                micros(self.encoded.map(|end| (self.started, end))),
+                micros(self.encoded.zip(self.returned)),
+                micros(self.returned.map(|start| (start, finished))),
             ));
         } else {
             crate::diagnostics::emit(format!(

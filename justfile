@@ -37,9 +37,9 @@ default:
 build:
     GERBIL_BUILD_CORES="${GERBIL_BUILD_CORES:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)}" {{ gerbil_command }} build
 
-# Linked production closure; upstream REPL utilities handle source reloads.
+# Gerbil owns the REPL; load the installed ASCENT modules into it.
 develop:
-    {{ gerbil_environment }} GERBIL_PATH="{{ gerbil_package_prefix }}" "{{ gerbil_package_prefix }}/bin/ascent-develop"
+    {{ gxi_command }} -L :std/interactive -L :gerbil-ascent/program/syntax -L :gerbil-ascent/program/api -L :gerbil-ascent/interface/engine-api -
 
 # Install tools explicitly, after production dependencies have selected their versions.
 prepare-dev:
@@ -88,6 +88,10 @@ _test-file path heap='2G':
     export GERBIL_LOADPATH="${ASCENT_TEST_LIBRARY:+$ASCENT_TEST_LIBRARY:}${GERBIL_LOADPATH:+$GERBIL_LOADPATH:}{{ justfile_directory() }}"
     test_module="{{ path }}"
     test_args=(-v 5 "$test_module")
+    source_runtime_options=(-:debug=q)
+    if [[ "{{ heap }}" != auto ]]; then
+        source_runtime_options=(-:max-heap={{ heap }},debug=q)
+    fi
     if [[ -n "${ASCENT_TEST_LIBRARY:-}" ]]; then
         compiled="$ASCENT_TEST_LIBRARY/gerbil-ascent/${test_module%.ss}.ssi"
         test -f "$compiled"
@@ -96,11 +100,11 @@ _test-file path heap='2G':
         runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} :gerbil/tools/gxtest)
     elif [[ -d "$test_module" ]]; then
         # BEGIN GENERATED PREPARATION RUNNER
-        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss batched "{{ heap }}")
+        runner=({{ gxi_command }} "${source_runtime_options[@]}" t/harness/test.ss batched "{{ heap }}")
         # END GENERATED PREPARATION RUNNER
         test_args=("$test_module")
     else
-        runner=({{ gerbil_command }} -:max-heap={{ heap }},debug=q test)
+        runner=({{ gerbil_command }} "${source_runtime_options[@]}" test)
     fi
     inactivity="${ASCENT_GXTEST_TIMEOUT:-120s}"
     inactivity="${inactivity%s}"
@@ -124,7 +128,7 @@ prepare-test-library:
 prepare-semantic-library:
     {{ build_supervisor }} {{ gxi_command }} {{ preparation_runtime_options }} t/harness/build.ss semantics t/qualification/*-test.ss
 
-# Scheme performance Suites use the declared Gerbil testing isolation profile.
+# Isolated Suites keep their runtime assertions under the aggregate supervisor.
 test-performance-contracts: prepare-test-library
     #!/usr/bin/env bash
     set -euo pipefail
@@ -135,7 +139,9 @@ test-performance-contracts: prepare-test-library
     for name in ascent-withdrawal-support-performance ascent-uf-plan-performance ascent-change-plan-performance ascent-source-cut-allocation ascent-component-index-performance ascent-actor-credit-performance ascent-trrel-uf-performance ascent-steensgaard-performance ascent-relation-view-performance scheme-library-lifecycle-performance; do
         modules+=("$library/$name-test.ssi")
     done
-    {{ test_library_environment }} timeout "${ASCENT_GXTEST_TIMEOUT:-120s}" {{ gxi_command }} -:max-heap=2G,debug=q t/harness/test.ss isolated 2G "${modules[@]}" 2>&1 | tee "$output"
+    inactivity="${ASCENT_GXTEST_TIMEOUT:-120s}"
+    inactivity="${inactivity%s}"
+    {{ test_library_environment }} {{ test_supervisor }} --startup-seconds "$inactivity" --idle-seconds "$inactivity" -- {{ gxi_command }} -:max-heap=2G,debug=q t/harness/test.ss isolated 2G "${modules[@]}" 2>&1 | tee "$output"
     if grep -E 'ERROR (CHECK|CASE|HARNESS|MODULE)|Heap overflow|Stack overflow' "$output" >/dev/null; then exit 1; fi
     awk -f t/harness/assert-cases.awk "$output"
     test "$(grep -c '^MODULE-OK ' "$output")" -eq "${#modules[@]}"
@@ -553,10 +559,10 @@ rule-rows:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-rule-program-output.ss
 
 aggregate-rows:
-    @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-aggregate-program-output.ss
+    @timeout 60s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle aggregate
 
 derived-aggregate-rows:
-    @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-derived-aggregate-program-output.ss
+    @timeout 60s .cache/ascent/compiled-library/dsl-closure {{ gerbil_test_runtime_options }} --oracle derived-aggregate
 
 syntax-rows:
     @timeout 60s {{ gerbil_command }} {{ gerbil_test_runtime_options }} t/qualification/ascent-syntax-program-output.ss

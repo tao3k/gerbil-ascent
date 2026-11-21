@@ -1,0 +1,235 @@
+#+title: Source result transport independently of evaluator selection
+
+* Observed production boundary
+
+The typed =define-program= closure fixture in
+=rust/ascent-scheme/benches/process_throughput.rs= selects the ordinary
+Session. A native production-interface probe observed only =primordial=
+execution checkpoints and an ordinary list reply despite requesting packed
+rows. It must not be reported as a resident Actor qualification.
+
+The baseline =source-run= implementation in =interface/engine-api.ss= permits
+integer packets only for a finished Actor result. The Rust decoder in
+=rust/ascent-scheme/src/values.rs= already accepts the same integer packet
+independently of the evaluator. Ordinary list decoding promotes and snapshots
+each row. The existing numeric buffer path copies one signed integer buffer.
+The 1,000-request closure baseline retained all tuple comparisons and recorded
+substantial time inside decoding and release. Raw traces remain in =.cache/=.
+
+* Selection rule and unchanged authority
+
+Keep the existing Actor-ready expression and its getter evaluation order.
+Select the existing integer encoder when that expression is true, or when
+the caller explicitly requests packets for an ordinary Session. Keep the
+existing encoder's signed-64, rectangular, nonempty shape checks and ordinary
+fallback. Do not replace the evaluator or classify host callbacks as pure.
+
+Representation selection does not grant completion. In particular, an ordinary
+partial result may use a lossless integer representation while its complete
+flag, generation, retained result, cancellation outcome and proof scope remain
+unchanged. The current Actor partial-result behavior remains unchanged.
+The existing final publication checkpoint still runs after serialization.
+
+* Mathematical and source obligations
+
+=IntegerRowTransfer= in =WeightedExportCapacity.lean= already proves that
+unpacking flattened rectangular rows preserves all rows and their order.
+Extend that model with the three-Boolean selection decision. Relate the old
+ready flag to its original requested/Actor/finished expression. Prove that
+the Actor decision is unchanged, no non-requested packet is introduced, and
+selection preserves arbitrary receipt metadata as well as decoded rows.
+
+The existing native-call model charges =rows * (6 + 2 * columns)= for the
+known-kind ordinary row path and three calls for the packed numeric vector.
+This excludes Scheme packing, Rust allocations, IPC, GC and scheduler time.
+It is not a wall-time or cumulative-byte theorem. Gambit's backward allocation
+readings remain unavailable evidence, not zero allocation.
+
+Bind the selection source and its Quint counterpart to the Lean renderer.
+Quint must reject changes that force completion, erase cancellation or resource
+failure, lose provenance metadata, reorder rows, or bypass transport opt-in.
+These checks do not prove the compiler, numeric ABI or mutable runtime.
+
+* Native acceptance
+
+Compare ordinary and packed replies through =gerbil test= for the real typed
+DSL, signed endpoints, bignum fallback, empty results, partial completion,
+callback observations, stale proof scope and source replacement. Preserve the
+existing Actor, cancellation, resource and provenance suites. Run the Rust
+decoder and production control tests with the same data.
+
+Rebuild the production worker through the existing package/archive interface.
+Repeat the same 1,000 verified closure requests and report client queueing,
+encoding, call, decoding/release, CPU, natural GC and resource costs separately.
+Retain the fixed-work workload and its original limits. A faster ordinary
+Session transport does not establish resident Actor integration or scheduler
+fairness. The latter remains a separate production-path obligation.
+
+** Selected compiled carriers
+
+The local prefix contained an older =engine-api~0.o2= that Gerbil's native
+loader selected ahead of the newly compiled =.o1=. Declared-target clean did
+not enumerate these historical dynamic carriers. Preserve that generated
+namespace in =.cache/= and rebuild its outputs while reusing the upstream
+dependencies. Source tests that loaded a shadowed object do not qualify the
+current implementation. Verify the actual selected carrier after rebuilding;
+do not add a second loader or infer source identity from build success alone.
+
+* Performance admission and remaining costs
+
+The fixed recursive workload has 256 independent chains of width 16: 3,840
+input edges and 30,720 output rows per changed-source request. Require at least
+1,000 independently checked requests and preserve the existing process limit.
+Record preparation, client queueing, encoding, native execution, decoding,
+release, CPU and natural GC separately. Keep raw receipts in =.cache/= or CI
+artifacts; historical timings are not a current performance admission.
+
+=RuleSession.run= and =admit_replacement= in
+=rust/ascent-scheme/src/api/session.rs= each obtain a finite projection and
+perform independent Rust work-budget admission when finite ceilings are
+requested. Neither execution may be skipped under a transport optimization.
+Source replacement, projection decoding and the serialized owner queue remain
+separate costs. Allocation readings that move backwards remain failed evidence;
+they must not be clamped or described as available cumulative allocation.
+
+* Projected source-row transport
+
+
+The production trace still decodes ordinary nested source rows for
+=source-projection= twice per changed-source request: =admit_replacement= and
+=RuleSession.run= each perform a finite budget check. Their independent Rust
+execution remains required. Optimizing their transport must not cache a public
+object's validation or skip either resource decision.
+
+The current =ascent-engine-program-wire= in =interface/wire-value.ss= already
+represents integer cells as exact integers. Its relation rows can therefore
+reuse the existing signed-integer packet after the complete wire catalogue
+has been captured. Apply this only to fresh private catalogue dictionaries;
+keep every original descriptor, getter, cell conversion and complex-pool visit
+in its original order. Mixed cells, empty rows and integers outside signed 64
+bits retain the ordinary representation.
+
+The Rust =ReplyShape= route table now admits integer packets below either
+result relations or the explicit catalogue path
+=source-projection / program / relations / each relation / rows=. It does not
+recognize numeric vectors throughout arbitrary values. The application
+negotiates the existing transport for =source-projection= as well as
+=source-run=. Ordinary Scheme callers retain their original catalogue shape.
+
+=ProjectionRowTransfer.lean= proves the complete ordered relation-list
+round trip, duplicate preservation, arbitrary metadata preservation, opt-in
+and unsupported-input identity. The packet model includes a target allocation
+capacity and signed header bounds. The source-row codec remains the existing
+signed-64 encoder. A separate theorem counts fewer native row calls; it does
+not predict wall time, cumulative bytes or GC behavior.
+
+The same typed route table emits Rust dispatch and Quint route definitions.
+The private Scheme transformer is emitted alongside them and checked by the
+existing formal source comparisons. This is not a proof of the mutable hash
+implementation, native numeric ABI or whole compiler. Fresh private catalogue
+ownership and the native scalar codec remain explicit boundaries.
+
+Native semantic tests compare the complete ordinary and packed catalogues,
+including signed endpoints, duplicates, empty relations, mixed and complex
+values, source generations and rejected updates. They verify that encoding
+does not re-enter captured caller getters or mutate a retained catalogue.
+Rust compares both rooted ABI representations under the same live execution
+control and rejects packets appearing in metadata. Existing cancellation,
+resource-limit and stale-provenance controls remain required.
+
+Repeat the complete production workload with the original controls. A partial
+timed-out trace is diagnostic evidence, never performance acceptance.
+
+* Ordered binary views at the reply boundary
+
+The affine and packed integer source views own two field readers and the
+published row count. Their full visitor advances by increasing ordinal.
+Their list exporter advances backwards and prepends, yielding the same
+order. Bind the optimization to that exact exporter and its field visitor.
+Replacing an exporter removes this permission unless the exporter is the
+same procedure. General view selection and list consumers keep their
+existing paths.
+
+An eligible complete Result hands the existing integer packet writer the
+captured count and two positional fields per row. Validate a positive
+count and the fixnum allocation extent before constructing the signed
+64-bit vector. Bound every write by the declared count and require exact
+delivery. Check the existing cancellation and deadline authority in the
+writer. Each packet belongs to its invocation. Publication still happens
+at the existing reply acceptance point, after every requested relation
+has produced its complete payload.
+
+The Lean correspondence is in =MillionQueryWorkload.lean=.
+=binary_reply_matches_complete_export= states the order and decoding
+equivalence. =binary_reply_writes_fit= and =binary_reply_refuses_partial=
+cover the bounded writer and canceled or short reply.
+=binary_reply_keeps_capture= states the result-version frame. The proof
+models the ordered field sequence and its allocation bounds. Native tests
+check selection of the exact exporter, interruption, and old reply
+isolation at the Scheme boundary.
+
+The private writer polls the current execution authority before allocating,
+at 1,024-row intervals when an authority is present, and after traversal.
+These are zero-work checks on already admitted rows. The Session's
+work and fact budgets retain their original meaning. The engine compares
+the generation captured at request entry with the generation at reply
+acceptance. A reentrant replacement during a checkpoint can therefore
+advance the Session without relabeling the in-progress packet.
+
+The qualification Case drives =source-run= through a committed identity
+projection with descending origins. It compares complete list order,
+rejects a replacement beyond the existing fact budget, interrupts the
+writer after its first block, and changes the source during another
+packet. An already returned packet keeps its original fields. Separate
+controls replace the view's list exporter and inject count underflow and
+overflow. The reordered view uses the existing list writer.
+
+The million-row delivery Cases reuse the two alternating inputs and the
+existing Actor publication. They live in a separate test module so the
+original list gate keeps its imports and suite unchanged. Both use the
+same production packet encoder.
+The list arm declines the capability, and the ordered arm gives the list
+exporter a refusal stub. Both check the packet's count and width and
+decode every signed cell into the same ordered Scheme consumer. The
+request timer includes replacement, publication, packing, decoding and
+delivery. Rust's VM transfer and PyO3 are outside this native timing.
+The ordered path applies to completed views carrying the certificate.
+Results produced by other evaluators, including timed results without
+the certificate, retain the existing packet writer.
+
+The frozen Gerbil =1cfb032= and Gambit =ea114fc= runs used one VM
+processor, the 2 GiB heap cap and the 90-second process limit. The first
+1,000-request trials stopped before completion. The last recorded
+markers were 400 for the list arm and 900 for the ordered arm. A
+subsequent single 256-request list window was also stopped. The final
+comparison uses separate 128-request windows in the order list, view,
+view, list. Each request still consumes one million rows, and each arm
+consumes 256 million verified rows in total. The original 1,000-request
+mutable-list acceptance test is independent of this comparison.
+
+| Measured phase | List staging | Direct ordered view |
+|----------------+--------------+---------------------|
+| Complete request P95 | 439.13-465.95 ms | 86.71-98.39 ms |
+| Packing P95 | 415.87-437.74 ms | 49.42-59.95 ms |
+| Decode and delivery P95 | 25.44-29.41 ms | 42.26-43.58 ms |
+| Maximum complete request | 535.42 ms | 278.03 ms |
+| Verified rows per second | 3.51-3.55 million | 16.79-17.72 million |
+| Collections per 128 requests | 44 | 3 |
+
+All four windows exited normally after independently checking every row.
+Subphase percentiles are measured from their own samples. The complete
+request percentile includes the source update and publication. The
+ordered writer avoids the temporary detached list, and its maximum still
+reflects long requests in the observed windows. The frozen mutable-list
+gate remains pending the next Gambit release, per the current test scope.
+
+The interface, condensed Session and positive provenance suites passed 28
+native cases. Lean Guard built all 196 jobs, and its rendered row-packet
+selection exactly matched the generated Scheme region. Raw receipts are
+under =.cache/ascent/ordered-packet/=.
+
+#+begin_src sh
+gerbil test t/qualification/ascent-engine-interface-test.ss
+gerbil -:max-heap=2G test -r '^actor-million-integer-list-test$' benchmarks/actor-integer-reply-test.ss
+gerbil -:max-heap=2G test -r '^actor-million-integer-view-test$' benchmarks/actor-integer-reply-test.ss
+#+end_src

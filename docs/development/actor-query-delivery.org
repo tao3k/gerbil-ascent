@@ -1,0 +1,1579 @@
+#+TITLE: Resident Actor query delivery
+
+* Workload
+
+=benchmarks/actor-million-test.ss= measures 1,000 requests per shape through
+the public single-VM Actor Session. =.last-completed= gets the published cut
+through the owner mailbox. =visit-rows= selects an origin from that cut.
+=rows-of= returns detached chronological rows. Replacement alternates between
+disjoint 10,000-row sources. Append grows a 9,000-row source to 10,000 rows.
+The independent oracle checks the delivered result. Request percentiles end at
+delivery. Verified-window throughput includes the oracle and reports its time.
+
+* Recursion at a fixed output cardinality
+
+The native =actor-ten-thousand-closure-test= alternates two disjoint source
+cuts through public replacement, evaluation and =rows-of=. Both Cases
+verify every one of 10,000 rows in each of 1,000 samples. One Case starts
+with 4,000 edges in 1,000 disjoint five-vertex chains. The other adds a
+shortcut from the first vertex to the third in every chain. This raises
+input cardinality to 5,000, breaks the unique-successor guard in
+=gerbil-ascent-functional-result-view= and leaves the expected closure
+unchanged. The P95 below includes the independent bitmap oracle.
+
+| Shape | Runtime | Verified/s | P50 ms | P95 ms | Max ms | CPU s | GC wall s |
+|-------+---------+------------+--------+--------+--------+-------+-----------|
+| Functional | Reference | 437.90 | 1.73 | 1.97 | 35.45 | 2.26 | 0.51 |
+| Functional | Resident terminal worker | 449.41 | 1.72 | 1.96 | 32.72 | 2.22 | 0.48 |
+| Branching | Reference | 79.12 | 10.17 | 41.17 | 56.86 | 12.57 | 2.39 |
+| Branching | Resident terminal worker | 78.64 | 10.11 | 40.99 | 119.22 | 12.58 | 2.41 |
+
+The reference branching run spent 11.934 s of its 12.639 s measured
+window in evaluation and publication, 0.128 s in source replacement,
+0.466 s in list export, and 0.102 s in the independent oracle. This
+bracket includes collector and scheduling time. Measured process CPU
+during evaluation and publication was 11.883 s, including 1.995 s of
+GC CPU. The resident worker does not remove the branching bottleneck.
+Both arms reported two passing native Cases and the completed Gerbil
+harness. The optional macOS resource wrapper could not read
+=kern.clockrate= and returned status 1 after reporting the Cases.
+Peak RSS and foreign compiler counts are unavailable for these runs.
+Signed Gambit deltas with collections are retained in the raw receipts
+and do not establish cumulative allocation.
+
+=MillionQueryWorkload.redundant_shortcuts_preserve_closure= proves
+equality of the transitive supersets when each shortcut has a two-edge
+witness in the base relation. The concrete cardinality theorem and the
+native complete-result oracle check the dataset independently. Neither
+establishes the production solver's source refinement.
+
+** Sparse source changes
+
+The source-mode invocation also appends one redundant edge in a different
+chain on each request. It checks the growing source count and the unchanged
+10,000-row closure. All three Cases completed and exited normally in
+54.06 s under the same 90-second limit and 2 GiB heap. Caller mode differs
+from the compiled comparison above. Report its timings separately.
+
+| Source-mode Case | Verified/s | P95 ms | Max ms | Update wall s | Evaluation and publication wall s | Export wall s | Oracle wall s |
+|------------------+------------+--------+--------+---------------+-----------------------------------+---------------+---------------|
+| Replace functional cut | 104.16 | 17.59 | 47.12 | 0.121 | 1.451 | 1.228 | 6.782 |
+| Replace branching cut | 48.07 | 52.59 | 69.62 | 0.179 | 12.411 | 0.676 | 7.518 |
+| Append one redundant edge | 53.00 | 48.25 | 73.34 | 0.176 | 11.669 | 0.971 | 6.192 |
+
+Today, the ordinary Actor invalidates its retained evaluator on a source
+update. The general source-selection path in =program/update-selection.ss=
+marks a whole relation and closes the affected set through the rule graph.
+Neither mechanism identifies the changed chain in this workload. Appending
+one edge still spends nearly as much time in evaluation and publication as
+replacing the branching cut. Set equality alone would not license retaining
+the previous Result. A new edge can change discovery order, derivation
+rounds and provenance even when it adds no reachable pair.
+
+** Performance boundaries
+
+For point and selective reads, use the index of the already committed
+Result. For changed input, the largest remaining cost in this branching
+Case lies in the generic positive component. Its local stage constructs
+list rows, probes the source index, checks structural membership and
+passes ordered batches to the coordinator. A compact scalar relation
+representation should carry ordinals through lookup, novelty and
+frontier traversal before materializing public rows. Equivalence must
+cover duplicate-witness order, all existing credits and limits, and
+proof support on each eligible route. The sparse Case measures the
+improvement only if publication also preserves these observables.
+
+** Compact frontier for branching
+
+The experimental route starts from the same admitted two binary rules as
+the functional terminal worker. It accepts a target with no seeds and
+ordered, strictly forward integer pairs that fit two 24-bit fields. An
+adjacency bucket preserves the order of the newest-first source lane used
+by =gerbil-ascent-source-scalar-index-write!= on the initial lookup. Each
+round visits only the previous delta, in reverse discovery order. A fresh
+packed pair appends once to the private numeric lane. Its logical position
+identifies both its order and the next delta interval. Full export scans
+the populated interval backward and allocates detached public pairs.
+
+=recorded_frontier_exact= relates reverse numeric-lane traversal to the
+worker's prepended delta, conditional on exact keys and candidate order.
+=worker_pair_key_exact= and =mixed_worker_pair_key_exact= cover the packed
+keys within their guard. The native comparison must check the bucket and
+round order directly, including convergence, duplicate input, negative
+keys, exhausted budgets and callbacks reading a previous publication.
+The actor keeps ordinary work for an execution authority, positive-plan
+observer, deadline, declared field checks, source domain or custom provider.
+The candidate checks the current
+cancel token while capturing the source, at each prefix and suffix visit,
+and before publication. A refused candidate cannot publish a partial lane.
+The owner retains the existing terminal disposition and acceptance boundary.
+
+Both arms used the same compiled caller, Gerbil and dependency image. The
+reference was the isolated resident terminal worker on PR head =90af6adc=.
+The candidate adds the branching frontier to that image. All six Cases
+returned normally under the original supervisor and fact budgets and verified
+1,000 complete results per Case. The candidate also passed 129 Cases in ten
+native semantic modules. The added semantic Case compares the exact ordered
+output after convergence, graph reversal, a one-edge append and a later cut.
+
+| Workload | Reference verified/s | Candidate verified/s | Reference P95 | Candidate P95 | Reference max | Candidate max |
+|----------+----------------------+----------------------+---------------+---------------+---------------+---------------|
+| Functional replacement | 452.81 | 361.39 | 1.88 ms | 4.13 ms | 41.80 ms | 51.86 ms |
+| Branching replacement | 80.65 | 205.43 | 40.96 ms | 8.00 ms | 42.97 ms | 71.92 ms |
+| One redundant edge appended | 74.66 | 206.28 | 42.07 ms | 8.23 ms | 57.85 ms | 58.50 ms |
+
+In the branching replacement window, evaluation and publication fell from
+12.03 to 3.88 s, process CPU from 12.37 to 4.25 s, and GC wall from
+2.39 to 1.05 s. For the append window, evaluation and publication fell from
+12.57 to 3.74 s, process CPU from 12.73 to 4.24 s, and GC wall from
+2.41 to 0.83 s. The candidate still recomputes the compact frontier for
+every accepted cut. Reuse by affected key remains open. In this comparison
+functional throughput fell, and the branching maximum rose. The native
+allocation readings remain unusable in windows with collections. The
+process monitor was unavailable, so these timings do not establish
+isolation from other workloads or explain the functional regression.
+
+On the original million-row loads, the same candidate verified all 1,000
+complete query samples per delivery shape. It also passed the million
+state/reply windows for one caller and machine-adaptive callers. Request
+percentiles and verified-window throughput include the original oracle
+where specified by each Suite.
+
+| Workload | Verified/s | P95 | Max | Process CPU s | GC wall s | Peak RSS |
+|----------+------------+-----+-----+---------------+-----------+----------|
+| Projection detached list | 22.27 | 132.11 ms | 217.02 ms | 42.95 | 21.95 | 1.63 GiB |
+| Recursive detached list | 15.51 | 116.75 ms | 199.68 ms | 58.81 | 30.68 | 0.89 GiB |
+| Projection positional fields | 52.60 | 24.11 ms | 73.93 ms | 17.91 | 0 | 0.87 GiB |
+| State, one caller | 755,417 | 0.833 us | 61.68 ms | 1.32 | 0.59 | 0.90 GiB |
+
+The two detached-list Cases failed the original 100 ms P95 assertion,
+even though the Gerbil processes returned status zero. The field Case
+verified 52.60 million delivered rows per second. Its zero observed natural
+collections and negative allocation reading leave cumulative bytes
+unavailable. The adaptive state Case verified 851,603 replies per second
+at 9.58 us P95. Resident state does not traverse the million retained rows.
+RSS above is the process high-water mark from =wait4= and can include
+preparation. The CPU and GC columns only cover the measured workload.
+
+** Matched upstream Rust Ascent comparison
+
+The release =actor_closure= bench uses upstream =ascent 0.8.1= through
+the existing Rust development dependency. It runs =ascent!= on one
+thread. The measured Scheme arm uses the isolated compact-frontier
+candidate and the compiled Gerbil caller on one VM processor. Both
+processes exited normally. Each Case verified all 10,000 rows in each
+of 1,000 requests using the same bitmap rule and source sizes. Neither
+oracle sorts. Percentiles include verification. Scheme returns detached
+mutable lists and retains the Session cancellation and acceptance checks.
+Native Rust copies the resulting typed tuples into a detached vector.
+
+| Workload | Scheme verified/s | Rust verified/s | Scheme share | Scheme P95 | Rust P95 |
+|----------+-------------------+-----------------+--------------+------------+----------|
+| Functional replacement | 443.82 | 1,048.23 | 42.34% | 1.98 ms | 1.05 ms |
+| Branching replacement | 295.41 | 1,200.69 | 24.60% | 3.01 ms | 0.93 ms |
+| One redundant edge appended | 304.36 | 1,158.18 | 26.28% | 3.06 ms | 0.98 ms |
+
+On sparse append, mean source update was 0.005 ms in Scheme and 0.105 ms
+in native Rust, which reconstructs a fresh source vector and evaluator.
+Mean evaluation and publication was 2.521 ms in Scheme, versus 0.734 ms
+for native evaluation. Detached delivery cost 0.647 ms and 0.003 ms,
+respectively. The Rust control that repeatedly appends to the same native
+instance and invokes =run()= did not finish its 1,000 requests within
+90 seconds in the exploratory process. The table uses its completed
+fresh-run baseline. It makes no claim about an incremental Rust solver.
+
+Beating the measured Rust sparse-append reference requires more than
+1,158 verified complete requests per second and a P95 below 0.982 ms for
+this specific load. At current mean list delivery and verification costs,
+less than 0.11 ms per request remains for evaluation and publication at
+that sustained rate. Efficient affected-region evaluation and cheaper
+delivery are both material. =regional_candidates_exact= proves that
+filtering an ordered candidate round by an edge-closed region preserves
+that region's sequence. Global merge order, first witnesses, budget and
+provenance behavior still require separate source evidence.
+
+** Replaying unaffected frontier segments
+
+The next isolated candidate retains the accepted child interval of each
+prefix occurrence in a committed compact solve. A single detached prepend
+whose tail is the exact prior source spine can invalidate its old weak
+component if both endpoints already belong to that same component. The
+worker builds the tentative output in ordinary prefix order. For dirty
+prefixes it expands and deduplicates their source bucket. For an unaffected
+prefix it copies its accepted interval and transfers occurrence ordinals.
+The global round remains ordered even when dirty and unchanged prefixes
+interleave. The two regions have disjoint novelty by row identity.
+
+The saveable cut binds its source occurrence count, exact source root,
+unchanged region map and immutable arena. A replacement, merged or unknown
+component, duplicate input or capacity refusal keeps the complete evaluator.
+The owner can adopt the new cache only alongside the matching completed
+terminal result. Appends never mutate an earlier cut's view or its index.
+The worker must observe cancellation while replaying both retained and fresh
+work. =regional_candidates_exact= and =replay_children_in_prefix_order=
+state the ordered projection and merge properties with their locality and
+first-witness premises. The existing Actor terminal models check stale
+results, fallback and joins, and the compact-result model checks count and
+resource refusal. Native controls must independently compare the two routes.
+
+Gerbil executes these workloads in one VM. The measured build reported one
+VM processor. The Session owner, resident evaluator, monitor and callers are
+Gerbil green threads with separate mailboxes and lifetimes. The serial Rust
+macro uses one execution thread for the rules. The benchmark measures
+query work and delivery without an async I/O workload. A separate state
+contention Case measures multiple concurrent green-thread requesters inside
+the same VM; it does not infer parallel joins or I/O performance.
+
+An independent native test used a nonblocking OS pipe through Gerbil
+=:std/os/pipe= and =device-wait-input!=. The controller verified that a
+reader Actor was waiting on the input device, completed one million
+public Session state requests, and verified that the reader was still
+waiting. It then wrote a byte, joined the reader and checked its result.
+The Gerbil harness and both children exited normally under the same
+90-second supervisor and 2 GiB heap ceiling.
+
+| State requests in one VM | Verified replies/s | Sampled P95 | Sampled max | CPU | GC wall |
+|--------------------------+--------------------+-------------+-------------+-----+---------|
+| No pipe reader | 747,940 | 0.917 us | 22.79 us | 1.3125 s | 0.667 s |
+| Reader waiting on pipe | 758,305 | 0.917 us | 13.33 us | 1.3130 s | 0.663 s |
+
+Every reply was checked. The latency sample includes every thousandth
+request, for 1,000 observations per arm. The byte release followed the
+measured window. This establishes Session progress during pending OS
+I/O. It does not measure pipe throughput or establish a speedup from
+introducing a waiting Actor.
+
+The maintained source entry is
+[[file:../../benchmarks/actor-io-overlap-test.ss][actor-io-overlap-test.ss]].
+The separate source-mode invocation passed both Cases. The table uses
+the compiled caller and the same compiled production Session in both
+arms.
+
+The cancellation-cell control uses Gambit's existing =vector-cas!=. The
+Session owner changes false to true once. The evaluator reads the previous
+word by comparing false with false, leaving the bit unchanged. The token
+is fresh for every admitted run. =ActorStateCost.cancel_cell_read_after_mark=
+proves the transition law assuming the primitive's compare-and-swap
+semantics. Native checks must retain the existing generation fences,
+checkpoints and owner acceptance, including on a run that declines.
+
+On the unchanged 1,000-sample sparse append, child replay increased
+verified throughput from 308.89 to 467.68 requests/s. P95 moved from
+2.89 to 1.83 ms and the maximum from 38.14 to 90.80 ms. Mean evaluation
+and publication moved from 2.47 to 1.50 ms. The candidate still walks
+the global prefix order and materializes the entire detached result.
+
+A subsequent matched cancellation-cell comparison used the same child
+replay implementation in both arms. The mutex arm completed 333.13
+requests/s at 5.36 ms P95. The compare-and-swap arm completed 508.94
+requests/s at 2.84 ms P95. Their evaluation-and-publication CPU totals
+were 1.63 and 1.18 s respectively, with no reported collections inside
+either evaluation phase. Wall-time differences include scheduler and
+delivery effects. The two comparisons are separate windows; the slower
+mutex-arm wall result does not discount the earlier 467.68 requests/s.
+
+The latest candidate passed 131 Cases in ten native semantic modules,
+including exact ordered comparisons over consecutive appends and refusal
+of a different source spine, a cross-component edge, duplicate input and
+insufficient budget. Its native state contention Case used 12 green
+callers in one VM and verified one million replies at 800,145 requests/s
+and 9.42 us P95. These measurements do not infer I/O throughput.
+
+The full mutable list API must deliver three distinct pairs per two-field
+row. A million requests each returning 10,000 such rows would require
+10 billion delivered rows and 30 billion fresh pairs per second. The
+existing positional field visitor gives complete ordered delivery with
+no per-row list spine on admitted scalar views. Track complete-query
+latencies and delivered rows/s alongside the small Session-state
+request rate.
+
+* Ordered append to a frozen source
+
+=program/source-cut.ss= captures an ordered binary source in private integer
+cells for the certified identity projection. A strictly monotone integer
+append can keep that base and attach a new persistent ordered suffix. Use
+the nonmutating Gerbil standard library =rbtree-put= so older published cuts
+continue to reference their own tree roots. The source and derived views
+retain chronological order. Selected keys probe the packed base and suffix.
+Full export copies every public pair and outer list cell on each request.
+
+The ordinary admission route handles equal or out-of-order origins, non-integer
+values and unsupported batch shapes. Input, derived and materialized fact
+ceilings precede publication. The existing projection eligibility check still
+selects the ordinary evaluator for deadline and caller-authority requests.
+Owner commit and cancellation rules remain in =program/actor-session.ss=.
+
+=MillionQueryWorkload.lean= proves ordered append reconstruction, disjoint
+origin partitions, selected values and exact complete-export visits for
+the base-plus-suffix sequence. These statements rely on the standard library
+tree's nonmutating update and ordered-traversal contract. Native tests exercise
+the actual tree, older public results, fallback and budget refusal.
+
+* Local comparison
+
+Both arms ran the same 1,000-sample shapes under 90 seconds and 2 GiB, with
+five successful native cases in each process. Other compiler processes were
+visible during both windows. These measurements qualify the local fixture
+only.
+
+| Shape                    | Reference P95 | Suffix P95 | Reference verified/s | Suffix verified/s |
+|--------------------------+---------------+------------+----------------------+-------------------|
+| Indexed published origin |       2.42 us |    4.33 us |              567,403 |           512,503 |
+| Published table export   |       0.072 ms |   0.067 ms |                2,566 |             2,545 |
+| Replace and export       |       0.297 ms |   0.292 ms |                1,435 |             1,440 |
+| Append and export        |       0.471 ms |   0.214 ms |                1,179 |             1,747 |
+
+Append request readiness fell from 404 to 189 ms in aggregate, while
+delivery fell from 337 to 276 ms. The observed append maximum remained
+about 28 ms. GC wall time in that window fell from 304 to 275 ms. The
+Gambit allocation deltas were negative for append, so the allocation
+quantity is unavailable.
+
+In the preceding million-row packed projection window, complete export
+took 25.57 ms on average. P95 for the verified request was 135.10 ms against
+a 100 ms threshold. The observation with export-level timestamps found an
+export GC in 225 of 248 requests over 100 ms. The one-row append change
+addresses write-after-read preparation and evaluation. Full detached export
+still requires a fresh public list and row spines for every delivered row.
+
+* Million-row visitor
+
+The native list and visitor workloads alternate the same two million-row
+source cuts for 1,000 requests each. An independent arithmetic sequence
+checks the exact count, value and order of every delivered row. The same
+consumer runs in both arms. Request time includes replacement, evaluation
+and consuming the row stream. First-row time is taken at first consumer
+entry. The existing bitmap-oracle list benchmark remains an independent
+gate with its original workload and measurements.
+
+For a packed cut, the existing public =visit-rows= can scan the contiguous
+integer cells in ascending ordinal order when no columns are supplied.
+The captured vector is read-only. Each consumer call owns its two row
+pairs, even when it retains a row or reenters the Session. A callback that
+exits early leaves only the prefix it received. Selected visits continue
+to use the existing column and key checks and ordered origin lookup.
+
+=MillionQueryWorkload.lean= relates the callback sequence and every
+exit prefix to the packed source. =ActorPackedSource.qnt= checks pinned
+delivery while the source is replaced and the prefix of an invocation
+whose callback escapes. If the caller later resumes its own saved
+continuation, the restored cursor still refers to that same frozen cut.
+
+The =fields?: #t= form of =visit-rows= calls the same synchronous consumer
+with the fields as positional arguments, in the same order as ordinary
+row delivery. For public binary traversal over a view with admitted
+parts, =program/result.ss= passes the two scalar values from those parts
+without assembling a row. All other representations pass the fields
+from the existing checked visitor with =apply=. No packed storage object
+is handed to the caller. The callback can retain values, escape or issue
+a nested request. This form uses the same checked columns and keys.
+
+#+begin_src scheme
+((.ref result 'visit-rows) 'reach [] []
+ (lambda (origin target)
+   (consume origin target))
+ fields?: #t)
+#+end_src
+
+* Million-row local results
+
+All samples include source replacement, Actor publication and independent
+verification of one million delivered rows. Each window contains 1,000
+samples. The following two arms use the same compiled candidate and
+caller. They ran with the original 90-second supervisor, 2 GiB heap limit
+and 100 ms P95 admission criterion.
+
+| Delivery    | First-row P95 | Complete P95 | Complete max | Verified rows/s | GC wall |
+|-------------+---------------+--------------+--------------+-----------------+---------|
+| Row visitor |      33.94 ms |    131.92 ms |    228.12 ms |      22,812,786 | 21.37 s |
+| Fields      |      17.35 ms |     31.81 ms |    168.15 ms |      40,710,470 |  2.54 s |
+
+The field arm verified all one billion rows. It used 21.82 process CPU
+seconds and collected 24 times. The row visitor used 39.92 CPU seconds
+and collected 207 times. Sampled process RSS peaked at 1,523,648 KiB
+for fields and 1,319,744 KiB for the visitor. Both runs saw other compiler
+processes. The allocation counter delta spans collections in both runs,
+so neither delta qualifies as cumulative allocation evidence.
+
+The original bitmap-oracle list gates were also run on the candidate.
+Both verified 1,000 requests. Projection complete-list P95 was 197.22 ms
+and recursive complete-list P95 was 188.68 ms. Both failed the original
+100 ms limit. The candidate's synchronous field path and the original
+detached-list path have separate acceptance results.
+
+* Exact packed source reuse
+
+Gambit's emitted code builds an outer pair and two field pairs per binary
+row. Width-two result lists remain mutable and fully detached. Integer
+vector reads of admitted fixnums do not need bignum boxes. This leaves
+packed *input* allocation as an independent reduction available to both
+list and field consumers.
+
+After ordinary shape and transaction-budget checks, the certified binary
+projection can reuse a packed backing vector only if every occurrence
+and both of its fields match exactly. Compare fixnum fields in order
+against the private cells. The successful check shares stable vector
+storage while constructing the new slot and publication normally.
+A mismatch, other value type or length change uses ordinary capture.
+No caller-side list is saved as a certificate.
+
+Retain at most one additional packed vector of up to 16 MiB in the
+current source cut. The candidate keeps backing cells only, so the
+alternate cannot extend a chain of old cuts or retain a forced lane.
+Rejected or cancelled work cannot replace the committed cache.
+=MillionQueryWorkload.lean= checks exact packed matching and
+=ActorPackedSource.qnt= checks refusal of an equal-sized different cut.
+
+Both arms ran the original bitmap oracle on 1,000 changed-source queries
+with 90 seconds, 2 GiB and the existing 100 ms admission criterion.
+
+| Metric                       | Reference | Reuse |
+|------------------------------+-----------+-------|
+| Source replacement mean (ms)  |     11.18 |  7.77 |
+| Complete query P95 (ms)      |    131.89 |119.93 |
+| Complete query maximum (ms)  |    141.81 |142.99 |
+| Verified queries per second  |     21.44 | 23.82 |
+| Runtime CPU (s)              |     46.44 | 41.84 |
+| GC wall (s)                  |     24.62 | 20.64 |
+
+The reuse candidate avoids a new two-million-cell integer allocation on
+an exact hit. The raw Gambit counter accumulated across collections in
+both windows and is unavailable for total allocation. Both arms missed
+the original complete-list threshold. The point estimate for maximum
+latency increased. Other compilers were visible in both process windows.
+Sampled peak RSS increased from 1,545,664 to 1,691,232 KiB. An isolated
+native check exposed the private accessors and verified vector identity
+after an exact replacement, a new vector for a changed last field and
+retention of only the previous vector. The accessors remain private in
+the measured candidate.
+
+* Direct publication from a closed identity rule
+
+The compact integration derives its eligibility from the admitted positive
+plan. There are exactly two width-two relations and one rule. Its only
+body action introduces the two fields, and its only head writes those
+same fields in order to the other relation. The existing Actor admission
+establishes canonical Set storage, hash indexes and the absence of field
+callbacks. Packed capture additionally requires unique, strictly ordered
+fixnum origins. Its source slot owns the vector before any result can
+borrow it.
+
+For an untimed, unobserved call with an empty target seed and sufficient
+input, derived and total fact room, the evaluation worker creates the
+ordinary published result from the same frozen row view in both slots.
+Names, sizes, explicit representation observations and active rule
+counts match the list evaluator. The worker keeps no reusable engine
+for this result. The owner alone checks its generation and commits the
+publication through the normal terminal message. A later timed or
+authority-bearing invocation builds through the ordinary evaluator on
+the lazy source rows. This also preserves per-occurrence proof or cost
+observation and the ordinary budget failure order.
+
+** Combined PR-head evidence
+
+The actor, source capture, result and source initialization modules
+were compiled against the native =5f9a825a= dependency image. The
+initialization module must rebuild when the private source-slot
+accessor changes from a field read to a lazy-lane accessor. An early
+mixed build encountered a promise on the ordinary path. The rebuilt
+consumer passed the ordinary fallback and all selected semantic modules.
+
+| Workload                     | Verified/s | Request P95 | GC wall |
+|------------------------------+------------+-------------+---------|
+| State, one caller            |    837,777 |    0.708 us |  0.51 s |
+| State, 12 callers            |    914,766 |    9.041 us |  0.46 s |
+| Projection, original lists   |      23.40 |   122.90 ms | 21.19 s |
+| Projection, positional fields|      60.87 |    17.25 ms |     0 s |
+
+The field window delivered and checked one billion rows and recorded
+zero natural collections. Its Gambit allocation counter decreased,
+so it provides no allocation-volume evidence. The list window also
+checked one billion rows and failed its existing 100 ms gate. The
+comparison retains the exact per-scenario heap and wall limits.
+
+The recursive query kept the existing component solver. Its last
+verified progress was 60 of the required 1,000 requests before the
+90-second supervisor stopped the process. In that verified prefix,
+execution and publication consumed 79.21 of 84.87 seconds.
+List delivery consumed 5.01 seconds. The recursive result therefore
+identifies a solver gap independently of the identity projection's
+list-allocation bottleneck.
+
+* Ranked functional component
+
+The recursive fast path uses the admitted binary plan for exactly the
+base rule =reach(x,y) <- edge(x,y)= and the recursive rule
+=reach(x,z) <- reach(x,y), edge(y,z)=. The variables are checked through
+their compiled fresh and bound slots. The recursive pivot is the
+target relation, and the other read stays in the frozen source cut.
+The target has no seed. Authority, deadlines and plan-cost observers
+select ordinary evaluation.
+
+The component captures one successor per nonnegative fixnum origin and
+checks that every edge increases its value. A successor can merge with
+another trail. It cannot branch or revisit a vertex. Count the lengths
+of trails with memoized suffixes before publishing. The full derived
+count must fit both the derived and remaining total budget. Build and
+count checkpoints consult the current Actor cancellation token. The
+Session owner commits through the same terminal-message boundary.
+
+The existing ordinal-run writer traverses adjacent uniform successor
+runs in semi-naive delta order. Other admitted functional cuts use
+stable compaction of live origins in that same order. The output view
+owns its ordinal vectors and index. Each list result still owns outer
+and row pairs. Refusing plan shape, rank, unique origin or resource
+room leaves the ordinary solver responsible for the cut.
+
+** Candidate against PR #2 revision 5f9a825a
+
+The compile overlay contains the Actor, source cut, initialization,
+result, and component worker modules. It uses the same native
+dependency image and the same compiled benchmark caller. Ten native
+qualification modules passed 125 cases. The cancellation and close
+cases stop the test evaluator at its first charged step, so both
+cases exercise an in-flight run independently of the solver's speed.
+The ranked component and ordinal runs Quint models passed their
+positive runs and rejected seven mutations.
+
+| Workload                      | Verified/sample window | Requests/s |       P50 |       P95 |       Max | GC wall |
+|-------------------------------+------------------------+------------+-----------+-----------+-----------+---------|
+| Recursive detached list       |                  1,000 |      22.32 |  28.22 ms |  86.87 ms |  99.74 ms | 17.03 s |
+| Projection detached list      |                  1,000 |      24.18 |  21.12 ms | 119.16 ms | 144.72 ms | 20.37 s |
+| Projection fields             |                  1,000 |      60.18 |  16.50 ms |  17.38 ms |  22.93 ms |     0 s |
+| Session state, one caller     |              1,000,000 |    783,456 |  0.583 us |  0.750 us |  63.95 ms |  0.59 s |
+| Session state, twelve callers |              1,000,000 |    888,536 |  7.083 us |  8.958 us |  61.68 ms |  0.47 s |
+
+Each recursive request verified all 1,040,384 rows. Across the 1,000
+samples, replacement consumed 2.27 s, evaluation and publication
+4.33 s, list export 27.62 s, and the independent oracle 10.57 s.
+The historical solver used 79.21 s of evaluation and publication
+across the last 60-request prefix it verified before its timeout.
+The recursive candidate passes the 100 ms P95 gate. Projection list
+delivery remains over the same gate. It spent 7.63 s in replacement,
+0.18 s in evaluation and publication, 22.58 s in list export, and
+10.95 s in the oracle.
+
+CPU for the recursive, projection list, and projection field windows
+was 44.72 s, 41.17 s, and 16.57 s, respectively. Maximum process RSS
+for the two list gates was 978,403,328 and 1,736,441,856 bytes. The
+monitor observed two foreign compiler identities per window. These
+are local measurements from a shared host. Collections or negative
+Gambit deltas leave cumulative allocation unavailable.
+
+The detached binary list constructor has one outer pair and two row
+pairs per result row. The Lean slot and extent theorems record the
+fresh pair envelope independently of collector accounting. A million
+rows need three million pair slots per full list. The field consumer
+checked one billion projection rows at 60.18 million rows/s with no
+natural collections. It uses the published cut and the same positional
+values. Complete recursive field traversal and the old projection list
+gate require separate qualification.
+
+* Direct recursive field traversal
+
+The list exporter visits increasing depths, alternates ordinal direction
+at each depth, and prepends each row. The direct visitor instead walks
+depths from the maximum to zero. Within a depth it reverses the order
+of runs and the direction of each run. The same immutable origin and
+target vectors supply both fields. There are no temporary row pairs in
+this traversal. The cursor's coordinates are local immutable bindings,
+so an escaped or resumed callback uses its original published view.
+
+Select this traversal for unfiltered visits over uniform ordinal runs
+when the number of depth-by-run checks is at most twice the result
+cardinality. Skewed runs and selected keys retain the checked visitor.
+The existing complete-list and query gates still use their original
+delivery forms. Lean checks the reversal of the nested emission
+sequence and the work guard. Quint rejects forward depth order and
+failure to reverse order within a depth.
+
+** Native comparison on the previous Yuanxu image
+
+Both field arms used one compiled caller with the independent chain
+oracle. Each changed the source 1,000 times and consumed all 1,040,384
+rows as field pairs per request. The reference used the published result's
+generic field adapter, which first materialized a list. The direct arm
+used the same published cut with the ordinal visitor.
+
+| Recursive delivery     | Verified/s |  First-row P95 |  Complete P95 |        Max |     Process CPU |   GC wall | Process peak RSS |
+|------------------------+------------+----------------+---------------+------------+-----------------+-----------+------------------|
+| Generic field adapter  |      15.39 |                |     107.54 ms |  250.00 ms |         63.74 s |   20.28 s |    1,023,918,080 B |
+| Direct fields          |      30.82 |        5.84 ms |      33.37 ms |   70.00 ms |         32.30 s |    1.08 s |      593,674,240 B |
+| Original detached list |      21.19 |                |      89.10 ms |  254.32 ms |         46.57 s |   18.04 s |    1,000,554,496 B |
+
+The direct stream delivered about 32.07 million verified rows/s.
+Its 1,000 requests spent 0.91 s in replacement, 4.59 s in evaluation
+and publication, and 26.93 s in traversal with the inline oracle.
+There were 36 natural collections versus 421 in the generic field
+window. The collector counter does not yield cumulative allocation
+across these collections. The monitor observed 6, 738, and 184
+foreign compiler identities for direct fields, generic fields, and
+the detached list respectively. Use the timings as observations on
+a shared host. With the direct visitor, 127 Cases across ten native
+semantic modules passed, including both ordinal directions, skewed
+runs, key selection, callback escape, and reentrant source replacement.
+
+PR #2 advanced to =90af6adc= during this round. Its single changed
+file pins Yuanxu =46a12b01= and the transitive POO revision changes to
+=187fc0eb=. The results above use the preceding dependency image.
+
+** Ranked index input
+
+The ranked index consumes the frozen source in newest-first order.
+When the source already owns contiguous cells, read the adjacent
+fields from the end and pass their ordinal directly to the index
+builder. The packed slot retains its lazy list lanes for ordinary
+evaluation and export. The ranked reader neither forces those lanes
+nor keeps a new row spine. Nonpacked sources traverse the existing
+newest-first list. The same checkpoint, origin validation, successor
+rank, and fact budgets follow each input. Lean relates the reversed
+packed-pair projection to the original newest-first lane.
+
+** Exact replacement preflight
+
+When an Actor Session already owns a packed source, check
+the replacement against its current or alternate frozen cells.
+Each match checks that the outer list ends at the cached extent
+and that each row is exactly two matching fixnum fields. A hit
+supplies the width and exact occurrence count for the existing
+source transaction preflight. It needs no separate list and row
+walk. A miss enters ordinary admission. The batch still checks
+all source names and row shapes before duplicate positions and
+the input fact budget. Only admitted batches construct new
+source headers or publish. Appends still use their normal path.
+
+Lean relates each successful packed comparison to the validated
+row sequence and the fact count. Native tests cover malformed
+rows, extra and absent rows, equal-length changes, rollback,
+and continued publication from the earlier cut. The packed
+comparison is bounded by the extent of the frozen backing even
+when a caller supplies an improper or cyclic list.
+
+On the previous dependency image, the fused comparison took 5.55 s
+across 1,000 replacements versus 9.19 s in its reference arm.
+Whole-window CPU fell from 45.19 to 41.03 s. Complete-list P95
+was 185.18 ms for the candidate and 140.66 ms for the reference.
+Both failed the existing gate. They each verified 1,000 million-row
+results. The monitor observed 1,471 and 151 foreign compiler
+identities, respectively. The source-phase improvement does not
+establish a complete-list tail improvement. The native shape and
+rollback controls passed as part of 128 Cases in ten modules.
+
+** Signed packed cell width
+
+The full binary source exporter constructs the same detached pair
+layout for any integer width. When every captured field fits signed
+32 bits and signed 32-bit values fit a VM fixnum, the private cell
+vector can use signed 32-bit storage. A wide value keeps the existing
+signed 64-bit capture. Select the reader before scanning for complete
+export. Match and retain the frozen vectors with the same exact tuple
+and source-cut rules. The original fact limits, cancellation, and
+publication boundary govern both cell widths.
+
+This representation test targets the packed backing size and the
+generated integer conversion before pair assembly. It keeps the
+public list shape and its independently mutable pairs. Lean checks
+the actual signed 32-bit range. Quint exercises a bounded eight-bit
+instance and rejects truncating a wide label. Native controls cover
+both 32-bit endpoints, their adjacent wide values, selected queries
+and retention of older publications on both representations.
+
+On the same full native dependency image and with identical benchmark
+callers, the wide and narrow vectors each verified 1,000 detached
+million-row results.
+
+| Source cells | Verified/s | Complete P95 | Complete max | Process CPU | GC wall | Process peak RSS |
+|--------------+------------+--------------+--------------+-------------+---------+------------------|
+| Signed 64-bit |      14.53 |    216.67 ms |    372.64 ms |     58.50 s | 37.49 s |  1,778,401,280 B |
+| Signed 32-bit |      17.18 |    180.71 ms |    398.24 ms |     55.85 s | 32.06 s |  1,700,151,296 B |
+
+Both missed the 100 ms gate and both collected 222 times. The monitor
+observed 1,037 foreign compiler identities in the wide arm and 185 in
+the narrow arm. The smaller representation passes the native boundary
+checks. The windows leave its causal effect on request tails unresolved.
+
+The separate ranked index cursor took 9.03 s for evaluation and
+publication over 1,000 verified recursive queries. Its phase recorded
+zero natural collections, compared with 91 in the original candidate's
+12.95 s phase. The complete-list gate still failed at 156.71 ms P95.
+Its process reached the 90-second supervisor limit after reporting all
+samples. Keep that failed process outcome in addition to the timings.
+
+* Native build on PR head 90af6adc
+
+The isolated prefix contains Yuanxu =46a12b01=, Gerbil POO
+=187fc0eb=, and the released Gerbil toolchain. Fresh dependency
+installation first stopped at its 600-second build supervisor with
+=root-configured-cores=0=. Resume reused the generated modules and
+selected build concurrency from the host CPU count. POO completed
+in 64.60 s, Yuanxu in 107.57 s, dependency verification in 48.77 s,
+and the production ASCENT build in 249.20 s.
+
+The first cold semantic process stopped at the original 120-second
+startup limit before its first Case. The explicit development
+dependency preparation and semantic fixture preparation subsequently
+completed over separate windows of 105.45 s and 57.59 s. The latter
+reported =production-rebuilt=0= and retained the byte hash of the
+built Actor module. Under the existing startup and inactivity
+supervisor, all 127 native Cases in the ten selected semantics
+modules passed with natural exit. The complete semantic invocation
+lasted 132.77 s. Keep the cold startup refusal as an independent
+observation.
+
+The full native package ran the existing million-row list gates and
+the recursive field window under the original budgets. All three
+verified 1,000 subsequent source replacements and complete samples.
+
+| Delivery             | Verified/s | Complete P50 | Complete P95 | Complete max | Process CPU | GC wall |
+|----------------------+------------+--------------+--------------+--------------+-------------+---------|
+| Recursive list       |      13.67 |     53.01 ms |    143.89 ms |    382.66 ms |     68.34 s | 23.43 s |
+| Projection list      |      13.38 |     38.33 ms |    238.82 ms |    408.26 ms |     60.94 s | 35.83 s |
+| Recursive fields     |      25.82 |     35.95 ms |     48.87 ms |    213.70 ms |     37.88 s |  1.25 s |
+
+The original list gates failed. The field gate passed, with a first-row
+P95 of 8.14 ms and about 26.87 million checked rows/s. Exact native
+list and field timings include separate independent-oracle costs.
+The monitor observed 1,070 foreign compiler identities in the recursive
+list window, 696 in the projection list window, and 34 in the recursive
+field window. These observations do not establish the cause of the
+wall-time changes. Live collections make the allocation deltas
+unsuitable for cumulative allocation reporting.
+
+The separate 1,000-sample export trace recorded 209 requests at or
+above 100 ms. All 209 collected during detached export, and 203
+spent at least 100 ms in that collection alone. Total export GC wall
+was 29.22 s. The trace retained the original list shape, complete
+oracle and performance threshold. Its own P95 was 185.56 ms.
+
+The million-row projection field path passed independently at
+22.69 ms P95, verified 49.40 million rows/s, and ran with zero
+natural collections. Its allocation delta was negative. Five
+10,000-row production Cases also passed with the existing indexed,
+published, replacement, append and order/resource checks.
+
+** Detached export from a fixed committed cut
+
+In the declaration-root control, both arms commit the same million
+rows at generation two. Each timed request obtains the completed
+result through the Session mailbox, exports a fresh mutable list and
+verifies all one million rows against the independent oracle. The
+window has 1,000 requests. Neither arm changes the source during
+the timed work. Preparation and its oracle run outside that window.
+
+| Retained source state    | Verified/s | Complete P95 | Complete max | Process CPU | GC wall |
+|--------------------------+------------+--------------+--------------+-------------+---------|
+| Declaration and cut      |      28.84 |     90.62 ms |    146.68 ms |     34.07 s | 21.46 s |
+| Committed cut only       |      32.60 |     62.27 ms |    129.70 ms |     30.46 s | 17.47 s |
+
+Both fixed-cut arms passed the 100 ms threshold. The cut-only arm
+collected more frequently, 449 times versus 309, and spent less
+total time in the collector. The monitor recorded three and seven
+foreign compiler identities respectively. This holds the list
+delivery and verification work fixed while varying the raw
+declaration retained after opening. The preparation paths differ.
+The original changing-source projection and recursive gates remain
+separate results.
+
+** Two affine columns in a packed source
+
+This candidate admits arithmetic progressions as another private binary
+source representation. It checks the row shape, fixnum values, nonzero
+origin stride, complete occurrence count, and both column values on every
+step. First values, strides, maximum products and endpoints must fit
+fixnums before a native cursor is installed. A mismatch keeps the existing
+vector capture. Nothing borrows the caller's list into the certificate.
+The admitted values, chronological order, inverse-index checks, and
+detached mutable export are the same as for the packed vector.
+
+=affine_field_next= describes the linear capture scan. Apply
+=affine_field_bounds= at zero and at each origin to bound the cursor
+arithmetic, and at first value zero to bound each intermediate product.
+Native comparisons cover ascending and descending runs, an unequal last
+field, signed boundary refusal, selected reads, and older publications.
+The standard fixnum and result resource limits remain in force.
+
+On the cancellation-cell candidate, the recursive list passed at
+91.22 ms P95 with 1,000 complete checked results. The unchanged
+projection list failed at 127.74 ms P95. It spent 8.04 s replacing
+sources, 0.19 s evaluating and publishing, 25.11 s exporting lists,
+and 11.51 s checking the oracle. The separate projection-field Case
+verified all one billion rows with 18.65 ms P95 and zero natural
+collections. Its negative allocation reading remains unavailable.
+
+On the subsequent projection-list comparison, each arm delivered
+the same 1,000 complete verified mutable lists. The extra-scan
+affine arm reduced peak process RSS by 89.81 MiB, and total GC wall
+from 23.78 to 21.42 s. Export fell from 26.32 to 22.53 s, but source
+replacement increased from 8.46 to 11.70 s. Throughput remained
+21.28 versus 21.22 requests/s. P95 was 132.64 and 129.10 ms,
+respectively. Both arms failed the unchanged 100 ms assertion.
+
+A follow-up candidate combines the arithmetic check with the input
+shape and occurrence count. Provisional wrapped cursor arithmetic
+must preserve the strict direction of the first column and see a
+proper terminator. Both endpoint products and sums must fit fixnums
+before the numeric certificate is returned. A failed proof continues
+through ordinary validation so malformed rows retain the established
+error and an unsuccessful transaction retains its prior result.
+
+The single-scan candidate passed 134 Cases in ten native semantic
+modules, including malformed and cyclic inputs. Its unchanged
+projection-list Case verified all 1,000 results before failing the
+100 ms assertion. It completed 24.88 verified requests/s with
+117.94 ms P95 and 164.68 ms maximum. It used 39.86 s process CPU,
+206 natural collections and 19.78 s GC wall. Peak process RSS was
+1,673,117,696 bytes. Source replacement consumed 7.07 s, evaluation
+and publication 0.25 s, detached export 20.51 s, and the independent
+oracle 12.33 s. The candidate's single-scan window is separate from
+the preceding matched extra-scan comparison. The positive raw
+allocation delta with collections does not establish cumulative bytes.
+
+The same single-scan image passed the original recursive list Case
+at 88.40 ms P95 for 1,000 checked 1,040,384-row results. The
+positional-field Case delivered 60.10 million checked rows/s at
+18.99 ms P95. The sparse append regression Case delivered 605.44
+checked 10,000-row results/s at 1.50 ms P95. These were separate
+native windows. The current image still fails the projection-list
+gate and its new runtime package remains unpublished.
+
+** Native projection export and collector observations
+
+The native binary projection can build four rows per loop iteration while
+keeping the same three fresh pairs per row. The remainder uses the original
+single-row append. The compiled export accepts only the already published
+numeric cursor. It does not accept caller callbacks or change source capture
+and commit. =detached_export_four= states the accumulator equality. The
+existing cell extent theorem applies to both loops.
+
+Observe projection collection spans in a separate diagnostic caller
+compiled against the same candidate. Slots 5 and 6 of Gambit's
+=##process-statistics= give total GC wall and collections. Slots 14, 15,
+17, 18 and 19 describe the latest collection, its heap size, live bytes,
+movable bytes and still bytes. The diagnostic records the latest collection
+only when the export bracket's counter advances. It neither estimates
+cumulative allocation from a signed counter nor attributes every live
+object to the newly materialized list.
+
+The single-scan projection probe verified all 1,000 requests. 212 of the
+219 requests at or above 100 ms collected inside the export bracket.
+Median export time was 2.10 ms without a collection and 101.89 ms with
+one. Export brackets recorded 21.39 s of GC wall. The latest collection
+in those brackets reported medians of 445.91 MiB live, 439.14 MiB
+movable and 6.77 MiB still. In the inspected Gambit source,
+=words_movable_objs= doubles the accounted heap and stack words for
+the copying space. The movable statistic therefore cannot be summed
+as the sizes of the logical rows themselves. The diagnostic window
+failed the 100 ms assertion at 126.18 ms P95.
+
+The four-row candidate passed 135 native semantic Cases, including
+all block remainders and independent public pair mutation. Against
+the scalar cursor in back-to-back windows it changed export wall
+from 20.95 to 23.05 s, verified throughput from 24.40 to 23.30
+requests/s, and P95 from 120.63 to 126.95 ms. Both arms completed
+and verified 1,000 results and both failed the unchanged gate.
+Retain the scalar cursor in the production candidate.
+
+The caller-root experiment runs the identical alternating facts,
+original replacement operation and complete detached list oracle.
+Its control reuses one mutable caller-side list, writing its
+fixnum fields before each replacement. Timing includes this
+additional staging pass. The caller keeps no second million-row
+root in that arm. This isolates an application lifetime decision
+while keeping the original two-list production gate separate.
+
+| Caller input | Verified queries/s | P95 | Max | Process CPU | Export GC pause median | Accounted live median | Peak RSS |
+|--------------+--------------------+-----+-----+-------------+------------------------+-----------------------+----------|
+| Two mutable lists | 23.90 | 125.83 ms | 188.98 ms | 41.45 s | 96.26 ms | 445.91 MiB | 1,618.31 MiB |
+| One reusable list | 22.52 | 99.04 ms | 128.91 ms | 43.91 s | 64.63 ms | 293.28 MiB | 1,315.75 MiB |
+
+Each arm verified 1,000 one-million-row outputs under the 90-second
+supervisor and 2 GiB heap limit. The one-list arm spent 2.69 s staging the
+next input. It recorded more collections (303 versus 207) and similar total
+GC wall (20.50 versus 20.58 s). The shorter pauses reduced tail latency,
+while the extra staging work reduced complete-query throughput. The
+original two-list workload still failed the 100 ms gate. Both windows
+included collections, so the raw allocation deltas do not establish bytes.
+
+** Computing the source cursor extent once
+
+The affine source capture checks strict first-column progress on every
+row and validates the final fixnum products and sums. The alternative
+computes the largest allowed ordinal once for each column. For an
+ascending column, take the smaller of the distances from zero and the
+first value to the upper fixnum limit, divided by the stride. For a
+descending column use the corresponding distances to the lower limit
+and the magnitude of the stride. A zero stride needs no arithmetic
+bound. The scan takes the minimum with the existing occurrence cap.
+
+=affine_positive_ordinal_bound= and =affine_negative_ordinal_bound=
+characterize the exact range in which both the product and field are
+representable. An ordinal outside that range declines the fast path
+before reading its expected row. The first stride is nonzero, so a cyclic
+outer spine cannot reproduce the strictly ordered fields within the bound.
+The candidate reads both expected fields and the proper row terminator.
+Shape, cancellation, source budgets, fallback errors and the publication
+owner stay on the existing path.
+
+The compiled candidate passed 135 Cases across ten native qualification
+modules, including both fixnum extremes, malformed rows, cyclic source
+spines and rollback. The original complete projection Case used the
+same compiled caller and two alternating million-row inputs. Each arm
+completed all 1,000 exact result checks.
+
+| Source scan | Replace total | Mutable export total | CPU | Verified queries/s | P95 | Max |
+|-------------+---------------+----------------------+-----+--------------------+-----+-----|
+| Prior scalar scan | 7.27 s | 21.37 s | 41.01 s | 24.13 | 120.78 ms | 245.13 ms |
+| Prebounded scan | 2.11 s | 22.05 s | 36.55 s | 27.07 | 119.30 ms | 146.67 ms |
+
+The scan saved 71.0 percent of replacement wall and improved complete
+query throughput by 12.2 percent. GC wall was 20.46 and 20.94 s,
+respectively. Both runs failed the unchanged 100 ms P95 assertion.
+The candidate and its boundary test remain in the isolated patch.
+
+The same candidate passed all three 10,000-row Cases against the
+unchanged serial Rust Ascent 0.8.1 executable. Each arm checked 1,000
+complete results per shape. Scheme returns detached mutable lists;
+Rust returns detached vectors of tuples. The Rust append arm rebuilds
+its evaluator, and the Scheme append arm reuses its prior frontier.
+
+| Workload | Scheme verified/s | Rust verified/s | Scheme share | Scheme P95 | Rust P95 |
+|----------+-------------------+-----------------+--------------+------------+----------|
+| Functional replacement | 508.70 | 1,067.28 | 47.66% | 1.625 ms | 1.007 ms |
+| Branching replacement | 316.18 | 1,201.62 | 26.31% | 2.605 ms | 0.905 ms |
+| One redundant edge appended | 608.03 | 1,110.14 | 54.77% | 1.469 ms | 0.980 ms |
+
+** Allocation order of the detached list
+
+The binary source view reads its numeric cursor by ordinal. The current
+exporter walks backward and prepends each newly allocated row. The
+forward candidate allocates the same two row pairs and one spine pair
+per ordinal. It links the previous private tail to the next cell before
+returning the list. A zero-row view returns the empty list. The caller
+receives the same values and order, with independently mutable spine
+and row pairs. No caller callback runs while the spine is being built.
+
+=detached_forward_order= models the accumulated sequence.
+=detached_forward_cells_fresh= separates new cells from prior initialized
+cells. Neither statement predicts collector timings. Gambit's movable
+collector copies a live object's payload and follows links from the
+copied objects. The probe changes allocation order to test locality
+while holding the source roots, row values, pair count and verifier
+fixed. The original bound and source-cursor checks remain in force.
+
+The candidate passed 136 Cases in ten native semantic modules. An
+added case mutates the outer spine and a row's inner spine, then
+checks a second export and a later export of the same publication.
+Both measured arms used the prebounded source scan. Both completed
+and checked 1,000 one-million-row mutable lists.
+
+| Allocation order | Export wall | GC wall | Process CPU | Verified queries/s | P95 | Max |
+|------------------+-------------+---------+-------------+--------------------+-----+-----|
+| Backward prepend | 21.32 s | 20.33 s | 35.56 s | 27.91 | 113.38 ms | 152.35 ms |
+| Forward tail link | 24.89 s | 21.89 s | 39.21 s | 25.32 | 124.56 ms | 165.77 ms |
+
+Forward linking was slower and both arms failed the unchanged 100 ms
+P95 assertion. Keep the backward exporter. The candidate uses the same
+number of pairs, so the result does not measure the benefit of a smaller
+live set.
+
+** Initial declaration reachability
+
+In =make-actor-session=, =initial= holds the captured source cut. The
+owner closure also retains =program= and =relations= for canonical
+shape checks, current POO metadata, update eligibility and ordinary
+snapshot fallback. The initial relation declaration still contains
+its caller-supplied row spine. Replacing the source cut changes
+=pending= and its subsequent committed cut, leaving that other path
+to the initial declaration intact.
+
+A native reachability probe registered weak keys for the original
+Program and its initial row spine. The activation that constructed
+them returned only the Session. It then replaced the source and
+verified the completed new relation. Both keys survived a collection
+while the Session was live. The no-Session control released both keys
+on its first observation. After closing the Session and leaving its
+scope, the Program key cleared on the first collection and the row
+spine cleared on the second. The probe uses explicit collections
+only for reachability, outside the performance suite. It shows a
+retention path while the Session is open. It does not show a leak
+after close or explain every root in the two-input benchmark, whose
+caller independently holds both lists.
+
+A row-free owner must preserve the metadata revision and callback
+fallback checks in =gerbil-ascent-canonical-actor-inputs?= and
+=gerbil-ascent-projection-tree-current?=. A derived POO object that
+inherits the original relation keeps the original row root reachable.
+Any replacement must establish independent ownership for admitted row
+data and still honor observable caller and prototype edits. These
+obligations remain open.
+
+A separate native reachability probe kept a Session and its completed
+Result live for an 8,192-row affine projection. Two exports from that
+same Result registered the outer pair, first row pair, and first field
+tail in separate weak-key identity tables. The caller kept one export
+and discarded the other. After two explicit collections, all three
+kept keys remained and all three discarded keys were gone. Mutation
+of the kept row changed neither a new export of that Result nor a
+subsequent Session run. This distinguishes the declaration retention
+above from retention of the sampled detached result cells on this
+export path. It is a reachability check with no timing verdict.
+
+** Collector time alone and the export gate
+
+The benchmark sorts 1,000 verified request durations and tests index
+949 against the strict 100 ms bound. At most 50 samples can meet or
+exceed that bound. In the earlier scalar trace, 100 export brackets
+recorded at least 100 ms of GC wall by themselves. The matching
+two-caller-root diagnostic had 59 such brackets, and the one-root
+diagnostic had one. Each collecting bracket counted a single GC.
+
+=bounded_phases_limit_fast_requests= bounds the number of fast
+complete requests by the number of fast enclosed phases. Holding the
+observed pauses fixed, eliminating all other request work in either
+two-root diagnostic would still miss the gate. This calculation uses
+the observed traces from those diagnostics. A new implementation can
+change the collector's timing and therefore needs its own measurement.
+
+** Eligibility from the owned cut
+
+On the ordinary Actor path, =evaluate-cut= checks eligibility for
+retaining the private engine. Its current scalar-cut check uses the
+flags computed by =copy-source-rows= and the packed capture in
+=source-cut.ss=. The following update-eligibility call scans the
+original declaration rows again when a relation has no field
+predicate. Initializer =gerbil-ascent-initialize-sources!= already
+uses the owned cut for row values on this route. After replacement
+the declaration rows describe an older source.
+
+The Actor-specific eligibility entry consumes that same private cut.
+It checks every current slot's scalar flag, then shares the existing
+predicate, provider and rule checks. The ordinary Session and the
+log-bound snapshot entry keep their original row checks. The caller
+continues to guard the Actor entry with canonical ownership, current
+projection metadata and a single evaluator worker. No positive
+eligibility decision is cached. Source layout, matched publication,
+cancellation, provenance and resource accounting stay under the
+existing engine and coordinator checks.
+
+=scalar_slot_append= covers a prepended batch and its existing
+suffix. =actor_scalar_cut_summary= composes the slot flags without
+reading declaration values. An ordinary retained run must still
+refuse mutable current values, including after a scalar initial
+declaration. Conversely, an earlier mutable value cannot prevent
+reuse once a replacement has committed an entirely scalar cut.
+
+=ActorCutEligibility= checks the decision after replacing a slot.
+Its negative controls retain an old flag, inspect the initial rows,
+admit a foreign cut, ignore changed metadata or skip the protocol
+checks. The native regression replaces a mutable initial key with a
+scalar, observes zero evaluation work on the second read, then replaces
+it with a new mutable key and observes a later mutation through a
+fresh solve.
+
+The ordinary Actor control replaces a million-row declaration with
+one scalar row and verifies that row on each of 1,000 native Session
+requests. It retains the declaration and times only the hot window.
+Both arms use the same compiled caller, one VM processor and the
+90-second and 2 GiB limits. Neither arm records a GC in the window.
+
+| Eligibility read | Requests/s | P95 | Max | CPU | Opening |
+|------------------+------------+-----+-----+-----+---------|
+| Initial declaration rows | 87.49 | 12.534 ms | 18.533 ms | 11.407 s | 316.53 ms |
+| Current cut flags | 6,972.29 | 0.161 ms | 0.252 ms | 0.143 s | 298.24 ms |
+
+The change removes a declaration-sized scan per ordinary retained
+run. It does not detach the original declaration or change the
+terminal binary export. The original million-row mutable projection
+still checked all 1,000 full results and failed its 100 ms P95
+assertion at 125.49 ms. Its throughput was 26.12 verified requests/s.
+
+On the same isolated runtime image, the 1,040,384-row recursive list
+passed at 91.69 ms P95 over 1,000 requests. Positional-field delivery
+passed at 12.42 ms P95 with 85.50 million verified rows/s. Its raw
+allocation delta was negative even with zero reported natural
+collections. The receipt retains that value and leaves cumulative
+allocated bytes unavailable. All three 10,000-row Cases also passed.
+
+** Unpublished suffix across collection
+
+The scalar exporter holds its partially materialized suffix strongly
+across every allocation. A collection can copy that suffix even though
+no client can have observed it. The candidate stages one bounded block
+at a time and holds the earlier suffix only through a weak-value table
+while allocating the next block. The numeric source view remains
+strongly reachable and immutable for the entire export.
+
+After a block is allocated, a surviving suffix can be linked to the
+new private tail and put back in the weak slot. A cleared slot triggers
+one complete pass through the original strong exporter. The incomplete
+block never leaves the export call. This uses normal Gambit collections
+under the same heap ceiling. Dropped work is bounded by one partial
+pass plus one complete pass. The fact budgets, list types, freshness
+and public row order do not change.
+
+=detached_chunk_join= states the exact order after joining at a cut.
+=detached_weak_suffix_exact= covers a surviving suffix and the
+full-export fallback. The native experiment checks whether a weak
+suffix actually clears and whether reducing retained output during
+GC improves the unchanged million-row list case. The theorem does not
+assert that the compiler will drop every strong reference at the
+intended safepoint or that collection timing will improve.
+
+The experimental Quint model found the expected counterexamples for
+publishing an incomplete block, joining in reverse order and retrying
+the weak pass. The compiled candidate passed 137 cases across ten
+native semantic modules. A separate instrumented case collected before
+reading the weak slot and reached the strong fallback on each of three
+exports. All three exports retained exact order and independent mutation.
+The measured candidate used natural collections throughout.
+
+| Collector root during next block | Verified queries/s | P95 | Max | GC count | GC wall | Peak RSS |
+|----------------------------------+--------------------+-----+-----+----------+---------+----------|
+| Strong suffix | 26.82 | 124.61 ms | 149.77 ms | 208 | 21.11 s | 1,596.14 MiB |
+| Weak suffix | 20.77 | 117.23 ms | 151.56 ms | 333 | 31.25 s | 1,166.94 MiB |
+
+Both arms checked all 1,000 one-million-row mutable lists under the
+original limits. The weak route reduced peak RSS but spent 33.83 s
+in export versus 21.95 s for the strong route. Neither passed the
+100 ms assertion. The production candidate retains the strong
+exporter. The rejected implementation, formal model and raw receipts
+remain with the local experiment.
+
+** Native package rebuilt from the PR source
+
+The retained runtime and its release fixtures replay as an eight-file
+patch over PR #2 head =90af6adc9ea46f6a6451b6d2f552fc111e5185f6=.
+Each replayed file matches the retained source hash. An independent
+prefix reused the pinned Yuanxu and POO dependency objects and began
+with no ASCENT objects. The native =gerbil build= completed and
+produced a new =libascent= image.
+
+The first semantic invocation omitted the test-only fixture search
+path. It reported five missing fixture modules, and only five modules
+completed. The corrected invocation gives the rebuilt production
+prefix precedence and adds the same archived source tree only for
+fixture imports. It passed all 136 cases in ten modules with the
+120-second startup and idle supervision and 2 GiB heap limit. Its
+receipt binds the test to the replay hashes and the built executable.
+
+The same prefix then ran the frozen million-row list Case. All 1,000
+results were verified at 26.56 requests/s. P95 was 125.65 ms,
+maximum latency was 163.45 ms, and 204 collections accounted for
+21.05 s of GC wall. The original 100 ms assertion failed.
+
+The same prefix prepared the compiled performance suites in 42.02 s.
+The original ten-module aggregate ran for 52.03 s and reported 27
+passing cases. It exited 70 after the lifecycle allocation delta
+failed the original nonnegative check. The aggregate reached every
+module under the 120-second startup and idle supervision. Its failure
+remains in the receipt. No Gambit patch or counter substitution was
+used.
+
+** Collector frequency under the same heap ceiling
+
+A separate diagnostic invoked the same compiled million-row list Case
+and the same rebuilt production library with Gambit's
+=live-ratio=35=. The runtime reported one VM processor and the original
+2 GiB managed heap ceiling. Both windows verified all 1,000 results.
+Nothing changed in the default runtime, the Case, or its assertion.
+
+| GC live ratio | Verified requests/s | GC count | GC wall | P95 | Max | Peak RSS |
+|---------------+---------------------+----------+---------+-----+-----+----------|
+| Default 50 | 26.56 | 204 | 21.05 s | 125.65 ms | 163.45 ms | 1,597.02 MiB |
+| Diagnostic 35 | 33.71 | 129 | 13.53 s | 123.80 ms | 147.89 ms | 2,100.80 MiB |
+
+The collector ran less often and completed more requests per second.
+Mean recorded collection wall was about 103 ms and 105 ms,
+respectively. The unchanged P95 assertion still failed. Peak process RSS
+includes memory outside the managed Scheme heap, so it is reported
+separately from the configured ceiling. The diagnostic setting is kept
+out of production and acceptance.
+
+** macOS worker link controls
+
+The local Scheme-profile Rust build against the rebuilt =90af6adc=
+candidate first failed to find =-liconv=. The same small Rust program
+reproduced that failure with the Nix =cc= selected by PATH and linked
+with =/usr/bin/clang= using the installed Apple SDK.
+
+With Apple Clang, Rust compiled the extension, but the default Apple
+linker crashed while linking the worker. The native crash report
+identified a thread stack overflow inside repeated =markLive= calls
+from =deadStrip=. The linker snapshot replayed successfully with
+only =-dead_strip= removed. A separate replay with the same objects
+and Apple =ld-classic= also linked with =-dead_strip= retained.
+These interventions are local controls. The failed builds are
+retained, and the project and SDK configurations are unchanged.
+
+The installed wheel on this =90af6adc= candidate passed the default
+worker entry. The separately built explicit worker failed the exact
+program identity handshake. The two program archives contained the same
+533 member names in the same order. Among them, 375 differing objects
+reported a deployment target of 26.0 in the explicit worker build and
+11.0 in the wheel build. Building the explicit worker with the wheel's
+deployment target and Cargo flags reproduced the wheel's archive
+SHA-256. The installed-wheel qualification then passed with the explicit
+worker in 21.55 s. It verified 120 calls and 120 closure applications
+and reaped every process at the host capacity of 12. It also verified
+all three Rayon distribution modes and the resource failure control.
+The original mismatched build remains a negative control. This
+experiment concerns the separate process-pool transport.
+
+** PR dependency update
+
+PR #2 advanced from =90af6adc= to =2b733a60= with one manifest line
+changed. It now selects Yuanxu =df4be3a= and still selects POO
+=187fc0e= transitively. The retained eight-file patch replayed over the
+new Git source with identical hashes for every touched file. Its Rust
+bridge remains pinned to gerbil-scheme-rust =7c4dd3d8=.
+
+The pinned Yuanxu source built in a separate prefix, and its selected
+native library closure regression passed. A direct linked-source
+build lacked the package manifest used by ASCENT. The named
+=gerbil pkg build= registered that manifest in the isolated prefix.
+Qualification of the resulting ASCENT image is separate from
+the measurements on =90af6adc=.
+
+The isolated native =gerbil build= completed in 499.10 s. That wall time
+includes overlap with another build. The resulting image passed all 136
+Cases in the ten selected semantic modules in 117.82 s, including normal
+process exit and complete harness markers. The image SHA-256 was
+=02c657fef21425c3cf2dfc4708f4b3c88d8d3b05c2dce1aa545c117be671240b=.
+
+The separate local run of the full macOS semantic recipe passed 1,584
+Cases across all 185 modules. Preparation took 125.01 s. The original
+600-second test invocation completed in 365.35 s, with zero exit
+status and complete module and harness receipts. The full inventory
+includes the lifecycle checks for fresh and retained Sessions in
+=scheme-library-contract-test.ss=.
+
+The independent performance aggregate prepared in 44.00 s and ran in
+58.47 s under its existing startup and idle supervisor. All ten modules
+reported, and 27 Cases passed. The aggregate failed with exit 70 at
+the lifecycle counter assertion in
+=t/qualification/scheme-library-contract-fixture.ss:313=. The published
+=2b733a60= Linux performance job failed the same assertion. The
+nonnegative allocation check and its evidence remain in place.
+
+The worktree already contained a failure diagnostic for the lifecycle
+fixture. The two fixture files were compiled in a separate overlay and
+loaded above the same candidate image. The instrumented native Case
+completed all nine retained states of pair zero. Its raw Gambit
+counter fell from 523,460,504 to -434,711,568 bytes. The delta was
+-958,172,072 bytes. The independent lifecycle assertions ran before
+the original nonnegative check rejected the sample. The existing
+120-second supervision ended with exit 70 after 10.62 s. Only failure
+evidence was added to the diagnostic window.
+
+[[https://github.com/tao3k/gambit/issues/5][Gambit issue 5]] records a
+native Darwin backtrace on the same pinned SDK family. The earlier
+relink implicated stack section accounting when the stack limit parked
+a section without copying a frame. This overlay records the raw
+counter regression, and does not attribute the Linux failure to that
+same native instruction. No runtime patch, replacement counter, or
+coerced result was used.
+
+The signed measurements and the scope of the Linux observation are
+also recorded in a [[https://github.com/tao3k/gambit/issues/5#issuecomment-7058093548][follow-up on Gambit issue 5]].
+
+The published =2b733a60= head passed the macOS dependency, preparation,
+and semantic jobs, and the Linux semantic, oracle, Rust/PyO3, Python
+consumer, and formal jobs. Local model checks cover a different scope.
+The guarded Lean build completed all 195 jobs in the working inventory.
+The local Quint checks for =ActorSession=, =ActorResidentWorker=,
+=ActorPackedSource=, =ActorSourceCertificate=, =ActorTerminalCommit=,
+=ActorOrdinalRuns=, and =RuntimeMeasurement= passed with their configured
+negative controls. These checks apply to the named models and do not
+establish an end-to-end implementation refinement.
+
+The complete working-source =just --no-deps check-formal= run later
+reached =ALL-FORMAL-CHECK-OK= and exited zero. It completed the guarded
+Lean build, 759 Quint obligations across 86 models, and 109 generated
+source checks. =PreparationWork= was the final Quint obligation. Its
+positive exploration generated 48,428,881 states, found 2,442,600
+distinct states, and exhausted its queue. Its original transitions,
+invariants, mutants and time budget were used. This local result is
+separate from CI on a published candidate revision.
+
+The installed Scheme/Rayon wheel and explicit Rust worker built from
+the same candidate. Both embedded archive SHA-256
+=1d85fd62b075353a22bd1974115ed13eed3bde5c376b2d5881ec1819d91f0194=.
+The wheel used the same 11.0 macOS deployment target as the worker.
+The default PyO3 worker passed in 21.17 s and the selected worker in
+20.48 s. Both used the machine's available capacity, verified 120
+calls and 120 closure applications, and reaped all 12 child processes.
+Both exercised the three Rayon distribution modes, resource failure,
+and the retained published snapshot. These process-pool checks are
+separate from the resident single-VM measurements.
+
+** Mutable list allocation without ASCENT
+
+The rebuilt =2b733a60= candidate verified 1,000 changed queries with one
+million projected rows per result. The native =gerbil test= Case kept one
+VM processor, the 2 GiB heap ceiling, and the strict 100 ms P95 check.
+It verified 24.12 requests/s in the oracle-inclusive window. P50 was
+15.75 ms, P95 was 127.52 ms, and the maximum was 359.11 ms. Source
+replacement took 2.35 s in total. Run and publication took 0.20 s,
+detached export 24.67 s, and the oracle 14.20 s. The VM recorded 211
+collections and 23.55 s of GC wall. The original assertion failed.
+
+The separate native control retained two disjoint million-row caller
+lists throughout 1,000 materializations. It allocated each ordered result
+directly with three fresh pairs per row and verified all fields and the
+terminal spine independently. The three distinct cells for each row
+correspond to =detached_binary_pair_slot= and =detached_binary_pair_extent=
+in =MillionQueryWorkload.lean=. That counts three billion cons cells across
+the window by construction. The count does not depend on the GC allocation
+counter. The control had no Session, relation
+index, source replacement or rule evaluation. It used the same processor
+count and heap ceiling. The timed loop took 29.90 s wall and 29.16 s
+CPU. Its oracle-inclusive P95 was 109.57 ms, and its export GC P95 was
+103.88 ms. The VM counted 249 collections, and all recorded GC wall
+fell within export brackets. There were 142 requests with at least
+100 ms of GC wall in export alone.
+
+The =bounded_phase_misses_p95= theorem connects the measured GC brackets
+to the production percentile rule. At most 858 of 1,000 requests in this
+control could be below the bound with the recorded GC durations fixed.
+The rule requires 950. This is evidence for the two-root mutable-list
+shape on this Gambit release. The control does not exercise ASCENT
+semantics or bound the pauses of a different allocation strategy.
+
+** Deferred linking of private output blocks
+
+The native binary-source exporter builds a backward outer chain with
+two fresh field pairs per row. The alternative held independent block
+spines in private vectors and linked their tails only after construction.
+Every tail write targeted a new outer pair. =detached_block_splice_order=
+uses Lean's =List.map_flatten= to establish the order of the completed
+splices. =detached_binary_pair_slot= preserves the distinct coordinates
+for the three cells per row. The native controls checked empty, exact,
+partial, and one-row blocks, and checked that mutating one returned list
+could change neither the input nor a second result.
+
+One compiled native probe measured a continuous chain, 1,024-row
+blocks, and single-row blocks in that order. Each process verified all
+1,000 results of one million rows with both caller input lists retained.
+The probe kept the single processor, 2 GiB ceiling, and 90-second limit.
+Wall and CPU differences are taken separately from Gambit's GC counters.
+
+| Layout during allocation | Result P95 | Result P99 | Export GC wall P95 | Export GC CPU P95 | GC wall at least 100 ms |
+|--------------------------+------------+------------+--------------------+-------------------+-------------------------|
+| Continuous chain | 117.71 ms | 134.63 ms | 111.12 ms | 102.81 ms | 152 / 1,000 |
+| 1,024 rows per block | 110.99 ms | 124.15 ms | 104.57 ms | 102.93 ms | 128 / 1,000 |
+| One row per block | 160.02 ms | 243.99 ms | 145.56 ms | 102.79 ms | 195 / 1,000 |
+
+The 1,024-row blocks reduced observed wall tail but spent about the same
+CPU in the collecting samples. All layouts exceeded the original
+100 ms criterion in the independent probe, even on GC CPU P95 alone.
+The experiment did not justify changing the production exporter. The
+existing production gate and allocation assertion remain intact.
+
+** Nonmoving output spine control
+
+A second independent probe used Gambit's =##still-copy= only on a
+newly created outer pair. The two row field pairs stayed ordinary
+Scheme pairs. Gambit's runtime documents the distinction between the
+[[https://github.com/gambit/gambit/blob/master/lib/_kernel.scm#L2235][still copy primitive]] and its [[https://github.com/gambit/gambit/blob/master/lib/mem.c#L69][allocation and collection rules]].
+On the frozen SDK, the native controls verified content and order
+after a collection and isolated subsequent mutations of the result
+from the input and from a second export.
+
+The initial million-row timing pair overlapped the full Quint suite.
+The ordinary control processed 300 verified requests before the
+90-second limit. The nonmoving arm reached 100. These are the last
+completed progress markers, emitted every 50 requests. Neither arm
+returned a 1,000-request receipt. The overlap invalidates the timing
+comparison. The failures remain in the local evidence, and neither
+arm had a comparable performance receipt from that run.
+
+After formal exited zero, the same compiled probe and native commands
+ran in sequence. The moving-pair control completed all 1,000 verified
+results in 37.17 s of measured wall time and 35.16 s CPU. Its P95 was
+137.76 ms, including export and the oracle. Export GC CPU P95 was
+125.75 ms. The nonmoving-spine arm reached the 850-result marker and
+was stopped by the unchanged 90-second watchdog. It produced neither
+a complete sample set nor a valid P95. This measures the Scheme
+=##still-copy= route, which adds an allocation after =cons=. A direct
+allocator for still pairs was outside this experiment.
+
+** Direct allocation of the nonmoving spine
+
+The frozen SDK exposes =___make_pair= and =___release_scmobj=. Gambit's
+[[https://github.com/gambit/gambit/blob/master/lib/mem.c#L1646][allocator contract]]
+requires nonmoving inputs during foreign allocation. The probe uses
+=std/ffi= to allocate an empty outer pair with immediate fields. It
+releases the temporary foreign reference after the last allocating C
+call, then attaches the row and the suffix from Scheme. The generated
+foreign wrapper returns the new pair before Scheme writes either field.
+The two inner pairs remain ordinary Scheme pairs. Failure follows
+Gambit's heap-overflow signaling path. No runtime patch was used.
+
+The native controls forced collection with the returned object rooted,
+verified that a discarded blank pair was reclaimed, and verified that
+mutating an exported pair left the input and another result unchanged.
+The allocation probe used the same 1,000 independently verified
+million-row results with both inputs retained, one VM processor, the
+2 GiB heap ceiling and the 90-second watchdog.
+
+| Outer pair allocator | Measured wall | Measured CPU | Result P95 | Export GC CPU P95 |
+|----------------------+---------------+--------------+------------+-------------------|
+| Ordinary Scheme allocation | 30.44 s | 29.90 s | 111.10 ms | 104.19 ms |
+| Direct nonmoving allocation | 66.03 s | 65.45 s | 188.84 ms | 160.18 ms |
+
+Both arms finished. Direct allocation removed the extra moving pair
+from the =still-copy= route, while GC CPU and end-to-end cost remained
+higher than ordinary allocation. The isolated probe therefore does not
+support replacing ASCENT's exporter with this path.
+
+The production exporter remains unchanged. Its measured mutable-list
+threshold and the lifecycle allocation assertion are still failing
+release requirements. The conditional clock reduction considered for
+=PreparationWork= remains a local proposal. The original model passed
+within its budget.
+
+** Read recursive packed sources without materializing their row lane
+
+The recursive terminal route forced =source-slot-newest-first= to build
+the functional successor index, even when the same slot had an exact
+numeric view. =packed-source-lane= allocates three pairs per input row
+and the forced promise keeps the pairs reachable from its source cut.
+Read the numeric view into the existing index arrays and write the
+forward visit ordinals into descending slots. Lean's
+=forward_cursor_preserves_newest_first_slot= ties each index slot to the
+old newest-first lane. Integer validation, checkpoints, and the output
+limit remain in the functional evaluator. The branching replay and
+ordinary fallback still use the original lane when they need it. The
+direct projection still returns the same fresh mutable list.
+
+Both recursive arms loaded the same compiled Gerbil benchmark and
+verified 1,000 results of 1,040,384 rows. The cursor overlay passed 53
+focused native Cases including round order, cancellation, limits and
+detached mutation. These were separate from the timed windows.
+
+| Recursive input path | Run CPU | Total timed CPU | Total GC wall | Requests/s | Result P95 |
+|----------------------+---------+-----------------+---------------+------------+------------|
+| Materialized lane | 3.80 s | 44.80 s | 16.25 s | 21.45 | 94.88 ms |
+| Numeric cursor | 3.19 s | 44.14 s | 18.93 s | 19.26 | 104.06 ms |
+
+The first overlay had a shorter evaluator CPU window, but its ownership
+probe still observed one forced lane retained after collection. The
+actual workload orders each chain backward before stepping to the next
+chain, so the existing strictly monotone source capture did not produce
+a numeric view. The timing does not establish an allocation saving.
+The complete Case failed the original strict 100 ms bound. The separate
+unchanged projection shape under
+the overlay verified 1,000 million-row results at 141.19 ms P95 and
+also failed the original assertion. Both timed runs with the overlay
+reported collections. The raw allocation readings are not evidence of
+cumulative allocation savings.
+
+The next candidate admits an unordered numeric lane only for the
+already selected recursive terminal source. This representation supports
+an internal ordinal read and keeps the deferred ordinary row lane.
+It cannot publish the source as a unique indexed relation. The evaluator
+still validates distinct origins and forward edges before using its
+successor index. Ordinary initialization, branching replay, source
+order, and resource and cancellation checks retain their existing paths.
+After that validation, a scalar source view can publish and scan the
+same cells in caller order. It exposes no binary-search claim for an
+unordered capture. Source list and field entries remain detached from
+the stored cells.
+
+The separate native ownership probe observed one terminal evaluation,
+zero forced source lists and zero retained source-list spines after
+collection. It checked ordered source export, keyed field selection,
+and independent list mutation. The prior terminal path forced one
+source list and retained its spine after collection. Neither ownership
+probe enters a timed window.
+
+This candidate passed 62 focused native Cases including publication,
+cancel, budget and provenance. On the same compiled recursive Case,
+it verified all 1,000 results of 1,040,384 rows and passed the original
+100 ms assertion at 87.94 ms P95. The materialized-lane reference was
+94.88 ms. Peak process RSS fell by 114.14 MiB. Source replacement took
+0.18 s total, compared with 3.28 s in the reference. Total timed CPU
+was 45.19 s compared with 44.80 s. GC wall was 18.48 s compared
+with 16.25 s. This result qualifies the recursive sample window.
+
+The separate one-million-input projection completed and verified every
+one of the 1,000 results at 117.23 ms P95. Its original 100 ms assertion
+still failed. Recursive packing does not change the projection's source
+or list exporter. The candidate remains local pending full acceptance.
+
+** Other production deliveries on the rebuilt image
+
+Each measured Case verified 1,000 requests. The recursive list and
+field visitor kept their separate delivery and oracle contracts. All
+rows were verified in both Cases.
+
+| Request | Verified/s | P95 | Max | Query CPU | GC wall |
+|---------+------------+-----+-----+-----------+---------|
+| Recursive list, 1,040,384 output rows | 23.60 | 87.08 ms | 176.21 ms | 42.08 s | 15.31 s |
+| Projection field visitor, 1,000,000 output rows | 92.33 | 11.43 ms | 102.09 ms | 10.77 s | 0.091 s |
+| 10,000-row closure, disjoint chains | 441.96 | 3.53 ms | 79.01 ms | 2.10 s | 0.586 s |
+| 10,000-row closure, chains with shortcuts | 311.33 | 3.11 ms | 46.69 ms | 3.17 s | 0.812 s |
+| 10,000-row closure, one redundant edge appended per query | 609.27 | 1.48 ms | 32.83 ms | 1.63 s | 0.331 s |
+
+These Cases passed the original P95 assertion and exited normally. The
+field visitor delivered its first row at 2.94 ms P95 and verified
+92.33 million rows/s. It does not construct a detached mutable list. Its
+raw Gambit allocation counter regressed by 3,220,353,288 bytes in the
+timed window. Cumulative allocation is unavailable for that measurement.
+
+The unchanged serial Rust Ascent 0.8.1 reference verified 1,000 results
+per workload on the same machine after the Scheme windows. The output
+cardinalities and update sequences match. The Scheme caller receives a
+detached mutable list; the Rust caller receives a detached tuple vector.
+The Rust arm below rebuilds evaluation state after each update, including
+append. The Scheme append arm uses its retained frontier.
+
+| 10,000-row closure | Scheme verified/s | Rust verified/s | Scheme share | Scheme P95 | Rust P95 |
+|--------------------+-------------------+-----------------+--------------+------------+----------|
+| Functional replacement | 441.96 | 960.14 | 46.03% | 3.526 ms | 1.704 ms |
+| Branching replacement | 311.33 | 876.75 | 35.51% | 3.108 ms | 2.157 ms |
+| Redundant edge append | 609.27 | 1,010.36 | 60.30% | 1.483 ms | 1.526 ms |
+
+The separate retained Rust run reached preparation but returned no
+1,000-sample receipt in the 90-second window. The append row in the
+table therefore remains a comparison against Rust recomputation.
+
+** Session progress during a pending OS read
+
+Native =gerbil test= loaded =benchmarks/actor-io-overlap-test.ss= from
+source against the same rebuilt image. Both arms verified one million
+public state replies and recorded 1,000 latency samples. Both ran in
+one VM with one processor. In the second arm, the pipe reader stayed
+suspended on input through the request window. It received the expected
+byte after the harness released it and joined normally.
+
+| Pipe wait | Verified replies/s | Sample P95 | Sample max | CPU | Collections | GC wall |
+|-----------+--------------------+------------+------------+-----+-------------+---------|
+| No | 637,514 | 2.08 us | 17.63 us | 1.564 s | 26 | 0.739 s |
+| Yes | 634,574 | 2.08 us | 14.08 us | 1.567 s | 26 | 0.740 s |
+
+Both arms passed. The experiment exercises a genuine native I/O wait
+and public mailbox requests. It does not measure scheduling during
+active CPU-bound evaluation or the maximum over all one million replies.
+
+** Session replies during recursive evaluation
+
+A separate native diagnostic on the rebuilt candidate used the existing
+128 groups of 128 vertices, two alternating cuts, and the independent
+recursive oracle. One caller ran each query while another issued a
+32-request burst through the public Session mailbox. The diagnostic
+checked monotone generations, current-epoch running replies, and the
+idle state after every complete result. The source replacement advances
+the generation before the new run advances it again. The earlier probe
+incorrectly expected only one transition and its failure is retained.
+The corrected probe derives the expected run epoch from the post-update
+state, following =update!=, =start-run!= and =read-state=.
+
+All 64 queries verified 1,040,384 rows each, and all 2,048 measured
+state requests returned. Each query had at least one state reply for
+its in-flight epoch. The 66 running replies had 8.77 ms P95 and
+20.97 ms maximum. The full burst population had 42.92 us P95,
+3.61 ms P99, and 20.97 ms maximum. The public running status identifies
+an admitted query before its terminal publication; it does not sample
+the evaluator's program counter. This run overlapped a wheel build. Its
+running subset is diagnostic and is too small to qualify a tail SLO.

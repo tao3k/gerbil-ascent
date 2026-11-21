@@ -122,6 +122,8 @@ def obligations(base: Configuration) -> tuple[Obligation, ...]:
         result.append(Obligation(mutation, fault, 12, "Safety"))
     if model in ("ActorRoundCredits", "ActorTestPool", "ReadyComponents"):
         result.extend(Obligation(f"capacity-{n}", base.changed(Capacity=n)) for n in (1, 3))
+    if model == "ReadyComponents":
+        result.append(Obligation("sole-assignment", base.changed(Tasks="{1}", Capacity=1)))
     if model == "LatticeProjection":
         result.extend(Obligation(f"remaining-{n}", base.changed(Remaining=n)) for n in (0, 1))
     if model == "EvidenceLifecycle":
@@ -180,8 +182,8 @@ def capacity(heap_mib: int = 1024) -> int:
 
 
 def verification_schedule(configurations: list[Configuration]) -> list[Configuration]:
-    # Every model is already compiled and independent. Start larger obligation
-    # groups first so their serial checks do not form a late verification tail.
+    # Every model is already compiled. Prioritize larger groups while their
+    # independent obligations share the same bounded checker pool.
     return sorted(configurations, key=lambda base: len(obligations(base)), reverse=True)
 
 
@@ -305,33 +307,39 @@ class Runner:
         finally:
             self.close_compiler()
 
-    def check(self, base: Configuration) -> int:
-        count = 0
-        checks = obligations(base)
-        print(f"QUINT-MODEL-START {base.model} obligations={len(checks)}", flush=True)
-        for obligation in checks:
-            label = f"{base.model}-{obligation.name}"
-            config = self.output / f"{label}.cfg"
-            config.write_text(obligation.configuration.text())
-            code, output = self.run(["java", "-Xmx1G", "-XX:+UseParallelGC", f"-Djava.io.tmpdir={self.output}",
-                                     "-cp", str(self.jar), "tlc2.TLC", "-workers", "1", "-config", str(config),
-                                     "-metadir", str(self.output / label), str(self.output / f"{base.main}.tla")], label)
-            validate_output(obligation, code, output)
-            marker = "QUINT-CHECK-OK" if code == 0 else "COUNTEREXAMPLE-OK"
-            print(f"{marker} {label} {obligation.property} exit={code}", flush=True)
-            count += 1
-        return count
+    def check(self, base: Configuration, obligation: Obligation) -> None:
+        if time.monotonic() >= self.deadline:
+            raise TimeoutError("formal verification deadline exhausted before "
+                               f"{base.model}-{obligation.name}")
+        label = f"{base.model}-{obligation.name}"
+        config = self.output / f"{label}.cfg"
+        config.write_text(obligation.configuration.text())
+        code, output = self.run(["java", "-Xmx1G", "-XX:+UseParallelGC", f"-Djava.io.tmpdir={self.output}",
+                                 "-cp", str(self.jar), "tlc2.TLC", "-workers", "1", "-config", str(config),
+                                 "-metadir", str(self.output / label), str(self.output / f"{base.main}.tla")], label)
+        validate_output(obligation, code, output)
+        marker = "QUINT-CHECK-OK" if code == 0 else "COUNTEREXAMPLE-OK"
+        print(f"{marker} {label} {obligation.property} exit={code}", flush=True)
 
     def quint_checks(self, models: tuple[str, ...]) -> dict[str, int]:
         configurations = [configuration(model, self.environment) for model in models]
         self.compile(configurations)
-        workers = min(capacity(), len(configurations))
+        scheduled = []
+        for base in verification_schedule(configurations):
+            checks = obligations(base)
+            print(f"QUINT-MODEL-START {base.model} obligations={len(checks)}", flush=True)
+            scheduled.extend((base, obligation) for obligation in checks)
+        workers = min(capacity(), len(scheduled))
         print(f"QUINT-CAPACITY workers={workers} models={len(configurations)}", flush=True)
-        results = {}
+        results = dict.fromkeys(models, 0)
+        # Configurations and TLA inputs are immutable. Each obligation already
+        # owns a distinct cfg, log and TLC state directory; it needs no model lock.
         with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures = {pool.submit(self.check, base): base.model for base in verification_schedule(configurations)}
+            futures = {pool.submit(self.check, base, obligation): base.model
+                       for base, obligation in scheduled}
             for future in as_completed(futures):
-                results[futures[future]] = future.result()
+                future.result()
+                results[futures[future]] += 1
         print("ALL-QUINT-CHECK-OK", flush=True)
         return results
 
@@ -388,6 +396,7 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "ranked-row-rust", "rust/ascent/src/execution/ordering.rs"),
                 ("ExecutionPolicy.lean", "archive-quint", "packages/proofs/quint/ArchivePolicy.qnt"),
                 ("ExecutionPolicy.lean", "scheme", "core/execution-policy.ss"),
+                ("ExecutionPolicy.lean", "choice-branch", "program/scheme-choice.ss"),
                 ("ExecutionPolicy.lean", "declaration-role-scheme", "program/declaration-role.ss"),
                 ("ExecutionPolicy.lean", "rust", "rust/ascent/src/execution/policy.rs"),
                 ("ExecutionPolicy.lean", "proof-authority-rust", "rust/ascent-scheme/src/api/session.rs"),
@@ -407,7 +416,6 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "quint", "packages/proofs/quint/ExecutionPolicy.qnt"),
                 ("ExecutionPolicy.lean", "preparation-python", "workbench/src/ascent_workbench/preparation_policy.py"),
                 ("ExecutionPolicy.lean", "preparation-quint", "packages/proofs/quint/PreparationPolicy.qnt"),
-                ("ExecutionPolicy.lean", "preparation-selection", "t/harness/build.ss"),
                 ("ExecutionPolicy.lean", "preparation-interface-quint", "packages/proofs/quint/PreparationInterfaces.qnt"),
                 ("ExecutionPolicy.lean", "preparation-interfaces", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-import", "t/harness/build.ss"),
@@ -418,7 +426,6 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "lookup-admission", "core/relation-view.ss"),
                 ("ExecutionPolicy.lean", "lookup-study-profile", "t/performance/run.ss"),
                 ("ExecutionPolicy.lean", "preparation-cc-observed", "workbench/src/ascent_workbench/preparation_work.py"),
-                ("ExecutionPolicy.lean", "preparation-compiler", "build.ss"),
                 ("ExecutionPolicy.lean", "preparation-options", "t/harness/artifact-admission.ss"),
                 ("ExecutionPolicy.lean", "preparation-stale", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-coverage", "workbench/src/ascent_workbench/preparation_work.py"),
@@ -427,7 +434,6 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-ggc", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-restore-inputs", ".github/workflows/build-cost.yml"),
                 ("ExecutionPolicy.lean", "preparation-cache-admission", ".github/workflows/build-cost.yml"),
-                ("ExecutionPolicy.lean", "preparation-cache-inputs", ".github/workflows/build-cost.yml"),
                 ("ExecutionPolicy.lean", "preparation-producer", "workbench/src/ascent_workbench/preparation_work.py"),
                 ("ExecutionPolicy.lean", "preparation-support-admission", "t/harness/artifact-admission.ss"),
                 ("ExecutionPolicy.lean", "preparation-value-shape", "program/types.ss"),
@@ -440,6 +446,13 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "instance-package-resource", "rust/ascent-scheme/src/instances/package.rs"),
                 ("ExecutionPolicy.lean", "instance-package-lifecycle", "rust/ascent-scheme/src/instances/lifecycle.rs"),
                 ("ExecutionPolicy.lean", "owner-hybrid-scheme", "interface/hybrid.ss"),
+                ("ExecutionPolicy.lean", "actor-integer-rows", "interface/engine-api.ss"),
+                ("ExecutionPolicy.lean", "source-row-packet-quint", "packages/proofs/quint/SourceRowTransfer.qnt"),
+                ("ExecutionPolicy.lean", "source-row-selection", "interface/engine-api.ss"),
+                ("ExecutionPolicy.lean", "projection-rows", "interface/engine-api.ss"),
+                ("ExecutionPolicy.lean", "projection-row-shapes", "rust/ascent-scheme/src/values.rs"),
+                ("ExecutionPolicy.lean", "projection-row-shapes-quint", "packages/proofs/quint/SourceRowTransfer.qnt"),
+                ("ExecutionPolicy.lean", "integer-source-packet", "interface/engine-api.ss"),
                 ("ExecutionPolicy.lean", "owner-source-scheme", "rules/source.ss"),
                 ("ExecutionPolicy.lean", "owner-control-rust", "rust/ascent-scheme/src/control_state.rs"),
                 ("ExecutionPolicy.lean", "projection-object-reuse", "interface/projection-cache.ss"),
@@ -463,9 +476,15 @@ def main() -> int:
                 ("ExecutionPolicy.lean", "preparation-heap", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-runner", "justfile"),
                 ("ExecutionPolicy.lean", "preparation-groups", "t/harness/test.ss"),
+                ("ExecutionPolicy.lean", "source-queue-admission", "t/harness/test.ss"),
+                ("ExecutionPolicy.lean", "source-phase-barrier", "t/harness/test.ss"),
+                ("ExecutionPolicy.lean", "scalar-materialization", "program/source-snapshot.ss"),
                 ("ExecutionPolicy.lean", "dsl-select", "program/scheme-language.ss"),
                 ("ExecutionPolicy.lean", "dsl-root", "program/func.ss"),
                 ("ExecutionPolicy.lean", "dsl-owned", "program/scheme-language.ss"),
+                ("ExecutionPolicy.lean", "dsl-closed-rules", "program/scheme-language.ss"),
+                ("ExecutionPolicy.lean", "dsl-rule-extent", "program/func.ss"),
+                ("ExecutionPolicy.lean", "dsl-rule-protocol", "program/types.ss"),
                 ("ExecutionPolicy.lean", "dsl-workload", "t/qualification/ascent-semi-naive-test.ss"),
                 ("ExecutionPolicy.lean", "preparation-roots", "t/harness/library-spec.ss"),
                 ("ExecutionPolicy.lean", "preparation-support", "packages/proofs/quint/PreparationSupport.qnt"),
@@ -492,10 +511,24 @@ def main() -> int:
                         ["lake", "env", "lean", "--run", script, language],
                         Path(script).stem + "-" + language, ROOT / "packages/proofs/lean")
                 expected = (ROOT / target).read_text()
-                if language == "row-view-scheme":
+                if language in ("actor-integer-rows", "integer-source-packet", "source-row-packet-quint", "source-row-selection", "projection-rows", "projection-row-shapes", "projection-row-shapes-quint"):
+                    region = language.removesuffix("-quint").replace("-", " ").upper()
+                    comment = "  //" if language.endswith("-quint") else "//" if language == "projection-row-shapes" else "                ;;" if language == "source-row-selection" else ";;"
+                    begin = f"{comment} BEGIN GENERATED {region}\n"
+                    end = f"{comment} END GENERATED {region}\n"
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError(f"missing or duplicate {language} source region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "row-view-scheme":
                     begin, end = ';; BEGIN GENERATED OWNED ROW VIEW\n', ';; END GENERATED OWNED ROW VIEW\n'
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError("missing or duplicate owned row view source region")
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language == "choice-branch":
+                    begin, end = ('  ;; BEGIN GENERATED CHOICE BRANCH\n',
+                                  '  ;; END GENERATED CHOICE BRANCH\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError("missing or duplicate choice branch region")
                     expected = expected.split(begin)[1].split(end)[0]
                 elif language.startswith("dsl-"):
                     region = language.removeprefix("dsl-").upper()
@@ -601,9 +634,22 @@ def main() -> int:
                     if expected.count(begin) != 1 or expected.count(end) != 1:
                         raise RuntimeError('missing or duplicate capture row transport region')
                     expected = expected.split(begin)[1].split(end)[0]
-                elif language in {"preparation-metadata-guard", "preparation-value-shape", "preparation-runtime-env", "preparation-pass-total", "preparation-batch-width", "preparation-cc-observed", "preparation-modules-current", "preparation-source-coverage", "preparation-output-publication", "preparation-projection-cache", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-restore-inputs", "preparation-cache-admission", "preparation-producer", "preparation-support-admission", "preparation-cache-inputs", "preparation-parent", "preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-compiler", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-selection", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
+                elif language in {"source-queue-admission", "source-phase-barrier"}:
+                    label = language.replace('-', ' ').upper()
+                    begin, end = f';; BEGIN GENERATED {label}\n', f';; END GENERATED {label}\n'
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate source scheduling region')
+                    expected = expected.split(begin)[1].split(end)[0]
+                    expected = expected[:expected.rfind('\n') + 1]
+                elif language == "scalar-materialization":
+                    begin, end = (';; BEGIN GENERATED SCALAR MATERIALIZATION\n',
+                                  ';; END GENERATED SCALAR MATERIALIZATION\n')
+                    if expected.count(begin) != 1 or expected.count(end) != 1:
+                        raise RuntimeError('missing or duplicate scalar materialization region')
+                    expected = expected.split(begin)[1].split(end)[0]
+                elif language in {"preparation-metadata-guard", "preparation-value-shape", "preparation-runtime-env", "preparation-pass-total", "preparation-batch-width", "preparation-cc-observed", "preparation-modules-current", "preparation-source-coverage", "preparation-output-publication", "preparation-projection-cache", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-restore-inputs", "preparation-cache-admission", "preparation-producer", "preparation-support-admission", "preparation-parent", "preparation-origin", "preparation-inputs", "preparation-stale", "preparation-coverage", "preparation-options", "preparation-ggc", "preparation-interfaces", "preparation-import", "preparation-source", "preparation-runner", "preparation-groups", "preparation-roots", "preparation-cargo-cache", "preparation-heap"}:
                     region = language.removeprefix("preparation-").upper()
-                    prefix = "#" if language in {"preparation-runtime-env", "preparation-pass-total", "preparation-batch-width", "preparation-cc-observed", "preparation-source-coverage", "preparation-output-publication", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-producer", "preparation-parent", "preparation-coverage", "preparation-inputs"} else "    #" if language in {"preparation-ggc", "preparation-origin"} else "#" if language == "preparation-heap" else "        #" if language == "preparation-runner" else "          #" if language in {"preparation-restore-inputs", "preparation-cache-admission", "preparation-cache-inputs", "preparation-cargo-cache"} else ";;"
+                    prefix = "#" if language in {"preparation-runtime-env", "preparation-pass-total", "preparation-batch-width", "preparation-cc-observed", "preparation-source-coverage", "preparation-output-publication", "preparation-audit-order", "preparation-output-target", "preparation-job-allocation", "preparation-producer", "preparation-parent", "preparation-coverage", "preparation-inputs"} else "    #" if language in {"preparation-ggc", "preparation-origin"} else "#" if language == "preparation-heap" else "        #" if language == "preparation-runner" else "          #" if language in {"preparation-restore-inputs", "preparation-cache-admission", "preparation-cargo-cache"} else ";;"
                     begin, end = (f'{prefix} BEGIN GENERATED PREPARATION {region}\n',
                                   f'{prefix} END GENERATED PREPARATION {region}\n')
                     if expected.count(begin) != 1 or expected.count(end) != 1:

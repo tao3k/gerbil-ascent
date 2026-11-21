@@ -2,11 +2,17 @@
 
 * Build ownership
 
-ASCENT declares its modules, two executables, C ABI headers, and library link options.
-=build.ss= builds the complete BuildSpec through one standard =defbuild-script=
-entry point. Gerbil's =std/make= and compiler own dependency tracking, currentness,
-job execution, and draining. ASCENT no longer splits module and executable phases
-or constructs compiler commands.
+Yuanxu collects Module targets and their options. =interface/build.ss= declares
+the single =libascent= link, its compiler options, and the runtime target's
+native =std/make= property list with C source and header prerequisites.
+=build.ss= passes these targets to =std/build-script= once. The same Yuanxu
+projection gives Gambit's linker private, checked copies of borrowed static Scheme.
+Gerbil's =std/make= and compiler own dependency tracking, currentness, job execution,
+and draining. =just develop= opens the installed Gerbil interpreter.
+Test preparation uses Yuanxu's =package-library-spec= to follow the imports of
+the selected suites and fixtures. Ordinary semantic suites remain source inputs
+to Gerbil's test command. The compiled test lanes use the same compiler options
+as the package build.
 
 The SDKs remain pinned to the existing Releases and SHA256 values in
 =tools/ci/install-gerbil-v19-release.sh=. This change introduces no SDK replacement

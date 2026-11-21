@@ -1,0 +1,123 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+title: Finite-choice research: useful ideas for our existing Scheme DSL
+#+date: 2026-10-31
+#+status: paper-to-design audit; no language or runtime change
+
+* Scope and source
+
+The subject is our existing =relational-program= / =relational-fragment= DSL.
+Its [[file:../../scheme-closure-contract.org][closure contract]] remains authoritative for the implemented language.
+This reading supplements the [[file:rule-planning.org][Ascent paper reading]]; it does not replace our
+semantics with Dusa's, introduce another solver or use miniDusa as a prerequisite.
+
+Primary source: Martens, Simmons and Arntzenius,
+[[https://arxiv.org/html/2405.19040v3][Finite-Choice Logic Programming]], arXiv:2405.19040v3, POPL 2025.
+Relevant locators are Sections 2, 4--5, 6.2 and 7.1. The independent oracle
+and implemented choice surface are described in [[file:../../../dev/finite-choice/README.org][the finite-choice notes]].
+
+Source inspection binds =4715fa0aae6a06fa7cc78627b4befcf61b7b9645= plus the
+pre-existing working tree. The inspected DSL/planner files were not edited.
+Neither upstream test results nor this document qualify the native runtime.
+
+* What we already have
+
+- =program/scheme-language.ss= lowers declared relations, rules, checked terms
+  and final limits to inspectable program values. Source construction and
+  rule-time computation have distinct boundaries.
+- =core/positive-plan.ss= keeps ordered slot actions, outputs, purity and atom
+  extent. Unsupported clauses retain the general execution path. Delta lanes
+  and physical row access already participate in native matching.
+- =program/activation.ss= makes engine-owned mutable frames from immutable
+  plans. Sharing a plan is not permission to share its mutable frame.
+- =program/reuse.ss= rejects unfinished closures. =update-selection.ss= checks
+  reuse eligibility and closes affected dependencies before reusing results.
+- =program/operator-measurement.ss= explicitly measures reference/change
+  interpreters, not compiled native rules. It cannot substantiate native
+  prefix-matching costs.
+
+* Paper ideas and design decisions
+
+| Idea | Current correspondence | Proposed use | Semantic boundary |
+|------+------------------------+--------------+-------------------|
+| Prefix-firing cost semantics, Section 7.1 | Ordered positive plans and independent operator counters | Add a native plan-level cost view: candidate visits, partial bindings, complete witnesses, head proposals and new facts | Counters need a defined charge point; neither output count nor agenda events measure all joins |
+| Incrementally retained matching information | Semi-naive deltas, index caches and completed closure reuse | Investigate retained prefix bindings for admitted pure plans | This goes beyond retaining final facts and needs its own dependency/space contract |
+| Deduction before unresolved alternatives, Section 6.2 | Completed strata and closure admission already exist | Preserve completion as a semantic stage; if exploration is later added, define which propagation must finish before a fork | No choice keyword or search API follows from this reading; infinite closure may starve branching |
+| Persistent logical state | Immutable analysis and owned engine materializations | Compare structural sharing of read-only data with current ownership, including allocation and update cost | Persistent sets do not freeze mutable payloads or memoize matching |
+| Attribute-to-value dependency, Section 2 | Relations and lattice declarations have different existing meanings | Consider a separate, explicit functional-key contract only when a target program needs it | Rejecting conflicting values, joining values and enumerating alternatives are different semantics |
+
+* First priority: make matching costs visible
+
+A rule can emit one new tuple after visiting many candidate rows and successful
+partial bindings. A second rule can derive the same tuple through a different
+witness. The DSL's operational account should distinguish all of these events.
+
+The relevant observer belongs to the existing native matcher and plan identity,
+not to a new surface grammar. Bind counts to the admitted program/source cut,
+rule and body position. Count failed candidates and duplicate head proposals.
+Native execution, reference interpretation and index construction retain
+separate counter scopes. Disabled measurement must not alter evaluation order,
+callbacks, cancellation points or admitted resource limits.
+
+Acceptance requires equal full results against an independent finite oracle,
+then an explanation of how operation counts differ. Lower output cardinality
+or an incomplete solve cannot count as cheaper inference. Timing and allocation
+remain separate evidence from the operation model.
+
+* Second priority: identify reusable prefixes without changing the language
+
+Existing syntax can already express two rules with the same relational prefix:
+
+#+begin_src scheme
+;; Rule excerpts; declarations are omitted. This is existing syntax.
+(rule (warm-answer ?x ?w)
+      (edge ?x ?y) (edge ?y ?z) (warm ?z ?w))
+(rule (cool-answer ?x ?w)
+      (edge ?x ?y) (edge ?y ?z) (cool ?z ?w))
+#+end_src
+
+The two edge matches suggest an internal materialized intermediate. It must
+carry the live bindings needed by both suffixes, not just the projected endpoint:
+discarding a witness variable can change multiplicity or provenance. Our current
+per-rule slot frames are scratch space, not a shared persistent prefix table.
+This observation does not prove the whole engine has no other sharing path.
+
+Start the investigation with canonical pure Set rules and immutable scalars.
+Preserve variable identity, body grounding order and visible dependencies; do
+not reorder opaque callbacks. Rule-local intermediates, cross-rule sharing,
+retention across rounds and retention across revisions are four distinct
+optimization scopes. Dusa's prefix cost model does not prove all four sound.
+
+On relevant source changes, invalidate or recompute the intermediate. With
+unchanged prefix inputs and a new suffix input, retain the prefix and join the
+new suffix; the new join is legitimate work. Negative/aggregate reads and
+lattice refinements require their existing stronger admission rules. A memory
+budget must account for retained intermediate rows. Avoid asserting that a
+cache is beneficial before measuring a disjoint-prefix control and peak memory.
+
+* Functional dependencies and choices are later semantic questions
+
+A key contract says that at most one value belongs to a key, and must specify
+what conflicting derivations mean. A lattice declaration combines values by an
+admitted join. A finite-choice language enumerates alternative models. These
+are not interchangeable declarations.
+
+The current =relational-choice-program= adds explicit functional choice
+predicates. Ordinary relation and lattice semantics remain distinct. The
+choice solver propagates singleton intersections before branching and uses
+private Session cuts to ground rule instances. Cross-branch prefix reuse
+requires a separate proof of dependencies and ownership.
+
+* Minimal research gate for an implementation proposal
+
+Keep the existing syntax, native evaluator and test owners. Freeze small pure
+Set programs with shared/disjoint prefixes, nonlinear recursion and several
+supports producing one head. Specify a naive finite reference in Scheme before
+adding an optimization; it must not call the production planner or matcher.
+Then compare exact results, witnessed partial matches, duplicate proposals,
+allocation and interruption behavior using the same task and semantics.
+
+This is the admission criterion for future work, not a completed test run or
+authorization to port an upstream solver. The most immediate design contribution
+is a measurable account of our existing DSL's inference, followed by a bounded
+prefix-retention experiment if the counts identify repeated work.

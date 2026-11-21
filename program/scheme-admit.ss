@@ -12,7 +12,7 @@
         (only-in "scheme-query.ss" make-relational-solution)
         (only-in "evaluate.ss" gerbil-ascent-make-engine)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :std/error exception->string)
         (only-in :std/list/list append-map))
 (export relational-compose relational-admit relational-admit/report relational-solve

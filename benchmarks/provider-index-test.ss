@@ -1,0 +1,246 @@
+;;; -*- Gerbil -*-
+;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+
+(import :std/test
+        :gerbil/runtime/gambit
+        (only-in :clan/poo/object .o .ref)
+        (only-in :gerbil-ascent/program/api gerbil-ascent-program gerbil-ascent-relation
+                 gerbil-ascent-rule gerbil-ascent-atom gerbil-ascent-literal
+                 gerbil-ascent-variable gerbil-ascent-wildcard
+                 gerbil-ascent-evaluate-program
+                 gerbil-ascent-open-session gerbil-ascent-session-run
+                 gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!)
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-row-indexes row-indexes-rows)
+        (only-in :gerbil-ascent/table/funs gerbil-ascent-index-row-snapshot)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider))
+
+(export provider-index-test)
+
+(def (recorded-mark)
+  (let* ((counter (make-f64vector 1 0.))
+         (stats (##process-statistics))
+         (wall (current-jiffy)))
+    (##get-bytes-allocated! counter 0)
+    (vector wall
+            (+ (f64vector-ref stats 0) (f64vector-ref stats 1))
+            (f64vector-ref stats 6)
+            (f64vector-ref stats 17)
+            (f64vector-ref counter 0))))
+
+(def (phase name start end fields)
+  (display "PROVIDER-INDEX ")
+  (write (cons* (cons 'phase name)
+                (cons 'wall-us (/ (* 1000000 (- (vector-ref end 0) (vector-ref start 0)))
+                                  (jiffies-per-second)))
+                (cons 'cpu-us (* 1000000. (- (vector-ref end 1) (vector-ref start 1))))
+                (cons 'collections (- (vector-ref end 2) (vector-ref start 2)))
+                (cons 'last-gc-live-bytes (vector-ref end 3))
+                (let (bytes (- (vector-ref end 4) (vector-ref start 4)))
+                  (cons 'allocation-counter-delta (and (>= bytes 0) bytes)))
+                fields))
+  (newline))
+
+(defstruct provider-probe (marks builds extends lookups returned) final: #t)
+(def (fresh-probe) (make-provider-probe (make-vector 4 #f) 0 0 0 []))
+
+(def (recorded-provider probe overselect?)
+  (let* ((base gerbil-ascent-hash-index-provider)
+         (build (.ref base '.build-index))
+         (extend (.ref base '.extend-index!))
+         (lookup (.ref base '.lookup-index))
+         (marks (provider-probe-marks probe)))
+    (.o (:: @ base)
+        (.build-index
+         (lambda (rows columns)
+           (vector-set! marks 0 (recorded-mark))
+           (provider-probe-builds-set! probe (+ 1 (provider-probe-builds probe)))
+           (let (index (if overselect? rows (build rows columns)))
+             (vector-set! marks 1 (recorded-mark))
+             index)))
+        (.extend-index!
+         (lambda (index rows columns)
+           (provider-probe-extends-set! probe (+ 1 (provider-probe-extends probe)))
+           (if overselect? (append rows index) (extend index rows columns))))
+        (.lookup-index
+         (lambda (index key)
+           (vector-set! marks 2 (recorded-mark))
+           (provider-probe-lookups-set! probe (+ 1 (provider-probe-lookups probe)))
+           (let (rows (if overselect? index (lookup index key)))
+             (provider-probe-returned-set! probe rows)
+             (vector-set! marks 3 (recorded-mark))
+             rows))))))
+
+(def (make-rows size width groups)
+  (map (lambda (id)
+         (cons (modulo id groups) (cons id (make-list (- width 2) 3))))
+       (iota size)))
+
+(def (capture-workflow size width groups overselect?)
+  (let* ((rows (make-rows size width groups))
+         (probe (fresh-probe))
+         (provider (recorded-provider probe overselect?))
+         (indexes (gerbil-ascent-make-row-indexes
+                   (vector rows) (vector rows) (vector size) (vector size)
+                   (vector 0) (vector 0) (vector provider)))
+         (literal '(literal . 0))
+         (terms (cons literal (make-list (- width 1) '(wildcard . #f))))
+         (atom (vector 0 terms '(0) terms (list literal)))
+         (lookup (row-indexes-rows indexes))
+         (keys (if overselect? rows (filter (lambda (row) (zero? (car row))) rows)))
+         (fields (list (cons 'input-rows size) (cons 'width width)
+                       (cons 'groups groups) (cons 'overselect? overselect?)
+                       (cons 'matching-rows (quotient (+ size (- groups 1)) groups))
+                       (cons 'returned-rows (length keys))))
+         (marks (provider-probe-marks probe)))
+    (def (verify packet)
+      (check-equal? packet keys)
+      (check-equal? (eq? packet (provider-probe-returned probe)) #f)
+      (check-equal? (eq? (car packet) (car (provider-probe-returned probe))) #f))
+    (##gc)
+    (let* ((start (recorded-mark))
+           (packet (lookup atom [] #f #f))
+           (finish (recorded-mark)))
+      (verify packet)
+      (check-equal? (provider-probe-builds probe) 1)
+      (check-equal? (provider-probe-lookups probe) 1)
+      ;; The provider callback is a production boundary. This interval also
+      ;; includes index-owner setup, so report it as inclusive.
+      (phase 'cold-before-provider-build start (vector-ref marks 0) fields)
+      (phase 'provider-build-body (vector-ref marks 0) (vector-ref marks 1) fields)
+      (phase 'cold-key-and-dispatch (vector-ref marks 1) (vector-ref marks 2) fields)
+      (phase 'provider-lookup-body (vector-ref marks 2) (vector-ref marks 3) fields)
+      (phase 'returned-packet-admission (vector-ref marks 3) finish fields))
+    (let* ((start (recorded-mark))
+           (packet (lookup atom [] #f #f))
+           (finish (recorded-mark)))
+      (verify packet)
+      (check-equal? (provider-probe-builds probe) 1)
+      (check-equal? (provider-probe-lookups probe) 2)
+      (phase 'warm-key-and-dispatch start (vector-ref marks 2) fields)
+      (phase 'warm-provider-lookup-body (vector-ref marks 2) (vector-ref marks 3) fields)
+      (phase 'warm-returned-packet-admission (vector-ref marks 3) finish fields))
+    ;; Independently price the exact copy primitive used on the outbound
+    ;; boundary. Keep forced collections and the oracle outside the CPU mark.
+    (##gc)
+    (let* ((before (##process-statistics))
+           (start (recorded-mark))
+           (detached (gerbil-ascent-index-row-snapshot rows))
+           (finish (recorded-mark)))
+      (##gc)
+      (let (after (##process-statistics))
+        (check-equal? detached rows)
+        (check-equal? (eq? (car detached) (car rows)) #f)
+        (phase 'outbound-copy start finish
+               (cons* (cons 'fresh-pairs (* size (+ width 1)))
+                      (cons 'gc-charge-before (f64vector-ref before 16))
+                      (cons 'gc-charge-after (f64vector-ref after 16))
+                      fields))))))
+
+;;; Wrap equal?-hash and equal? only to count their work. This is the same
+;;; structural get/put sequence as a member witness, with an independent
+;;; cardinality check. The wrappers change dispatch and are not a CPU baseline.
+(def (structural-hash-work rows probes hint)
+  (let ((hashes 0) (comparisons 0))
+    (def (hash-row row)
+      (set! hashes (+ hashes 1))
+      (equal?-hash row))
+    (def (same-row? left right)
+      (set! comparisons (+ comparisons 1))
+      (equal? left right))
+    (def members (make-hash-table test: same-row? hash: hash-row size: hint))
+    (for-each (lambda (row)
+                (unless (hash-get members row) (hash-put! members row #t)))
+              rows)
+    (let ((build-hashes hashes) (build-comparisons comparisons))
+      (check-equal? (hash-length members) (length rows))
+      (check-equal? (andmap (cut hash-get members <>) probes) #t)
+      (display "PROVIDER-HASH ")
+      (write (list (cons 'size-hint hint)
+                   (cons 'rows (length rows))
+                   (cons 'hit-probes (length probes))
+                   (cons 'build-hashes build-hashes)
+                   (cons 'build-comparisons build-comparisons)
+                   (cons 'hit-hashes (- hashes build-hashes))
+                   (cons 'hit-comparisons (- comparisons build-comparisons))))
+      (newline))))
+
+(def (query-program rows width provider)
+  (let* ((id (gerbil-ascent-variable 'id))
+         (terms (cons* (gerbil-ascent-literal 0) id
+                       (make-list (- width 2) (gerbil-ascent-wildcard)))))
+    (gerbil-ascent-program
+     (list (gerbil-ascent-relation 'input width rows provider)
+           (gerbil-ascent-relation 'output 1 []))
+     (list (gerbil-ascent-rule (list (gerbil-ascent-atom 'output (list id)))
+                              (list (gerbil-ascent-atom 'input terms))))
+     65536 65536 65536)))
+
+(def (provider-counts probe)
+  (list (provider-probe-builds probe) (provider-probe-extends probe)
+        (provider-probe-lookups probe)))
+
+(def (provider-traffic before probe)
+  (map cons '(builds extends lookups) (map - (provider-counts probe) before)))
+
+(def (observe-query name action probe expected)
+  (let* ((before (provider-counts probe))
+         (start (recorded-mark))
+         (result (action))
+         (solved (recorded-mark))
+         (rows ((.ref result 'rows-of) 'output))
+         (read (recorded-mark))
+         (fields (cons* (cons 'operation name)
+                        (cons 'output-rows (length expected))
+                        (provider-traffic before probe))))
+    (check-equal? (list-sort < (map car rows)) expected)
+    (phase 'solve start solved fields)
+    (phase 'read-output solved read fields)
+    result))
+
+(def (observe-update name action probe input-size)
+  (let* ((before (provider-counts probe))
+         (start (recorded-mark)))
+    (action)
+    (phase name start (recorded-mark)
+           (cons (cons 'input-rows input-size) (provider-traffic before probe)))))
+
+(def (session-workflow)
+  (let* ((size 4096)
+         (width 64)
+         (initial (make-rows size width 1))
+         (ids (iota size))
+         (probe (fresh-probe))
+         (provider (recorded-provider probe #t))
+         (program (query-program initial width provider))
+         (appended (cons* 0 size (make-list (- width 2) 3)))
+         (replacement (take initial 1024)))
+    (observe-query 'one-shot (cut gerbil-ascent-evaluate-program program) probe ids)
+    (let* ((opened (recorded-mark))
+           (session (gerbil-ascent-open-session program))
+           (start (recorded-mark)))
+      (def (run) (gerbil-ascent-session-run session))
+      (phase 'open-session opened start [])
+      (let (saved (observe-query 'first run probe ids))
+        (observe-query 'warm run probe ids)
+        (observe-update 'append-source
+          (cut gerbil-ascent-session-append-source! session 'input appended) probe 1)
+        (observe-query 'after-append run probe (iota (+ size 1)))
+        (observe-update 'replace-source
+          (cut gerbil-ascent-session-replace-source! session 'input replacement) probe 1024)
+        (observe-query 'after-replace run probe (iota 1024))
+        (check-equal? (list-sort < (map car ((.ref saved 'rows-of) 'output))) ids)))))
+
+(def provider-index-test
+  (test-suite "Provider physical index and Session phases"
+    (test-case "cold and warm physical index phases preserve complete packets"
+      (capture-workflow 4096 64 1 #t)
+      (capture-workflow 16384 2 1 #t)
+      (capture-workflow 4096 64 256 #f))
+    (test-case "structural hashes expose rehash work with equal copied keys"
+      (let* ((rows (make-rows 4096 64 1))
+             (probes (map list-copy rows)))
+        (structural-hash-work rows probes #f)
+        (structural-hash-work rows probes 2048)))
+    (test-case "one-shot and retained queries report production provider traffic"
+      (session-workflow))))

@@ -3,11 +3,12 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
         (only-in :gerbil-ascent/core/execution-policy gerbil-ascent-actor-complete gerbil-ascent-joined-round)
-        (only-in :gerbil-ascent/core/actor-envelope gerbil-ascent-send-round! gerbil-ascent-match-round!)
+        (only-in :gerbil-ascent/core/actor-envelope gerbil-ascent-send-envelope! gerbil-ascent-match-envelope!)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?
                  gerbil-ascent-canonical-view-storage-provider?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?))
-(export gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
+(export gerbil-ascent-run-actor-round! gerbil-ascent-run-actor-ready-round!
+        gerbil-ascent-actor-round-eligible?)
 
 ;; gerbil-ascent-actor-round-eligible?
 ;; : (forall (r s i l f) (-> [r] (Vector s) (Vector i) (Vector l) (Vector f) Boolean))
@@ -61,13 +62,19 @@
       (lambda ()
          (let ((batch []) (size 0) (ticks 0))
            (def (request! kind payload)
-             (gerbil-ascent-send-round! owner kind key (current-thread) task payload)
+             (gerbil-ascent-send-envelope! owner kind key (current-thread) task payload)
              (unless (eq? (thread-receive) 'credit) (stop 'stopped)))
+           ;; Only emit! owns the fresh outer pairs. Relink that spine before
+           ;; handing it to the owner and drop the worker's reference.
+           (def (take-batch!)
+             (let (ready (reverse! batch))
+               (set! batch [])
+               ready))
            (def (flush!)
              (unless (zero? size)
-               (request! 'batch (reverse batch))
+               (request! 'batch (take-batch!))
                (set! ticks 0)
-               (set! batch []) (set! size 0)))
+               (set! size 0)))
            (def (emit! atom row)
              (set! batch (cons (cons atom row) batch))
              (set! size (+ size 1))
@@ -79,7 +86,7 @@
            (execute task emit! checkpoint!)
            ;; Execution has ended: transfer the bounded tail with completion.
            ;; The worker waits for its next assignment instead of another credit.
-           (cons 'finished (reverse batch))))))))
+           (cons 'finished (take-batch!))))))))
 
 ;; gerbil-ascent-run-actor-round!
 ;; : (forall (task atom row) (-> RoundKey (List task) PositiveInteger (Execute task atom row) (Merge atom row) Cancel (Ready task) (Completed task) Void))
@@ -102,6 +109,11 @@
 (def (gerbil-ascent-run-actor-round! key tasks jobs execute merge (canceled? (lambda () #f))
                                      (ready? (lambda (_) #t))
                                      (completed! (lambda (_) (void))))
+  (gerbil-ascent-run-actor-ready-round! key tasks jobs execute merge canceled? ready? completed! #f))
+
+;; The optional queue is owned by the coordinator once the round starts.
+;; It holds unique tasks from tasks, and returns #f when none is ready.
+(def (gerbil-ascent-run-actor-ready-round! key tasks jobs execute merge canceled? ready? completed! dequeue-ready!)
   (unless (and (exact-integer? jobs) (> jobs 0))
     (error "invalid ASCENT worker capacity" jobs))
   (let (result
@@ -112,14 +124,19 @@
               (lambda ()
                 (let ((owner (current-thread))
                       ;; The sentinel and spine belong to this coordinator alone.
-                      (pending (cons #f (map values tasks)))
+                      (pending (and (not dequeue-ready!) (cons #f (map values tasks))))
+                      (task-count (and dequeue-ready! (length tasks)))
                       (assigned (make-hash-table-eq))
                       (active (make-hash-table-eq)) (active-count 0) (completed-count 0)
                       (workers []) (idle []) (awaiting #f) (failed? #f) (failure #f))
                   (def (stop! exception)
                     (unless failed? (set! failure exception) (set! failed? #t))
-                    (set-cdr! pending []))
-                  (def (take-ready!)
+                    (when pending (set-cdr! pending [])))
+                  (def (pending?)
+                    (if pending
+                      (pair? (cdr pending))
+                      (< (hash-length assigned) task-count)))
+                  (def (scan-ready!)
                     (let scan ((previous pending) (rest (cdr pending)))
                       (cond
                        ((null? rest) #f)
@@ -133,6 +150,15 @@
                             (hash-put! assigned task #t))
                           task))
                        (else (scan rest (cdr rest))))))
+                  (def (take-ready!)
+                    (if dequeue-ready!
+                      (let (task (dequeue-ready!))
+                        (when task
+                          (when (or (hash-get assigned task) (not (ready? task)))
+                            (error "invalid ASCENT ready task"))
+                          (hash-put! assigned task #t))
+                        task)
+                      (scan-ready!)))
                   (def (make-worker!)
                     (let* ((worker
                             (spawn/name 'ascent-round-worker
@@ -141,7 +167,7 @@
                                  (match (thread-receive)
                                    (['task task]
                                     (let (result (run-task owner key task execute))
-                                      (gerbil-ascent-send-round! owner 'done key (current-thread) task result))
+                                      (gerbil-ascent-send-envelope! owner 'done key (current-thread) task result))
                                     (loop))
                                    ('stop 'finished))))))
                            (monitor
@@ -149,7 +175,7 @@
                              (lambda ()
                                (let (result (with-catch (lambda (exception) (cons 'failed exception))
                                                (lambda () (thread-join! worker))))
-                                 (gerbil-ascent-send-round! owner 'exited key worker #f result))))))
+                                 (gerbil-ascent-send-envelope! owner 'exited key worker #f result))))))
                       (set! workers (cons (cons worker monitor) workers))
                       worker))
                   (def (start! task)
@@ -174,11 +200,11 @@
                          (unless failed?
                            (when (canceled?) (error "ASCENT actor round canceled"))
                            (let admit ()
-                             (when (and (pair? (cdr pending)) (< active-count jobs))
+                             (when (and (pending?) (< active-count jobs))
                                (let (task (take-ready!))
                                  (when task (start! task) (admit))))))
                          (unless (zero? active-count)
-                           (gerbil-ascent-match-round! (thread-receive)
+                           (gerbil-ascent-match-envelope! (thread-receive)
                              ([kind received-key worker task payload]
                               (when (eq? received-key key)
                                 (let (assignment (hash-get active worker))
@@ -220,7 +246,7 @@
                   (try
                    (run!)
                    (cond (failed? (raise failure))
-                         ((pair? (cdr pending)) (error "ASCENT ready task dependency deadlock")))
+                         ((pending?) (error "ASCENT ready task dependency deadlock")))
                    (finally
                     (for-each (lambda (entry) (thread-send (car entry) 'stop)) workers)
                     (for-each (lambda (entry) (thread-join! (cdr entry))) workers)))
@@ -228,7 +254,9 @@
                   ;; original exception, including dependency deadlock.
                   (unless (and (= active-count (hash-length active))
                                (gerbil-ascent-joined-round (hash-length assigned) completed-count
-                                 active-count (length (cdr pending)) failed? #t))
+                                 active-count (if pending (length (cdr pending))
+                                                (- task-count (hash-length assigned)))
+                                 failed? #t))
                     (error "ASCENT actor completion certificate rejected")))))))))
     (if (and (pair? result) (eq? (car result) 'failed))
       (raise (cdr result)) result)))

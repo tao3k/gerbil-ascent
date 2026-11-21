@@ -15,7 +15,7 @@
         (only-in :gerbil-ascent/t/performance/source-materialization/reference-snapshot gerbil-ascent-source-snapshot
                  gerbil-ascent-prepare-source-snapshot source-snapshot-program)
         (only-in :clan/poo/object .o .ref object?)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in "reference-initialization.ss" make-initial-source-state gerbil-ascent-initialize-sources!)
         (only-in :gerbil-ascent/program/lattice-frontier make-lattice-frontier lattice-frontier-ref

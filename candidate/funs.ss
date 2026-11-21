@@ -4,9 +4,9 @@
 
 ;;; Pure operations over inspected candidate data. The native planner uses
 ;;; core/rule-semantics.ss over its different, lowered rule representation.
-(import (only-in :gerbil-ascent/candidate/types
+(import (only-in "types.ss"
                  reasoning-snapshot-relations reasoning-candidate-relations)
-        (only-in :gerbil-ascent/candidate/program candidate-variable?))
+        (only-in "program.ss" candidate-variable?))
 
 (export candidate-same-row-set?
         candidate-schema-of candidate-required-entry

@@ -6,26 +6,26 @@
 ;;; Closed-world nonmembership relative to one inspected finite positive
 ;;; program and one copied input snapshot. This says nothing about whether
 ;;; the caller supplied every real-world source fact.
-(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
+(import (only-in "datum.ss" candidate-copy-pairs)
         (only-in :gerbil-ascent/core/rule-bindings gerbil-ascent-bind-row)
-        (only-in :gerbil-ascent/candidate/certificate-limits
+        (only-in "certificate-limits.ss"
                  +max-certificate-relations+ +max-certificate-rows+
                  +max-certificate-cells+ +max-certificate-row-arity+
                  bounded-list-length unique-rows?)
-        (only-in :gerbil-ascent/candidate/program-identity
+        (only-in "program-identity.ss"
                  candidate-positive-program-fingerprint)
-        (only-in :gerbil-ascent/candidate/types
+        (only-in "types.ss"
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
                  reasoning-snapshot-valid?
                  reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query)
-        (only-in :gerbil-ascent/candidate/program
+        (only-in "program.ss"
                  candidate-variable? scalar?)
-        (only-in :gerbil-ascent/candidate/funs
+        (only-in "funs.ss"
                  candidate-schema-of
                  candidate-fixed-clause)
-        (only-in :gerbil-ascent/candidate/provenance
+        (only-in "provenance.ss"
                  candidate-positive-closed-absence positive-proof-status
                  positive-proof-nodes proof-node-relation proof-node-row
                  positive-rule-body? positive-fixed-clause?))

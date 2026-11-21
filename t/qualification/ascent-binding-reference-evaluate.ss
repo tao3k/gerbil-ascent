@@ -8,7 +8,7 @@
 ;;; session; public declarations and returned snapshots are POO values.
 (import (only-in "ascent-binding-reference-fixture.ss" ascent-reference-bind-row)
         (only-in :clan/poo/object .o .ref object?)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in :gerbil-ascent/program/planning gerbil-ascent-prepare-rule)
         (only-in :gerbil-ascent/program/types GerbilAscentSessionContract)

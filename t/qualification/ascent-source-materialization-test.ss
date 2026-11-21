@@ -15,6 +15,24 @@
   (gerbil-ascent-program (list (gerbil-ascent-relation 'input 1 '((0)))) [] 32 32 32))
 (def ascent-source-materialization-test
   (test-suite "Source log materialization belongs to an accepted cut"
+    (test-case "concurrent pure classification retains positive negative and root evidence"
+      (let* ((initial (gerbil-ascent-source-snapshot (one-source)))
+             (positive (gerbil-ascent-prepare-source-log-snapshot initial
+                         (vector (cons (map list (iota 2048)) []))))
+             (negative (gerbil-ascent-prepare-source-log-snapshot initial
+                         (vector (cons (list (list (vector 1))) []))))
+             (program (source-snapshot-program positive))
+             (rows (vector-ref (source-snapshot-rows positive) 0))
+             (bad-program (source-snapshot-program negative))
+             (bad-rows (vector-ref (source-snapshot-rows negative) 0))
+             (readers
+              (map (lambda (_)
+                     (spawn (lambda ()
+                       (and (gerbil-ascent-source-snapshot-scalar? positive program 0 rows)
+                            (not (gerbil-ascent-source-snapshot-scalar? negative bad-program 0 bad-rows))
+                            (not (gerbil-ascent-source-snapshot-scalar? positive bad-program 0 rows))))))
+                   (iota 100))))
+        (for-each (lambda (reader) (check (thread-join! reader) => #t)) readers)))
     (test-case "unchanged persistent roots reuse ordered rows and declarations"
       (let* ((program (one-source))
              (initial (gerbil-ascent-source-snapshot program))

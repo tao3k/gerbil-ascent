@@ -600,3 +600,31 @@ timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
 #+end_src
 
 Evidence: =/private/tmp/ascent-packed-neighbors.hJDQuC/=.
+
+* Bind source lookup to the admitted version
+
+The retained scalar reader in =program/positive-components.ss= can resolve
+one canonical single-column lookup on its first reached atom. A worker
+that never reaches the atom does no index work for it. The physical reader
+borrows the table resolved by =program/index.ss:indexed-rows= at the version
+admitted to this evaluation. Each call still receives its actual frame
+and slot terms, evaluates the key, and reads the existing ordered bucket.
+The descriptor cache keeps no bound key, frame, or continuation.
+
+The ready assignment captures a source-only cut. Source append and replacement
+run before the next assignment, and source recycling follows worker join.
+The per-run reader table is therefore local to that admitted cut. The same
+atom may be visited with new slot terms, so physical selection by atom
+identity is independent of logical key evaluation. Composite keys and small
+sources keep their existing read paths. A newly reached atom resolves at
+its original first lookup, before the original key evaluation.
+
+=PhysicalBuckets.bound_source_reader_exact= states equality of ordered
+probe results over the admitted version.
+=PhysicalBuckets.bound_source_selection_work= counts only repeated physical
+selection. =ComponentIndex.BorrowedCut= requires the resolved view to remain
+current between borrow and join, with a fault that permits mutation during
+that interval. Native checks compare exact bucket order across changes to
+the current frame and slot terms. They also hold an exported bucket across
+recycling, check the replacement version, and exercise the existing
+component probe counts and Actor cancellation path.

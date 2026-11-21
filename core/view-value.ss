@@ -5,6 +5,8 @@
 (export
   (struct-out relation-view)
   (struct-out part-visitors)
+  make-ordered-binary-visitors
+  gerbil-ascent-ordered-binary-row-parts?
   (struct-out rectangle-visitors)
   (struct-out row-stream)
   (struct-out rectangle)
@@ -29,6 +31,8 @@
 
 (defstruct relation-view (identity generation revision lane count units visit contains export parts))
 (defstruct part-visitors (checked admitted))
+;; Only the owner of an exact integer field stream certifies its full export.
+(defstruct (ordered-binary-visitors part-visitors) (exporter) final: #t)
 ;; Built-in products additionally own a direct selected-result collector.
 ;; Custom visitors keep their existing callback and ordering protocol.
 (defstruct (rectangle-visitors part-visitors) (materialize) final: #t)
@@ -77,6 +81,13 @@
   (and (relation-view? view)
        (let (parts (relation-view-parts view))
          (and (part-visitors? parts) (part-visitors-admitted parts) #t))))
+;; Replacing the list exporter can change delivery order independently of
+;; the field traversal. Bind the certificate to the original procedure.
+(def (gerbil-ascent-ordered-binary-row-parts? view)
+  (and (relation-view? view)
+       (let (parts (relation-view-parts view))
+         (and (ordered-binary-visitors? parts)
+              (eq? (ordered-binary-visitors-exporter parts) (relation-view-export view))))))
 ;; : (-> PartVisitor RowSource Void)
 (def (gerbil-ascent-for-each-row-parts consume rows)
   (if (relation-view? rows) (gerbil-ascent-visit-view-parts! rows [] [] consume)

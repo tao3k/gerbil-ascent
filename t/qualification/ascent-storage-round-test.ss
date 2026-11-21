@@ -4,6 +4,7 @@
 (import :std/test :clan/poo/object :gerbil-ascent/program/func
         :gerbil-ascent/t/performance/storage-round/fixture
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-make-engine)
+        (only-in :gerbil-ascent/program/initialization source-admission-loop)
         (prefix-in :gerbil-ascent/t/performance/storage-round/reference-evaluate old-)
         (only-in :gerbil-ascent/table/func gerbil-ascent-set-storage-provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage make-storage-readiness
@@ -11,8 +12,6 @@
                  gerbil-ascent-storage-check-state! gerbil-ascent-storage-admit-state!
                  gerbil-ascent-storage-check-readiness! gerbil-ascent-storage-admit-readiness!))
 (export ascent-storage-round-test)
-;;; Exercise the private source syntax from its exact production owner.
-(include "../../program/initialization.ss")
 (def (run engine) ((.ref engine '.run)))
 (def ascent-storage-round-test
   (test-suite "Custom storage round and readiness ownership"

@@ -24,6 +24,10 @@
 
 
         :gerbil-ascent/program/session
+        (only-in :gerbil-ascent/program/actor-session
+                 gerbil-ascent-open-actor-session gerbil-ascent-session-last-completed
+                 gerbil-ascent-session-close!)
+        (only-in :gerbil-ascent/program/update-selection gerbil-ascent-update-eligible?)
         (only-in :std/hash/misc hash-key?)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
@@ -31,8 +35,9 @@
 (import (only-in "../rules/closed-source.ss" ascent-closed-guard-description)
         :gerbil-ascent/core/execution-control
         :gerbil-ascent/program/aggregators)
-(export ascent-engine-dispatch ascent-engine-program-wire ascent-engine-call)
-(defstruct api-session (engine sources queries))
+(export ascent-engine-dispatch ascent-engine-program-wire ascent-engine-call
+        ascent-engine-relation-answer)
+(defstruct api-session (engine sources queries actor?))
 (def sessions (make-hash-table-eqv))
 (defstruct source-state (queries descriptors generation last-result runs program explain results sources names projection-cache))
 (defstruct owned-result (generation value retained kind))
@@ -187,7 +192,7 @@
              (session (gerbil-ascent-open-session program)))
         (set! next-handle (next-owner-identity next-handle))
         (ascent-accept-publication!)
-      (hash-put! sessions next-handle (make-api-session session sources queries))
+      (hash-put! sessions next-handle (make-api-session session sources queries #f))
         (hash ("handle" next-handle) ("factLimits" (program-limits program)))))))
 (def (lookup request)
   (let (handle (hash-ref request "handle"))
@@ -230,10 +235,24 @@
                                 ("program" (ascent-engine-program-wire program (map car sources)
                                   (map (lambda (d) (cons (name (hash-ref d "name")) (hash-ref d "columns")))
                                        descriptors) queries))))))
-           (session (gerbil-ascent-open-session program)))
+           (actor
+            (and (equal? (hash-ref projection "status") "supported")
+                 (gerbil-ascent-projection-tree-current? program)
+                 (andmap (lambda (source)
+                           (andmap (lambda (field)
+                                     (member (hash-ref field "kind") '("scalar" "integer" "boolean" "symbol")))
+                                   (cdr source)))
+                         sources)
+                 (gerbil-ascent-update-eligible? program)
+                 (gerbil-ascent-open-actor-session program required?: #f)))
+           (session (or actor (gerbil-ascent-open-session program))))
       (set! next-handle (next-owner-identity next-handle))
-      (ascent-accept-publication!)
-      (hash-put! sessions next-handle (make-api-session session sources queries))
+      (with-catch
+       (lambda (failure)
+         (when actor (gerbil-ascent-session-close! actor))
+         (raise failure))
+       ascent-accept-publication!)
+      (hash-put! sessions next-handle (make-api-session session sources queries (and actor #t)))
       (hash-put! source-sessions next-handle
         (make-source-state queries descriptors 0 #f 0 program explain (make-hash-table-eqv)
           (map (lambda (r) (cons (.ref r 'name) (map (cut map identity <>) (.ref r 'rows))))
@@ -326,39 +345,178 @@
             (error "native symbol value byte bound"))
           decoded)) row columns)) raw)))
 
-(def (source-run request)
+;; BEGIN GENERATED ACTOR INTEGER ROWS
+;; : (-> Boolean Boolean Boolean Boolean)
+(def (source-row-packet? requested actor ready)
+  (or ready (and requested (not actor))))
+
+;; : (-> Rows (Or False S64Vector))
+(def (pack-integer-rows rows)
+  (and (pair? rows) (pair? (car rows))
+       (let* ((width (length (car rows)))
+              (count (length rows))
+              (size (+ 2 (* count width))))
+         (and (fixnum? size) (<= size 9223372036854775807)
+              (andmap (lambda (row)
+                        (and (= (length row) width)
+                             (andmap (lambda (value)
+                                       (and (exact-integer? value)
+                                            (<= -9223372036854775808 value 9223372036854775807)))
+                                     row)))
+                      rows)
+              (let (packet (make-s64vector size))
+                (s64vector-set! packet 0 count)
+                (s64vector-set! packet 1 width)
+                (let write-rows ((pending rows) (offset 2))
+                  (if (null? pending)
+                    packet
+                    (let write-cells ((cells (car pending)) (offset offset))
+                      (if (null? cells)
+                        (write-rows (cdr pending) offset)
+                        (begin
+                          (s64vector-set! packet offset (car cells))
+                          (write-cells (cdr cells) (fx+ offset 1))))))))))))
+
+;; END GENERATED ACTOR INTEGER ROWS
+
+(def (pack-ordered-binary-fields count visit)
+  (let (size (+ 2 (* 2 count)))
+    (and (> count 0) (fixnum? size) (<= size 9223372036854775807)
+         (begin
+           (ascent-execution-checkpoint!)
+           (let ((packet (make-s64vector size)) (cursor 2)
+                 (controlled? (current-ascent-execution-control)))
+             (s64vector-set! packet 0 count)
+             (s64vector-set! packet 1 2)
+             (visit
+              (lambda (left right)
+                (when (fx>= cursor size) (error "ASCENT ordered field count exceeded"))
+                (when (and controlled? (fx= (fxand (fx- cursor 2) 2047) 0))
+                  (ascent-execution-checkpoint!))
+                (unless (and (fixnum? left) (fixnum? right))
+                  (error "ASCENT ordered packet requires fixnum fields"))
+                ;; The cursor starts at two and advances by two. An admitted
+                ;; even extent leaves room for both fields at every write.
+                (##s64vector-set! packet cursor left)
+                (##s64vector-set! packet (fx+ cursor 1) right)
+                (set! cursor (fx+ cursor 2))))
+             (unless (fx= cursor size) (error "ASCENT ordered field count incomplete"))
+             (ascent-execution-checkpoint!)
+             packet)))))
+
+;; The private packet branch shares the published view's order and never
+;; invokes its list exporter. All other replies use the existing conversion.
+(def (ascent-engine-relation-answer result name packet? ordinary)
+  (or (and packet? ((.ref result 'with-ordered-binary-fields) name pack-ordered-binary-fields))
+      (let (rows ((.ref result 'rows-of) name))
+        (or (and packet? (pack-integer-rows rows)) (ordinary rows)))))
+
+;; BEGIN GENERATED PROJECTION ROWS
+(def (pack-projection-rows! program requested)
+  ;; Only fresh private wire dictionaries enter here, after complete capture.
+  (when requested
+    (for-each
+      (lambda (relation)
+        (let (packet (pack-integer-rows (hash-ref relation "rows")))
+          (when packet (hash-put! relation "rows" packet))))
+      (hash-ref program "relations")))
+  program)
+;; END GENERATED PROJECTION ROWS
+
+;; BEGIN GENERATED INTEGER SOURCE PACKET
+(def (unpack-integer-source-rows packet width limit)
+  (let (size (s64vector-length packet))
+    (unless (>= size 2) (error "invalid native source row packet"))
+    (let ((count (s64vector-ref packet 0)) (columns (s64vector-ref packet 1)))
+      (unless (and (fixnum? count) (> count 0)
+                   (fixnum? columns) (> columns 0))
+        (error "invalid native source row packet"))
+      (when (> count limit) (error "ASCENT source fact budget exceeded"))
+      (unless (= columns width) (error "scheme row arity"))
+      (unless (= size (+ 2 (* count columns)))
+        (error "invalid native source row packet"))
+      (let read-rows ((end size) (rows []))
+        (if (= end 2)
+          rows
+          (let (start (fx- end columns))
+            (let read-cells ((cursor end) (cells []))
+              (if (= cursor start)
+                (read-rows start (cons cells rows))
+                (let (index (fx- cursor 1))
+                  (read-cells index (cons (s64vector-ref packet index) cells)))))))))))
+
+;; END GENERATED INTEGER SOURCE PACKET
+
+(def (source-update-rows raw columns state packed-rows?)
+  (if (and packed-rows? (s64vector? raw))
+    (let (rows (unpack-integer-source-rows raw (length columns)
+                 (.ref (source-state-program state) 'max-input-facts)))
+      (if (andmap (lambda (column)
+                    (member (hash-ref column "kind") '("integer" "scalar")))
+                  columns)
+        rows
+        (source-rows rows columns state)))
+    (source-rows raw columns state)))
+
+(def (source-run request packed-rows?)
   (let-values (((session state) (source-lookup request)))
     (let* ((queries (unique (map (cut source-name state <>) (hash-ref request "queries"))))
-           (duration (hash-ref request "timeoutNanoseconds" 1000000000)))
+           (duration (hash-ref request "timeoutNanoseconds" 1000000000))
+           (generation (source-state-generation state)))
       (unless (and (<= (length queries) 128)
                    (andmap (lambda (n) (memq n (source-state-queries state))) queries)
                    (exact-integer? duration) (<= 0 duration 1000000000))
         (error "native DSL query/deadline contract"))
-      (let ((result (gerbil-ascent-session-run-timeout (api-session-engine session) duration))
-            (answers (make-hash-table)))
-        (for-each (lambda (n)
-          (hash-put! answers (source-label state n)
-            (map (lambda (row)
-                   (map (lambda (v)
-                          (cond ((interned-symbol? v) (symbol->string v))
-                                ((or (string? v) (exact-integer? v) (boolean? v)) v)
-                                (else (hash ("encoding" "owned-result-reference"))))) row))
-                 ((.ref result 'rows-of) n)))) queries)
+      (let* ((engine (api-session-engine session))
+             (actor? (api-session-actor? session))
+             (cached (and actor?
+                          (begin
+                            (ascent-execution-checkpoint!)
+                            (gerbil-ascent-session-last-completed engine))))
+             (result (or cached (gerbil-ascent-session-run-timeout engine duration)))
+             (answers (make-hash-table))
+             (pack? (and packed-rows? actor? (.ref result 'finished)))
+             (scalar-projection? #t))
+        (for-each
+         (lambda (n)
+           (hash-put! answers (source-label state n)
+             (ascent-engine-relation-answer result n
+                ;; BEGIN GENERATED SOURCE ROW SELECTION
+                (source-row-packet? packed-rows? actor? pack?)
+                ;; END GENERATED SOURCE ROW SELECTION
+                (lambda (rows)
+                  (map (lambda (row)
+                         (map (lambda (v)
+                                (cond ((interned-symbol? v) (symbol->string v))
+                                      ((or (string? v) (exact-integer? v) (boolean? v)) v)
+                                      (else
+                                       (set! scalar-projection? #f)
+                                       (hash ("encoding" "owned-result-reference")))))
+                              row))
+                       rows)))))
+         queries)
         (ascent-accept-publication!)
+        (unless (= generation (source-state-generation state))
+          (error "ASCENT source changed during result delivery"))
         (source-state-runs-set! state (+ (source-state-runs state) 1))
         (let (reused (and (.ref result 'finished) (eq? result (source-state-last-result state))))
           (when (.ref result 'finished) (source-state-last-result-set! state result))
           (let (handle (retain-owned-result state result))
-          (hash ("complete" (.ref result 'finished)) ("relations" answers)
-                ("resultHandle" handle)
-                ("scalarProjection" (if (andmap (lambda (n)
-                  (andmap (lambda (row) (andmap wire-scalar? row))
-                    ((.ref result 'rows-of) n))) queries) "supported" "partial"))
-                ("nativeResultReused" reused) ("sourceGeneration" (source-state-generation state))
-                ("runIndex" (source-state-runs state))
-                ("evaluationPath" (symbol->string (.ref result 'evaluation-path)))
-                ("reusedRelations" (map symbol->string (.ref result 'reused-relations)))
-                ("activeRuleCount" (.ref result 'active-rule-count)))))))))
+            (hash ("complete" (.ref result 'finished)) ("relations" answers)
+                  ("executionRuntime" (if actor? "actor" "session"))
+                  ("resultHandle" handle)
+                  ("scalarProjection"
+                   (if (if actor? scalar-projection?
+                         (andmap (lambda (n)
+                                   (andmap (lambda (row) (andmap wire-scalar? row))
+                                           ((.ref result 'rows-of) n)))
+                                 queries))
+                     "supported" "partial"))
+                  ("nativeResultReused" reused) ("sourceGeneration" (source-state-generation state))
+                  ("runIndex" (source-state-runs state))
+                  ("evaluationPath" (symbol->string (.ref result 'evaluation-path)))
+                  ("reusedRelations" (map symbol->string (.ref result 'reused-relations)))
+                  ("activeRuleCount" (.ref result 'active-rule-count)))))))))
 
 (def (retain-owned-result state value (kind 'result))
   (when (>= (hash-length (source-state-results state)) 64)
@@ -460,7 +618,7 @@
 
 ;;; Boundary: Each operation uses its existing owner and admission boundary.
 ;;; Invariant: Cancellation, identity checks and fact ceilings remain in the called engine.
-(def (dispatch request)
+(def (dispatch request (packed-rows? #f))
   (when (hash-key? request "maxSourceScopes")
     (let (ceiling (hash-ref request "maxSourceScopes"))
       (unless (and (exact-integer? ceiling) (> ceiling 0))
@@ -573,13 +731,14 @@
          (source-state-projection-cache-set! state cache)
          (with-catch (lambda (_) (hash ("status" "unsupported") ("sourceGeneration" (source-state-generation state))))
            (lambda () (hash ("status" "supported") ("sourceGeneration" (source-state-generation state))
-             ("program" (ascent-engine-program-wire program (.ref program 'source-handles)
+             ("program" (pack-projection-rows!
+               (ascent-engine-program-wire program (.ref program 'source-handles)
                (map (lambda (descriptor binding) (cons (cdr binding) (hash-ref descriptor "columns")))
                     (source-state-descriptors state) (source-state-names state))
-               (source-state-queries state)))))))))
+               (source-state-queries state)) packed-rows?))))))))
     ((source-run)
      (shape request '("operation" "handle" "queries") '("timeoutNanoseconds"))
-     (source-run request))
+     (source-run request packed-rows?))
     ((source-replace)
      (shape request '("operation" "handle" "sources"))
      (let-values (((session state) (source-lookup request)))
@@ -590,9 +749,12 @@
                  (shape u '("relation" "rows"))
                  (let* ((n (source-name state (hash-ref u "relation"))) (columns (assq n (api-session-sources session))))
                    (unless columns (error "relation is not an update source"))
-                   (cons n (source-rows (hash-ref u "rows") (cdr columns) state)))) updates))
+                   (cons n (source-update-rows (hash-ref u "rows") (cdr columns)
+                             state packed-rows?)))) updates))
            (unique (map car replacements))
-           (gerbil-ascent-session-replace-sources! (api-session-engine session) replacements)
+           (gerbil-ascent-session-replace-sources!
+            (api-session-engine session) replacements
+            (and (api-session-actor? session) (lambda (_) #t)))
            (source-state-sources-set! state
              (map (lambda (source)
                     (let (replacement (assq (car source) replacements))
@@ -619,9 +781,14 @@
        (unless (and (valid actual) (valid expected)) (error "invalid comparison rows"))
        (hash ("equal" (and (andmap (lambda (r) (and (member r expected) #t)) actual)
                             (andmap (lambda (r) (and (member r actual) #t)) expected))))))
-    ((close) (shape request '("operation" "handle")) (lookup request)
-     (hash-remove! source-sessions (hash-ref request "handle"))
-     (hash-remove! sessions (hash-ref request "handle")) (hash ("closed" #t)))
+    ((close)
+     (shape request '("operation" "handle"))
+     (let ((session (lookup request)) (handle (hash-ref request "handle")))
+       (when (api-session-actor? session)
+         (gerbil-ascent-session-close! (api-session-engine session)))
+       (hash-remove! source-sessions handle)
+       (hash-remove! sessions handle)
+       (hash ("closed" #t))))
     ((replace)
      (shape request '("operation" "handle" "sources"))
      (when (hash-key? source-sessions (hash-ref request "handle"))
@@ -649,12 +816,12 @@
                   ((.ref result 'rows-of) n)))) (api-session-queries session))
          (hash ("complete" (.ref result 'finished)) ("relations" answers)))))
     (else (error "unsupported scheme operation"))))
-(def (ascent-engine-call request)
+(def (ascent-engine-call request (packed-rows? #f))
   (if (equal? (hash-ref request "operation") "process-domain")
     (begin
       (shape request '("operation" "domain"))
       (configure-owner-domain! (hash-ref request "domain")))
-    (dispatch request)))
+    (dispatch request packed-rows?)))
 
 ;; ascent-engine-dispatch
 ;; : (-> String String)

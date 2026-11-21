@@ -8,15 +8,15 @@
 (import "declaration-contract.ss"
         (only-in :std/list/list delete-duplicates/hash)
         (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
-        (only-in :clan/poo/mop define-type element? validate Type. Any)
+        (only-in :clan/poo/type define-type element? validate Type. Any)
         (only-in :clan/poo/type Record)
         (only-in :clan/poo/object-contract ObjectContract.)
-        (only-in :tao3k/yuanxu/object-types/contracts
+        (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
-        (only-in :gerbil-ascent/table/provider
+        (only-in "../table/provider.ss"
                  GerbilAscentIndexProviderContract gerbil-ascent-canonical-hash-index-provider?)
-        (only-in :gerbil-ascent/table/storage
+        (only-in "../table/storage.ss"
                  GerbilAscentStorageProviderContract gerbil-ascent-canonical-set-storage-provider?))
 
 (export
@@ -30,6 +30,7 @@
   gerbil-ascent-make-rule-value
   gerbil-ascent-make-located-rule-value
   gerbil-ascent-check-owned-rule-value
+  gerbil-ascent-closed-rule-contracts-current?
   gerbil-ascent-make-aggregate-value
   gerbil-ascent-check-owned-aggregate-value
   gerbil-ascent-make-relation-value
@@ -37,6 +38,7 @@
   gerbil-ascent-make-program-value
   gerbil-ascent-check-source-handles
   gerbil-ascent-projection-tree-current?
+  gerbil-ascent-canonical-actor-inputs?
   gerbil-ascent-check-projection-program
   gerbil-ascent-relation-with-rows
   gerbil-ascent-relation-with-role
@@ -454,6 +456,27 @@
 
 ;; END GENERATED OWNED DECLARATION VALUES
 
+;; BEGIN GENERATED DSL-RULE-PROTOCOL
+;; A closed rule still passes the complete Program root. Reuse the same
+;; protocol guards as the canonical clause views before borrowing the
+;; private construction extent.
+(def gerbil-ascent-closed-rule-contracts-current?
+  (let* ((contracts (list GerbilAscentTermContract GerbilAscentAtomContract
+                          GerbilAscentGuardContract GerbilAscentGeneratorContract
+                          GerbilAscentBindingContract GerbilAscentNegationContract
+                          GerbilAscentAggregateContract GerbilAscentRuleContract))
+         (prototypes (map (cut .ref <> 'proto) contracts))
+         (revisions (map object-revision prototypes)))
+    (lambda ()
+      (and (andmap (lambda (contract prototype revision)
+                     (and (= (object-revision prototype) revision)
+                          (eq? (.ref/cached contract 'proto) prototype)))
+                   contracts prototypes revisions)
+           (term-value-current?) (rule-value-current?)
+           (aggregate-predecessors-current?) (aggregate-value-current?)))))
+
+;; END GENERATED DSL-RULE-PROTOCOL
+
 ;;; A fragment publishes an export resolver rather than a mutable mapping.
 ;;; The constructor copies and checks labels before closing over them.
 (def +fragment-exports+
@@ -547,9 +570,35 @@
         max-input-facts: input-limit
         max-derived-facts: derived-limit max-output-facts: output-limit)))
 
+;;; The owned program's six fields are constants. Foreign prototypes and
+;;; edited declarations keep the ordinary receiver and getter order.
+;; : (-> Program Boolean)
+(def (gerbil-ascent-canonical-program-value? program)
+  (and (declared-value-shape? 'program program) (projection-program-current?)))
+
+;; gerbil-ascent-canonical-actor-inputs?
+;; : (forall (p r) (-> p [r] Boolean))
+;; : (-> Program [Relation] Boolean)
+;; | doc m%
+;;     Check whether the Actor can read its private source cut directly.
+;;     Program fields and relation metadata must still have their original
+;;     ownership. An unknown or edited POO object retains its staged receiver.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-canonical-actor-inputs? program (.ref program 'relations))
+;;     ;; => #t for unchanged canonical Set declarations
+;;     ```
+;;   %
+(def (gerbil-ascent-canonical-actor-inputs? program relations)
+  (and (gerbil-ascent-canonical-program-value? program)
+       (eq? relations (.ref program 'relations))
+       (andmap owned-canonical-relation? relations)))
+
 (def (gerbil-ascent-projection-tree-current? program)
-  (and (declared-value-shape? 'program program)
-       (projection-program-current?) (relation-protocol-current?) (relation-metadata-current?)
+  (and (gerbil-ascent-canonical-program-value? program)
+       (relation-protocol-current?) (relation-metadata-current?)
        (rule-value-current?) (atom-value-check-current?) (term-value-current?)
        (aggregate-value-current?) (aggregate-predecessors-current?)
        (let ((relations (.ref program 'relations)) (rules (.ref program 'rules))

@@ -10,7 +10,7 @@ import subprocess
 
 
 def artifacts(path):
-    expected = {'provenance_load', 'ascent-scheme-worker', 'archive_build'}
+    expected = {'provenance_load', 'ascent-scheme-worker'}
     found = {}
     for line in path.read_text().splitlines():
         item = json.loads(line)
@@ -41,7 +41,7 @@ def main():
                'source_head': subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip(),
                'source_clean': not subprocess.check_output(['git', '-C', str(root), 'status', '--porcelain', '--untracked-files=no'], text=True).strip(),
                'executables': {name: {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()} for name, path in binaries.items()}}
-    command = [str(binaries[name]) for name in ['provenance_load', 'ascent-scheme-worker', 'archive_build']]
+    command = [str(binaries[name]) for name in ['provenance_load', 'ascent-scheme-worker']]
     command.append(args.owner_mode)
     environment = dict(os.environ, ASCENT_PROCESS_TRACE='1', RUST_BACKTRACE='1')
     with (args.output / 'stdout').open('w') as stdout, (args.output / 'stderr').open('w') as stderr:

@@ -1,20 +1,19 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-;;; Sole Module declaration. Native Scheme exports belong to func.ss.
+;;; Publish the native API through the Yuanxu module role.
+(import (only-in :clan/poo/object .def .o)
+        ;; The published callable role is also a first-build dependency.
+        "./func.ss"
+        (only-in "./types.ss" RulesScopeContract)
+        (only-in "./objects.ss" RulesAPI))
 
-(import (only-in :gerbil-ascent/program/types ProgramScopeContract))
+(export Rules)
 
 (.def Rules
   identity: 'rules
   core:
   (.o
-    requires:
-    (.o
-      Program:
-      (.o
-        module-id: 'program
-        contract: ProgramScopeContract))
     scope-contract: RulesScopeContract
     exports: RulesAPI)
   features: (.o))

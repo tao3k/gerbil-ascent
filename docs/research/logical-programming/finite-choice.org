@@ -1,0 +1,119 @@
+# SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+# SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+#+title: Finite-choice logic programming: closure, branch ownership and cost
+#+date: 2026-10-31
+#+status: source-grounded reading and local upstream diagnostic; no ASCENT implementation or performance admission
+
+* Sources and identities
+
+Chris Martens, Robert J. Simmons and Michael Arntzenius,
+[[https://arxiv.org/html/2405.19040v3][Finite-Choice Logic Programming]], arXiv:2405.19040v3,
+21 November 2024; POPL 2025, DOI [[https://doi.org/10.1145/3704849][10.1145/3704849]].
+The paper version is fixed independently of today's implementation.
+
+- Official implementation: [[https://github.com/robsimmons/dusa][robsimmons/dusa]], local =.data/dusa=,
+  revision =8f2905f202783eca360a4ca7cdc1e5eac544d7a3=, package 0.1.6.
+- Paper-linked experiment artifact: [[https://github.com/robsimmons/dusa-benchmarking][robsimmons/dusa-benchmarking]],
+  local =.data/dusa-benchmarking=, revision
+  =1ed0723dd8a096ee567864fa6145c37cdaaac75e=. Its lockfile resolves Dusa 0.0.13,
+  independently of the current implementation clone's version 0.1.6.
+- ASCENT inspected at =4715fa0a= with pre-existing working edits preserved.
+  The inspection below concerns existing rule/session code, not those build edits.
+
+* Paper reading
+
+| Locator | Finding |
+|---------+---------|
+| Sections 2 and 4 | Attributes have at most one assigned value. Open and closed choices differ; an exclusion constraint is not ordinary negation-as-failure. |
+| Sections 4--5 | The least fixed point ranges over a lattice of choice sets, not the ordinary database-union order. |
+| Sections 6.2--6.3 | Deduction before choice guides exploration; completeness has termination premises. Finite choice does not imply a finite Herbrand universe. |
+| Section 7.1 | Prefix firings expose partial-match costs. Functional maps add overhead beyond constant-time hash-table assumptions. |
+| Section 7.2 and Appendix D | Performance is workload-dependent; inspect unfavorable examples and discarded timeouts as well as successful cases. |
+
+These are semantic and evaluation ideas. The paper does not establish language
+model thinking reuse, source-revision invalidation or ASCENT correctness.
+
+* What the cloned implementation actually does
+
+The following observations bind to the Dusa revision above, rather than assuming
+the current sources are the exact implementation measured in the paper.
+
+| Source | Observation | Lesson for this Library |
+|--------+-------------+-------------------------|
+| =src/engine/forwardengine.ts=: SearchState and createSearchState | Active agenda and deferred alternatives are distinct fields. | Treat completed propagation and unresolved choice as different states. |
+| =src/engine/choiceengine.ts=: stepState | A nonempty agenda is processed before deferred choices are exposed. | A reusable parent must represent an admitted closure, not a partial traversal. |
+| =src/engine/choiceengine.ts=: forceChoice | A child starts with a shallow copy of parent state, then replaces persistent map roots. | Shared roots require immutable logical contents; shallow copying arbitrary mutable buffers would be unsound. |
+| =src/datastructures/{database,attributemap,avl}.ts= | Updates construct new containers/tree paths instead of overwriting the old logical mapping. | Compare persistent sharing against our owned materialization cost, including memory. |
+| =src/engine/choiceengine.ts=: collapseTreeUp | Exhausted alternatives are removed and single-child nodes collapsed. | Retaining a solved subtree and recomputing it are different lifecycle questions. |
+| =src/language/binarize.ts= and =src/language/README.md= | Rules are decomposed into joins with intermediate prefix predicates; variable liveness controls carried bindings. | Measure repeated partial matches, not only duplicate output tuples. |
+| =src/client.ts=: DusaIteratorImpl.stats | Deductions, rejections and choices are observable. A deduction counts an agenda-processing event. | Do not equate this counter with all join probes, inference proof length or model tokens. |
+
+Logical parent state is shared within one program's search tree. A result that
+depends on a particular choice stays below that choice. This is not unrestricted
+cross-question memoization. A new external input can invalidate prior support.
+The current client also filters internal models with unresolved negative mappings;
+an exhausted internal leaf is therefore not automatically a public solution.
+
+* Correspondence with current ASCENT
+
+1. =program/reuse.ss= already rejects unfinished closures and admits a private
+   completed-result reuse capsule. =program/update-selection.ss= checks stable
+   procedures/providers and propagates source changes through dependencies.
+   Preserve this admission boundary before considering branch snapshots.
+2. =core/rule-semantics.ss= records positive, negative and aggregate read edges.
+   A shared fragment must remain invalidatable through all of them. Unchanged
+   positive rows alone are insufficient when a negative premise changes.
+3. =program/index.ss= and the existing [[file:../semi-naive-audit.org][semi-naive audit]]
+   distinguish Old/Delta/All witness ownership. That avoids overlapping delta
+   witnesses; it does not establish arbitrary cross-branch prefix memoization.
+4. =program/operator-measurement.ss= explicitly measures the direct operator
+   evaluator and excludes compiled/native execution. Its join counter cannot
+   serve as native prefix-firing evidence without a correspondence argument.
+5. =program/lattice-frontier.ss= coalesces changes by lattice key within a round.
+   Its presence does not implement the paper's choice-set lattice or mutually
+   exclusive models. Ordinary lattice joins cannot silently acquire choice
+   semantics.
+6. Existing =SemiNaive.lean=, =SourceUpdateFrame.lean=,
+   =DependencyInvalidation.lean= and =DeltaClosure.qnt= concern their declared
+   models. None is a proof of Dusa, an ASCENT choice extension, or extraction of
+   a persistent branch implementation.
+
+The current ASCENT choice implementation uses checked Scheme declarations,
+private grounding relations and Session updates. Its independent oracle and
+Lean obligations are described in [[file:../../../dev/finite-choice/README.org][the implementation notes]].
+
+* Artifact reproduction caveats
+
+The artifact's =util.js= specifies three repetitions and a 100-second limit,
+with a 500 ms child-process grace. It records missing completion and timeout
+as separate negative solution counts. Its =run-dusa.js= generally counts output
+rows rather than independently validating their semantics. =bench-graph.js=
+passes a seed to Alpha and Clingo, but its Dusa command has no matching seed
+argument. Exact random traces are therefore not reproduced by fixing those
+other solver seeds. These are observations of the cloned artifact.
+
+Use its frozen lockfile for historical reproduction; substituting 0.1.6 creates
+a different comparison. Keep raw timeout/error rows, independently validate
+solutions and report stochastic variation. The full artifact was not executed
+in this reading; its stored CSV results are historical data, not local receipts.
+Upstream implementation and documentation carry their own license declarations;
+this study imports the local implementation without copying it into ASCENT.
+
+* Focused follow-up experiments, not implemented changes
+
+Use the existing session/bindings and test owners for a common rule prefix with
+several downstream queries. Compare full recomputation with admitted retained
+execution using the same rules and source cut. Record attempted row probes,
+successful partial bindings, derived tuples, source checks, allocations and
+wall time separately. Distinct proof witnesses may legitimately share an output
+tuple, so output deduplication is not the repeat metric.
+
+Then withdraw a positive support, insert a blocker of a negative premise, and
+revise the rule source. An unaffected branch may retain its result; affected
+branches must agree with an independent fresh oracle. Keep cancellation,
+incomplete closure and stale-publication cases as failures. Shared-prefix and
+disjoint-prefix controls distinguish useful sharing from bookkeeping overhead.
+
+POO Flow continues to own model conversations, semantic thinking annotation and
+budgeted application studies, as specified by [[file:../../library-boundary.org][the Library boundary]].
+The upstream solver is a research reference, not a new ASCENT dependency.

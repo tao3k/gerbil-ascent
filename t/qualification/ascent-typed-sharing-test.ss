@@ -3,7 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test (only-in :std/error Error-message)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :gerbil-ascent/program/types GerbilAscentProgramContract)
         (only-in :gerbil-ascent/program/func gerbil-ascent-relation)
         :gerbil-ascent/program/higher-order

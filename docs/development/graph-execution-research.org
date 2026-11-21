@@ -1,0 +1,1071 @@
+#+TITLE: Graph algorithms for ASCENT execution
+
+* Scope and source map
+
+Separate rule dependency analysis, fact-graph evaluation, and result
+delivery. Each has a different size parameter and a different
+correctness obligation.
+
+| Layer | Implementation | Dominant work to count |
+|-------+----------------+------------------------|
+| Rule dependency graph | [[file:../../core/dependency-graph.ss][Iterative Tarjan]], [[file:../../program/component-plan.ss][component projection]] | Relations, rule edges, and distinct condensation edges |
+| Actor component admission | [[file:../../program/positive-components.ss][Predecessor credits]], [[file:../../program/actor-round.ss][owner and worker envelopes]] | Pending inspections, ready queue operations, terminal merges, and index setup |
+| Fact-graph evaluation | [[file:../../core/binary-relation.ss][Binary frontier and indexed path kernels]], [[file:../../program/component-worker.ss][positive workers]] | Edge visits, candidate extensions, novel rows, and rejected duplicate derivations |
+| Full result delivery | [[file:../../program/source-cut.ss][source views]], [[file:../../program/result.ss][public result]], [[file:../../benchmarks/actor-million-test.ss][independent oracle]] | Detached rows, live draft prefix, previously delivered rows, and collector time |
+
+* Rule SCCs and scheduling
+
+[[https://www.cs.cmu.edu/~cdm/resources/Tarjan1972-sccs.pdf][Tarjan]] partitions a directed graph with linear work in vertices and
+edges. ASCENT already has this traversal, using dense IDs and explicit
+DFS frames. The [[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Ascent paper]] then combines SCC-local evaluation with
+delta, total, and indexed relation access. Graph partition and task
+admission are distinct. A low ordinal blocked on a worker can remain
+in the owner list while many independent tasks complete. Reexamining
+the blocked suffix for each free slot gives quadratic admission work
+on a chain beside an independent frontier.
+
+Seed an ordered Gerbil STD priority queue with zero-credit tasks.
+The owner consumes credits on distinct outgoing component edges after
+the terminal merge and offers a successor when its last credit is
+consumed. The queue selects the minimum ready ordinal, preserving the
+old first-ready choice for the same completion sequence. Admission
+still snapshots the current frontier. Worker checkout, cancellation,
+batch credit, terminal merge, and joined return use the same envelope
+path. Source-only components are complete before worker admission.
+
+With S scheduled components and E distinct dependency edges,
+readiness management uses O(S + E + S log S) work and O(S) queue
+storage. These bounds exclude frontier snapshots and evaluation.
+=ComponentClosure.lean= checks the final-credit transition and the
+equivalence of minimum-ready and first-ready selection in ordinal
+order. Ownership across the worker protocol is exercised by Gerbil
+cases. The lemmas do not verify the STD heap or the Scheme compiler.
+
+A deterministic native =gerbil test= control holds the root of a
+chain in one worker while the other drains independent siblings. It
+checks the exact admission sequence and every terminal completion.
+The table records predicate calls and process CPU inside the Actor
+round on the fixed Gerbil release. It excludes module load and queue
+setup. This workload exposes coordinator overhead and does not
+measure relational closure latency.
+
+| Scheduled tasks | Scan calls | Queue calls | Scan CPU | Queue CPU |
+|-----------------+------------+-------------+----------+-----------|
+| 4,097 | 6,296,577 | 4,097 | 1.531 s | 5.49 ms |
+| 8,193 | 25,176,065 | 8,193 | 6.138 s | 10.14 ms |
+
+* Fact-graph SCCs and factored transitive closure
+
+[[https://www.cs.ox.ac.uk/people/boris.motik/pubs/hmh18modular-materialisation.pdf][Hu, Motik and Horrocks]] specialize the evaluation of recursive
+modules, including transitivity, using a proof obligation for each
+module interface. This applies after recognizing the exact positive
+binary transitive rule and its seed. It does not apply to arbitrary
+rules in a recursive SCC. A fact-graph vertex is a data value and an
+edge is an admitted input fact. Internal SCCs can be represented by
+vertex ranges and reachability between those ranges can be evaluated
+on the condensation DAG.
+
+The core binary closure currently extends each new pair across
+its middle vertex's adjacency list, using dense bit rows in a bounded
+canonical case and a duplicate check in the general pair frontier.
+On a complete directed graph without self edges, the pair frontier
+reaches N squared pairs and visits N squared times (N - 1)
+extensions. A factored representation for this graph has one
+component. Discovery reads N times (N - 1) edges and complete detached
+delivery still emits N squared pairs. This family distinguishes skipped
+derivations from skipped output. A sparse DAG, a bow-tie with a narrow
+cut, and a large SCC with a long sparse tail separate index construction
+from propagation and expansion. The dense bit-row case needs its own
+comparison. Measure work counts alongside process CPU, P95, and GC.
+
+An isolated native prototype uses the existing binary adjacency and
+Tarjan traversal, followed by one union per distinct condensation
+edge in reverse topological order. It charges the sum of group
+products before expanding the sorted row list. Each arm starts from
+the same admitted trie set and produces a full sorted list of encoded
+rows. The baseline is =gerbil-ascent-relation-closure-bounded=. The
+test also checks the entire list against a closed-form independent
+oracle and checks that a one-row-short budget is refused.
+
+| Vertices | SCCs | Input edges | Exact output rows | SCC unions | Current kernel CPU | Prototype CPU |
+|----------+------+-------------+-------------------+------------+--------------------+---------------|
+| 192 | 1 | 36,672 | 36,864 | 0 | 169.45 ms | 81.58 ms |
+| 256 | 8 | 7,943 | 36,864 | 7 | 33.13 ms | 18.61 ms |
+| 1,664 | 26 | 104,857 | 1,437,696 | 25 | 6.007 s | 242.08 ms |
+
+The largest fixture consists of 26 complete directed groups with
+64 vertices each, joined by 25 forward bridges. On this graph the
+current pair frontier visits 90,595,648 extensions, by counting
+63 internal outgoing edges for each reachable pair and the separate
+bridge extensions. The prototype inspects 104,857 edges in its
+condensation pass in addition to its input build and SCC traversal.
+It still expands and checks all 1,437,696 output rows. The CPU ratio
+was 24.8 on this fixture. Each entry is a native feasibility sample.
+This tests a binary kernel, outside the Session query and publication
+path. It does not establish production cancellation, provenance,
+latency percentiles, or a general speedup across graph shapes.
+
+[[https://www.cs.hut.fi/~enu/thesis.pdf][Nuutila's stack closure and interval representations]] give two
+choices for the next stage. Process groups in reverse topological
+order, and compute each group's reachable set by adding its direct
+successors and unioning their completed sets. Start with exact sparse
+sets. Compare interval unions on long chains and on shuffled dense
+DAGs where intervals fragment. Count group-level set operations and
+stored intervals before expanding member pairs. A keyed reachability
+query may also use [[https://www.cs.rpi.edu/~zaki/PaperDir/VLDBJ12.pdf][GRAIL]] labels to reject impossible targets. A positive
+label test still requires exact graph search or an exact index. This
+filter has no role in the full output-size bound.
+
+Lean checks both directions of the cross-component correspondence and
+the criterion for diagonal results. The proofs take exact component
+ownership and witnessed cross edges as premises. Integration still
+requires validating these premises against the admitted dense graph
+and mapping factored rows to versioned evidence. In particular:
+
+- A singleton without a self-loop does not yield a diagonal fact just
+  from its component membership. A multi-vertex cycle yields reachable
+  diagonals through a nonempty path.
+- Charge the same logical unique-row limits before publication even
+  when a component product represents many rows. Preserve the order
+  of observable failure and cancellation checks.
+- Witness expansion needs concrete, version-checked input paths.
+  Inter-component reachability alone cannot fill the existing
+  provenance payload or establish its completeness.
+- Insert-only SCC maintenance, as in [[https://arxiv.org/abs/1105.2397][Haeupler et al.]], applies to
+  an admitted insertion stream. A source replacement can remove a
+  bridge and split a component. Compare local affected-region rebuild
+  with a full fresh or existing grounded rederivation, including
+  duplicate supports, last-support removal, and canceled publication.
+  [[https://arxiv.org/abs/2203.16684][DBSP]] supplies a distinct alternative for signed changes through
+  recursive operators. A trial of affected-region rebuilding would
+  not qualify as a DBSP implementation.
+
+Use the same condensed layout to evaluate keyed and full queries
+separately. The local POO =strong-components.ss= already has compact
+offset and target vectors for traversal. [[https://graphar.apache.org/docs/overview/concepts/][GraphAr]] likewise separates
+adjacency offsets from edge properties. Both motivate measuring a
+private dense layout with witness edges separate from traversal
+offsets. Retain existing Provider semantics and exact version
+ownership when changing any physical index layout.
+
+* Cyclic joins and finite choice
+
+[[https://openproceedings.org/2014/conf/icdt/Veldhuizen14.pdf][Leapfrog Triejoin]] intersects ordered key ranges across a join,
+avoiding the cost of materializing a large binary intermediate on
+skewed cyclic rules. Compare a triangle or multiway rule with a large
+binary prefix and few answers against the current indexed,
+left-to-right delta joins. An admissible optimizer needs stable
+equality and ordering for every participating key. Prove that each
+delta occurrence contributes exactly the sanctioned substitutions
+and preserve the rule's exception and provenance behavior.
+
+[[https://arxiv.org/abs/2405.19040][Finite-choice logic programming]] separates deterministic deductions
+from branching decisions. The local Dusa forward engine stores an
+attribute's known or possible values and advances the agenda on new
+facts or narrowed support. The miniDUSA Racket runtime makes the
+search state explicit. Compare those mechanisms against the existing
+ASCENT Candidate scheduler for repeated matching and branch-local
+support. A finite-choice agenda has different state and certificates
+from a positive reachability index.
+
+* Session integration
+
+=gerbil-ascent-open-condensed-actor-session= uses the existing Actor
+owner, source replacement, publication and close operations. This
+entry selects the condensed view for the admitted two-relation
+positive reachability rule and cyclic fixnum data. The existing
+Session entry preserves the execution order of its result lists.
+The condensed view orders full export by numeric origin and target.
+Both entries return independently mutable lists. An unsupported
+shape, executor authority, or deadline goes through the existing
+evaluator and its budget and observation protocol.
+
+The index owns one admitted source slot, its key-to-ordinal map, the
+inverse label vector, exact adjacency buckets, SCC owners and group
+reachability masks. The direct build checks the validity and
+multiplicity of its input before it can publish a source view.
+Traversal walks existing Tarjan frames with Actor cancellation
+checkpoints. Group products charge exact logical rows before the view
+is published. A refusal goes through the ordinary evaluator so the
+public failure and rollback contract is preserved.
+
+The unchanged source slot reuses the index. An append can consume
+one delta when its row spine has the previous owned rows as its exact
+tail and both endpoints have dense slots. The group update applies
+old predecessors of the origin crossed with old successors of the
+target, including the endpoints. A cross-edge with a return path
+rebuilds because it can merge SCCs. Replacement rebuilds from the
+new adjacency so a deleted bridge can split a component. Only the
+Session owner installs the index after successful publication.
+
+=closure-witness= searches the same immutable adjacency for one
+nonempty path, under a caller-provided edge-inspection budget.
+=verify-closure-witness= checks both the exact source-slot identity
+and the publication epoch before replaying concrete edges. Old
+results can still replay their own witnesses. The path witness is
+separate from the general Candidate proof DAG and its evidence
+completeness contract.
+
+=ComponentClosure.lean= relates distinct labels and dense ordinals
+to keyed lookup, proves the exact single-edge delta, and states the
+source-slot and epoch replay condition. These are refinement lemmas
+under the stated representation invariants. The native Session
+suite checks the actual hash lookup and repeated key coordinates,
+delta selection, stale-proof refusal, delete/split, rollback and
+independently mutable results against an independent oracle.
+The cancellation and close regressions also cover the ordinary
+Session while the evaluator is held at its first charged step. The
+hold makes the in-flight assertion independent of how quickly a
+packed chain reaches completion. The join and supervisory deadlines
+are unchanged. Separate state-reply tests exercise abandoned and
+queued readers against the shared Session owner.
+
+The native Session comparison uses the same 104,857 input edges and
+independently verifies every one of the 1,437,696 detached output rows.
+Session opening and oracle verification are outside the two CPU
+columns. The result uses the fixed local Gerbil release and cached
+Yuanxu =df4be3a=, whereas PR 2 head =b69daffe= pins =adcd30ac=.
+
+| Route | Run and publish CPU | Complete export CPU | Combined CPU | GC wall |
+|-------+---------------------+---------------------+--------------+---------|
+| Ordinary Actor Session | 29.512 s | 278.11 ms | 29.790 s | 7.742 s |
+| Condensed Actor Session | 218.51 ms | 88.86 ms | 307.37 ms | 77.58 ms |
+
+Both native Gerbil Cases exited normally. The combined reduction
+is 96.9 times on this fixture. This comparison is a single complete
+sample per route and has no latency percentile claim.
+
+The guarded Lean inventory passed all 195 jobs. Local semantic
+qualification completed all 185 modules with the cached dependency
+prefix. The final Actor and condensed Session test files passed
+40 Cases in a separate native invocation. The release gate still
+requires the performance assertions and exact dependency acceptance.
+
+* Full mutable-list projection
+
+The million-row pure projection already uses a terminal affine lane
+on this input. The lane holds its extent and affine parameters, and
+its alternative source promises remain unforced on the terminal
+path. The measured query does not run rule-SCC scheduling or
+materialize a duplicate relation index. It reads the numeric view
+and emits the detached public list in source order. The caller keeps
+both alternating one-million-row input lists alive under the fixed
+benchmark. A previous export that the caller releases is collectible
+while the corresponding result and Session remain live. Removing
+an additional reference to the same still-live caller input does
+not reduce its reachable cells.
+
+In a separate untimed native check with both caller lists, nine weak
+samples at the head, middle, and end of a released output cleared while
+the corresponding Result and Session remained live. All 18 caller
+input samples and all nine samples from the retained output survived.
+Mutating the retained output did not affect an export from either
+Result. This samples reachability rather than measuring total live
+heap size.
+
+The fixed sample yielded 117.23 ms P95. The replay with the scheduler
+candidate verified all 1,000 lists and failed the same bound at
+127.49 ms P95. It took 0.21 s for solve and publication, 26.08 s for
+export, and 23.41 s of GC across all phases. These aggregate intervals
+are not additive percentiles. The scheduler candidate does not change
+this exporter. The recursive Case verified 1,000 lists of 1,040,384
+rows and reached 86.96 ms P95 on the replay. The earlier qualified
+recursive window measured 87.94 ms. The whole experiment preserves
+the original caller cuts, result shape, and 100 ms gate.
+
+The replay used the same compiled caller. Both the SCC qualification
+and the recursive benchmark printed their final Gerbil success
+markers. The enclosing resource reporter exited nonzero after its
+macOS clock-rate query was denied by the sandbox. The separate
+ordinary qualification command exited zero in 135 s with 185 modules
+and 1,584 Cases. The projection assertion failed independently of the
+reporter. Raw receipts stay in the local cache.
+
+A subsequent replay with the condensed Session code used the same
+previously compiled million-row caller and both original 90-second
+and 2 GiB limits. The recursive Case timed out after its progress
+receipt for 930 verified requests, so it produced no qualified P95.
+The projection verified all 1,000 requests and still failed the
+100 ms assertion at 177.93 ms P95. Its cumulative export wall was
+36.65 s, GC wall 33.52 s, and solve and publication wall 0.29 s.
+No collection occurred in the measured solve and publication phase.
+The runtime's raw allocation counter is preserved in the receipt.
+It cannot provide a reliable allocation total across these collections.
+The exporter and caller inputs were unchanged.
+The separate ownership probe on this replayed runtime again retained
+all 18 input samples and the nine live-output samples, while clearing
+all nine samples of the discarded output.
+
+** Matching the first 930 recursive requests
+
+The earlier 87.94 ms run and the 90-second timeout both recorded the
+same first 930 verified requests. Compare that common prefix before
+attributing the timeout to a code path.
+
+| Phase | Earlier wall | Timeout wall | Increase |
+|-------+--------------+--------------+----------|
+| Source replacement | 0.170 s | 0.462 s | 0.292 s |
+| Run and publication | 3.029 s | 5.945 s | 2.916 s |
+| Detached export | 29.038 s | 58.659 s | 29.621 s |
+| Independent oracle | 10.242 s | 20.010 s | 9.767 s |
+| Request window | 42.493 s | 85.094 s | 42.601 s |
+
+Export accounts for 69.5 percent of the added wall time and the
+oracle accounts for 22.9 percent. Neither window recorded a collection
+during run and publication. The wall minus process CPU residual in
+that phase increased from 0.044 s to 1.099 s. This residual includes
+off-CPU time and measurement error. The earlier harness did not
+separately bracket collector CPU or waiting inside export, so those
+historical contributions cannot be recovered from the totals.
+
+** Replay with the PR dependency lock
+
+PR 2 head =b69daffe= pins Yuanxu =adcd30ac=, POO =187fc0e= through
+Yuanxu, and the development package ASP =a020cd1=. The replay built
+Yuanxu and the candidate test library for Gerbil =1cfb032= and
+Gambit =ea114fc=. Both arms used the same runtime modules and benchmark
+caller. The reference substituted the Actor Session source from the
+87.94 ms candidate. Each arm used the original 90-second deadline,
+2 GiB heap limit, row oracle and strict 100 ms assertion.
+
+| Runtime | Recursive complete-list P95 | Pure projection P95 |
+|---------+-----------------------------+---------------------|
+| Reference | 90-second process deadline, 950 recorded verified requests | 117.10 ms, failed |
+| SCC candidate | 79.59 ms, passed | 115.67 ms, failed |
+
+The reference recursive gate recorded 42.43 s in its steady window
+at the last progress receipt. The receipt file's creation and final
+write differed by 89.60 s, leaving about 47.17 s outside the
+measured interval. The timing does not separate launch from the final
+receipt write on that invocation. Reported dataset preparation and
+its cold query together took less than 0.10 s. The later diagnostic
+invocation of the same reference reached test preparation about
+3.43 s after launch and finished all requests. There is no system
+trace identifying the cause of the isolated unmeasured delay. It
+differs from the earlier timeout's 85.09 s of measured steady work.
+
+The separate diagnostic caller brackets every replacement, evaluation,
+export and oracle with Gambit's wall and CPU counters. All three
+diagnostic arms verified 1,000 requests. These brackets explain costs
+and do not determine acceptance.
+
+| Diagnostic | Whole request P95 | Export wall | Export GC wall | Export GC CPU | Export wall minus process CPU |
+|------------+-------------------+-------------+----------------+---------------+-------------------------------|
+| Reference recursive | 84.15 ms | 32.68 s | 20.25 s | 19.92 s | 0.50 s |
+| SCC candidate recursive | 85.55 ms | 33.41 s | 20.17 s | 19.65 s | 1.06 s |
+| SCC candidate pure projection | 120.86 ms | 25.53 s | 23.27 s | 22.68 s | 0.62 s |
+
+In the pure projection diagnostic, all 228 natural collections in
+the request window fell inside export. Its export GC wall P95 was
+105.67 ms and its export GC CPU P95 was 104.87 ms. In 108 requests,
+GC wall inside export alone reached at least 100 ms. In 94 requests
+it consumed at least 100 ms of CPU. The export phase accumulated
+2.23 s of non-collector CPU. Run and publication accumulated 0.20 s
+wall, including approximately 0.005 s of wall minus CPU. Removing
+only measured waiting with these observed collector costs fixed
+would still leave too many requests above the strict P95 bound.
+
+The SCC Session itself verified all 1,437,696 rows on the locked
+stack with 142.20 ms of evaluation CPU and 86.92 ms of detached
+export CPU in one native check.
+
+All 185 Scheme qualification modules and 1,572 Cases passed on this
+stack in 210 s. The pure projection assertion leaves the release
+gate open. The PR head was unchanged after the replay.
+
+** Root accounting in the million-row pure projection
+
+The root census uses the same production Actor Session, both original
+caller-owned inputs and the full detached list. It observes the heap in
+a separate native test after two collections at each scope boundary.
+The accounted values are Gambit statistics and include copying-space
+accounting. They do not measure the physical bytes copied in a pause.
+The official latency test still uses natural collections.
+
+| Transition | Change in accounted live memory |
+|------------+----------------------------------|
+| Establish both caller input lists | +275.74 MiB |
+| Open the Session and publish the replacement cut, with both inputs kept | +0.41 MiB |
+| Keep one complete detached output | +137.87 MiB |
+| Release that output while keeping the Result and Session | -137.87 MiB |
+| Close and leave the Session scope, with both inputs kept | -0.11 MiB |
+
+The input objects are held across all of these observations. A
+Session reference to the same initial declaration does not make its
+caller-owned rows collectible. The old detached result's nine
+sampled cells cleared while the Session and its published Result
+remained live. Keeping the detached output was the control. A
+test-only probe of the affine source promise observed zero forces
+through the replacement and full export. The numeric representation
+retains no memoized list on this route. The production row allocator,
+caller inputs and runtime configuration were left intact.
+
+Weak-key samples of the full initial admission's membership table
+and reversed row spine were already gone at the first observation
+after Session open. The admission probe counted one nonempty
+million-row event and zero surviving keys at each later observation.
+Its separate counter confirmed that no affine list promise ran.
+
+A native loading control started with =std/test=, then loaded the
+actual Actor and declaration runtime modules before importing the
+compiled benchmark module with the same =import-module= call used
+by Gerbil's test discovery. The direct runtime loading increased
+accounted live memory by 3.30 MiB. Importing the benchmark module
+added 58.85 MiB before any input or Session existed. This is a
+loading and module-context footprint. It is outside the Session
+and Result ownership measured by the workload probe.
+
+The steady diagnostic recorded the last-collection live size for
+each export whose GC counter changed. It finished all 1,000
+one-million-row requests. There were 221 export brackets containing
+a collection, each with one recorded collection. The accounted live
+median was 451.45 MiB. The range was 425.00 to 558.00 MiB, compared
+with 420.43 MiB at rest with the published cut and 558.30 MiB when a
+complete output was held.
+
+| Export brackets with a collection | Brackets | Median accounted live |
+|-----------------------------------+----------+-----------------------|
+| GC wall below 100 ms | 86 | 428.57 MiB |
+| GC wall at least 100 ms | 135 | 469.01 MiB |
+
+The largest persistent workload objects observed were the caller
+inputs. The exporter grows a detached list that must remain reachable
+until return. The size of this in-progress output is consistent with
+the measured range. A pause can also vary at the same live size. The
+test does not identify every object the collector marks or claim that
+only those objects contribute to the pause.
+
+The two unchanged gates were rerun on the same locked native build.
+The recursive Case passed at 90.70 ms P95. The projection Case
+verified all 1,000 full lists and failed at 126.85 ms P95. Its
+separate live-size diagnostic is evidence about GC behavior only.
+The condensed Session again verified all 1,437,696 rows. The
+runtime and benchmark artifacts match the earlier locked build
+that passed the 185-module Scheme suite. No Session root change
+was applied on the strength of these results. The release gate
+remains open.
+
+** Native test import ownership
+
+The follow-up used the identical PR #2 dependency lock and compiled
+benchmark file. Each diagnostic started with =gerbil test= and loaded
+the native declarations and Actor Session before importing the
+benchmark. No source rows or Session existed during this import.
+The diagnostic sampled accounted live bytes after collection at each
+boundary. Neither the dependency probes nor their collections ran
+inside the performance gate.
+
+| Import phase | Accounted live change |
+|--------------+-----------------------|
+| Read and expand the compiled interface with evaluation disabled | +58.92 MiB |
+| Evaluate the already expanded interface | +11.16 KiB |
+| Resolve the two exported suites as test discovery does | -152 bytes |
+
+Loading the benchmark's native object first added 38.62 KiB. The
+subsequent interface read still added 58.89 MiB. Discovery found the
+same projection Suite object already initialized by the native load.
+After its local references had gone out of scope, the diagnostic's
+weak keys still observed the Suite instance, module context, binding
+table, expanded syntax and evaluation promise. The interface read
+registered 178 module contexts, counted once per module identifier.
+Of those, 60 belonged to ASCENT, 58 to the standard library, 51 to
+POO, seven to Yuanxu, one to Gerbil, and one to the benchmark.
+
+Importing the benchmark's direct dependencies in order attributed
+53.25 MiB to the =program/func= import. A separate process partitioned
+that import further using the dependency interfaces named by the
+locked build.
+
+| Declaration import step | Accounted live change |
+|-------------------------+-----------------------|
+| Yuanxu role module prelude | +8.99 MiB |
+| POO MOP and its imports, reached from the Yuanxu package prelude | +21.96 MiB |
+| Yuanxu package prelude after its direct dependencies were imported | +8.99 MiB |
+| Yuanxu Contracts after its prelude was imported | +5.48 MiB |
+| Remaining declarations reached by =program/func= | +6.94 MiB |
+
+The table omits three small direct prelude dependencies that together
+added 0.92 MiB. After its direct dependencies were already present,
+the benchmark's own interface added 91.10 KiB. The two Yuanxu
+prelude contexts had 20,949 and 20,956 export records respectively.
+Their compiled interfaces contain reexports of Gerbil Core across
+phases and POO object exports. The live deltas attribute the cost to
+an import path and include its transitive metadata and shared state.
+They do not count the exact bytes of each reachable object type.
+
+Gerbil's =prepare-module= calls =import-module= with evaluation enabled
+before it examines the Suite exports. Gerbil's expander registers each
+context under its path and identifier and retains the context's
+binding table, expanded code and delayed evaluation entry. Returning
+from a Suite or closing the ASCENT Session leaves these roots in the
+expander registry. The production-owned admission scratch objects and
+detached output followed the shorter lifetimes measured above. This
+audit found no additional ASCENT-owned root that can be released early
+on the plain projection path. No loader, cache or runtime change was
+made.
+
+Both original million-row Cases verified 1,000 queries. The recursive
+Case passed at 96.48 ms P95 and the pure projection Case failed the
+100 ms gate at 136.58 ms P95. Projection recorded 225 natural
+collections and 25.41 seconds of GC wall time across the workload.
+The separate condensed Actor Session verified 1,437,696 rows at
+172.84 ms evaluation wall time. The performance gate prevents
+publication. The diagnostic and gate receipts are in the ignored
+=.cache/ascent/scc-import-roots/= directory.
+
+** Single-export scan, allocation and collection
+
+The same locked affine source is selected by the terminal projection
+branch in =program/actor-session.ss=. =rows-of= reaches the export
+callback through =gerbil-ascent-public-snapshot-rows= and
+=gerbil-ascent-view-rows=. The affine view starts with an ordinal and
+two numeric fields per row. It does not scan either caller list,
+force a source promise, build an index, or materialize an intermediate
+result. The replacement phase separately scans the caller input to
+prove the affine shape for that cut.
+
+The indexed exporter traverses one million ordinals in descending
+order. Each iteration computes the two fields from the ordinal and
+prepends an outer cell with a detached two-cell row. It emits exactly
+three million cons cells in source order. The 779 exports without a
+collection all gained 144,002,608 bytes on the runtime's accounted
+allocation counter, including the probe bracket. The accounting
+includes movable semispace weighting. Deltas across a collection are
+retained in the receipt and are not treated as allocated payload.
+
+| Pure projection diagnostic, 1,000 exports | P95 | Total |
+|--------------------------------------------+-----+-------|
+| Export wall | 122.88 ms | 27.912 s |
+| Export GC wall | 119.10 ms | 25.195 s |
+| Export GC CPU | 108.34 ms | 22.789 s |
+| Export mutator CPU | 3.02 ms | 2.434 s |
+| Export wall minus process CPU | 13.16 ms | 2.689 s |
+| Replacement wall outside the export | 3.38 ms | 2.548 s |
+
+The worst export, request 921 in zero-based order, took 276.08 ms.
+Collection occupied 273.43 ms of that wall time, including 113.34 ms
+of GC CPU. Mutator CPU was 2.32 ms. There were 207 exports at or above
+100 ms in GC wall alone and 130 at or above 100 ms in GC CPU alone.
+=RuntimeMeasurement.bounded_phase_misses_p95= rules out meeting the
+1,000-request quota by removing all other work while holding these
+phase times fixed. This statement is conditional on the measured
+collector durations. The counters do not separately measure GC scan
+and copy operations. Percentiles across independent columns do not add.
+
+The source-level candidate seeds both affine fields at the last
+admitted ordinal, then subtracts each stride on the way to ordinal
+zero. =MillionQueryWorkload.stepped_affine_export_exact= proves ordered
+equality to re-evaluating both affine expressions at every ordinal,
+and =affine_decrement_fits= proves that every subtraction lands inside
+the admitted fixnum range. The loop emits the zeroth row before
+returning and performs no subtraction beyond that boundary. The count
+model removes 1,999,998 field multiplications for the million-row case.
+It preserves the visited ordinals, output cells, and pair layout.
+The model predicts a mutator saving. Reduced collector work requires
+native evidence.
+
+The isolated build loaded the candidate =source-cut.o1= and reused the
+original compiled benchmark unchanged. The uninstrumented comparison is
+against the last run with the same locked artifacts. The instrumented
+comparison used a separate caller to sample each export.
+
+| Lane | Indexed reference | Stepped candidate |
+|------+-------------------+-------------------|
+| Original recursive request P95 | 96.48 ms | 93.47 ms |
+| Original pure-projection request P95 | 136.58 ms | 127.00 ms |
+| Diagnostic pure-projection request P95 | 138.79 ms | 146.20 ms |
+| Diagnostic export mutator CPU P95 | 3.02 ms | 2.99 ms |
+| Diagnostic median CPU per export without GC | 2.289 ms | 2.251 ms |
+| Diagnostic export GC CPU P95 | 108.34 ms | 106.79 ms |
+| Diagnostic export GC wall P95 | 119.10 ms | 125.15 ms |
+| Exports with at least 100 ms of GC CPU | 130 | 142 |
+
+All four original-gate counts and both projection diagnostics have
+1,000 independently verified output lists. The candidate recorded
+144,002,608 accounted bytes on each of the 785 exports without GC,
+identical to the reference in that cohort. The 0.038 ms reduction in
+the measured median non-GC CPU cannot explain a 9.58 ms improvement
+in the single uninstrumented P95 comparison. The instrumented
+candidate had a slower request tail. The evidence does not support a
+reproducible tail improvement from this source change.
+
+The guarded Lean file check and three native signed-stride cases
+passed. The cases covered both fixnum boundaries, ordered emission
+and mutable rows and outer spines detached across exports. The Actor
+and condensed suites passed 40 cases. The view export suite passed
+four cases after the locked test source root was added to its load
+path for the test fixtures. The initial missing-fixture error remains
+in the receipt. The SCC oracle verified 1,437,696 rows.
+The Scheme cursor patch and receipts
+remain in the ignored =.cache/ascent/projection-tail/= directory.
+The production exporter was restored to the exact locked source.
+The original projection gate still fails, so full release
+qualification and publication did not proceed.
+
+** Native GC scan, copy and uncharged elapsed time
+
+The fixed Gerbil binary (UUID =2AAD5BDF-7963-3654-889C-6C02430DBA94=)
+ran the production affine projection. The diagnostic kept the original
+dataset, oracle, heap cap and watchdog. Native Time Profiler recorded
+15 seconds after the test started issuing complete requests.
+The 14,842 retained samples were running main-thread observations
+weighted at 1 ms apiece. A separate three-window stack sample
+confirmed that =mark_array= and its specialized variants dominated
+the collector stacks. Sampling and its instrumentation were outside
+the release runs.
+
+The offsets below are bound to the loaded binary UUID. The source is
+Gambit =ea114fc3:lib/mem.c= (SHA-256
+=317b5262efd7f3a9418328250c163a9cf3fb9a44fbd573b08fde6f4a3cce2882=).
+=mark_array= both traverses a reference and copies movable objects.
+The attribution uses instruction addresses, not the function name
+alone. Test and load blocks at =0x1003e0540=, =0x1003e0a50= and
+=0x1003e0e70= inspect the field tag and object header. For example,
+=0x1003e1060= rewrites the incoming slot to its forwarded address,
+while =0x1003e11e8= and =0x1003e11f0= load and store a body word.
+The scan queue visits the copied object's remaining fields through
+=scan_movable_objs_to_scan= and =scan=. Unclassified instructions in
+the shared marking function retain a separate category.
+
+| Identified collector top-of-stack operation | Samples | Share of identified GC samples |
+|---------------------------------------------+---------+--------------------------------|
+| Field loads, tag and header tests | 4848 | 56.01 percent |
+| Destination scan and queue dispatch | 592 | 6.84 percent |
+| Object body copy loops | 599 | 6.92 percent |
+| Header and forwarding stores | 404 | 4.67 percent |
+| Remaining instructions in marking routines | 2168 | 25.05 percent |
+| Other identified collector code | 45 | 0.52 percent |
+
+There were 8,656 identified collector samples, with 6,186 outside
+that classification. The two scanning categories accounted for
+62.85 percent of the identified collector samples. The sample
+fractions describe the observed running thread. They are neither
+individual pause durations nor a count of bytes copied.
+
+=lib/_kernel.scm:##process-statistics= exposes the cumulative user,
+system and wall clocks measured by the collector in =lib/mem.c=.
+The same diagnostic produced 1,000 export receipts, with exactly one
+collection in each of 221 exports. The partition is computed from the
+same endpoints for each export, following
+=WeightedExportCapacity.paired_cpu_wall_split=.
+
+| Across the 1,000 export receipts | Total | P95 |
+|----------------------------------+-------+-----|
+| GC process CPU | 22.012 s | 103.54 ms |
+| GC elapsed minus GC process CPU | 1.093 s | 4.17 ms |
+| CPU outside GC | 2.324 s | 2.84 ms |
+| Elapsed minus CPU outside GC | 0.135 s | 0.67 ms |
+
+The export at the P95 rank took 110.82 ms, including 105.59 ms
+of GC CPU and 2.96 ms of uncharged elapsed time inside the collection.
+The longest export took 169.16 ms, including 104.67 ms of GC CPU and
+60.90 ms of uncharged collector elapsed time. The running-thread
+trace does not identify the cause of that uncharged interval, such as
+descheduling or an OS wait. Even with it removed, 97 exports had
+at least 100 ms of GC CPU in this diagnostic. This exceeds the 50
+allowed by the strict 1,000-request quota.
+
+=MillionQueryWorkload.projectionCopyWords= charges three pair objects
+per row, each with one header and two body words.
+=projection_body_slots_exact= checks the partition of the full body
+into pointer and immediate slots. A full million-row result has
+9 million words including headers, and 2,999,999 pointer slots and
+3,000,001 immediate slots in its bodies. A collection inside export
+sees only the currently reached prefix alongside other roots. The
+model does not infer an exact copied prefix from the VM live-byte
+counter.
+
+The two caller cuts remain live by design across publication and
+export. =redundant_projection_root_no_reachable_saving= applies if
+an ASCENT reference only aliases those caller roots. The previous
+locked root control measured 0.41 MiB of accounted increase across
+open and replacement, versus 275.74 MiB for the two caller cuts.
+The pure projection publishes the numeric view given by
+=source-slot-view=; it neither forces the numeric descriptor's
+fallback list promises nor retains an exported list. The live prefix
+is needed for delivery of the fresh mutable result. No additional
+material ASCENT-owned root or intermediate list was identified for
+removal. Production Scheme and the collector were left intact.
+
+The native disassembly, frozen source digest, per-address receipt
+and paired clock records are in the ignored
+=.cache/ascent/projection-gc/= directory.
+
+The guarded Lean file check passed. The original benchmark then ran
+without either profiler. With the existing 90-second deadline and
+2 GiB cap, the recursive case verified 1,000 lists of 1,040,384
+rows and passed at 91.89 ms P95. The pure projection verified 1,000
+lists of 1,000,000 rows and failed at 120.58 ms P95. The independent
+condensed Session verified all 1,437,696 rows. The unchanged production
+exporter supports no optimization claim from the lower observed P95.
+The projection breach prevents full release qualification and
+publication.
+
+** Scanning cost by held-root control
+
+The 62.85 percent running-thread sample share above identifies
+instructions. It does not identify the objects those instructions
+visited. This experiment changes the held roots in separate native
+test processes. All processes load the same native benchmark,
+declaration and Session objects. An additional step imports the
+locked benchmark interface through the same Gerbil expander call as
+test discovery. Only that step differs in the metadata control.
+No registry entries or files are cleared.
+
+The input control holds zero, one or two of the original million-row
+lists. It calls the locked benchmark's native input constructor with
+the original offsets. It verifies every retained input row both
+before and after collection. The output control uses the locked
+affine view exporter to create a separate list with zero, 500,000,
+or one million retained rows. The production loop visits ordinals
+backwards and prepends each row. Consequently its partial accumulator
+is a suffix of the final output, as checked by
+=MillionQueryWorkload.projection_accumulator_order=. The 500,000-row
+control builds that suffix without holding its own source input.
+It matches the contents and cell shape of the accumulator. It does
+not recreate the interrupted export's allocation history or stack.
+
+=projection_root_probe_extents= checks 22.5 million pair words for
+two complete inputs and a half-million-row accumulator. Removing
+both inputs leaves 4.5 million of those words. Removing just the
+half-million-row accumulator leaves 18 million. Metadata stays
+outside these pair counts. The word count predicts reachability and
+layout only. Each additional root can change locality, forwarding
+and the distribution of samples in other parts of the collector.
+
+The clock matrix varies three factors independently: import metadata,
+hold both inputs, and hold the half-million-row accumulator. Two
+additional configurations hold one input or a complete accumulator.
+The two clock runs reverse process order and take 16 forced
+collections in each configuration after two preparation collections.
+A separate on-CPU instruction trace acquires 24 forced collections
+in each near-production configuration. Its estimate is the
+classified sample weight per completed collection. Each process
+checks its complete lists and its collection count. This controlled
+attribution does not qualify the natural-GC latency gate.
+
+The forward and reverse clock matrices completed 320 measured
+collections. The near-production reference holds imported metadata,
+both caller inputs and the half-million-row accumulator.
+
+| Change from near-production reference | Accounted live reduction | GC CPU reduction per collection, forward / reverse |
+|---------------------------------------+---------------------------+------------------------------------------------------|
+| Omit the extra interface import | 58.85 MiB | 9.57 / 12.72 ms |
+| Hold neither caller input | 275.74 MiB | 53.14 / 56.91 ms |
+| Hold only the first input | 137.87 MiB | 28.26 / 28.86 ms |
+| Hold no output accumulator | 68.94 MiB | 11.93 / 12.62 ms |
+
+The reference used 101.93 and 102.15 ms of GC CPU per collection.
+Replacing the half-million-row accumulator with the full million-row
+list added 14.04 and 14.50 ms. Across the factorial cells the metadata
+effect ranged from 9.57 to 14.78 ms, the two-input effect from 53.14
+to 58.74 ms, and the half-million-row accumulator effect from 11.93
+to 16.81 ms. These are conditional marginal effects in the held-root
+experiment. Their ranges show why a single additive attribution of
+the natural collector's time would be misleading.
+
+The six instruction traces completed 144 measured collections. The
+classified collector sample weights cover 99.37 to 100.24 percent
+of their corresponding collector CPU clocks. Below, scanning is
+the sum of the same field/header tests and destination scan ranges
+used earlier. Each estimate uses its own arm's observed samples
+and completed collections.
+
+| Held-root configuration | Scan samples, ms per collection | Scan difference from reference |
+|-------------------------+---------------------------------+-------------------------------|
+| Metadata, two inputs, half accumulator | 64.92 | reference |
+| Two inputs and half accumulator, with no extra interface import | 55.79 | -9.13 ms |
+| Metadata and half accumulator, with no input held | 27.08 | -37.83 ms |
+| Metadata, first input only and half accumulator | 43.96 | -20.96 ms |
+| Metadata and two inputs, with no accumulator | 53.33 | -11.58 ms |
+| Metadata, two inputs and full accumulator | 73.96 | +9.04 ms |
+
+The largest measured scanning reduction removes both caller lists.
+The caller must keep the lists for the alternating replacements.
+The Session's duplicate reference does not remove any reachable
+cells while the caller remains an independent owner. The metadata
+belongs to Gerbil's test module registry in the required native
+entry. The accumulator must stay live until the mutable public
+list is returned. The affine source and its result descriptor
+already avoid a materialized intermediate. The earlier matched
+lifetime probe measured 0.41 MiB of additional accounted live data
+through Session open and replacement, with the caller roots kept.
+It also observed that the admission scratch and prior exported list
+were collectible. The audit found no substantial removable
+ASCENT-owned scanning root under these constraints. Production
+source, caller, runtime and caches are unchanged.
+
+The guarded Lean file check passed. The profiler and root probes
+then exited before the uninstrumented native release cases started.
+With the original caller, PR #2 dependency lock, 90-second deadline
+and 2 GiB cap, the recursive case verified all 1,000 lists of
+1,040,384 rows and passed at 83.87 ms P95. The pure projection
+verified all 1,000 lists of 1,000,000 rows and failed at 118.87 ms
+P95. The independent condensed Session verified 1,437,696 rows.
+The unchanged exporter supports no performance improvement claim.
+The failing gate prevents full release qualification and publication.
+
+The matrix, instruction samples and uninstrumented verdicts are
+in the ignored =.cache/ascent/projection-gc-roots/= directory.
+
+* Indexed double-bound SCC queries
+
+The published condensed view already defines pair membership by
+resolving both fixnum labels and testing the destination owner's bit
+in the origin owner's reachability mask. The view's target lists
+are sorted and unique. With exactly two bindings, one for each
+column, filtering the origin's list therefore returns zero or one
+row. Use the same membership test for =contains?= and =visit-rows=
+on the same captured view. Accept both column orders. Continue the
+ordinary visitor for partial or repeated bindings.
+
+The callback can mutate the caller's binding lists. If it does, the
+ordinary scan would apply the revised filters to the remaining
+targets of the original origin. After direct delivery, detect any
+such change and resume the original visitor strictly after the
+delivered target. Existing row and field callback modes expose the
+same result. The direct branch neither creates a witness nor changes
+the published cut, its version, its cancellation checkpoints or its
+publication and witness budgets.
+
+Lean =ComponentClosure.bound_pair_bit_test= proves the zero-or-one
+ordered result under the existing unique-target and exact-bit
+premises. =bound_pair_callback_suffix= gives the suffix selected by
+the native resume condition after a callback edit. These checks do
+not prove the entire native mask construction or the effects of an
+arbitrary Scheme callback.
+
+The native comparison used the same compiled caller, dependency
+lock and 26-clique graph as the 1,437,696-row closure control.
+Origin 64 reaches 1,600 targets on the intact graph and 768 after
+removing the bridge from vertex 831 to 832. The timed arms used
+unmodified release code and the indexed candidate. The counter
+arms were separate builds and their latencies were excluded. Each
+edited query used a new published cut with the opposite bridge
+state installed before its update. The oracle checked every
+delivered field, including the absence of rows for misses.
+
+| Public fields visitor | Samples per arm | P95 scan / indexed (us) | Candidate rows per request, scan / indexed |
+|-----------------------+-----------------+-------------------------+--------------------------------------------|
+| Same cut, hit | 1000 | 9.29 / 0.54 | 1600 / 0 |
+| Same cut, miss | 1000 | 9.13 / 0.42 | 1600 / 0 |
+| First query after removing bridge, miss | 32 | 13.67 / 9.42 | 768 / 0 |
+| First query after restoring bridge, hit | 32 | 34.29 / 8.67 | 1600 / 0 |
+| Hit on the original view held across those updates | 1000 | 10.25 / 0.50 | 1600 / 0 |
+
+Each indexed request did exactly one membership test. Same-version
+P95 improved 17.2x on hits and 21.9x on misses. The maximum
+same-version hit was 40.45 ms in the reference and 41.07 ms in
+the indexed run. Those observations were retained and their
+cause was not measured by this benchmark.
+
+| Edit | Source replacement P95, scan / indexed | Run and publication P95, scan / indexed |
+|------+------------------------------------------+--------------------------------------------|
+| Remove bridge | 1.15 / 1.11 ms | 144.53 / 142.02 ms |
+| Restore bridge | 1.21 / 1.03 ms | 194.96 / 184.61 ms |
+
+Both release arms rebuilt on each measured edit. The difference in
+publication time does not establish a publication optimization.
+It still dominates the edited request. The focused native suites
+passed on both implementations, including both binding orders,
+repeat and conflicting bindings, callback edits of keys and columns,
+witness isolation, cancellation and budget withdrawal. The guarded
+Lean file check passed. Raw evidence, source and disjoint timed and
+counted receipts remain under =.cache/ascent/scc-bound-query/=.
+
+The uninstrumented candidate passed the original million-row
+recursive gate at 82.38 ms P95. The unchanged pure-projection gate
+verified all 1,000 lists and failed at 120.27 ms P95. The independent
+condensed Session qualified all 1,437,696 rows in the full export.
+The entire Scheme qualification passed 185 modules and 1,572 cases
+in 160 seconds. The pure-projection gate still blocks publication
+to PR #2.
+
+* Local bridge edits and deferred SCC targets
+
+The bracketed reference compiled the existing double-bound query
+implementation with phase clocks. The original bridge test still
+checked every result. The phase table includes both measured and
+preparatory publications, grouped by admitted edge count. It is a
+diagnostic, separate from the release timing.
+
+| Reference phase P50 | Bridge removed | Bridge present |
+|---------------------+----------------+----------------|
+| Source walk, ordinal hash and duplicate table | 134.12 ms | 132.19 ms |
+| Adjacency construction | 0.93 ms | 0.93 ms |
+| Tarjan traversal | 1.17 ms | 1.18 ms |
+| Quotient edge construction | 1.55 ms | 1.55 ms |
+| Target expansion | 0.15 ms | 0.28 ms |
+| Target sorting | 0.59 ms | 1.22 ms |
+
+The target lists hold 11,648 or 22,464 labels respectively. Replacing
+the whole index repeats the dominant source walk and allocation.
+The candidate compares the two already owned packed sources in
+ordinal order. =ordered_extra_exact= establishes the one-splice
+condition. An edit that cannot prove it goes through the existing
+rebuild. Removing a cross edge leaves every SCC's internal edges
+unchanged. The candidate also requires both endpoint groups to
+retain their internal cycles, which preserves the admitted vertex
+universe. Removing the last concrete witness to a quotient edge
+recomputes closure rows in its previous predecessor cone.
+=delete_unaffected_path= justifies keeping the other rows.
+Deleting an intra-component edge still rebuilds and may split an
+SCC. A cyclic cross insertion still rebuilds and may merge SCCs.
+
+Exact logical row count and refusal still precede publication.
+Group targets are built by the same sorted enumeration on first use
+of each group. Double-bound queries use the fixed cut's bit test
+without forcing targets. Full export and partial binding keep their
+original order. The delayed queries capture immutable index data
+and do not retain a publication cancellation token.
+
+Restoring a packed edge preserves the original adjacency order, even
+when the next edge from its origin is separated by unrelated rows.
+The packed scan records that successor in the aligned suffix. The
+native insertion uses that label as the insertion point.
+=ordered_adjacency_splice= proves that projecting the new input onto
+the affected origin produces the same adjacency order as a rebuild.
+The native witness control also checks the one-edge inspection
+budget before and after restoration.
+
+A fresh uninstrumented reference and candidate each verified 32
+edits in each direction. The reference already includes the
+double-bound bit test. The candidate asserts =removed= or =inserted=
+for each corresponding publication. All query windows below start
+after run and publication returned.
+
+| Bridge operation | Replace P95 ref / local | Run and publish P95 ref / local | First double-bound P95 ref / local |
+|------------------+-------------------------+---------------------------------+------------------------------------|
+| Remove | 1.144 / 1.153 ms | 139.329 / 1.268 ms | 8.917 / 6.292 us |
+| Restore | 1.015 / 1.132 ms | 185.777 / 1.121 ms | 8.958 / 7.208 us |
+
+The measured run and publication improved 109.9x and 165.7x on this
+graph. The owned-input certificate still compares every packed row,
+so this path retains a linear verification pass in source size.
+It avoids rebuilding ordinal and duplicate tables as well as
+running Tarjan again. The original mixed workload's first publish
+took 132.64 ms in the reference and 130.78 ms in the candidate.
+The same-cut double-bound hit P95 regressed from 0.54 to 1.38 us in
+this run. Same-cut misses measured 0.50 us in both arms. Hits on the
+original view held across edits measured 0.50 and 0.54 us. Both
+full-list SCC oracles verified 1,437,696 rows. In that single-sample
+check, detached export CPU took 91.52 ms in the reference and
+97.35 ms with the candidate, including the deferred work.
+
+The separate first-origin control materialized targets after each
+edit and checked every delivered right label in numerical order.
+For 32 queries per direction, its P95 was 16.58 / 65.04 us
+(reference / deferred) after removal and 24.08 / 132.67 us after
+restoration. The deferred list therefore moves work to the first
+enumeration of a group. The double-bound route needs no such list.
+
+The guarded Lean file check passed. Native Scheme qualification
+passed 185 modules and 1,574 cases in 159 seconds, including an
+alternate cross edge, the last bridge, and a packed intra-component
+deletion that rebuilds and splits an SCC. The original million-row
+cases separately verified 1,000 queries each. Recursion passed at
+81.51 ms P95. Pure projection failed the unchanged strict 100 ms
+gate at 120.39 ms P95. Both full SCC export controls verified
+1,437,696 rows. The pure-projection failure still blocks publication
+to PR #2. Source and receipts are under
+=.cache/ascent/scc-local-edits/=.
+
+* Ordered target runs shared across SCC versions
+
+A timed bracket inside the previous target promise isolated expansion
+and sorting. For the 768-target group, their respective P50 values
+were 5.04 and 41.06 us. For the 1,600-target group they were 9.90 and
+90.02 us. The first-origin oracle examined the same sorted targets in
+both arms. Sorting accounts for most of the deferred first-read cost.
+
+The double-bound branch never forces the target promise. A diagnostic
+kept one published result throughout eight alternating batches of
+1,000 hit and miss queries. The eager and deferred implementations
+both began in the 1.1 to 1.3 us range and both later reached roughly
+0.42 to 0.58 us in retained batches, while the empty clock pair
+stayed at 0.042 us P95. This reproduces the high initial time on the
+eager reference and shows no persistent penalty from lazy
+materialization. It does not identify the host cause of the
+transient.
+
+The candidate sorts vertex labels once at full index construction,
+then records consecutive runs with a common SCC owner. Local edits
+share that immutable order index because they preserve the labels,
+ordinals and SCC partition. Each query still reads the reachability
+mask of its own version. =ordered_runs_select_exact= proves that
+skipping whole disallowed runs returns the same ordered vertex
+subsequence as filtering the flattened label sequence. The native
+single-origin visitor uses the run index when its run count is no
+greater than the admitted target count. Sparse or other query
+shapes retain existing deferred target lists. The callback still
+checks caller-owned keys at each delivered row boundary. Witness
+order, acceptance budgets, cancellation and snapshot ownership
+continue to follow the previous publication path.
+
+A paced Time Profiler control measured the previous direct lookup on one
+retained result. The 69 sustained windows sampled only on performance cores
+had median window P95 of 0.50 us. The three sustained windows sampled on both
+core types had median window P95 of 1.25 us. The two early windows sampled
+only on efficiency cores had median window P95 of 1.27 us. Trace sample
+alignment discarded one millisecond at both window edges. Most early
+windows were too short for such attribution. The observation associates the
+slow samples with core placement; it does not identify the placement of
+every earlier outlier or isolate placement from clock-frequency effects.
+
+The fixed workload contains 104,857 source edges and 1,437,696 reachable
+pairs before the edit. Results below come from native =gerbil test= with
+compiled callers. Edit rows use 32 observations per direction. Same-cut
+rows use 1,000 observations.
+
+| Operation | Prior deferred P95 | Ordered-runs P95 |
+|-----------+--------------------+------------------|
+| Remove bridge and publish | 1.164 ms | 1.184 ms |
+| Restore bridge and publish | 1.414 ms | 1.162 ms |
+| First origin read after removal | 87.42 us | 17.25 us |
+| First origin read after restoration | 136.38 us | 25.04 us |
+| First double-bound read after removal | 6.375 us | 6.250 us |
+| First double-bound read after restoration | 5.792 us | 5.833 us |
+| Initial same-cut hit | 0.542 us | 1.292 us |
+| Initial same-cut miss | 0.542 us | 1.208 us |
+| Read through the retained original cut after edits | 0.500 us | 0.542 us |
+
+The checked-in benchmark was also run with compiled Scheme callers and
+the workspace's upstream Rust Ascent 0.8.1 dev-dependency, both serial.
+The Rust program publishes a sorted vector of typed tuples after a fresh
+=ascent!= fixed point. Its independent full-result check follows the first
+read so it cannot prewarm that read. Compare these numbers as costs of the
+two complete strategies for this graph, including each strategy's read
+representation and API boundary.
+
+| Operation | Scheme P95 | Upstream Rust Ascent P95 |
+|-----------+------------+-------------------------|
+| Remove bridge and publish | 2.319 ms | 280.190 ms |
+| Restore bridge and publish | 1.142 ms | 562.486 ms |
+| First origin read after removal | 18.33 us | 8.75 us |
+| First origin read after restoration | 26.08 us | 23.75 us |
+| First double-bound read after removal | 4.67 us | 9.75 us |
+| First double-bound read after restoration | 6.17 us | 4.50 us |
+| Initial same-cut hit | 0.625 us | 0.084 us |
+| Initial same-cut miss | 0.708 us | 0.084 us |
+
+The publication boundaries start after input replacement. That phase is
+also reported separately because the Scheme Session adopts a source cut
+whereas Rust copies a prepared slice. On this second Scheme pass, deletion
+was about 60 times faster than the pre-local-edit 139.33 ms reference.
+Restoration was about 163 times faster than its 185.78 ms reference.
+The source form also runs directly via =gerbil test=. Use compiled callers
+for the microsecond comparison so callback interpretation does not dominate.
+
+The strict 100 ms million-row gates both failed after verifying every row
+of all 1,000 requests. The recursive P95 was 109.60 ms, up from 81.51 ms.
+Captured export wall time rose from 32.80 to 43.95 seconds across 1,000
+requests, while solve and publish rose from 3.35 to 3.59 seconds. Total GC
+wall time rose from 20.38 to 30.30 seconds. The recursive gate uses the
+generic Actor constructor with condensed execution disabled. These phase
+records locate the regression in the export window without identifying the
+underlying change in GC conditions. The projection P95 was 115.37 ms, down
+from 120.39 ms. The sampled allocation counters crossed GC boundaries and
+are retained as raw observations. All 185 Scheme qualification modules and
+1,574 cases passed. The formal claim covers the ordered enumeration lemma
+under its owner premise; the Scheme implementation and runtime obligations
+are also exercised in the focused Session suite.

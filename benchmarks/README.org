@@ -1,0 +1,736 @@
+#+TITLE: ASCENT benchmarks
+
+* Performance questions and measurement units
+
+High performance must be demonstrated on the operation being claimed. Keep
+these layers distinct when selecting an optimization and reporting a result:
+
+| Layer | Existing native measurement | What a completion means | Remaining evidence |
+|-------+-----------------------------+-------------------------+--------------------|
+| Mailbox | =actor-mailbox-test.ss= ordered burst | Receiver checked one message | Does not execute a Session request |
+| Session protocol | Same Suite, timed and throughput-only windows | Public state reply checked; caller mailbox preserved | A throughput-only window supplies no latency distribution |
+| Resident evaluation | =actor-session-test.ss= phase Suites | Versioned result and complete expected tuples checked | Kernel work must be separated from materialization and caller checks |
+| Index/provider | =provider-index-test.ss= physical callback intervals | Expected IDs checked; published snapshots remain isolated | Inclusive intervals overlap; do not add them as exclusive costs |
+| Production transport | Rust =process_throughput= with actual runtime identity | Changed source replaced, result exported and independent oracle matched | Budget preflight, transport, evaluation and export are separate costs |
+
+Use verified completions per second, complete request P50/P95/P99/maximum,
+input/output cardinalities, CPU, GC and process resources. Report queue time
+only where it is instrumented; do not infer it from total wall time minus CPU.
+An unavailable or backward allocation counter is unavailable evidence, not
+zero allocation. Cold preparation and caller compilation are independent axes.
+Million-message throughput does not establish million-query throughput.
+Existing semantic and performance gates remain required. The million-request
+and sub-100-ms large-query targets require production evidence; neither follows
+from a model proof or the configuration checks.
+
+* Recursive query at fixed output size
+
+Run the native 10,000-row closure Suite directly:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-ten-thousand-closure-test$' benchmarks/actor-million-test.ss
+#+end_src
+
+Two Cases alternate source cuts and check every output row in each of 1,000
+complete requests. Both produce the same 10,000-row closure. Redundant edges
+in the second Case make the input non-functional. A third Case appends one
+redundant edge per request and checks both the growing source count and the
+unchanged closure. The receipts separately report the source update,
+evaluation and publication, detached export and oracle time.
+
+The serial upstream Rust Ascent comparison uses the release benchmark target
+=actor_closure=. It uses the same base, branch and sparse append datasets,
+checks the source size and verifies all result rows without sorting.
+
+#+begin_src sh
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure
+#+end_src
+
+The default Rust cases solve a fresh cut. The separate =--retained= control
+appends to the native relation and invokes =run()= on the same program.
+Native output is a detached vector of typed tuples. Gerbil output is a
+detached Scheme list of pairs. Count and value checks match across both;
+the CPU cost of these output representations is included in delivery.
+
+* SCC bridge edits and bound reads
+
+Run each Scheme query shape through the native test command. Each uses 26
+strongly connected groups of 64 vertices and the same 25 directed bridges.
+The cases time 32 removals and restorations of the central bridge. The
+double-bound case also times 1,000 same-version hits and misses.
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^scc-bound-query-test$' benchmarks/scc-bridge-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^scc-first-origin-test$' benchmarks/scc-bridge-test.ss
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-bound
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --bridge-origin
+#+end_src
+
+Use upstream Rust Ascent for the reference column in SCC benchmark results.
+It runs the same two closure rules serially using the workspace dev-dependency
+and verifies the complete sorted result on every edit after timing the first
+read. Scheme reads a retained, versioned component index through =visit-rows=.
+Rust Ascent rebuilds the explicit closure and sorts it for direct typed lookup.
+Report source replacement, publication, and first read separately, including
+the index sort in Rust publication. The direct Rust lookup and Scheme visitor
+have different interface costs. Keep these results separate from complete
+million-row detached-list export gates.
+
+For the two complete million-row cases, use the upstream serial Ascent
+reference from the same target:
+
+#+begin_src sh
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-recursive
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-projection
+#+end_src
+
+For the same workloads through upstream Ascent's Rayon evaluator:
+
+#+begin_src sh
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-recursive-rayon
+cargo bench --locked --manifest-path rust/Cargo.toml -p gerbil-ascent --bench actor_closure -- --million-projection-rayon
+#+end_src
+
+Both variants alternate the same two source cuts for 1,000 requests per
+case and check every detached row with a bitmap oracle. The Rayon variant
+reports the worker count selected by the pool. Report source replacement,
+evaluation, detached output, validation and total latency. Rust accounts
+separately for explicit per-request release and includes it in the total.
+Scheme GC is charged to whichever measured phase triggers it. The parallel
+Ascent relation uses its concurrent container, which is copied into a
+detached vector for the same oracle. Scheme delivers a mutable list. The
+native Scheme 100 ms verdict remains independent.
+
+* Single VM Actor components
+
+Run the source Suite through the native test entry; it does not create another
+runner or another VM. The installed production library supplies the Session.
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-mailbox-test.ss
+#+end_src
+
+The first Case sends one million ordered fixnums to one persistent mailbox and
+waits for the receiver to drain. The second measures 10000 public Session state
+requests on one VM processor. It reports Session opening, the first request,
+aggregate throughput, P50, P95, maximum latency and natural collections. The
+request Case requires P95 below 100 ms and checks caller-mailbox isolation.
+There is no logging inside the measured loop. No build is required for the Suite
+itself. These component measurements exclude Rust/Scheme value conversion,
+process IPC, rule evaluation and full relation export; their throughput units
+must not be substituted for those production operations.
+
+* Caller compilation control
+
+Source entry remains available without a benchmark build. To measure compiled
+callers separately, compile the same module through the official compiler and
+run its SSI through the same native test command:
+
+#+begin_src sh
+gerbil compile -O -d .cache/ascent/message-callers benchmarks/actor-mailbox-test.ss
+GERBIL_LOADPATH=".cache/ascent/message-callers${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" \
+  timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  .cache/ascent/message-callers/gerbil-ascent-benchmarks/actor-mailbox-test.ssi
+#+end_src
+
+Keep the same source, sample counts, verification and gates. Label caller mode;
+do not mix compiled and source-mode observations in one performance comparison
+or attribute their difference to a change of the production runtime.
+
+The throughput-only Case still verifies every one of 1.2 million public
+Session replies, with clocks at window edges. Its =ACTOR-THROUGHPUT= receipt
+explicitly has zero latency samples. It supplies no P95 evidence. Every original
+fully timed Case and its thresholds remain required and unchanged.
+All message Cases use Gambit's monotonic counter and report its frequency in
+=ACTOR-CLOCK=. Earlier system-clock receipts remain diagnostic observations.
+
+* Concurrent native requesters
+
+Record the VM count, active VM processor count, evaluator worker count, and
+calling Actor population separately. A single VM can interleave runnable
+green threads while other Actors wait. These in-memory cases exercise
+mailbox and Session-state contention. Asynchronous I/O needs a workload with
+pending I/O and independent runnable Actors to measure that overlap.
+
+Run the separate I/O comparison through the native test entry:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-io-overlap-test.ss
+#+end_src
+
+Each Case verifies one million Session state replies and times every
+thousandth reply. In the overlap Case the reader waits on a nonblocking OS
+pipe before and after the measured requests. The Case then writes one byte
+and checks the reader's natural completion. =ACTOR-IO= reports runtime
+throughput, latency samples, CPU and GC. The byte transfer sits outside the
+measured request window.
+
+The recursive-query overlap diagnostic uses the same native entry:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-closure-state-overlap-test$' benchmarks/actor-million-test.ss
+#+end_src
+
+It verifies 64 complete recursive answers and 2,048 state replies
+across two alternating source cuts. Report the in-flight subset size
+alongside its distribution. A state reply identifies the owner's protocol
+phase. It does not identify where the evaluator was interrupted.
+
+The current single-VM Suite exercises one, up to three, and machine-capacity calling Actors
+against the same one-worker Session. Each profile completes exactly 1,200,000
+independently checked state requests. This is mailbox/Session-state admission,
+not a relation-query or Rust transport result. All calling Actors join before
+Session retirement, including failure paths. The original 100 ms P95 check
+still applies to every client and the complete profile.
+Duplicate populations on small machines are omitted. Remainder requests are
+distributed across callers so machines with five or seven cores still execute
+the same total work. =ACTOR-CAPACITY= distinguishes CPU capacity, caller
+population, one VM and one VM processor. These are benchmark populations,
+not a limit on the Actor protocol or green-thread count.
+
+* Resident production Session phases
+
+Run exported Suites directly with native selection, for example:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-session-4096-test$' benchmarks/actor-session-test.ss
+#+end_src
+
+The same file exports the 128-row, 4096-row diagnostic, 16384-row shared,
+changed-replacement, GC-traced and cancellation Suites. The 4096-row diagnostic
+retains its original 64 cycles; the sustained Suite requires 1000. First-run
+timing is a single cold observation, separate from repeated-request admission.
+Every phase checks complete sample counts and nonnegative intervals. Phases
+with at least 1000 samples enforce P95 strictly below 100 ms; smaller profiles
+remain diagnostics. The existing tighter relation performance gates remain.
+Phase reports include CPU, P50/P95/P99/max and an isolated reciprocal service
+rate. =ACTOR-WINDOW= reports verified cycles per second across six public API
+calls and client oracle checks; do not substitute a phase reciprocal for this
+sustained throughput. Full export includes detached public row materialization.
+Source entry requires no benchmark executable or preliminary benchmark build.
+
+* Typed source Session
+
+The same file exports =actor-session-wire-4096-test= and
+=actor-session-wire-16384-test=. Each Suite uses the typed production
+operations =open-sources=, =source-replace=, =source-run=, =owned-result= and
+=close=. A checkpoint on the first query confirms evaluation on the resident
+Actor. Both Suites alternate two disjoint source cuts for 1000 cycles and
+verify every exported tuple against the two-hop oracle. Reported cycle
+throughput includes result verification and release. Opening and the initial
+empty query have separate timings. The steady-state phases measure eager
+replacement, complete typed export, and the paired transaction. The normal
+2 GiB heap, 90-second supervision and 100 ms sustained P95 gate apply.
+
+* State request mechanism costs
+
+=actor-state-mechanism-test.ss= compares empty and million-row production
+Sessions with one million operations per component window. It distinguishes
+verification, clock/sample overhead, same-thread fresh STD Completion, and
+complete public state request/replies. These inclusive cohorts cannot be
+subtracted as an exact GC or scheduler partition. Window-only controls supply
+no P95 evidence; the fully timed million-row Suite remains required.
+See [[file:../docs/development/actor-state-cost.org][the source-cost model and native commands]] for the original limits, optional
+official caller compilation control, Lean obligations and Quint mutations.
+
+* Million-row production workloads
+
+Run the native Suites independently; no benchmark executable, preliminary
+build or nested Scheme runner is required:
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-oracle-test$' benchmarks/actor-million-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-state-test$' benchmarks/actor-million-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-query-test$' benchmarks/actor-million-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-recursive-test$' benchmarks/actor-million-test.ss
+#+end_src
+
+The corresponding delivery probes are selected with
+=actor-million-list-delivery-test=, =actor-million-visit-test=, or
+=actor-million-fields-test=. Each consumes and independently checks every
+row in a fresh million-row result for 1,000 source replacements. First-row
+timing is separate from complete query timing. The original query and
+recursive suites retain their bitmap oracle and thresholds. The
+=actor-million-fields-controls-test= suite exercises callback exit,
+reentrant replacement, selected keys, and the general row representation.
+
+The base query has 1,000,000 input facts and 1,000,000 complete exported rows.
+The recursive query has 128 disjoint chains of width 128: 16,256 input facts
+and 1,040,384 exported rows. Both plan 1,000 changed-source queries, alternating
+two disjoint cuts. A bitmap oracle checks every tuple, duplicate freedom and
+complete cardinality without asking ASCENT for an expected result. Refusal
+controls cover missing rows, duplicates, foreign cuts and invalid paths.
+
+The state Suite retains 1,000,000 source facts and independently checks
+1,000,000 public state request/replies. A reply is a source generation and
+=idle=, =running= or =draining=; it contains no query result rows. Its throughput
+must never be labelled complete-query throughput.
+The =actor-million-state-contention-test= selector divides the same one
+million requests across a machine-sized set of concurrent Scheme callers
+of the one Actor Session. Each caller checks its replies and records its
+own latency samples. The caller count is a property of the workload.
+
+Preparation, one cold complete query and changed-source requests are distinct
+receipts. Complete query timing includes public Session execution and full row
+export. Changed-source request latency additionally includes replacement and
+independent oracle verification. Sustained throughput includes client checks
+and progress reporting; reciprocal phase times are not throughput. The
+existing strict 100 ms P95 policy applies only to complete populations.
+
+The cold-query phase receipt measures Session run through publication, the
+result accessor, and the independent oracle on the same request. Progress
+receipts accumulate those phases and source replacement for completed
+requests only. Wall time also includes loop and progress reporting overhead.
+These receipts preserve where the workload spent time if the supervisor
+expires before the planned population completes.
+
+The query receipts bracket the run with Gambit's process counters. They
+report CPU, GC CPU and natural collections for the same set of completed
+requests, including the resident evaluator's green threads in that VM.
+Preparation, result access and the oracle sit outside the CPU bracket, and
+GC CPU is included in run CPU. The run bracket makes no claim about
+cumulative allocation when the upstream counter moves backwards.
+
+Workload-specific declaration ceilings admit the named data cardinalities.
+The existing output budget counts source and derived facts: these new profiles
+declare total ceilings of 2,000,000 and 1,056,640, respectively. The reported
+complete query still exports only the named result relation;
+production default ceilings and all older gates stay unchanged. Keep 2 GiB and
+90 seconds for each Suite, without prewarming or retries. A timeout before the
+planned population completes is a failed workload, not a throughput or P95
+pass. Keep partial phase receipts and report the last completed operation.
+Observe whole-process CPU and peak RSS externally. Raw Gambit allocation
+counter deltas remain evidence; allocation is unavailable across collections
+until the upstream counter is qualified. No patched runtime is required.
+
+* Matched recursive production transport
+
+The existing Rust =process_throughput= benchmark retains its complete row oracle
+and changing source values. Set =ASCENT_BENCH_DSL=ascent= to load the original
+closure DSL through =Engine.load_sources= and require an Actor receipt from
+every Scheme query. The default =typed= fixture retains its ordinary Session
+and requires that receipt instead. Rayon uses the same selected source after
+owned projection. A receipt mismatch fails, including stale compiled carriers.
+
+Set =ASCENT_BENCH_CLIENTS=1= for an isolated requester or specify the population
+for a matched saturation experiment. Omission uses the machine's available
+parallelism. This does not impose an Actor protocol capacity. The matrix tool
+also defaults to available CPUs for callers and Rust threads, and compares
+one, up to three, and machine-capacity VMs. Every VM has one processor. Rayon
+thread-count controls fit the same machine. Use =--clients= and =--dsl typed=
+only for explicitly labelled requester and ordinary-Session controls. Historical
+33-row receipts used twelve callers and remain historical data; they do not
+define the current default. The new matrix schema records actual CPU capacity,
+requester population and DSL. Results from different schemas or caller modes
+must not be pooled as one performance comparison.
+The installed Python =ProcessPool()= and macOS =InstancePool()= also derive
+their default owner population from Rust's =available_parallelism=. An explicit
+=owners=N= remains a caller choice; neither constructor imposes a twelve-VM
+default. Each owner retains one VM processor. Installed-wheel qualification
+omits =owners= by default so it checks the public constructor itself.
+The Python package reexports the Rust/PyO3 extension. Python qualification
+scripts supply workloads and assertions; execution and runtime control remain
+in the selected Rust or Scheme backend.
+The Scheme wheel's process owner currently uses =python -c= to enter the Rust
+worker export in its child process. This is interpreter-based bootstrap, not
+a Python evaluator or scheduler. The default Rust-runtime wheel does not use
+that Scheme process bootstrap. Do not describe both configurations as an
+independent Rust executable.
+Each matrix row now requires at least 1000 fixed-work request samples across
+five windows, followed by its separate 30-second saturation window. Every
+configuration within a workload executes the same total work. Keep the
+original 240-second process limit and retain any timeout as a failure.
+
+The grouped recursive case uses 256 chains of width 16, 3,840 input edges,
+30,720 exported rows and at least 1,000 verified changed-source requests.
+Keep finite resource prechecks when comparing the Rust interface. They include
+an independent Rust budget execution before the native query and replacement;
+the resulting measurements are not pure Scheme kernel timings. Keep encoding,
+native calls, decoding/release, queueing and client oracle costs separate.
+
+The Rayon fixture must execute and release its initial admitted result before
+the first source replacement. This initialization belongs to startup, not the
+measured changing-source requests. It uses the existing =SourceSession= lifecycle.
+
+The measured client phases currently include the following production work:
+
+| Client phase | Source | Included work |
+|--------------+--------+---------------|
+| =replace_ns= | =RuleSession.replace= and =admit_replacement= | Input construction, finite projection, Rust budget evaluation, payload conversion, native source replacement and acknowledgement |
+| =run_export_ns= | =RuleSession.run= and result ownership operations | Finite projection, Rust budget evaluation, native run/export, row decoding, result authority check and release |
+| Remaining request time | Benchmark =execute= | Sorting, independent complete tuple comparison and digest updates |
+
+For Actor sessions the native replacement eagerly evaluates and publishes its
+candidate; a following =source-run= may reuse that completed result. Therefore
+=replace_ns= is not an enqueue measurement. Opt-in =ASCENT-VM-PHASE= and
+=ASCENT-RPC-PHASE= brackets separate native encoding, calls, decoding/release,
+GC and owner queueing. Time outside these native brackets remains unattributed
+host work until directly instrumented; do not label it all as Rust inference.
+Traced runs are diagnostics, separate from performance admission.
+
+Potential projection or index reuse must be bound to the owner, immutable
+source cut and current generation, with failure invalidation and fresh
+cancellation/resource/publication checks. A public object's identity or a
+previous successful validation is insufficient. In particular, controlled
+execution currently disables retained scalar source indexes in =evaluate.ss=;
+enabling them requires validating interrupted index construction and source
+replacement, not just deleting that guard.
+
+* Rejected reply-channel candidate (historical experiment)
+
+The original implementation creates a private reply Actor for each synchronous
+Session request, preserving the caller's mailbox. A candidate replaced that
+Actor with a one-reply =std/sync/channel= channel, leaving owner-only state
+mutation and generation/publication logic intact.
+
+A declared 10000-pair alternating source-entry comparison checked identical
+responses and caller-mailbox isolation. Both arms had P50 3 us and P95 4 us.
+The accumulated individual request times were 120.487 ms for reply Actors and
+170.859 ms for reply channels. The maxima were 33.148 ms and 46.802 ms. No GC
+occurred in the paired loop. The study kept the existing reply Actor. These are historical measurements
+from the isolated experiment. The native Suite above measures the installed
+current Session on the same request shape.
+
+* Provider index and Session phases
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/provider-index-test.ss
+#+end_src
+
+Use the installed production library. The Suite compares 4096 wide rows,
+16384 narrow rows, and a 4096-row wide relation with a 16-row exact match.
+It records the intervals between the physical owner and actual provider
+callbacks, including cold creation, warm lookup and returned-packet admission.
+The cold interval before the build callback includes index-owner setup, witness
+construction and outbound copying. A separate call prices the same outbound
+copy primitive and checks the exact number of fresh pairs. Keep that interval
+separate from the inclusive cold interval.
+
+The structural hash diagnostic counts native structural hashes and equality
+calls during member-table construction and lookup of equal copied rows. It
+compares the same native table operations at the default initial capacity and
+with an explicit size hint. Counter wrappers are excluded from CPU comparison.
+The Session case records provider build, extension and lookup counts around
+the one-shot solve, first and repeated Session reads, append and replacement.
+Every result is checked against its expected complete ordered ID set outside
+the measured interval. The first publication is checked again after updates.
+
+Each phase reports CPU, wall time, collections, the live bytes observed at the
+most recent GC, and an allocation-counter delta. The delta can include the
+observation overhead and a false value denotes a backward counter reading.
+The outbound copy also reports the two raw endpoints of the collector charge.
+These observations guide optimization; the existing provider packet performance
+gates still run with their original fixtures and thresholds.
+
+* Retained Session publication
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/session-publication-test.ss
+#+end_src
+
+Run the same checked DSL at 4096 and 16384 archive rows. The archive has
+both source and derived rows. An independent replacement exercises completed
+closure reuse for the archive, while an append and a replacement update the
+small output relation. Record Session construction, first run, 1000 warm
+public calls, append staging, append solving, replacement, and the first and
+warm full exports. Hold earlier publications through both updates and check
+every archive row in its original order. No full archive export is demanded
+from the public result before measuring replacement.
+
+The replacement interval includes re-admission, seeding the archived rows,
+evaluation of the changed component and publication. The archived rows'
+derived-budget charge uses the current source membership in
+=program/reuse.ss=. Keep the number of hash operations separate from bucket
+comparison and allocation costs. =SourceUpdateFrame.lean= relates ordered
+first occurrences, source membership and the two budget checks.
+
+The counter delta is reported only across monotone windows without a natural
+collection. The live-byte field describes the most recent collection and can
+predate the measured phase.
+
+* Indexed two-pivot delta join
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/delta-join-test.ss
+#+end_src
+
+Run the same compiled join on a 16384-edge chain with sparse, medium and full
+delta cuts. Compare overlapping pivots with the existing first-fresh pivot
+restriction. The arithmetic oracle checks the answer and the multiplicity of
+each witness before any deduplication. The CPU and native work-counter
+invocations start from fresh physical owners and use the same expected output.
+The counters show candidate rows, complete witnesses, physical probes and
+the rows charged to old-lane membership.
+
+The second Case drives the production evaluator through the Scheme DSL. It
+derives 128 or 4096 fresh edges after the first round on the same 16384-edge
+chain. It checks every two-hop answer against an arithmetic oracle. An untimed
+pass records whether the index owner reused the previous total spine and
+counts probes, witnesses, candidate rows and membership inputs. The timing
+pass reports CPU and the two collector charge endpoints independently of the
+work counters. Forced collections bracket the counter reads and are outside
+the CPU interval. The source proof counts the actual list nodes, while this
+runtime observations do not cover all allocations.
+
+For the unkeyed read at the published versions, the previous total spine
+already has exactly the order and occurrences produced by old-row filtering.
+=IndexedPositiveTraversal.lean= relates this equality to the scalar Set
+commit and counts the cold preparation work removed from the read. The
+keyed and checkpointed reads keep their existing filtering and checkpoint
+schedule. The subsequent join still has to traverse and probe its inputs.
+
+* Shared-prefix cache
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/prefix-sharing-test.ss
+#+end_src
+
+The Scheme DSL fixture derives a delta of 128 targets. Two rules share the
+same edge and label reads before testing those targets. The sparse chain and
+16-way graph each start with 16384 edges. Run without retention, with 32
+retention units, and with enough capacity to keep the measured prefix.
+The oracle computes every answer by inverting the fixture's arithmetic
+and all three runs must also agree on output order.
+
+Report matcher input rows, slots stored during a retained match, cached
+rows replayed, slots restored, physical probes, and complete witnesses.
+The timed pass excludes the counter instrumentation. Report direct allocation
+counter deltas only for monotone samples without a collection in the interval.
+The scoped retention budget is separate from the fact and heap limits.
+
+In these rules the label atom reads the middle node and writes the target.
+Different incoming source nodes that reach the same middle node can share
+the ordered label matches. Each replay keeps the incoming bindings and
+support, then restores only the label atom's writes. The index owner reuses a
+stamp only for the same total and delta versions. The =PrefixCacheKey=
+theorems in =IndexedPositiveTraversal.lean= cover both compiled bucket keys
+and the retained row and slot payload.
+
+* Single VM Actor round phases
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-round-test.ss
+#+end_src
+
+The dispatch control completes 4096 empty assignments. The checkpoint case
+gives each assignment 64 checkpoint calls and no rows. The publication case
+emits 33 rows per assignment, exercising one 32-row batch and one completion
+tail. It uses one and four workers on a single VM processor and checks order
+within each task and unique completion. It reports the expected batch and
+checkpoint message counts plus the observed coordinator cancellation polls.
+The cancellation case requests stop while merging the first admitted batch.
+The worker resumes on the existing credit, loses the next credit, unwinds its
+cleanup, and the round completes the drain before returning the cancellation.
+
+The round cases report CPU, wall time, collections, the raw occupancy delta,
+and the collector charge before and after the operation. The separate batch
+spine case compares the native reversal operations on 4096 full batch and
+tail pairs without Actor stack switches. It measures the effect of
+transferring a fresh outer spine and checks identical payload order. GC
+preconditioning is outside the CPU intervals.
+
+* Performance contract admission
+
+=just test-performance-contracts= runs ten isolated test modules under a
+120-second startup and inactivity budget.
+Each child retains its 2 GiB heap and each Case retains its runtime assertion.
+Admission requires natural exit, every module verdict, and the harness
+completion marker. The CI job retains its outer time budget.
+
+The previous aggregate exit 124 remains a failed integration observation.
+Report compilation and source loading separately from the complete
+production Session samples below.
+
+* Single VM Actor production Session
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-session-test.ss
+#+end_src
+
+The Session receives unchanged runs, appends, replacements, and exports
+through its public interface. It runs 1000 cycles on 128 edges, 64 cycles on
+4096 edges, and 1000 cycles with four independent rules probing the same
+16384-edge relation. The timing brackets only each public operation. Check
+every complete output against the chain oracle after its timer stops. Report
+the first solve, P50, P95, maximum, CPU and throughput for each operation.
+Also report the append and replacement transactions by adding staging and
+evaluation times at the same request ordinal before computing percentiles.
+The workload reports natural collection counts and clocks, the raw allocation
+counter reading, and live bytes with the first and last results held. The
+allocation estimate is unavailable when a collection overlaps the window or
+the counter decreases. The separate 1000-cycle trace repeats the large workload
+with VM collection counts and collector wall and CPU clocks around each operation. It reports how many
+requests of at least 20 ms overlap a collection and how many spend over half
+their measured interval in one. Add both observed brackets for a staged
+transaction, pairing by ordinal. The overlap lower bound subtracts all
+observer time outside the measured operations. The traced run and the
+regular timing run are reported separately.
+
+An independent recursive case cancels 32 active solves and verifies the prior
+completed result and rolled-back input after worker drain. Source-only total
+indexes can be shared by one SCC worker for owned scalar inputs during a
+single run. The physical
+index and credit observations in the native SCC qualification suite, and the
+=FrozenIndex= theorems in =ActorEnvelope.lean=, relate that path to the
+assignment-local reference. Application-visible exports of relations with
+input facts detach their list and row spines.
+
+* Actor source admission and physical index
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-source-test.ss
+#+end_src
+
+The preparation case calls =gerbil-ascent-source-cut-update= directly
+for one-row append, whole-cut restoration after append, and whole-cut
+replacement with every input target changed. Each arm uses 1000
+samples. The retained result must have the incoming values in newest-first
+order, detach each incoming tuple, and share the old suffix only on append.
+Report CPU, collections, the collector charge endpoints and live heap.
+For 16384 two-column rows, the owned snapshot makes 16384 outer pairs and
+32768 tuple pairs. The source count in =program/source-cut.ss= now shares
+the width validation traversal and checks for an empty tail at exactly the
+declared arity. The proper-list check still rejects cyclic outer spines
+and all validation still precedes duplicate and budget checks.
+=SourceUpdateFrame.lean= gives the exact row-count and snapshot-pair laws.
+
+Two native repetitions of each implementation bracketed the candidate.
+The separate whole-cut restoration phase averaged 1.259 s before and
+0.879 s after per 1000 calls. Changed whole-cut preparation averaged
+1.292 s before and 0.894 s after. Each measured whole-cut preparation
+arm had 13 natural collections. In the public Session, mixed replacement
+averaged 3.241 s before and 2.746 s after. Full change averaged 3.168 s
+before and 2.781 s after. CPU improved in both pairs for both replacement
+workloads. Mixed-replacement wall P95 varied from 3.722 to 39.143 ms
+across the two reference repetitions and from 2.911 to 3.217 ms across
+the two candidate repetitions. The separate traced repetitions had
+44 replacement transactions dominated by GC in each implementation
+across 2000 requests. Append latency remains open.
+
+A separate direct-singleton consumption candidate eliminated the
+temporary lookup pair but increased the CPU of the fully changed
+replacement transaction from 2.329 s to 2.531 s. The ordered bucket
+traversal remains in production.
+
+Append one edge to the 16384-edge chain and observe the native admission
+buffers before building the canonical keyed index. Compare the ordinary
+initializer with the exact owned source cut across 1000 paired samples.
+Check the borrowed spine by identity, the duplicate-preserving count, and the absence of a membership
+table for a relation with no writer. Report source spine and membership
+work separately from the cold bucket build and the warm probe. The
+operation counts come from the admitted edge-slot shape and native index
+counters. The final count pass uses the four-rule production fixture. It
+compares a cold appended cut, an exact append extension, and an unchanged
+read. Compare the emitted rows in order and report physical build and
+extension inputs. The allocation calibration addresses the runtime byte counters separately.
+
+The Actor borrows the newest-first lane for current canonical Program and
+relation declarations on scalar sources. Mixed source and derived relations
+retain membership for every initial row. Foreign POO getters still see the
+staged declaration. =SourceUpdateFrame.lean= relates the append fold,
+writer mask, budgets, and source-loop work to these branches.
+
+A single-worker Session can keep one physical index per read-only source
+slot shared across its components. Extend the native index only when the
+new cut has the exact prior suffix. For comparably sized replacements,
+revoke the old version and clear its native table before refilling it.
+Release storage on large size changes. Compact a refilled table when its
+key count falls below half the former count. Drain the evaluation before
+discarding indexes from a canceled or failed cut. Held results retain row
+spines independently of bucket tables. =PhysicalBuckets.lean= proves the
+suffix scan, ordered extension, refill and copy of occupied buckets.
+
+* Cold replacement index storage
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/actor-index-build-test.ss
+#+end_src
+
+Time the production one-column insertion and ordering operations on a
+16384-row chain and a 32-key distribution of the same size. Collect 1000
+samples per arm for default capacity, capacity hinted by row count, and
+clearing and refilling a retained native table. Compare full buckets with
+direct singleton rows in the retained table. Report preparation,
+insertion and ordering intervals, plus dense probe batches through both
+compiled accessors. The column sum is a separate traversal control.
+Compare every bucket against independently collected row occurrences and
+verify their identity.
+
+The untimed counter observes each backing vector identity change in the
+pinned runtime. Report the cumulative number of vector slots allocated
+for table storage and the number of newly constructed bucket pairs.
+The Actor's canonical, single-column source index stores the owned row
+at a singleton key and constructs the traversal list on a hit. Repeated
+keys occupy normal ordered buckets. The allocation calibration below
+covers the remaining runtime accounting.
+The production Session suite additionally alternates two same-sized
+16384-edge cuts whose target values differ at every key, checking the
+result of each replacement against the arithmetic oracle.
+
+* Two-hop table expression carrier costs
+
+#+begin_src sh
+timeout --signal=KILL 216s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/table-expression-test.ss
+#+end_src
+
+With the compiled test library available, run 1000 samples per arm on the
+same 512 source pairs used by the performance gate. The frozen generic
+constructor and the ordered Patricia constructor use the same public source
+fold, sort-merge join, and public result projection. The profiler records
+source/index, join, normalization, construction, and final projection CPU
+separately. Total wall and collector CPU include the ASP receipt work.
+Both arms must export the complete independently generated set of 1024 keys.
+The source and join emit 1536 occurrences before set admission. Only the
+ordered constructor consumes the 1024 distinct keys. Lean
+=PhysicalBuckets.SortMergeCarrier= proves preservation of key membership and
+that sorting keeps the normalized constructor input count. The native
+qualification also checks the global point witness and wide encoded keys.
+
+In the local arm64 comparison, construction CPU for 1000 samples fell
+from 48.94 to 1.06 seconds, with 0.27 seconds for key normalization.
+Public projection used 18.10 and 18.14 seconds, and still owns complete
+carrier validation. Total wall fell from 80.88 to 29.38 seconds. The
+unchanged full local gate completed all 17 Cases with the optimized
+benchmark control. Its table-expression candidate P95 was 11.549 ms
+against the control's 30.494 ms.
+
+The scenario keeps the 1000-sample candidate and relative P95 checks, the
+20 ms candidate ceiling, and the full 512-input/1024-output point witness.
+Both baseline paths keep the checked public projection of the carrier.
+
+* Gambit allocation calibration
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  benchmarks/runtime-allocation-test.ss
+#+end_src
+
+The empty control and the two pair counts price the observer and the slope of
+the allocation charge. The 1 MiB still-copy controls allocate the same
+payload, holding or releasing it before the second forced collection.
+Report the raw Gambit counter, the charge at the last collection, and the
+movable and still portions of the live heap. The pinned collector sums
+processor accounting for the charge and separately recomputes still
+occupancy. The controls expose which allocations each observation captures.
+Keep the charge, actual cumulative allocation, and retained live heap
+separate when interpreting the Session trace.

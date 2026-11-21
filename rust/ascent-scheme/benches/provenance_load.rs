@@ -7,11 +7,11 @@ use gerbil_ascent::{
 use std::{
     collections::{BTreeMap, BTreeSet},
     path::Path,
-    process::{Child, Command},
     sync::{Arc, Barrier},
-    time::{Duration, Instant},
 };
 
+#[path = "support/archive_load.rs"]
+mod archive_load;
 #[path = "support/owners.rs"]
 mod owners;
 use owners::Pool;
@@ -110,21 +110,7 @@ fn exercise(session: &RuleSession) -> Result<()> {
     }
     Ok(())
 }
-fn archive_ready(child: &mut Child) -> bool {
-    let marker = Path::new(env!("OUT_DIR")).join(format!("archive-stress-{}/start", child.id()));
-    let started = Instant::now();
-    while started.elapsed() < Duration::from_mins(3) {
-        if marker.exists() {
-            return matches!(child.try_wait(), Ok(None));
-        }
-        if !matches!(child.try_wait(), Ok(None)) {
-            return false;
-        }
-        std::thread::sleep(Duration::from_millis(5));
-    }
-    false
-}
-fn run_clients(sessions: Vec<RuleSession>, archive_test: &Path) -> Result<bool> {
+fn run_clients(sessions: Vec<RuleSession>) -> Result<bool> {
     let ready = Arc::new(Barrier::new(CLIENTS + 1));
     let start = Arc::new(Barrier::new(CLIENTS + 1));
     std::thread::scope(|scope| {
@@ -148,35 +134,41 @@ fn run_clients(sessions: Vec<RuleSession>, archive_test: &Path) -> Result<bool> 
             }));
         }
         ready.wait();
-        let mut archive = Command::new(archive_test)
-            .args(["--exact", "concurrent_archive_publishers", "--nocapture"])
-            .spawn();
-        let overlap = archive.as_mut().is_ok_and(archive_ready);
+        let archive = archive_load::ArchiveLoad::start();
+        let overlap = archive.is_ok();
         eprintln!(
             "PROVENANCE-LOAD-START vms={CLIENTS} processors_per_vm=1 rust_threads={CLIENTS} rounds={ROUNDS} archive_overlap_at_release={overlap} diagnostic_only=true"
         );
         start.wait();
-        let mut complete = overlap;
+        let mut complete = match archive.and_then(archive_load::ArchiveLoad::finish) {
+            Ok(()) => true,
+            Err(error) => {
+                eprintln!("PROVENANCE-ARCHIVE-ERROR {error}");
+                false
+            }
+        };
         for handle in handles {
             match handle.join() {
                 Ok(Ok(())) => (),
                 Ok(Err(_)) | Err(_) => complete = false,
             }
         }
-        if let Ok(child) = &mut archive {
-            complete &= child.wait().is_ok_and(|status| status.success());
-        }
         Ok(complete)
     })
 }
 fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
-    if !(2..=3).contains(&args.len()) {
+    if let [argument, directory] = args.as_slice()
+        && argument == archive_load::WORKER_ARG
+    {
+        return archive_load::publish(Path::new(directory));
+    }
+    if !(1..=2).contains(&args.len()) {
         return Err(Error::InvalidProgram(
-            "expected worker, archive-test executables and optional vm|instances mode".into(),
+            "expected worker executable and optional vm|instances mode".into(),
         ));
     }
-    let mode = args.get(2).map_or("vm", String::as_str);
+    let mode = args.get(1).map_or("vm", String::as_str);
     if mode != "vm" && mode != "instances" {
         return Err(Error::InvalidProgram("unknown VM owner mode".into()));
     }
@@ -201,7 +193,7 @@ fn main() -> Result<()> {
         );
     }
     let (sessions, retained) = sessions(&pool)?;
-    let complete = run_clients(sessions, Path::new(&args[1]))?;
+    let complete = run_clients(sessions)?;
     for (engine, module, value) in retained {
         value.close();
         module.close();

@@ -70,8 +70,8 @@ class SameRequestCostEvidence(unittest.TestCase):
 
 
 class DiagnosticAdmission(unittest.TestCase):
-    def complete_evidence(self):
-        common = dict(mode='vm', vms='1', rust_threads='1', clients='12')
+    def complete_evidence(self, clients=12):
+        common = dict(mode='vm', dsl='ascent', vms='1', rust_threads='1', clients=str(clients))
         def line(tag, **values):
             return tag + ' ' + ' '.join(f'{key}={value}' for key, value in values.items()) + '\n'
         stderr = line('PROCESS-OWNER', pid=123, processors=1, domain=1)
@@ -85,7 +85,7 @@ class DiagnosticAdmission(unittest.TestCase):
                        histogram_resolution_ns=100_000, histogram_buckets=65_536,
                        p50_lower_ns=0, p50_upper_ns=100_000, p95_lower_ns=0, p95_upper_ns=100_000,
                        max_ns=100, checkpoints=1, shared_checkpoints=0, slowest_schema='same-request-v1')
-        stderr += line('PROCESS-SLOWEST', **common, task=72, total_ns=100,
+        stderr += line('PROCESS-SLOWEST', **common, task=60+clients, total_ns=100,
                        replace_ns=60, run_export_ns=25, validation_ns=15)
         stdout = HEADER + ''.join(request(sample, sample*12+task) for sample in range(5) for task in range(12))
         return stdout, stderr
@@ -98,13 +98,16 @@ class DiagnosticAdmission(unittest.TestCase):
         for diagnostic in [False, True]:
             with self.subTest(diagnostic=diagnostic), tempfile.TemporaryDirectory() as directory:
                 args = argparse.Namespace(benchmark=Path('/not-run/benchmark'), worker=Path('/not-run/worker'), output=Path(directory))
-                process = SimpleNamespace(pid=123, returncode=0, communicate=lambda **_: self.complete_evidence())
-                with patch.dict(CONTROL.os.environ, {}, clear=True), patch.object(CONTROL, 'compilers', return_value=[]), patch.object(CONTROL, 'process_snapshot', return_value=[dict(pid=123,ppid=0,rss_kib=1024,command='benchmark')]), patch.object(CONTROL, 'thread_population', return_value={123:12}), patch.object(CONTROL, 'cpu_resources', return_value={'maximum_process_rss_bytes': 1024}), \
+                process = SimpleNamespace(pid=123, returncode=0, communicate=lambda **_: self.complete_evidence(7))
+                with patch.dict(CONTROL.os.environ, {'ASCENT_BENCH_DSL': 'typed', 'ASCENT_BENCH_CLIENTS': '12'}, clear=True), patch.object(CONTROL, 'available_cpus', return_value=7), patch.object(CONTROL, 'compilers', return_value=[]), patch.object(CONTROL, 'process_snapshot', return_value=[dict(pid=123,ppid=0,rss_kib=1024,command='benchmark')]), patch.object(CONTROL, 'thread_population', return_value={123:7}), patch.object(CONTROL, 'cpu_resources', return_value={'maximum_process_rss_bytes': 1024}), \
                         patch.object(CONTROL.subprocess, 'Popen', return_value=process) as launch:
                     row = CONTROL.run_case(args, ('small', 12, 4, 8), ('vm', 1, 1), 'adaptive', diagnostic=diagnostic)
                 self.assertEqual(row['valid'], not diagnostic)
                 self.assertEqual(row['diagnostic_only'], diagnostic)
                 self.assertEqual('ASCENT_PROCESS_TRACE' in launch.call_args.kwargs['env'], diagnostic)
+                self.assertEqual(launch.call_args.kwargs['env']['ASCENT_BENCH_DSL'], 'ascent')
+                self.assertEqual(launch.call_args.kwargs['env']['ASCENT_BENCH_CLIENTS'], '7')
+                self.assertEqual(row['clients'], 7)
 
     def test_zombie_group_cleanup_preserves_timeout_and_every_observation(self):
         import argparse
@@ -114,7 +117,7 @@ class DiagnosticAdmission(unittest.TestCase):
         from types import SimpleNamespace
         from ascent_workbench.supervision import signal_group
         with tempfile.TemporaryDirectory() as directory:
-            args = argparse.Namespace(benchmark=Path('/not-run/benchmark'), worker=Path('/not-run/worker'), output=Path(directory))
+            args = argparse.Namespace(benchmark=Path('/not-run/benchmark'), worker=Path('/not-run/worker'), output=Path(directory), clients=12)
             process = SimpleNamespace(pid=123, returncode=-15, communicate=Mock(side_effect=[
                 subprocess.TimeoutExpired('benchmark', 240),
                 subprocess.TimeoutExpired('benchmark', 2), self.complete_evidence()]))
@@ -194,8 +197,28 @@ class OwnerConfigurationEvidence(unittest.TestCase):
     def test_vm_processor_population_and_rust_coordinator_count_are_independent(self):
         expected = [(mode, owners, 12) for mode in ('vm', 'instances') for owners in (1, 3, 12)]
         expected += [('rayon', 1, threads) for threads in (1, 3, 6, 8, 12)]
-        self.assertEqual(CONTROL.configurations(True), expected)
-        self.assertEqual(CONTROL.configurations(False), [row for row in expected if row[0] != 'instances'])
+        self.assertEqual(CONTROL.configurations(True, 12), expected)
+        self.assertEqual(CONTROL.configurations(False, 12), [row for row in expected if row[0] != 'instances'])
+
+    def test_small_odd_and_large_machines_do_not_inherit_twelve_vms(self):
+        from unittest.mock import patch
+        for capacity in (1, 2, 5, 7, 64):
+            with self.subTest(capacity=capacity), patch.object(CONTROL, 'available_cpus', return_value=capacity):
+                rows = CONTROL.configurations(True)
+                self.assertEqual(len(rows), len(set(rows)))
+                for mode in ('vm', 'instances'):
+                    owners = [row[1] for row in rows if row[0] == mode]
+                    self.assertEqual(min(owners), 1)
+                    self.assertEqual(max(owners), capacity)
+                    self.assertTrue(all(threads == capacity for kind, _, threads in rows if kind == mode))
+                self.assertTrue(all(1 <= owners <= capacity and 1 <= threads <= capacity
+                                    for _, owners, threads in rows))
+
+    def test_cpu_detection_respects_process_capacity_before_host_size(self):
+        from unittest.mock import patch
+        with patch.object(CONTROL.os, 'process_cpu_count', create=True, return_value=5), \
+                patch.object(CONTROL.os, 'cpu_count', return_value=64):
+            self.assertEqual(CONTROL.available_cpus(), 5)
 
 class JoinedOwnerEvidence(unittest.TestCase):
     def test_pending_roots_missing_and_duplicate_receipts_never_qualify_native_teardown(self):

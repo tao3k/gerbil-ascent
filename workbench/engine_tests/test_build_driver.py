@@ -83,6 +83,10 @@ class BuildDriverRouting(unittest.TestCase):
                         ["just", "--justfile", str(repo / "justfile"),
                          "--working-directory", str(root), "build"],
                         cwd=root, env=environment, capture_output=True, text=True, timeout=15)
+                    # Expose completed SDK commands to the matrix's unchanged
+                    # output watchdog instead of buffering all three subcases.
+                    print(child.stdout, end="", flush=True)
+                    print(child.stderr, end="", file=sys.stderr, flush=True)
                     self.assertEqual(child.returncode, 0, child.stdout + child.stderr)
                     lines = child.stdout.splitlines()
                     # The released SDK owns ordering, rather than the Just wrapper.

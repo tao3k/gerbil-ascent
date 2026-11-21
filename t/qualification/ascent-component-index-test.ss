@@ -7,11 +7,42 @@
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/t/performance/index-entry/fixture index-entry-harness index-entry-atom)
+        (only-in :gerbil-ascent/program/index gerbil-ascent-make-source-row-indexes
+                 source-row-indexes-bind! row-indexes-recycle-source!)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build gerbil-ascent-physical-index-single-rows))
 (export ascent-component-index-test)
 (def ascent-component-index-test
   (test-suite "SCC incremental total-index maintenance"
+    (test-case "bound source probes use current frame slots and release the old cut"
+      (let* ((rows (map (lambda (n) (list (modulo n 8) n)) (iota 64)))
+             (root (vector rows))
+             (sizes (vector 64))
+             (version (vector 0))
+             (indexes (gerbil-ascent-make-source-row-indexes root sizes version
+                        gerbil-ascent-hash-index-provider))
+             (atom (index-entry-atom '(0) '(3) 2))
+             (frame (vector 2 5))
+             (bound ((source-row-indexes-bind! indexes) atom)))
+        (let (held (bound frame '((bound . 0))))
+          (check-equal? held (filter (lambda (row) (= (car row) 2)) rows))
+          (check-equal? (bound frame '((bound . 1)))
+                        (filter (lambda (row) (= (car row) 5)) rows))
+          (vector-set! frame 0 9)
+          (check-equal? (bound frame '((bound . 0))) [])
+          (check-equal? (bound frame #f)
+                        (filter (lambda (row) (= (car row) 3)) rows))
+          ;; The old reader belongs to the completed run. Only the returned
+          ;; bucket is retained when the next cut recycles the owner.
+          (set! bound #f)
+          ((row-indexes-recycle-source! indexes))
+          (let (replacement (map (lambda (row) (list (car row) (+ 100 (cadr row)))) rows))
+            (vector-set! root 0 replacement)
+            (vector-set! version 0 1)
+            (let (next ((source-row-indexes-bind! indexes) atom))
+              (check-equal? (next frame '((bound . 1)))
+                            (filter (lambda (row) (= (car row) 5)) replacement))
+              (check-equal? held (filter (lambda (row) (= (car row) 2)) rows)))))))
     (test-case "extension preserves rebuild bucket order and old source roots"
       (let* ((rows (map (lambda (n) (list 0 n)) (iota 32)))
              (before (map (lambda (row) (map values row)) rows))

@@ -232,30 +232,105 @@ def test_outputs(tree):
 
 # BEGIN GENERATED PREPARATION BATCH-WIDTH
 def source_batch_width(entries, workers):
-    return 0 if entries == 0 else (entries - 1) // workers + 1
+    width = 0 if entries == 0 else (entries - 1) // workers + 1
+    return min(8, width) if sys.platform == 'darwin' else width
+
+
+def source_serial_suites():
+    return {"t/qualification/static-link-inputs-test.ss", "t/qualification/yuanxu-library-test.ss"}
+
+
+def source_live_ratio(darwin, parallel_source):
+    return 90 if darwin and parallel_source else 50
 # END GENERATED PREPARATION BATCH-WIDTH
 
 
-def source_semantic_workload(tree, log):
+def source_worker_capacity(env=None):
+    value = (os.environ if env is None else env).get('GERBIL_BUILD_CORES')
+    try:
+        configured = int(value) if value is not None else 0
+    except (TypeError, ValueError):
+        configured = 0
+    return configured if configured > 0 else max(1, os.cpu_count() or 1)
+
+
+def source_schedule_workload(lines, expected, batch_count, workers=None, automatic_heap=False):
+    workers = source_worker_capacity() if workers is None else workers
+    serial = source_serial_suites() & set(expected)
+    runtime_active, build_active, started, completed = set(), set(), set(), set()
+    barrier, peak = False, 0
+    collector_receipts = {}
+    for line in lines:
+        if line.startswith('TEST-BATCH-START '):
+            name = line.removeprefix('TEST-BATCH-START ')
+            if name not in expected or name in started:
+                raise ValueError('source schedule has an unknown or repeated batch')
+            if name in serial:
+                if not barrier or runtime_active or build_active:
+                    raise ValueError('serial source resource overlaps another batch')
+                build_active.add(name)
+            else:
+                if barrier:
+                    raise ValueError('runtime source started after the serial barrier')
+                runtime_active.add(name)
+                peak = max(peak, len(runtime_active))
+                if peak > workers:
+                    raise ValueError('source schedule exceeds machine runtime capacity')
+            started.add(name)
+        elif line.startswith('TEST-BATCH-COMPLETE '):
+            name = line.removeprefix('TEST-BATCH-COMPLETE ')
+            active = build_active if name in serial else runtime_active
+            if name not in active:
+                raise ValueError('source batch completion has no active owner')
+            active.remove(name)
+            completed.add(name)
+        elif line.startswith('TEST-WORK batch=') and ' VM-GC-RUNTIME live-ratio=' in line:
+            owner, ratio = line.removeprefix('TEST-WORK batch=').rsplit(' VM-GC-RUNTIME live-ratio=', 1)
+            expected_ratio = source_live_ratio(sys.platform == 'darwin',
+                                               owner not in serial and not automatic_heap)
+            if owner not in started or owner in collector_receipts or int(ratio) != expected_ratio:
+                raise ValueError('source collector receipt has an invalid owner or scope')
+            collector_receipts[owner] = int(ratio)
+        elif line.startswith('TEST-SERIAL-BARRIER pending='):
+            if barrier or runtime_active or build_active or int(line.split('=')[1]) != len(serial):
+                raise ValueError('source serial barrier did not follow runtime quiescence')
+            barrier = True
+    if (not barrier or runtime_active or build_active or started != completed or
+            len(started) != batch_count or not serial <= completed or
+            set(collector_receipts) != started):
+        raise ValueError('source schedule did not complete both resource lanes')
+    if peak != min(workers, batch_count - len(serial)):
+        raise ValueError('full source schedule did not exercise configured machine capacity')
+    return {'serial_suites': len(serial), 'peak_runtime_workers': peak}
+
+
+def source_semantic_workload(tree, log, capacity=None):
     expected = sorted(str(path.relative_to(tree)) for path in (tree / 't/qualification').glob('*-test.ss'))
     lines = log.read_text().splitlines()
     modules = sorted(line.removeprefix('MODULE-OK ') for line in lines if line.startswith('MODULE-OK '))
     cases = sum(line.startswith('CASE-OK ') for line in lines)
     compiled = [name for name in expected if (tree / '.gerbil/lib/gerbil-ascent' / name).with_suffix('.ssi').exists()]
     dispatches = [line for line in lines if line.startswith('TEST-DISPATCH ')]
-    if len(dispatches) != 1 or ' workers=12 ' not in dispatches[0]:
-        raise ValueError('source semantics did not dispatch twelve independent VM workers')
+    if len(dispatches) != 1:
+        raise ValueError('source semantics must have one native dispatch')
     batch_count = int(re.search(r' batches=(\d+) ', dispatches[0]).group(1))
+    workers = int(re.search(r' workers=(\d+) ', dispatches[0]).group(1))
+    capacity = source_worker_capacity() if capacity is None else capacity
+    if batch_count <= 0 or capacity <= 0 or workers <= 0 or workers != min(batch_count, capacity):
+        raise ValueError('source semantics did not dispatch native machine capacity')
+    automatic_heap = ' heap=auto' in dispatches[0]
     width = re.search(r' max-batch-modules=(\d+)(?: |$)', dispatches[0])
-    retained_width = source_batch_width(source_batch_width(len(expected), 12), 12)
+    retained_width = source_batch_width(len(expected), workers)
     if width is None or not 0 < int(width[1]) <= retained_width:
-        raise ValueError('source VM retained-entry width exceeds the native refinement bound')
+        raise ValueError('source VM retained-entry width exceeds the native balanced capacity')
     processors = [line for line in lines if line.startswith('VM-RUNTIME processors=')]
     if len(processors) != batch_count or any(line != 'VM-RUNTIME processors=1' for line in processors):
         raise ValueError('source VM runtime processor receipts are incomplete or not single-threaded')
     if not expected or modules != expected or cases == 0 or compiled:
         raise ValueError('source semantic workload is incomplete or compiled')
-    return {'modules': modules, 'cases': cases, 'vm_workers': 12, 'max_batch_modules': int(width[1])}
+    schedule = source_schedule_workload(lines, expected, batch_count, workers, automatic_heap)
+    return {'modules': modules, 'cases': cases, 'vm_workers': workers,
+            'max_batch_modules': int(width[1]), **schedule}
 
 
 
@@ -299,7 +374,7 @@ def check_source_semantic_cache(root, output, env):
 def source_semantic_environment(root, env):
     runtime = dict(env, GERBIL_PATH=str(root / '.gerbil'),
                    GERBIL_LOADPATH=str(root / '.gerbil/lib'),
-                   GERBIL_BUILD_CORES='12', ASCENT_GXTEST_TIMEOUT='600s')
+                   ASCENT_GXTEST_TIMEOUT='600s')
     runtime.pop('ASCENT_TEST_LIBRARY', None)
     return runtime
 # END GENERATED PREPARATION RUNTIME-ENV
@@ -316,9 +391,10 @@ def run_source_semantics(root, output, env):
             {'compiled_source_suites': suite_interfaces}, indent=2) + '\n')
         if suite_interfaces:
             raise RuntimeError('source qualification unexpectedly compiled Suite carriers')
-        measure(root, ['timeout', '600s', 'just', 'test-file', 't/qualification', '2G'],
+        measure(root, ['timeout', '600s', 'just', 'test-file', 't/qualification', 'auto'],
                 output / 'candidate-semantics.log', source_semantic_environment(root, env), semantic_diagnostics=True)
-        workload = source_semantic_workload(root, output / 'candidate-semantics.log')
+        workload = source_semantic_workload(root, output / 'candidate-semantics.log',
+                                           source_worker_capacity(env))
         (output / 'source-runtime-workload.json').write_text(json.dumps(workload, indent=2) + '\n')
     finally:
         batches = root / '.cache/ascent/test-modules'
@@ -368,13 +444,12 @@ def main():
         env = os.environ.copy()
         env['GERBIL_PATH'] = str(root / '.gerbil')
         env['GERBIL_LOADPATH'] = str(root / '.gerbil/lib')
-        env['GERBIL_BUILD_CORES'] = '3'
         env['ASCENT_GXTEST_TIMEOUT'] = '600s'
         env.pop('ASCENT_TEST_LIBRARY', None)
         (output / 'inputs.json').write_text(json.dumps({
             'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
-            'cores': 3, 'scheme_vm_workers': 12, 'threads_per_vm': 1,
-            'deadline_seconds': 600, 'child_heap': '2G',
+            'cores': source_worker_capacity(env), 'scheme_vm_workers': source_worker_capacity(env),
+            'threads_per_vm': 1, 'deadline_seconds': 600, 'child_heap': 'auto',
             'sdk_receipt': json.loads((Path(os.environ['GERBIL_PREFIX']) /
                                        'gerbil-build-receipt.json').read_text())}, indent=2) + '\n')
         cache_error = None
@@ -423,7 +498,7 @@ def main():
                'workbench/tests/test_compiler_cost.py',
                'workbench/tests/test_reference_cache.py',
                'workbench/tests/test_study_profile.py',
-               'workbench/tests/fixtures/allocation-stack.scm',
+               'workbench/tests/fixtures/allocation-stack.ss',
                'packages/proofs/quint/PreparationPolicy.qnt',
                'packages/proofs/quint/PreparationAdmission.qnt',
                'packages/proofs/quint/PreparationWork.qnt',

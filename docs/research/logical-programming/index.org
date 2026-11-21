@@ -6,12 +6,12 @@ Application Evidence and model efficacy studies are owned by POO Flow; see
 
 | Library question | Reading | Native owner | Formal scope |
 |------------------+---------+--------------+--------------|
+| Closure before choice and branch-local reuse | [[file:finite-choice.org][Finite-choice logic programming / Dusa]] | checked choice grounding and branch-local Session cuts | Paper and upstream implementation reading |
 | Grounded support and alternatives | [[file:weighted-provenance.org][Weighted provenance]] | candidate/provenance.ss | ProofDag and DerivationCounts |
 | Bounded nonmembership | [[file:why-not-explanations.org][Why-not explanations]] | candidate/nonmembership.ss | PositiveNonmembership and CertificateMaterial |
 | Derivation height | [[file:proof-height.org][Proof height]] | candidate/support-height.ss | MinimumHeight |
 | Source withdrawal | [[file:withholding.org][Withholding]] | candidate/withdrawal-session.ss | SourceUpdateFrame and DependencyInvalidation |
 | Scoped queries | [[file:scoped-witness.org][Scoped witnesses]] | generic rule/query admission | ScopedWitness |
-| Closure before choice and branch-local reuse | [[file:finite-choice.org][Finite-choice logic programming / Dusa]] | existing session reuse and native matching; study only | No finite-choice implementation proof claimed |
 
 An abstract theorem is not native compiler correctness, external authentication,
 or a model-efficacy result. Native correspondence and resource acceptance remain

@@ -1,4 +1,4 @@
-"""Installed Scheme-profile wheel: real calls through twelve resident VMs."""
+"""Installed Scheme-profile wheel: real calls at native machine capacity."""
 from concurrent.futures import ThreadPoolExecutor
 import argparse
 import gc
@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 
 from ascent import Atom, Engine, ProcessPool, Program, Term
+
+CAPACITY = max(1, (os.process_cpu_count() if hasattr(os, "process_cpu_count") else
+                  len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else
+                  os.cpu_count()) or 1)
 
 
 def qualify_rayon_modes():
@@ -17,7 +21,7 @@ def qualify_rayon_modes():
         program.rule(Atom("reach", [x, y]), [Atom("edge", [x, y])])
         program.rule(Atom("reach", [x, z]),
                      [Atom("reach", [x, y]), Atom("edge", [y, z])])
-        engine = Engine(workers=12, backend="rayon", work_distribution=distribution)
+        engine = Engine(workers=CAPACITY, backend="rayon", work_distribution=distribution)
         try:
             assert engine.work_distribution == distribution
             session = engine.open(program)
@@ -37,20 +41,25 @@ def qualify_rayon_modes():
         finally:
             engine.shutdown()
     try:
-        Engine(workers=12, work_distribution="unknown")
+        Engine(workers=CAPACITY, work_distribution="unknown")
     except ValueError:
         pass
     else:
         raise AssertionError("unknown work distribution was accepted")
-    print("RAYON-PYTHON-OK threads=12 modes=3 limits=preserved snapshots=preserved", flush=True)
+    print(f"RAYON-PYTHON-OK threads={CAPACITY} modes=3 limits=preserved snapshots=preserved", flush=True)
 
 
-def qualify(pool_type=ProcessPool, shared_process=False, package=None):
-    pool = pool_type(12) if package is None else pool_type(12, package=package)
+def qualify(pool_type=ProcessPool, shared_process=False, package=None, *, owners=None):
+    options = {} if owners is None else {'owners': owners}
+    if package is not None:
+        options['package'] = package
+    # Exercise the public constructor's machine default rather than supplying it.
+    pool = pool_type(**options)
+    owners = CAPACITY if owners is None else owners
     identities = pool.identities()
-    assert len(identities) == 12
-    assert len({row['domain'] for row in identities}) == 12
-    assert len({row['pid'] for row in identities}) == (1 if shared_process else 12)
+    assert len(identities) == owners
+    assert len({row['domain'] for row in identities}) == owners
+    assert len({row['pid'] for row in identities}) == (1 if shared_process else owners)
     if shared_process:
         assert all(row['pid'] == os.getpid() for row in identities)
     assert all(row['processors'] == 1 for row in identities)
@@ -60,7 +69,7 @@ def qualify(pool_type=ProcessPool, shared_process=False, package=None):
             if executable.exists():
                 assert executable.samefile(worker), 'explicit Rust worker was ignored'
     engines = [pool.engine(i, backend='scheme', max_source_scopes=8,
-                           max_input_bytes=16384) for i in range(12)]
+                           max_input_bytes=16384) for i in range(owners)]
     assert all(engine.max_source_scopes == 8 for engine in engines)
     assert all(engine.max_input_bytes == 16384 for engine in engines)
     assert [engine.process_identity() for engine in engines] == identities
@@ -70,7 +79,7 @@ def qualify(pool_type=ProcessPool, shared_process=False, package=None):
         for i, engine in enumerate(engines)]
 
     def call(index):
-        owner = index % 12
+        owner = index % owners
         value = modules[owner].call('answer', index)
         assert int(value.graph['root']['value']) == owner + index
         value.close()
@@ -80,7 +89,7 @@ def qualify(pool_type=ProcessPool, shared_process=False, package=None):
         answer.close()
         closure.close()
 
-    with ThreadPoolExecutor(max_workers=12) as executor:
+    with ThreadPoolExecutor(max_workers=owners) as executor:
         list(executor.map(call, range(120)))
     for module in modules:
         module.close()
@@ -91,8 +100,8 @@ def qualify(pool_type=ProcessPool, shared_process=False, package=None):
     if shared_process:
         gc.collect()
         receipt = pool.shutdown()
-        assert receipt['pending'] == 0 and receipt['joined'] == 12 and receipt['panicked'] == 0
-        assert len(receipt['owners']) == 12
+        assert receipt['pending'] == 0 and receipt['joined'] == owners and receipt['panicked'] == 0
+        assert len(receipt['owners']) == owners
         assert all(owner['status'] == 0 and owner['roots_before_cleanup'] == 0
                    for owner in receipt['owners'])
     return [row['pid'] for row in identities]
@@ -101,19 +110,24 @@ def qualify(pool_type=ProcessPool, shared_process=False, package=None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--instances', action='store_true')
+    parser.add_argument("--owners", type=int,
+                        help="explicit owner population; default: native available CPUs")
     args = parser.parse_args()
+    if args.owners is not None and args.owners < 1:
+        parser.error("--owners must be positive")
+    owners = CAPACITY if args.owners is None else args.owners
     qualify_rayon_modes()
     if args.instances:
         from ascent import InstancePackage, InstancePool
-        pids = qualify(InstancePool, shared_process=True)
+        pids = qualify(InstancePool, shared_process=True, owners=args.owners)
         assert set(pids) == {os.getpid()}
-        print('INSTANCE-PYTHON-OK owners=12 processors=1 clients=12 calls=120 applications=120 joined=12')
+        print(f'INSTANCE-PYTHON-OK owners={owners} processors=1 clients={owners} calls=120 applications=120 joined={owners}')
         package = InstancePackage()
-        captured_pids = qualify(InstancePool, shared_process=True, package=package)
+        captured_pids = qualify(InstancePool, shared_process=True, package=package, owners=args.owners)
         assert set(captured_pids) == {os.getpid()}
-        print('INSTANCE-PACKAGE-PYTHON-OK owners=12 processors=1 clients=12 calls=120 applications=120 joined=12')
+        print(f'INSTANCE-PACKAGE-PYTHON-OK owners={owners} processors=1 clients={owners} calls=120 applications=120 joined={owners}')
     else:
-        pids = qualify()
+        pids = qualify(owners=args.owners)
         gc.collect()
         for pid in pids:
             try:
@@ -122,4 +136,4 @@ if __name__ == '__main__':
                 continue
             raise AssertionError(f'owned worker not reaped: {pid}')
         entry = 'selected-rust-worker' if os.environ.get('ASCENT_SCHEME_WORKER') else 'default-pyo3-worker'
-        print(f'PROCESS-PYTHON-OK entry={entry} owners=12 processors=1 clients=12 calls=120 applications=120 reaped=12')
+        print(f'PROCESS-PYTHON-OK entry={entry} owners={owners} processors=1 clients={owners} calls=120 applications=120 reaped={owners}')

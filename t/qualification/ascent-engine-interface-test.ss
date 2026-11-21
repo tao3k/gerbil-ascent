@@ -5,7 +5,13 @@
         (only-in :gerbil-ascent/core/view-value make-relation-view make-ordered-binary-visitors
                  gerbil-ascent-view-with-export)
         (only-in :gerbil-ascent/program/result gerbil-ascent-make-published-result)
-        (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control))
+        (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation
+                 gerbil-ascent-variable gerbil-ascent-rule gerbil-ascent-atom)
+        (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-actor-session
+                 gerbil-ascent-session-close! gerbil-ascent-session-last-completed)
+        (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
+                 gerbil-ascent-session-replace-source!))
 (export ascent-engine-interface-test)
 (def (request value)
   (parameterize ((current-json-read-options (JSONReadOptions object-as-hash: #t)))
@@ -54,6 +60,18 @@
 
 (def (ordered-rows offset)
   (map (lambda (i) (list (- offset i) (+ offset (* 2 i)))) (iota 2048)))
+
+(def (open-ordered-actor edges)
+  (let ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y)))
+    (gerbil-ascent-open-actor-session
+     (gerbil-ascent-program
+      (list (gerbil-ascent-relation 'edge 2 edges)
+            (gerbil-ascent-relation 'reach 2 []))
+      (list (gerbil-ascent-rule
+             (list (gerbil-ascent-atom 'reach (list x y)))
+             (list (gerbil-ascent-atom 'edge (list x y)))))
+      2048 2048 4096)
+     workers: 1)))
 
 (def (source-run handle duration (packed-rows? #f))
   (ascent-engine-call
@@ -138,6 +156,65 @@
 
 (def ascent-engine-interface-test
   (test-suite "Public inert engine contract for C ABI consumers"
+    (test-case "caller buffer copies one ordered publication during a reentrant update"
+      (let* ((before (ordered-rows 17)) (after (ordered-rows -31))
+             (session (open-ordered-actor before))
+             (destination (make-s64vector 4098 -999))
+             (next #f) (checks 0))
+        (try
+          (begin
+            (check-equal? (ascent-engine-session-copy-integer-relation! session 'reach destination 1) #f)
+            (check-equal? destination (make-s64vector 4098 -999))
+            (let (first (gerbil-ascent-session-run session))
+              (gerbil-ascent-session-replace-source! session 'edge after)
+              (parameterize
+                ((current-ascent-execution-control
+                  (lambda (_work _facts)
+                    (set! checks (+ checks 1))
+                    (when (= checks 4)
+                      (parameterize ((current-ascent-execution-control #f))
+                        (set! next (gerbil-ascent-session-run session)))))))
+                (check-equal? (ascent-engine-session-copy-integer-relation!
+                               session 'reach destination 1) 2048))
+              (check-equal? (eq? next (gerbil-ascent-session-last-completed session)) #t)
+              (check-equal? (s64vector->list destination) (cons -999 (append (apply append before) '(-999))))
+              (check-equal? (ascent-engine-session-copy-integer-relation! session 'reach destination 1) 2048)
+              (check-equal? (s64vector->list destination) (cons -999 (append (apply append after) '(-999))))
+              ;; The destination can change without changing either Result.
+              (s64vector-set! destination 1 99)
+              (check-equal? (ascent-engine-relation-answer first 'reach #f values) before)
+              (check-equal? (ascent-engine-relation-answer next 'reach #f values) after)))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "caller buffer stays intact on capacity refusal, cancellation and unsupported values"
+      (let* ((session (open-ordered-actor (ordered-rows 17)))
+             (destination (make-s64vector 4096 -999)))
+        (try
+          (let (first (gerbil-ascent-session-run session))
+            (check-exception
+             (ascent-engine-session-copy-integer-relation! session 'reach destination 1) true)
+            (check-exception
+             (ascent-engine-session-copy-integer-relation! session 'reach destination -1) true)
+            (check-equal? destination (make-s64vector 4096 -999))
+            (for-each
+             (lambda (stop)
+               (let (checks 0)
+                 (parameterize ((current-ascent-execution-control
+                                  (lambda (_work _facts)
+                                    (set! checks (+ checks 1))
+                                    (when (= checks stop) (error "interrupt buffer delivery")))))
+                   (check-equal?
+                    (with-catch error-message
+                      (lambda () (ascent-engine-session-copy-integer-relation! session 'reach destination)))
+                    "interrupt buffer delivery"))
+                 (check-equal? destination (make-s64vector 4096 -999))
+                 (check-equal? (eq? first (gerbil-ascent-session-last-completed session)) #t)))
+             '(1 4 6))
+            (gerbil-ascent-session-replace-source! session 'edge '((label 1)))
+            (let (last (gerbil-ascent-session-run session))
+              (check-equal? (ascent-engine-session-copy-integer-relation! session 'reach destination) #f)
+              (check-equal? destination (make-s64vector 4096 -999))
+              (check-equal? (ascent-engine-relation-answer last 'reach #f values) '((label 1)))))
+          (finally (gerbil-ascent-session-close! session)))))
     (test-case "a different complete exporter takes precedence over the old field order"
       (let* ((emit (lambda (_columns _key consume) (consume [] 1 2) (consume [] 3 4)))
              (export (lambda () (list (list 1 2) (list 3 4))))

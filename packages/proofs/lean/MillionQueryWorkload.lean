@@ -1033,6 +1033,54 @@ theorem binary_reply_keeps_capture {Version : Type} [DecidableEq Version]
       exact ⟨labelEq.symm, same.symm, congrArg some dataEq⟩
   · simp [publishBinaryReply, same] at published
 
+/-- The caller owns the destination. A completed capture supplies the ordered
+fields while the private packet is staged. The last liveness check precedes
+the only write to the destination. -/
+def copyBinaryReply {Version : Type}
+    (capture : Option (Version × List (Int × Int))) (destination : List Int)
+    (start packetLimit : Nat) (live : Bool) :
+    List Int × Option (Version × Nat) :=
+  match capture with
+  | none => (destination, none)
+  | some (version, rows) =>
+    let count := rows.length
+    if live && decide (0 < count ∧ 2 + 2 * count ≤ packetLimit ∧
+        start + 2 * count ≤ destination.length) then
+      (destination.take start ++ (binaryReply rows).drop 2 ++
+        destination.drop (start + 2 * count), some (version, count))
+    else (destination, none)
+
+theorem copy_binary_reply_keeps_capture_and_order {Version : Type}
+    (version : Version) (rows : List (Int × Int)) (destination : List Int)
+    (start packetLimit : Nat)
+    (fits : 0 < rows.length ∧ 2 + 2 * rows.length ≤ packetLimit ∧
+        start + 2 * rows.length ≤ destination.length) :
+    copyBinaryReply (some (version, rows)) destination start packetLimit true =
+      (destination.take start ++ packedBinaryCells rows ++
+        destination.drop (start + 2 * rows.length), some (version, rows.length)) ∧
+    unpackBinaryCells (packedBinaryCells rows) = rows := by
+  simp [copyBinaryReply, fits, binaryReply, packed_capture_roundtrip]
+
+theorem copy_binary_reply_refusal_preserves_destination {Version : Type}
+    (version : Version) (rows : List (Int × Int)) (destination : List Int)
+    (start packetLimit : Nat) (live : Bool)
+    (refused : live = false ∨ rows.length = 0 ∨
+        packetLimit < 2 + 2 * rows.length ∨ destination.length < start + 2 * rows.length) :
+    copyBinaryReply (some (version, rows)) destination start packetLimit live =
+      (destination, none) := by
+  rcases refused with canceled | empty | packet | buffer
+  · simp [copyBinaryReply, canceled]
+  · simp [copyBinaryReply, empty]
+  · have exceeds : ¬ 2 + 2 * rows.length ≤ packetLimit := by omega
+    simp [copyBinaryReply, exceeds]
+  · have exceeds : ¬ start + 2 * rows.length ≤ destination.length := by omega
+    simp [copyBinaryReply, exceeds]
+
+theorem copy_binary_reply_without_capture {Version : Type}
+    (destination : List Int) (start packetLimit : Nat) (live : Bool) :
+    copyBinaryReply (Version := Version) none destination start packetLimit live =
+      (destination, none) := rfl
+
 end OrderedBinaryReply
 
 /-- Replacement preflight checks the outer extent and each complete

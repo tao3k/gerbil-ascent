@@ -233,3 +233,49 @@ gerbil test t/qualification/ascent-engine-interface-test.ss
 gerbil -:max-heap=2G test -r '^actor-million-integer-list-test$' benchmarks/actor-integer-reply-test.ss
 gerbil -:max-heap=2G test -r '^actor-million-integer-view-test$' benchmarks/actor-integer-reply-test.ss
 #+end_src
+
+* Actor Session delivery into a caller buffer
+
+=ascent-engine-session-copy-integer-relation!= captures one completed
+publication through the Actor Session's existing =.last-completed=
+request. Pending source changes become visible only after a new
+publication. Delivery uses the captured Result for its entire lifetime,
+even when a newer Result is published before the copy.
+
+The caller supplies an exclusively owned mutable =s64vector= and an
+optional starting cell. The function returns a row count and copies the
+ordered binary payload into the indicated slice. The count and width
+header stays in the private integer packet. A missing publication or a
+relation without the existing ordered binary capability returns =#f=.
+Invalid offsets and insufficient buffer capacity raise before staging the
+packet. Cells outside the requested slice retain their original values.
+
+The integer writer keeps the existing extent, type and cancellation
+checks, including its final check after staging. A last authority check
+precedes =s64vector-copy!=. Before that point, refusal leaves the entire
+destination unchanged. The single copy has no callback or checkpoint,
+and the Session retains no reference to its destination. Source budgets
+and detached mutable lists still use their existing paths.
+
+=MillionQueryWorkload.copyBinaryReply= specifies the snapshot, packet and
+destination boundaries. The success theorem relates the slice to the
+entire ordered tuple sequence and preserves cells on both sides. The
+refusal theorems cover missing capture, cancellation and insufficient
+capacity. The model assumes the existing packet encoder's completed
+capture and the native vector copy's slice semantics. Scheme tests
+exercise the live owner request, publication changes and cancellation
+checkpoints at those boundaries.
+
+The caller-buffer benchmark uses the same two source cuts, 128 requests
+with one million rows each, a 2 GiB heap and a 90-second process limit.
+The request timer includes source replacement, publication, snapshot
+capture, packet staging, the copy and an independent comparison of
+every delivered field. The scalar benchmark keeps its original
+per-field decode. The detached-list acceptance suite remains separate.
+Mean allocation uses samples with a nonnegative allocation counter
+delta and no collection. The full-window signed delta is diagnostic.
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-integer-buffer-test$' benchmarks/actor-integer-reply-test.ss
+#+end_src

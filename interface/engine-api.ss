@@ -36,7 +36,7 @@
         :gerbil-ascent/core/execution-control
         :gerbil-ascent/program/aggregators)
 (export ascent-engine-dispatch ascent-engine-program-wire ascent-engine-call
-        ascent-engine-relation-answer)
+        ascent-engine-relation-answer ascent-engine-session-copy-integer-relation!)
 (defstruct api-session (engine sources queries actor?))
 (def sessions (make-hash-table-eqv))
 (defstruct source-state (queries descriptors generation last-result runs program explain results sources names projection-cache))
@@ -410,6 +410,29 @@
   (or (and packet? ((.ref result 'with-ordered-binary-fields) name pack-ordered-binary-fields))
       (let (rows ((.ref result 'rows-of) name))
         (or (and packet? (pack-integer-rows rows)) (ordinary rows)))))
+
+;; Copy the latest completed Actor Result into caller-owned storage. Pending
+;; changes and subsequent publications cannot change the captured fields.
+;; The destination must be exclusively owned for the duration of this call.
+(def (ascent-engine-session-copy-integer-relation! session name destination (start 0))
+  (unless (and (s64vector? destination) (fixnum? start)
+               (<= 0 start (s64vector-length destination)))
+    (error "ASCENT invalid integer reply destination" start))
+  (ascent-execution-checkpoint!)
+  (let (result (gerbil-ascent-session-last-completed session))
+    (and result
+         ((.ref result 'with-ordered-binary-fields) name
+           (lambda (count visit)
+             (let (cells (* 2 count))
+               (when (> cells (- (s64vector-length destination) start))
+                 (error "ASCENT integer reply exceeds buffer capacity"))
+               (let (packet (pack-ordered-binary-fields count visit))
+                 (and packet
+                      (begin
+                        ;; The native copy has no user callbacks or checkpoints.
+                        (ascent-execution-checkpoint!)
+                        (s64vector-copy! destination start packet 2 (+ 2 cells))
+                        count)))))))))
 
 ;; BEGIN GENERATED PROJECTION ROWS
 (def (pack-projection-rows! program requested)

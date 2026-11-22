@@ -78,6 +78,29 @@ theorem collector_intervals_exact (first middle last : Nat)
     (firstLe : first ≤ middle) (middleLe : middle ≤ last) :
     (middle - first) + (last - middle) = last - first := by omega
 
+/-- Endpoints of one admitted direct buffer copy. Certification prepares
+the affine windows. The writer interval starts just before traversal. -/
+structure BufferCopyTrace where
+  copyEnter : Nat
+  writeEnter : Nat
+  writeExit : Nat
+  copyExit : Nat
+
+theorem direct_copy_brackets (t : BufferCopyTrace)
+    (before : t.copyEnter ≤ t.writeEnter)
+    (writes : t.writeEnter ≤ t.writeExit)
+    (after : t.writeExit ≤ t.copyExit) :
+    t.copyExit - t.copyEnter =
+      (t.writeEnter - t.copyEnter) + (t.writeExit - t.writeEnter) +
+      (t.copyExit - t.writeExit) := by omega
+
+/-- If the caller reads the same cumulative clock at consecutive endpoints,
+the difference belongs to that phase. The identity applies independently
+to wall ticks, caller thread CPU, and the collector's elapsed clock. -/
+theorem measured_interval_refines_bracket (phaseStart phaseEnd outerStart outerEnd : Nat)
+    (enter : outerStart ≤ phaseStart) (exit : phaseEnd ≤ outerEnd) :
+    phaseEnd - phaseStart ≤ outerEnd - outerStart := by omega
+
 structure Evidence where
   unit : Unit
   planned : Nat

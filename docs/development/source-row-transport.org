@@ -526,6 +526,60 @@ collector times were 121.069 and 121.357 ms at width 128, and 75.432
 and 72.966 ms at width 512. The production qualification uses the
 uninstrumented module and the original gates.
 
+** Direct-buffer write and oracle timing
+
+The buffer probe brackets the direct =copy!= invocation inside
+=ascent-engine-session-copy-integer-relation!= in =interface/engine-api.ss=.
+The result lookup keeps the Actor send, dispatch, post, and resume
+timestamps. Inside the ordinal =copy!=, mark the first traversal step
+after the extent and stride certificate are ready, then mark the end
+of the last window before the final extent assertion. Thus the writer
+span contains actual field stores and the traversal that drives them.
+=direct_copy_brackets= partitions copy preparation, writes, and the
+completion check using these source endpoints.
+
+Start the independent oracle after the delivered buffer has been
+returned. Capture elapsed wall, GC clocks, and OS-thread CPU at the
+same writer and verification endpoints. Thread CPU is comparable
+only when the two endpoints carry the same OS thread identity.
+These recorded intervals separate write and oracle work from Actor
+handoffs. Clock differences between wall and CPU do not identify who
+was running while the thread was off CPU.
+
+Pair the dense ordinal publication with the complete-list candidate
+on the same buffer request numbers. Use identical probes on both,
+reverse their run order on alternating shards, and validate the
+whole interleaved output. Before any production optimization,
+retain the samples and both ranked and same-request stage comparisons.
+
+The controlled writer experiment keeps the existing ordinal
+windows, first pair, signed stride, and destination extent check.
+Each complete block writes four rows before advancing the cursor.
+=affine_copy_four_row_partition= accounts for the final zero to three
+rows. =affine_copy_four_rows_fit= checks the last cell of every
+block, including an odd destination start. =affine_copy_block_field=
+relates the carried first pair and its offsets to the existing
+single-row recurrence. Fixnum stepping uses the writer's existing
+wrapping operations. Every emitted field is in the certified range.
+The stepped cursor after the final write is unused.
+
+The direct-copy probe compared the two source versions on 16 paired
+shards per width. The width-128 candidate P95 request spent 39.562 ms
+in writes and 52.615 ms in the oracle, with 0.042 ms in Actor handoffs.
+The width-512 candidate P95 request had 38.559 ms of GC entirely in
+publication. This cohort did not reproduce both increases seen in
+the earlier uninstrumented 1,000-request runs.
+
+The controlled four-row writer comparison used eight paired shards
+per width. Mean caller-thread CPU in the writer fell from 22.937 to
+18.246 ms at width 128, and from 21.049 to 14.870 ms at width 512.
+The independent oracle still checked every field. In this comparison
+end-to-end P95 rose in both widths even though the mean fell. The
+width-128 P95 request shared its request number with the reference
+P95 request and spent 65.009 ms in the oracle, up from 31.962 ms.
+The width-512 candidate P95 request spent 56.919 ms of caller-thread
+CPU in the writer. These samples do not establish a tail bound.
+
 * POO reuse boundaries
 
 Yuanxu's pinned POO already provides persistent correlated table indexes

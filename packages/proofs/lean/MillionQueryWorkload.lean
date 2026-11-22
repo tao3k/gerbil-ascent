@@ -209,6 +209,20 @@ theorem affine_copy_cell_bounds (start count capacity i : Nat)
     (room : start + 2 * count ≤ capacity) (inside : i < count) :
     start + 2 * i < capacity ∧ start + 2 * i + 1 < capacity := by omega
 
+theorem affine_copy_four_row_partition (rows : Nat) :
+    rows = 4 * (rows / 4) + rows % 4 ∧ rows % 4 < 4 := by omega
+
+/-- Four interleaved pairs fit in the admitted destination. The result
+also applies to an odd starting cell. -/
+theorem affine_copy_four_rows_fit (start rows base capacity : Nat)
+    (room : start + 2 * rows ≤ capacity) (four : base + 4 ≤ rows) :
+    start + 2 * base + 7 < capacity := by omega
+
+theorem affine_copy_block_field (first stride : Int) (base relative : Nat) :
+    affineField first stride (base + relative) =
+      affineField first stride base + (relative : Int) * stride := by
+  simp [affineField, Int.add_mul, Int.add_assoc]
+
 theorem affine_copy_ordinals_disjoint (start a b : Nat) (before : a < b) :
     start + 2 * a + 1 < start + 2 * b := by omega
 

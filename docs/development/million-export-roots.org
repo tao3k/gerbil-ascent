@@ -319,3 +319,123 @@ The evaluation phase accounts for most of the increase. The timing
 combines scheduling and relation-container costs for the default
 12-worker pool on this workload. All raw receipts are under
 =.cache/ascent/projection-owned-roots/=.
+
+* Algorithm choice after the per-request GC trace
+
+The unchanged projection has one edge from each even vertex to its
+adjacent odd vertex. =BoundedExport.projection_path_is_edge= proves
+that even positive transitive closure adds no edge.
+=BoundedExport.projection_scc_is_singleton= rules out mutual nonempty
+reachability. SCC scheduling on rule dependencies and condensation of
+recursive data graphs therefore address different costs from this
+projection. Ascent uses rule SCCs to organize semi-naive evaluation.
+Tarjan's algorithm finds data SCCs in linear graph time.
+[[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Ascent, section 4]]
+[[https://doi.org/10.1137/0201010][Tarjan]]
+
+The measured projection cohort had 64 of 1,000 delivery GC intervals
+at or above 100 ms. =BoundedExport.measured_gc_floor= instantiates the
+strict P95 bound for the observed intervals. A change confined to
+non-collector work cannot pass this cohort with the same pauses.
+The full mutable result still owns three fresh pairs per binary row.
+Partitioning construction into pages and joining all of them before
+return preserves that live output footprint. A compatible full-list
+improvement must change the amount of collector work or its placement.
+
+Baker's incremental copying algorithm changes the allocation contract
+of the runtime. Region allocation also depends on when references can
+escape. A native experiment for the existing list API would need a
+backing allocator that can hand off ordinary mutable pairs and account
+for surviving interior aliases, capacity, and all collection work
+inside the request. The repository's whole-block retention control in
+[[file:graph-index-export/collector-and-allocation.org][collector and allocation]]
+shows why reclaiming complete blocks from head liveness is insufficient.
+A selective young collection is a second runtime route. It can skip
+traversal of old caller graphs only if every old-to-young field is
+remembered and each actual alias is forwarded. The existing
+=WeightedExportCapacity= model proves these requirements with
+=covered_pair_reach= and =forwarded_slot_exact=. It does not establish
+that the locked Gambit runtime can supply such a collection for this
+export. Neither runtime route has a verified timing bound.
+[[https://doi.org/10.1145/359460.359470][Baker]]
+[[https://doi.org/10.1006/inco.1996.2613][Tofte and Talpin]]
+
+For consumers that can use batches, keep the immutable publication
+factorised until the destination is supplied. Read a contiguous
+ordinal interval into one reusable binary buffer. The affine cut is
+addressable from its numeric descriptor. A certified cross-SCC product
+is addressable by quotient and remainder into its two member axes.
+=BoundedExport.rectangle_rank_reads_axes= checks the origin-major
+coordinate mapping, and =rectangle_cross_component_sound= lifts each
+row to a concrete nonempty path. A source integration must also certify
+the composition order and coverage of all blocks, including diagonal
+cycle handling. Factorised relations supply the representation idea.
+MonetDB/X100 supplies the bounded-vector execution precedent.
+[[https://openproceedings.org/2012/conf/icdt/OlteanuZ12.pdf][Olteanu and Zavodny]]
+[[https://ir.cwi.nl/pub/16497][Boncz, Zukowski and Nes]]
+
+=completed_pulls_equal_full_result= proves exact ordered reconstruction,
+including repeated occurrences and a clipped final page. The cursor
+checks the owner, generation, revision and lane, then checks the row
+budget before reading. =accepted_pull= accounts for one advance and
+one debit. =accepted_binary_page_fits= bounds both destination cells
+for each committed row. Cancellation is modeled at page admission.
+Native atomicity still requires an exclusively owned destination until
+commit. For 8,192 binary rows the destination payload is 128 KiB and
+covers one million rows in 123 pulls. This bound assumes the producer
+retains no additional page and excludes caller-retained copies.
+
+A native trial would compare the existing full-buffer copier with
+ordinal pages using identical inputs and the same independent oracle.
+Measure publication, first page, complete delivery, GC and total
+throughput. Verify order, cut replacement, cancellation and exhaustion
+with the original mutable-list API and its 100 ms gate kept separately.
+The recursive-buffer 50 ms gate also remains in the original cohort.
+
+* Frozen Gambit allocation and scanning contract
+
+Gerbil =1cfb032= identifies Gambit =ea114fc3d2f120abbe20393c1f9aeafdd3f8c89f=.
+In that source, =lib/_kernel.scm:2051= calls the ordinary collector with
+a zero still-allocation request. The collector runs strong marking,
+weak marking and cleanup before resize in =lib/mem.c:7005–7036=.
+Ordinary pair cells are movable. =mark_array= forwards them and queues
+reachable still objects. =scan_still_objs_to_scan= traces their fields.
+=##add-gc-interrupt-job!= runs after collection and cannot narrow the
+set of roots that collection visits.
+
+=lib/_kernel.scm:2377= implements =##still-copy= as a shallow copy.
+=lib/mem.c:1712= selects a still object for a live processor and a
+permanent object for a null processor. The permanent pair is not an
+ordinary mutable return object. The still copy preserves field targets
+and the collector must trace them. =saved_interior_pair_keeps_child=
+models the alias that survives its outer head and acquires a newly
+installed child. A weak entry for the head cannot certify that its
+interior pair or the child's storage may be reused.
+
+=lib/setup.c:4940= sets the process minimum only. A later collection
+can provision more shared capacity according to the resize policy.
+=minimum_setter_grants_no_capacity= and
+=observed_capacity_can_be_consumed= distinguish a hint and a shared
+free-space observation from a reservation owned by this export. The
+locked =___heap_limit= admits sections as allocation proceeds. The
+internal =custom_msection_alloc_= selector runs after the free-space
+check and has no owner or extent argument. The nonzero collector
+argument is charged to still allocation. None of these entries hands
+out a reserved movable allocation for the ASCENT request. The unchanged
+million-row return requires 72,000,000 bytes of physical pair payload on
+this layout, before heap guards and collector accounting.
+
+See also [[file:graph-index-export/collector-and-allocation.org][the resize-history and still-allocation controls]].
+
+The native probe used the installed runtime, one VM processor, the
+original 2 GiB ceiling and a 90-second watchdog. The still pair stayed
+at its address across one collection. Its ordinary child moved and was
+read through the same field. The production =rows-of= probe kept only
+an interior pair. A weak table lost the outer head, the interior and
+one held input pair moved, both ordinary field mutations survived the
+next collection, and a subsequent export was independent. With the
+live percentage and ceiling fixed, the temporary minimum yielded
+295 mapped sections before the hint, 295 immediately after it, 873
+after collection, and 873 after restoring the old setting. All three
+Cases completed with the final =OK= and exit zero. These are mechanism
+controls. The full-list performance gate was not executed.

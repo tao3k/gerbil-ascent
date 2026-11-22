@@ -215,8 +215,10 @@
                (list #t (append chain second-chain) 1640)))))
 
     (test-case "ordinal pages preserve order and commit the buffer and cursor together"
-      (let* ((edges (append (map (lambda (i) (list i (+ i 1))) (iota 19))
-                     (map (lambda (i) (list (+ 100 (* 3 i)) (+ 103 (* 3 i)))) (iota 22))))
+      ;; The first run has varying gaps, so clipping must also work without
+      ;; an affine certificate. The ten-million-row cases cover that fast path.
+      (let* ((edges (append (map (lambda (i) (list (* i i) (* (+ i 1) (+ i 1)))) (iota 19))
+                     (map (lambda (i) (list (+ 1000 (* 3 i)) (+ 1003 (* 3 i)))) (iota 22))))
              (session (open-ordered-actor edges #t))
              (buffer (make-s64vector 23 -1)))
         (try

@@ -300,6 +300,42 @@ theorem measured_gc_floor (observations : List (Nat × Nat))
   apply RuntimeMeasurement.bounded_phase_misses_p95
   omega
 
+/-- A successful nonempty page has one owner interval and two handoffs.
+Oracle time is measured separately between returned pages. -/
+structure PagePhaseTicks where
+  send : Nat
+  receive : Nat
+  stageStart : Nat
+  stageEnd : Nat
+  copyStart : Nat
+  copyEnd : Nat
+  post : Nat
+  resumed : Nat
+
+theorem directly_measured_page_phases (t : PagePhaseTicks)
+    (sent : t.send ≤ t.receive) (entered : t.receive ≤ t.stageStart)
+    (staged : t.stageStart ≤ t.stageEnd) (beforeCopy : t.stageEnd ≤ t.copyStart)
+    (copied : t.copyStart ≤ t.copyEnd) (beforePost : t.copyEnd ≤ t.post)
+    (returned : t.post ≤ t.resumed) :
+    (t.receive - t.send) + (t.stageEnd - t.stageStart) +
+      (t.copyEnd - t.copyStart) + (t.resumed - t.post) ≤ t.resumed - t.send := by
+  omega
+
+/-- The producer clips the current window to the remaining page extent.
+It can resume at the resulting ordinal or advance to the next window. -/
+theorem clip_window_at_page_boundary (start stop room : Nat) (ordered : start ≤ stop) :
+    let n := min (stop - start) room
+    start + n ≤ stop ∧ n ≤ room ∧ (start + n = stop ∨ n = room) := by
+  simp only
+  omega
+
+/-- The two cursor directions start the next batch at the field after the
+last delivered row. The signed stride can be negative. -/
+theorem clipped_window_resume_field (first stride : Int) (windowStart consumed relative : Nat) :
+    first + (windowStart + consumed + relative : Nat) * stride =
+      (first + (windowStart : Int) * stride + (consumed : Int) * stride) + (relative : Int) * stride := by
+  simp [Int.add_mul, Int.add_assoc]
+
 section FrozenRuntime
 
 open RuleGraphClosure (Reachable)
@@ -364,3 +400,6 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.observed_capacity_can_be_consumed
 #print axioms Ascent.BoundedExport.commit_refusal_preserves_buffer_and_cursor
 #print axioms Ascent.BoundedExport.interleaved_scc_target_order
+#print axioms Ascent.BoundedExport.directly_measured_page_phases
+#print axioms Ascent.BoundedExport.clip_window_at_page_boundary
+#print axioms Ascent.BoundedExport.clipped_window_resume_field

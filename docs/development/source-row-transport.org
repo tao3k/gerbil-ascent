@@ -320,6 +320,51 @@ complete cardinality. The caller-buffer bound is 50 ms P95. The
 detached-list Suites retain their original 100 ms bound, output
 ownership and allocation path. Both use the 90-second watchdog.
 
+* Complete delivery at ten million rows
+:PROPERTIES:
+:CUSTOM_ID: complete-delivery-scale
+:END:
+
+=ten-million-query= in =benchmarks/actor-million-test.ss= chooses
+=1240 x 128= and =77 x 512= disjoint chains. Both cuts have a strictly
+increasing successor inside each chain. For every origin, all later
+vertices in its chain and only those vertices are reachable. The
+independent oracle checks range, forward order and chain membership,
+then marks one distinct slot per tuple and requires exact cardinality
+(=complete_oracle= and =recursive_gap_slot_exact=). It checks the
+actual detached list or caller vector supplied by the production
+entry point. The oracle builds no expected ASCENT result.
+
+=ten_million_delivery_profiles= fixes both source and output extents.
+This comparison changes input extent and maximum ordinal depth while
+holding the delivered row count within 0.06 percent. Read replacement
+and publication separately from delivery. Index capture and linking
+visit the input edges. The admitted ordinal walk visits each group's
+window at each live depth and emits all result pairs. The two
+fixtures have 157,480 and 39,347 group-depth windows respectively
+for the same roughly ten million outputs. This allows an
+optimization to be evaluated for width and source extent sensitivity
+alongside its per-result-row cost.
+
+Per output, a fresh mutable list owns three pairs per row, whereas
+the caller buffer holds two signed 64-bit cells per row. The modeled
+object words and buffer bytes in =ten_million_delivery_storage_bytes=
+give approximately 726 MB of list objects or 161 MB of buffer
+payload per request. These are layout counts. The heap also holds
+the input cuts, indexes, verifier, and runtime roots, and physically
+allocating a complete result must be verified under the measured
+2 GiB cap. The caller allocates one destination before the timed
+window and reuses it. Every list request obtains a fresh result.
+
+The timed request ID is =25 * shard + local-index=. The Lean bounds,
+coverage and uniqueness lemmas establish the partition of the
+1,000 requests. Using the global index parity keeps the two bands
+balanced even though each independent native process has an odd
+request count. The cold request is independently verified and
+excluded from the merged percentile. A publication-only
+observation and a limited first-origin read belong to the separate
+SCC benchmark.
+
 * POO reuse boundaries
 
 Yuanxu's pinned POO already provides persistent correlated table indexes

@@ -281,7 +281,64 @@ no P95 evidence; the fully timed million-row Suite remains required.
 See [[file:../docs/development/actor-state-cost.org][the source-cost model and native commands]] for the original limits, optional
 official caller compilation control, Lean obligations and Quint mutations.
 
-* Million-row production workloads
+* Ten-million-row complete delivery
+
+The main delivery comparison runs the same source replacements and positive
+closure rules for a caller-owned =s64vector= and a fresh mutable =rows-of=
+result. Each timed request individually delivers and independently verifies
+all rows. The graph has two predeclared shapes with similar result size.
+
+| Chains | Vertices per chain | Source facts per cut | Delivered rows per request |
+|--------+--------------------+----------------------+----------------------------|
+| 1,240  | 128                | 157,480              | 10,078,720                 |
+| 77     | 512                | 39,347               | 10,072,832                 |
+
+Use the standard =gerbil test= entry for one native Suite and one shard at a
+time. The selectors are =actor-ten-million-chains-128-list-test=,
+=actor-ten-million-chains-128-buffer-test=,
+=actor-ten-million-chains-512-list-test=, and
+=actor-ten-million-chains-512-buffer-test=. For timed comparison use the
+[[*Caller compilation control][caller compilation control]] for
+=actor-million-test.ss= and =actor-ten-million-test.ss= in the same output
+directory and pass the resulting =actor-ten-million-test.ssi= to
+=gerbil test=. Keep the artifact and loaded libraries fixed across the four
+lanes. The source entry is also available.
+
+#+begin_src sh
+gerbil compile -O -d .cache/ascent/ten-million-delivery \
+  benchmarks/actor-million-test.ss benchmarks/actor-ten-million-test.ss
+GERBIL_LOADPATH=".cache/ascent/ten-million-delivery${GERBIL_LOADPATH:+:$GERBIL_LOADPATH}" \
+  ASCENT_DELIVERY_SHARD=0 timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-ten-million-chains-128-list-test$' \
+  .cache/ascent/ten-million-delivery/gerbil-ascent-benchmarks/actor-ten-million-test.ssi
+#+end_src
+
+For each shape and delivery, run shard IDs 0 through 39, in serial native
+processes with a 2 GiB heap cap and 90-second watchdog each. Every process
+performs one untimed, fully checked cold query and then records 25 changed
+requests. Global request parity alternates the two disjoint source cuts.
+The cold query uses the opposite cut from the first timed request.
+Keep every failure receipt. A complete comparison requires one successful,
+naturally exited native test and one =ten-million-delivery= receipt for
+each planned shard ID and no missing or duplicate samples.
+
+For each shape and delivery, pool the 1,000 =request-latencies-ns= before
+taking nearest-rank P95. Compute rows per second from the sum of proven
+delivered rows divided by the sum of the measured shard windows. Sum the
+collection counts and GC CPU and wall seconds over those same windows.
+Per-shard percentiles are available for diagnosis. Preparation and the
+cold query are reported separately. The matched timer covers replacement,
+publication, all row delivery, and complete oracle verification. The
+merged result describes the fixed 25-request process windows.
+
+The large delivery fixtures establish a measured baseline before setting
+a latency target at that scale. The million-row list and buffer checks
+retain their original sample counts, bounds and failure evidence. The
+ten-million-row SCC cases above continue to measure publication and
+first-origin reads. See
+[[file:../docs/development/source-row-transport.org::#complete-delivery-scale][the ownership and algorithm cost model]].
+
+* Million-row regression workloads
 
 Run the native Suites independently; no benchmark executable, preliminary
 build or nested Scheme runner is required:

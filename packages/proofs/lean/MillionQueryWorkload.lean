@@ -301,6 +301,47 @@ theorem thousand_list_requests_gc_bound (observations : List (Nat × Nat))
   exact Nat.lt_of_le_of_lt (RuntimeMeasurement.bounded_phases_limit_fast_requests 50000000 observations)
     fastCollections
 
+/-- The two delivery fixtures target nearly the same output cardinality
+with different admitted source extents and maximum ordinal depth. -/
+theorem ten_million_delivery_profiles :
+    inputFacts 1240 128 = 157480 ∧ closureRows 1240 128 = 10078720 ∧
+    inputFacts 77 512 = 39347 ∧ closureRows 77 512 = 10072832 := by decide
+
+theorem ten_million_delivery_storage_bytes :
+    8 * projectionCopyWords (closureRows 1240 128) = 725667840 ∧
+    8 * projectionCopyWords (closureRows 77 512) = 725243904 ∧
+    16 * closureRows 1240 128 = 161259520 ∧
+    16 * closureRows 77 512 = 161165312 := by decide
+
+/-- Each independently launched shard produces its own 25 timed indices.
+The cold check is outside this sequence. Global index parity selects the cut. -/
+def tenMillionSampleIndex (shard localIndex : Nat) : Nat := 25 * shard + localIndex
+
+theorem ten_million_sample_in_range (shard localIndex : Nat)
+    (validShard : shard < 40) (validLocal : localIndex < 25) :
+    tenMillionSampleIndex shard localIndex < 1000 := by
+  unfold tenMillionSampleIndex
+  omega
+
+theorem ten_million_sample_location (globalIndex : Nat) (valid : globalIndex < 1000) :
+    ∃ shard localIndex, shard < 40 ∧ localIndex < 25 ∧
+      tenMillionSampleIndex shard localIndex = globalIndex := by
+  refine ⟨globalIndex / 25, globalIndex % 25, by omega, by omega, ?_⟩
+  simpa [tenMillionSampleIndex, Nat.add_comm] using Nat.mod_add_div globalIndex 25
+
+theorem ten_million_sample_unique (shard localIndex otherShard otherIndex : Nat)
+    (validLocal : localIndex < 25) (validOther : otherIndex < 25)
+    (same : tenMillionSampleIndex shard localIndex = tenMillionSampleIndex otherShard otherIndex) :
+    shard = otherShard ∧ localIndex = otherIndex := by
+  unfold tenMillionSampleIndex at same
+  omega
+
+theorem ten_million_sample_alternate_cut (shard localIndex : Nat) :
+    tenMillionSampleIndex shard localIndex % 2 = 0 ↔
+      localIndex % 2 = (25 * shard) % 2 := by
+  unfold tenMillionSampleIndex
+  omega
+
 end ProjectionCollector
 
 section FunctionalOriginOwnership

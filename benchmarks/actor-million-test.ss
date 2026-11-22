@@ -18,7 +18,7 @@
 (export actor-million-oracle-test actor-million-state-test
         actor-million-state-contention-test
         actor-million-query-test actor-million-recursive-test
-        million-query
+        million-query ten-million-query
         actor-ten-thousand-closure-test
         actor-million-list-delivery-test actor-million-visit-test
         actor-million-fields-test actor-million-fields-controls-test
@@ -228,7 +228,8 @@
           (cons 'run-gc-cpu-seconds (f64vector-ref cost 1))
           (cons 'run-natural-collections (f64vector-ref cost 2)))))
 
-(def (report-samples phase input output samples wall cpu before (delivered #f) (limit 100000000))
+(def (report-samples phase input output samples wall cpu before
+                     (delivered #f) (limit 100000000) (shard-info []))
   (let* ((after (##process-statistics))
          (ordered (list-sort < (f64vector->list samples)))
          (count (length ordered))
@@ -236,17 +237,22 @@
          (collections (- (f64vector-ref after 6) (f64vector-ref before 6)))
          (allocated (- (f64vector-ref after 7) (f64vector-ref before 7))))
     (receipt phase
-      (list (cons 'input-facts input) (cons 'exported-rows output)
-            (cons 'verified-requests count) (cons 'wall-ns wall) (cons 'cpu-seconds cpu)
-            (cons 'requests-per-second (/ (* count 1000000000.) wall))
-            (cons 'rows-per-second (/ (* (or delivered (* count output)) 1000000000.) wall))
-            (cons 'natural-collections collections)
-            (cons 'gc-wall-seconds (- (f64vector-ref after 5) (f64vector-ref before 5)))
-            (cons 'raw-allocation-counter-delta allocated)
-            (cons 'allocation-bytes (and (zero? collections) (>= allocated 0) allocated))
-            (cons 'p50-ns (list-ref ordered (quotient (- count 1) 2)))
-            (cons 'p95-ns p95) (cons 'max-ns (list-ref ordered (- count 1)))))
-    (check (< p95 limit) => #t)))
+      (append shard-info
+        (if (null? shard-info) []
+          (list (cons 'request-latencies-ns (f64vector->list samples))
+                (cons 'gc-cpu-seconds (+ (- (f64vector-ref after 3) (f64vector-ref before 3))
+                                         (- (f64vector-ref after 4) (f64vector-ref before 4))))))
+        (list (cons 'input-facts input) (cons 'exported-rows output)
+              (cons 'verified-requests count) (cons 'wall-ns wall) (cons 'cpu-seconds cpu)
+              (cons 'requests-per-second (/ (* count 1000000000.) wall))
+              (cons 'rows-per-second (/ (* (or delivered (* count output)) 1000000000.) wall))
+              (cons 'natural-collections collections)
+              (cons 'gc-wall-seconds (- (f64vector-ref after 5) (f64vector-ref before 5)))
+              (cons 'raw-allocation-counter-delta allocated)
+              (cons 'allocation-bytes (and (zero? collections) (>= allocated 0) allocated))
+              (cons 'p50-ns (list-ref ordered (quotient (- count 1) 2)))
+              (cons 'p95-ns p95) (cons 'max-ns (list-ref ordered (- count 1))))))
+    (when limit (check (< p95 limit) => #t))))
 
 (def (chain-shortcut group width offset)
   (let (first (+ offset (* group width)))
@@ -261,8 +267,8 @@
         (map (lambda (group) (chain-shortcut group width offset)) (iota groups)))
       base)))
 
-(def (million-query groups width recursive? shortcuts?: (shortcuts? #f)
-                    append-shortcuts?: (append-shortcuts? #f) copy-into: (copy-into #f))
+(def (measure-chain-query groups width recursive? shortcuts? append-shortcuts? copy-into
+                          requests latency-limit (shard #f))
   (check (##current-vm-processor-count) => 1)
   (when (or shortcuts? append-shortcuts?)
     (check (and recursive? (>= width 3)) => #t))
@@ -270,13 +276,17 @@
   (receipt 'prepare-start (list (cons 'groups groups) (cons 'width width)
                                (cons 'recursive recursive?)))
   (let* ((input (* groups (if shortcuts? width (- width 1))))
-         (capacity (if append-shortcuts? (+ input 1000) input))
+         (capacity (if append-shortcuts? (+ input requests) input))
          (output (if recursive? (output-count groups width) input))
          (span (* groups width))
          (begin (tick))
          (first (make-query-cut groups width 0 shortcuts?))
          (second (and (not append-shortcuts?) (make-query-cut groups width span shortcuts?)))
-         (session (open-session first groups width recursive? input-facts: capacity))
+         (first-request (if shard (* shard requests) 0))
+         (alternate-first? (even? first-request))
+         (initial (if alternate-first? first second))
+         (initial-offset (if alternate-first? 0 span))
+         (session (open-session initial groups width recursive? input-facts: capacity))
          (verify-rows (make-chain-verifier groups width recursive?))
          (deliver
           (and copy-into
@@ -285,13 +295,18 @@
                    (let (count (copy-into session 'reach buffer))
                      (unless (eqv? count output) (error "incomplete caller-buffer delivery" count))
                      buffer)))))
-         (samples (make-f64vector 1000 0.)))
+         (samples (make-f64vector requests 0.))
+         (shard-info (if shard
+                       (list (cons 'delivery (if deliver 'buffer 'list))
+                             (cons 'groups groups) (cons 'width width)
+                             (cons 'shard shard) (cons 'first-request first-request))
+                       [])))
     (try
       (receipt 'prepared (list (cons 'input-facts input) (cons 'expected-rows output)
                                (cons 'input-fact-capacity capacity)
                                (cons 'recursive recursive?) (cons 'wall-ns (nanoseconds begin))))
       (let (cost (make-f64vector 3 0.))
-        (let-values (((run-ns export-ns oracle-ns) (query session verify-rows 0 cost #f deliver)))
+        (let-values (((run-ns export-ns oracle-ns) (query session verify-rows initial-offset cost #f deliver)))
           (let (cold (+ run-ns export-ns))
             (receipt 'cold-complete-query
               (list (cons 'query-and-export-ns cold) (cons 'with-oracle-ns (+ cold oracle-ns))
@@ -302,8 +317,8 @@
             (replace-total 0) (run-total 0) (export-total 0) (oracle-total 0)
             (cost (make-f64vector 3 0.)))
         (let loop ((index 0))
-          (unless (= index 1000)
-            (let* ((use-second? (and second (even? index)))
+          (unless (= index requests)
+            (let* ((use-second? (and second (eq? (even? index) alternate-first?)))
                    (offset (if use-second? span 0))
                    (request (tick)))
               (if append-shortcuts?
@@ -322,12 +337,35 @@
               (report-query-work 'progress (+ index 1) replace-total run-total export-total
                 oracle-total (nanoseconds start) cost))
             (loop (+ index 1))))
-        (report-samples (cond (deliver 'changed-buffer-query)
-                              (append-shortcuts? 'appended-complete-query)
-                              (else 'changed-complete-query))
-          input output samples
-          (nanoseconds start) (- (cpu-time) cpu) before #f (if deliver 50000000 100000000)))
+        (let ((elapsed (nanoseconds start)) (used (- (cpu-time) cpu)))
+          (report-samples (cond (shard 'ten-million-delivery)
+                                (deliver 'changed-buffer-query)
+                                (append-shortcuts? 'appended-complete-query)
+                                (else 'changed-complete-query))
+            input output samples elapsed used before #f latency-limit shard-info)
+          (when shard
+            (report-query-work 'ten-million-phases requests replace-total run-total
+              export-total oracle-total elapsed cost))))
       (finally (gerbil-ascent-session-close! session)))))
+
+(def (million-query groups width recursive? shortcuts?: (shortcuts? #f)
+                    append-shortcuts?: (append-shortcuts? #f) copy-into: (copy-into #f))
+  (measure-chain-query groups width recursive? shortcuts? append-shortcuts? copy-into
+    1000 (if copy-into 50000000 100000000)))
+
+(def (ten-million-query width (copy-into #f))
+  (let ((groups (case width
+                  ((128) 1240)
+                  ((512) 77)
+                  (else (error "unsupported delivery chain width" width))))
+        (shard (string->number (getenv "ASCENT_DELIVERY_SHARD" "0"))))
+    (unless (and (fixnum? shard) (fx<= 0 shard) (fx< shard 40))
+      (error "ASCENT_DELIVERY_SHARD must be an integer from 0 to 39" shard))
+    (receipt 'ten-million-plan
+      (list (cons 'delivery (if copy-into 'buffer 'list))
+            (cons 'groups groups) (cons 'width width)
+            (cons 'shard shard) (cons 'planned-requests 25)))
+    (measure-chain-query groups width #t #f #f copy-into 25 #f shard)))
 
 (def actor-million-state-test
   (test-suite "million-row resident Session state"

@@ -300,6 +300,46 @@ theorem measured_gc_floor (observations : List (Nat × Nat))
   apply RuntimeMeasurement.bounded_phase_misses_p95
   omega
 
+/-- Request phases use clock endpoints in the same request. Count export
+GC within the delivery interval. -/
+theorem whole_list_phase_bounds (start replaced published delivered verified stopped exportGc : Nat)
+    (replacement : start ≤ replaced) (publication : replaced ≤ published)
+    (delivery : published ≤ delivered) (verification : delivered ≤ verified)
+    (receipt : verified ≤ stopped) (gcInside : exportGc ≤ delivered - published) :
+    (replaced - start) + (published - replaced) +
+        ((delivered - published - exportGc) + exportGc) + (verified - delivered) ≤ stopped - start := by
+  omega
+
+/-- The release counter is accepted only within one accounting epoch,
+and only if its endpoint is monotone. Other deltas are diagnostic. -/
+def observedAllocation (before after : Nat) (rawBefore rawAfter : Int) : Option Nat :=
+  if before = after ∧ rawBefore ≤ rawAfter then some (rawAfter - rawBefore).toNat else none
+
+theorem observed_allocation_valid {before after : Nat} {rawBefore rawAfter : Int} {bytes : Nat}
+    (valid : observedAllocation before after rawBefore rawAfter = some bytes) :
+    before = after ∧ rawAfter = rawBefore + bytes := by
+  unfold observedAllocation at valid
+  split at valid
+  next monotone =>
+    have diff : 0 ≤ rawAfter - rawBefore := by omega
+    have value := Option.some.inj valid
+    exact ⟨monotone.1, by omega⟩
+  next => contradiction
+
+/-- Keep the collection interval and the separately timed oracle fixed.
+The managed request phases can only add time to this lower bound. -/
+theorem whole_list_preserved_phases_limit (observations : List (Nat × Nat × Nat)) (bound : Nat)
+    (slow : 20 * (observations.filter fun t => decide (t.1 + t.2.1 < bound)).length <
+      19 * observations.length) :
+    ¬ (19 * observations.length ≤ 20 *
+      (observations.filter fun t => decide (t.1 + t.2.1 + t.2.2 < bound)).length) := by
+  let phases := observations.map fun t => (t.1 + t.2.1, t.2.2)
+  have phasesSlow : 20 * (phases.filter fun t => decide (t.1 < bound)).length <
+      19 * phases.length := by
+    simpa [phases, List.filter_map, Function.comp_def] using slow
+  simpa [phases, List.filter_map, Function.comp_def] using
+    (RuntimeMeasurement.bounded_phase_misses_p95 bound phases phasesSlow)
+
 /-- A successful nonempty page has one owner interval and two handoffs.
 Oracle time is measured separately between returned pages. -/
 structure PagePhaseTicks where
@@ -448,6 +488,9 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.rectangle_cross_component_sound
 #print axioms Ascent.BoundedExport.projection_path_is_edge
 #print axioms Ascent.BoundedExport.measured_gc_floor
+#print axioms Ascent.BoundedExport.whole_list_phase_bounds
+#print axioms Ascent.BoundedExport.observed_allocation_valid
+#print axioms Ascent.BoundedExport.whole_list_preserved_phases_limit
 #print axioms Ascent.BoundedExport.saved_interior_pair_keeps_child
 #print axioms Ascent.BoundedExport.observed_capacity_can_be_consumed
 #print axioms Ascent.BoundedExport.commit_refusal_preserves_buffer_and_cursor

@@ -401,3 +401,28 @@ Actor handoff averaged about 2 us.
 Without probes, 1,000 verified requests per width gave first-page P95
 of 15.70/4.66 ms and complete P95 of 94.46/77.70 ms. Throughput reached
 165.94/210.68 million rows per second for widths 128/512.
+
+** Individual requests at the mutable-list gate
+
+=query= in =benchmarks/actor-million-test.ss= reads the completed
+snapshot through =rows-of= before invoking the independent oracle.
+Capture replacement, publication, delivery and oracle clocks on the
+same request. Count delivery GC inside the delivery interval.
+=whole_list_phase_bounds= checks the endpoint accounting and
+=observed_allocation_valid= accepts only monotone allocation deltas
+without a collection. The release gate reported 108.89 ms P95 and
+219 collections across 1,000 requests.
+
+The diagnostic verified all 1,000 outputs. Its P95 request took
+110.49 ms, including 102.44 ms in delivery. Delivery GC took 100.42 ms,
+and the oracle took 6.03 ms. With delivery GC and oracle durations held
+fixed, only 872 requests could meet 100 ms even if all other work were
+free. =whole_list_preserved_phases_limit= checks this bound.
+
+All 782 collection-free deliveries counted 144,002,400 allocation
+units. The three fresh pairs per row account for 144,000,000 in the
+release counter's doubled units, leaving 2,400 for the envelope and
+probes. The production view already constructs the detached list
+directly from affine descriptors. The fixed-layout evidence supports
+keeping that path. The uninstrumented replay verified all 1,000 outputs
+and missed the original gate at 109.01 ms P95.

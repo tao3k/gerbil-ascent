@@ -33,6 +33,7 @@ pyo3 = { version = "=0.27.2", features = ["abi3-py310", "num-bigint"] }
 [profile.dev]
 opt-level = 2
 debug = 2
+incremental = true
 debug-assertions = true
 overflow-checks = true
 

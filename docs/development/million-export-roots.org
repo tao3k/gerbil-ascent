@@ -263,6 +263,38 @@ units. They give neither an object-by-object scan trace nor the number
 of bytes physically copied. The native acceptance run uses the release
 runtime and exporter with the diagnostic hooks absent.
 
+* Fifty-millisecond feasibility for the detached list
+
+The two standard list Suites call =rows-of= on the published capture.
+The affine exporter in =program/source-cut.ss= prepends one complete
+two-field row per ordinal. The recursive fixture uses
+=export-ordinal-runs= in =program/component-worker.ss=, with one
+32-bit active-run entry per chain and one complete two-field row per
+reachability pair. Neither exporter builds a second full row table
+before delivery. The affine pending and committed views retain numeric
+descriptors. The recursive active-run storage contains 128 entries
+for the 128-chain fixture.
+
+Each fresh result owns its outer pair and both inner pairs per row.
+Mutating one returned row must leave every other row, captured input
+and future result intact. With the measured 64-bit, three-word pair
+layout, =detached_million_list_footprints= gives 9,000,000 object words
+for projection and 9,363,456 for recursion. The recursive run cursor
+adds 512 payload bytes. These counts describe the object layout.
+Allocation counters, live-byte accounting, and physical collector
+scans are separate measurements.
+
+For each complete request, separate export-collector wall time from
+the remainder of the request. The strict 50 ms nearest-rank P95 for
+1,000 samples requires at least 950 individual requests below 50 ms.
+=thousand_list_requests_gc_bound= applies the existing phase bound:
+if fewer than 950 measured collection intervals qualify, even zero
+non-collector time would miss the target with those same intervals.
+This conclusion is conditional on the observed collection schedule.
+A different allocation path can change collection placement and
+duration, so the diagnostic is kept separate from the original native
+acceptance run and its 100 ms / 90-second limits.
+
 * Upstream Ascent with Rayon on the same two workloads
 
 The upstream =ascent_par!= variant selects the default Rayon pool and

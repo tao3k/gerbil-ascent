@@ -284,6 +284,23 @@ theorem affine_ordered_fallback_shares_row_cells (rows : Nat) (newestForced : Bo
     affineFallbackPairWords rows newestForced true = projectionCopyWords rows + 3 * rows := by
   simp [affineFallbackPairWords]
 
+/-- A complete mutable list has one outer pair and two inner pairs
+per row. These are object words at three words per pair. The collector's
+accounting and the allocator's reserve are separate. -/
+theorem detached_million_list_footprints :
+    projectionCopyWords (inputFacts 1000000 2) = 9000000 ∧
+      projectionCopyWords (closureRows 128 128) = 9363456 := by decide
+
+/-- Each pair is one enclosed collection interval (zero when absent)
+and the nonnegative remainder of that same request. When fewer than
+950 collection intervals fit, reducing the non-collector work alone
+cannot establish a strict 50 ms nearest-rank P95 for these observations. -/
+theorem thousand_list_requests_gc_bound (observations : List (Nat × Nat))
+    (fastCollections : (observations.filter (fun sample => decide (sample.1 < 50000000))).length < 950) :
+    (observations.filter (fun sample => decide (sample.1 + sample.2 < 50000000))).length < 950 := by
+  exact Nat.lt_of_le_of_lt (RuntimeMeasurement.bounded_phases_limit_fast_requests 50000000 observations)
+    fastCollections
+
 end ProjectionCollector
 
 section FunctionalOriginOwnership

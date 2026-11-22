@@ -487,3 +487,45 @@ verified all 80 shards. First-page P95 was 4.47/1.63 ms and complete
 P95 was 74.44/74.33 ms. The 512 complete P95 exceeded the reference
 in these runs, and its measured collections rose from 40 to 80.
 The million-row mutable-list failure remains on record.
+
+** Packed view roots and collection timing
+
+=source-cut-alternate= retains one packed backing. Its functional view
+retains two integer field vectors, the successor vector, dense origin
+slots and run bounds. The current backing and Result independently
+retain their views. =dense_functional_payload_bound= counts the dense
+array payload in the 64-bit layout. =exclusive_alternate_roots= isolates
+the edge whose removal can release the alternate's view. The unordered
+chain fixture also retains the alternate's 16-byte-per-edge packed
+source, introduced when exact unordered captures became reusable.
+The retaining edge is in [[file:../../program/source-cut.ss][source-cut.ss]],
+the publication installs the view in [[file:../../program/actor-session.ss][actor-session.ss]],
+and [[file:../../program/component-worker.ss][component-worker.ss]] allocates the dense lanes.
+
+Sample the collection counter across replacement, publication, cursor
+creation and delivery. A post-collection hook records the phase where
+the hook runs, the last collection duration and live accounting.
+=paged_collection_phase_counts= checks the outer counter partition.
+
+At width 512 the alternate backing and dense view carry 1,574,808
+payload bytes (=width_512_alternate_payload=). The natural collection
+probe recorded 1,574,432 additional still-accounting bytes. Each
+production-flag arm collected four times over 100 verified requests.
+All collections fell within delivery, with the hook observed in the
+send-to-dispatch interval. The reference collected at zero-based
+request 8 in each shard, and the cache arm at request 10. The median
+pauses were 28.09 and 27.37 ms, respectively.
+
+Pair =7e25fd26= with =0c607ca7= using the same staging Gerbil, production
+C flags, fixture, and native test. Alternate the run order by shard.
+Each width and arm verifies 1,000 requests against the unchanged oracle.
+
+| Width | First-page P95 (ms) | Complete P95 (ms) | Timed collections | GC wall (s) |
+|-------+---------------------+-------------------+-------------------+-------------|
+|   128 | 16.584 -> 2.196     | 63.599 -> 50.331  | 40 -> 0           | 1.378 -> 0 |
+|   512 | 4.160 -> 0.976      | 57.145 -> 46.233  | 40 -> 40          | 1.138 -> 1.179 |
+
+All 160 shards exited within 6.29 s. The earlier 512 regression and
+collection increase did not recur in this matched comparison. The
+earlier runs lack per-request collection timing under matched module
+builds, so the cause of that increase remains undetermined.

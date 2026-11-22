@@ -467,6 +467,42 @@ theorem rejected_run_preserves_functional_cache (accepted current : Bool)
   · simp [installFunctionalCache, rejected]
   · simp [installFunctionalCache, stale]
 
+/-- The dense functional view retains two u64 lanes, one s32 successor
+lane, an s32 origin lookup and the run boundary vector. Count payload in
+the 64-bit layout, separately from closures and collector accounting. -/
+def denseFunctionalPayload (edges extent runs : Nat) : Nat :=
+  20 * edges + 4 * extent + 8 * (runs + 1)
+
+theorem dense_functional_payload_bound (edges extent runs : Nat) (dense : extent ≤ 2 * edges) :
+    denseFunctionalPayload edges extent runs ≤ 28 * edges + 8 * (runs + 1) := by
+  unfold denseFunctionalPayload
+  omega
+
+theorem width_512_alternate_payload :
+    16 * (77 * 511) + denseFunctionalPayload (77 * 511) (77 * 512 - 1) 77 = 1574808 := by
+  decide
+
+/-- An alternate cache edge contributes only objects that are unreachable
+from the current publication and every other retained root. -/
+theorem exclusive_alternate_roots {Object : Type} (retained alternate : Object → Prop)
+    (object : Object) :
+    ((retained object ∨ alternate object) ∧ ¬ retained object) ↔
+      alternate object ∧ ¬ retained object := by
+  constructor
+  · rintro ⟨known | extra, absent⟩
+    · exact False.elim (absent known)
+    · exact ⟨extra, absent⟩
+  · exact fun h => ⟨Or.inr h.1, h.2⟩
+
+/-- A monotone collection counter sampled at phase boundaries counts each
+collection once, including collections before the first page. -/
+theorem paged_collection_phase_counts (before replaced published opened done : Nat)
+    (replaceOrder : before ≤ replaced) (publishOrder : replaced ≤ published)
+    (openOrder : published ≤ opened) (doneOrder : opened ≤ done) :
+    (replaced - before) + (published - replaced) + (opened - published) +
+      (done - opened) = done - before := by
+  omega
+
 /-- The producer clips the current window to the remaining page extent.
 It can resume at the resulting ordinal or advance to the next window. -/
 theorem clip_window_at_page_boundary (start stop room : Nat) (ordered : start ≤ stop) :
@@ -557,5 +593,9 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.prepend_chain_groups_matches_release
 #print axioms Ascent.BoundedExport.packed_functional_cache_exact
 #print axioms Ascent.BoundedExport.rejected_run_preserves_functional_cache
+#print axioms Ascent.BoundedExport.dense_functional_payload_bound
+#print axioms Ascent.BoundedExport.width_512_alternate_payload
+#print axioms Ascent.BoundedExport.exclusive_alternate_roots
+#print axioms Ascent.BoundedExport.paged_collection_phase_counts
 #print axioms Ascent.BoundedExport.clip_window_at_page_boundary
 #print axioms Ascent.BoundedExport.clipped_window_resume_field

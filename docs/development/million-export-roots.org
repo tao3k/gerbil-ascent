@@ -376,3 +376,28 @@ Without probes, complete P95 fell to 102.42/80.94 ms and throughput rose
 to 138.86/196.41 million rows per second. First-page P95 rose to 34.69 ms
 at width 128 and fell to 8.74 ms at width 512. Both widths again passed
 1,000 requests with every field checked.
+
+** First-page timing
+
+=ten-million-paged-query= starts the clock before source replacement.
+Time replacement, run/publication and cursor creation separately. On
+the first pull, bracket the stride check and page writes in =stage=,
+the send and receive in the Actor, and the destination copy at commit.
+=first_page_phase_bounds= checks that these intervals do not overlap.
+
+The functional linker already reads every successor before publication.
+=ordinal_link_stream_matches_saved_scan= checks that folding direction
+over those successors agrees with scanning the saved vector. The same
+terminal positions delimit the windows in both directions.
+
+For width 128, 200 matched requests show a 1.54 ms median first-page
+increase and 1.61 ms of new median stride validation. The longest
+pauses coincided with GC during replacement or publication. Across
+100 matched requests, classifying links during construction and using
+direct vector accesses reduced mean run/publication from 19.14 to
+12.46 ms and mean stride validation from 1.60 to 0.26 ms. First-pull
+Actor handoff averaged about 2 us.
+
+Without probes, 1,000 verified requests per width gave first-page P95
+of 15.70/4.66 ms and complete P95 of 94.46/77.70 ms. Throughput reached
+165.94/210.68 million rows per second for widths 128/512.

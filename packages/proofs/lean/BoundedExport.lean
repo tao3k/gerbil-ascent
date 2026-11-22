@@ -321,6 +321,58 @@ theorem directly_measured_page_phases (t : PagePhaseTicks)
       (t.copyEnd - t.copyStart) + (t.resumed - t.post) ≤ t.resumed - t.send := by
   omega
 
+/-- Source replacement and publication precede opening the cursor. The first
+pull's validation and writes occupy disjoint subintervals of staging. -/
+theorem first_page_phase_bounds (started replaced published opened : Nat) (t : PagePhaseTicks)
+    (checkStart checkEnd writeStart writeEnd : Nat)
+    (replaceOrder : started ≤ replaced) (publishOrder : replaced ≤ published)
+    (openOrder : published ≤ opened) (sent : opened ≤ t.send) (received : t.send ≤ t.receive)
+    (entered : t.receive ≤ t.stageStart) (beforeCheck : t.stageStart ≤ checkStart)
+    (checked : checkStart ≤ checkEnd) (beforeWrite : checkEnd ≤ writeStart)
+    (written : writeStart ≤ writeEnd) (afterWrite : writeEnd ≤ t.stageEnd)
+    (beforeCopy : t.stageEnd ≤ t.copyStart) (copied : t.copyStart ≤ t.copyEnd)
+    (beforePost : t.copyEnd ≤ t.post) (returned : t.post ≤ t.resumed) :
+    (replaced - started) + (published - replaced) + (opened - published) +
+      (t.receive - t.send) + (checkEnd - checkStart) + (writeEnd - writeStart) +
+      (t.copyEnd - t.copyStart) + (t.resumed - t.post) ≤ t.resumed - started := by
+  omega
+
+/-- Here none rejects ordinal runs and zero awaits the first nonterminal
+successor. Other directions must agree with every observed step. -/
+def observeOrdinalLink (direction : Option Int) (link : Nat × Int) : Option Int :=
+  if link.2 < 0 then direction
+  else direction.bind fun current =>
+    let step := link.2 - (link.1 : Int)
+    if (step = 1 ∨ step = -1) ∧ (current = 0 ∨ current = step)
+    then some step else none
+
+theorem ordinal_link_matches_scan (direction : Option Int) (origin : Nat) (target : Int)
+    (nonterminal : 0 ≤ target) :
+    observeOrdinalLink direction (origin, target) =
+      direction.bind (fun previous =>
+        if (target = (origin : Int) + 1 ∨ target = (origin : Int) - 1) ∧
+          (previous = 0 ∨ target = (origin : Int) + previous)
+        then some (target - (origin : Int)) else none) := by
+  cases direction with
+  | none => simp [observeOrdinalLink, show ¬ target < 0 by omega]
+  | some previous =>
+    simp only [observeOrdinalLink, show ¬ target < 0 by omega, ite_false, Option.bind_some]
+    have admissible : (target - (origin : Int) = 1 ∨ target - (origin : Int) = -1) ∧
+          (previous = 0 ∨ previous = target - (origin : Int)) ↔
+        (target = (origin : Int) + 1 ∨ target = (origin : Int) - 1) ∧
+          (previous = 0 ∨ target = (origin : Int) + previous) := by omega
+    simp [admissible]
+
+theorem ordinal_link_stream_matches_saved_scan {α : Type}
+    (link : α → Nat × Int) (rows : List α) (direction : Option Int) :
+    rows.foldl (fun current row => observeOrdinalLink current (link row)) direction =
+      (rows.map link).foldl observeOrdinalLink direction := by
+  induction rows generalizing direction with
+  | nil => rfl
+  | cons row rest ih =>
+    simp only [List.foldl_cons, List.map_cons]
+    exact ih _
+
 /-- The producer clips the current window to the remaining page extent.
 It can resume at the resulting ordinal or advance to the next window. -/
 theorem clip_window_at_page_boundary (start stop room : Nat) (ordered : start ≤ stop) :
@@ -401,5 +453,8 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.commit_refusal_preserves_buffer_and_cursor
 #print axioms Ascent.BoundedExport.interleaved_scc_target_order
 #print axioms Ascent.BoundedExport.directly_measured_page_phases
+#print axioms Ascent.BoundedExport.first_page_phase_bounds
+#print axioms Ascent.BoundedExport.ordinal_link_matches_scan
+#print axioms Ascent.BoundedExport.ordinal_link_stream_matches_saved_scan
 #print axioms Ascent.BoundedExport.clip_window_at_page_boundary
 #print axioms Ascent.BoundedExport.clipped_window_resume_field

@@ -214,6 +214,24 @@
                (list #t nonuniform 820)
                (list #t (append chain second-chain) 1640)))))
 
+    (test-case "mixed and nonadjacent successor ordinals keep the functional fallback"
+      (let* ((origins (map (lambda (i) (* i 4)) (iota 20)))
+             (first (map (lambda (x) (list x (+ x 1))) origins))
+             (second (map (lambda (x) (list (+ x 1) (+ x 2))) origins))
+             (expected (append first second (map (lambda (x) (list x (+ x 2))) origins))))
+        (for-each
+         (lambda (edges)
+           (let (session (open-ordered-actor edges #t))
+             (try
+               (let (result (gerbil-ascent-session-run session))
+                 (check-equal? (same? ((.ref result 'rows-of) 'reach) expected) #t)
+                 (check-equal? (gerbil-ascent-session-open-integer-pages session 'reach 11 60) #f))
+               (finally (gerbil-ascent-session-close! session)))))
+         (list (append first second)
+               (apply append
+                 (map (lambda (i left right) (if (even? i) (list left right) (list right left)))
+                   (iota 20) first second))))))
+
     (test-case "ordinal pages preserve order and commit the buffer and cursor together"
       ;; The first run has varying gaps, so clipping must also work without
       ;; an affine certificate. The ten-million-row cases cover that fast path.

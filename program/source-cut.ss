@@ -18,8 +18,10 @@
         gerbil-ascent-source-cut-export-mask gerbil-ascent-source-cut-initial-lane
         gerbil-ascent-source-cut-terminal-slot gerbil-ascent-source-cut-edit-edge
         source-slot-newest-first source-slot-count source-slot-view source-slot-rows
-        source-slot-binary-visitor source-slot-validated-binary-view source-slot-packed-extra)
-(defstruct source-slot (lane rows count scalar? view cells journal) final: #t)
+        source-slot-binary-visitor source-slot-validated-binary-view source-slot-packed-extra
+        source-slot-functional-view source-slot-cache-functional-view!)
+(defstruct source-slot (lane rows count scalar? view backing journal) final: #t)
+(defstruct packed-source-backing (cells ascending? ordered? functional-view) final: #t)
 (defstruct edge-journal (base hidden offsets appended next) final: #t)
 (defstruct source-change (position rows count affine) final: #t)
 (defstruct affine-source (count left right left-stride right-stride) final: #t)
@@ -190,20 +192,31 @@
 
 ;; Copy the admitted occurrence stream into private cells. A mismatch takes
 ;; the ordinary capture route before the new slot can be installed.
-(def (make-packed-source-slot cells count ascending? (ordered? #t))
-  (let (lane (delay-atomic (packed-source-lane cells)))
+(def (make-packed-source-slot (backing :- packed-source-backing) count)
+  (let* ((cells backing.cells) (lane (delay-atomic (packed-source-lane cells))))
     (make-source-slot lane (delay-atomic (reverse (force lane))) count #t
-      (and ordered? (packed-source-view cells count ascending?)) cells #f)))
+      (and backing.ordered? (packed-source-view cells count backing.ascending?))
+      backing #f)))
+
+(def (source-slot-cells (slot :- source-slot))
+  (and slot.backing (packed-source-backing-cells slot.backing)))
+
+(def (source-slot-functional-view (slot :- source-slot))
+  (and slot.backing (packed-source-backing-functional-view slot.backing)))
+
+;; The Actor owner installs this only after accepting a complete Result.
+(def (source-slot-cache-functional-view! (slot :- source-slot) view)
+  (when slot.backing (packed-source-backing-functional-view-set! slot.backing view)))
 
 ;; Only the terminal worker calls this after validating distinct source rows.
 (def (source-slot-validated-binary-view (slot :- source-slot))
-  (let (cells slot.cells)
+  (let (cells (source-slot-cells slot))
     (and cells (packed-source-view cells slot.count #f #f))))
 
 ;; Internal reader for the recursive index builder. Unordered cells never
 ;; establish membership or publish a unique source relation on their own.
 (def (source-slot-binary-visitor (slot :- source-slot))
-  (let ((cells slot.cells) (view slot.view))
+  (let ((cells (source-slot-cells slot)) (view slot.view))
     (cond
      (cells
       (lambda (consume)
@@ -309,7 +322,7 @@
 ;; ordered splice and verify the full suffix before returning the edit.
 (def (source-slot-packed-extra (long :- source-slot) (short :- source-slot) checkpoint!
                               (locate-successor? #f))
-  (let ((more long.cells) (less short.cells))
+  (let ((more (source-slot-cells long)) (less (source-slot-cells short)))
     (and more less
          (let (end (s64vector-length less))
            (def (same-row? i j)
@@ -352,8 +365,10 @@
     (let capture ((rest rows) (i 0) (last #f) (direction 0))
       (if (fx= i size)
         (and (null? rest)
-             (make-packed-source-slot cells count
-               (eqv? direction 1) (not (eq? direction 'unordered))))
+             (make-packed-source-slot
+               (make-packed-source-backing cells (eqv? direction 1)
+                 (not (eq? direction 'unordered)) #f)
+               count))
         (and (pair? rest)
              (let (row (car rest))
                (and (pair? row) (pair? (cdr row)) (null? (cddr row))
@@ -378,12 +393,15 @@
 (def (try-packed-source-slot rows count (current #f) (alternate #f) (recursive-source? #f))
   (and (fixnum? count) (<= 32 count #x3fffffff) (fixnum? (* count 2))
        (let* ((size (fx* count 2))
-              (reused (cond ((same-packed-source? rows current size) current)
-                            ((same-packed-source? rows alternate size) alternate)
+              (reused (cond ((and current
+                                  (same-packed-source? rows (packed-source-backing-cells current) size))
+                             current)
+                            ((and alternate
+                                  (same-packed-source? rows (packed-source-backing-cells alternate) size))
+                             alternate)
                             (else #f))))
          (if reused
-           (make-packed-source-slot reused count
-             (fx< (##s64vector-ref reused 0) (##s64vector-ref reused 2)))
+           (make-packed-source-slot reused count)
            (capture-packed-source-slot rows size count recursive-source?)))))
 
 (def (source-position positions name)
@@ -528,20 +546,22 @@
              (let* ((input (source-change-rows entry))
                     (packed
                      (and (eqv? packed-source position)
-                          (let* ((current (and (source-slot-view previous) (source-slot-cells previous)))
+                          (let* ((current (source-slot-backing previous))
                                  (new (cond
                                        ((source-change-affine entry) => affine-source-slot)
                                        ((not append?)
                                         (try-packed-source-slot input (source-change-count entry)
                                           current alternate recursive-source?))
                                        (else #f)))
-                                 (next-cells (and new (source-slot-cells new))))
+                                 (next-backing (and new (source-slot-backing new))))
                             ;; Affine slots own only their numeric descriptor.
                             ;; An older packed backing remains owned by any held cut.
                             (set! alternate
-                              (cond ((not next-cells) #f)
-                                    ((eq? current next-cells) alternate)
-                                    ((and current (<= (s64vector-length current) (* 2 1024 1024)))
+                              (cond ((not next-backing) #f)
+                                    ((eq? current next-backing) alternate)
+                                    ((and current
+                                          (<= (s64vector-length (packed-source-backing-cells current))
+                                              (* 2 1024 1024)))
                                      current)
                                     (else #f)))
                             new))))

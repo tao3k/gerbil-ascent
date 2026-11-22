@@ -361,6 +361,17 @@ theorem directly_measured_page_phases (t : PagePhaseTicks)
       (t.copyEnd - t.copyStart) + (t.resumed - t.post) ≤ t.resumed - t.send := by
   omega
 
+/-- Pull clocks enclose the two Actor handoffs, staging and the commit
+copy. The independent oracle has disjoint intervals between pulls. -/
+theorem paged_request_phase_bounds
+    (replace publish openCursor handoff stage copy pulls oracle elapsed gc : Nat)
+    (insidePulls : handoff + stage + copy ≤ pulls)
+    (insideRequest : replace + publish + openCursor + pulls + oracle ≤ elapsed)
+    (gcInside : gc ≤ elapsed) :
+    replace + publish + openCursor + handoff + stage + copy + oracle ≤ elapsed ∧
+      gc ≤ elapsed := by
+  omega
+
 /-- Source replacement and publication precede opening the cursor. The first
 pull's validation and writes occupy disjoint subintervals of staging. -/
 theorem first_page_phase_bounds (started replaced published opened : Nat) (t : PagePhaseTicks)
@@ -432,6 +443,29 @@ theorem prepend_chain_groups_matches_release (ascending : Nat → List Row) (gro
   | zero => rfl
   | succ groups ih =>
     simp [prependChainGroups, ih, releaseChainCut, List.range_succ, List.append_assoc]
+
+/-- A packed source match compares the entire ordered occurrence stream.
+An admitted functional view is a deterministic function of that stream.
+The receiving run still checks its current output budget. -/
+theorem packed_functional_cache_exact (build : List Row → List Row)
+    (captured requested cached : List Row) (room : Nat)
+    (matched : requested = captured) (computed : cached = build captured) :
+    (if cached.length ≤ room then some cached else none) =
+      (if (build requested).length ≤ room then some (build requested) else none) := by
+  rw [matched, computed]
+
+/-- The memo is written at the same acceptance point as the publication.
+The previous memo survives a refused or stale publication. -/
+def installFunctionalCache (accepted current : Bool) (before : Option View) (prepared : View) :
+    Option View :=
+  if accepted && current then some prepared else before
+
+theorem rejected_run_preserves_functional_cache (accepted current : Bool)
+    (before : Option View) (prepared : View) (refused : accepted = false ∨ current = false) :
+    installFunctionalCache accepted current before prepared = before := by
+  rcases refused with rejected | stale
+  · simp [installFunctionalCache, rejected]
+  · simp [installFunctionalCache, stale]
 
 /-- The producer clips the current window to the remaining page extent.
 It can resume at the resulting ordinal or advance to the next window. -/
@@ -516,9 +550,12 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.commit_refusal_preserves_buffer_and_cursor
 #print axioms Ascent.BoundedExport.interleaved_scc_target_order
 #print axioms Ascent.BoundedExport.directly_measured_page_phases
+#print axioms Ascent.BoundedExport.paged_request_phase_bounds
 #print axioms Ascent.BoundedExport.first_page_phase_bounds
 #print axioms Ascent.BoundedExport.ordinal_link_matches_scan
 #print axioms Ascent.BoundedExport.ordinal_link_stream_matches_saved_scan
 #print axioms Ascent.BoundedExport.prepend_chain_groups_matches_release
+#print axioms Ascent.BoundedExport.packed_functional_cache_exact
+#print axioms Ascent.BoundedExport.rejected_run_preserves_functional_cache
 #print axioms Ascent.BoundedExport.clip_window_at_page_boundary
 #print axioms Ascent.BoundedExport.clipped_window_resume_field

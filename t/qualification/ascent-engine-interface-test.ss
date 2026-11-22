@@ -232,6 +232,40 @@
                  (map (lambda (i left right) (if (even? i) (list left right) (list right left)))
                    (iota 20) first second))))))
 
+    (test-case "packed cuts reuse the functional view with fresh page versions"
+      (def (chain base)
+        (map (lambda (i) (list (+ base i) (+ base i 1))) (reverse (iota 19))))
+      (def (copier result)
+        ((.ref result 'with-ordered-binary-fields) 'reach
+          (lambda (_count _visit copy!) copy!) #t))
+      (let* ((left (chain 0)) (right (chain 40))
+             (first (append left right))
+             (second (append (chain 80) (chain 120)))
+             (session (open-ordered-actor first #t))
+             (buffer (make-s64vector 22)))
+        (def (publish input)
+          (gerbil-ascent-session-replace-source! session 'edge input)
+          (gerbil-ascent-session-run session))
+        (try
+          (let* ((initial (gerbil-ascent-session-run session))
+                 (expected ((.ref initial 'rows-of) 'reach))
+                 (cursor (gerbil-ascent-session-open-integer-pages session 'reach 11 380)))
+            (publish second)
+            (let ((again (publish first))
+                  (previous-copy (copier initial)))
+              (check-equal? (procedure? previous-copy) #t)
+              (check-equal? (eq? (copier again) previous-copy) #t)
+              (check-equal? (eq? initial again) #f)
+              (check-equal? ((.ref again 'rows-of) 'reach) expected)
+              (check-exception (gerbil-ascent-session-pull-integer-page! session cursor buffer) true)
+              (let* ((reordered (publish (append right left)))
+                     (ordered ((.ref reordered 'rows-of) 'reach)))
+                (check-equal? (eq? (copier reordered) previous-copy) #f)
+                (check-equal? (equal? ordered expected) #f)
+                (check-equal? (same? ordered expected) #t)
+                (check-equal? ((.ref initial 'rows-of) 'reach) expected))))
+          (finally (gerbil-ascent-session-close! session)))))
+
     (test-case "ordinal pages preserve order and commit the buffer and cursor together"
       ;; The first run has varying gaps, so clipping must also work without
       ;; an affine certificate. The ten-million-row cases cover that fast path.

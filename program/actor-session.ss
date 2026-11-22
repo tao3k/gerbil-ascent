@@ -17,7 +17,8 @@
                  gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update
                  gerbil-ascent-source-cut-terminal-slot gerbil-ascent-source-cut-edit-edge
                  source-slot-newest-first source-slot-count source-slot-view source-slot-rows
-                 source-slot-binary-visitor source-slot-validated-binary-view source-slot-packed-extra)
+                 source-slot-binary-visitor source-slot-validated-binary-view source-slot-packed-extra
+                 source-slot-functional-view source-slot-cache-functional-view!)
         (only-in "component-worker.ss" gerbil-ascent-functional-result-view
                  gerbil-ascent-branching-result-view gerbil-ascent-replay-branching-frontier)
         (only-in "condensed-closure.ss" gerbil-ascent-condense-closure
@@ -174,7 +175,7 @@
     (and source
          (let* ((count (source-slot-count source))
                 (room (min derived-limit (- output-limit count)))
-                (validated-view #f) (condensed #f) (update-kind #f)
+                (validated-view #f) (condensed #f) (update-kind #f) (functional-update #f)
                 (evaluation
                  (if plan.recursive?
                    (and (or edit
@@ -210,9 +211,17 @@
                                    (or (and previous-frontier (not (condensed-closure? previous-frontier))
                                             (gerbil-ascent-replay-branching-frontier (newest-first) count room check!
                                               previous-frontier))
-                                       (let (functional
-                                              (gerbil-ascent-functional-result-view
-                                                (and (not visit-binary) (newest-first)) count room check! visit-binary))
+                                       (let* ((cached (and (not (current-ascent-execution-control))
+                                                           (source-slot-functional-view source)))
+                                              (functional
+                                               (if cached
+                                                 (and (<= (relation-view-count cached) room)
+                                                      (begin (check!) cached))
+                                                 (gerbil-ascent-functional-result-view
+                                                   (and (not visit-binary) (newest-first))
+                                                   count room check! visit-binary))))
+                                         (when (and functional (not cached) visit-binary)
+                                           (set! functional-update (cons source functional)))
                                          (when (and functional (not (source-slot-view source)))
                                            (set! validated-view (source-slot-validated-binary-view source)))
                                          functional)
@@ -252,7 +261,7 @@
                             verify-closure-witness: (lambda (proof)
                               (gerbil-ascent-verify-condensed-witness condensed version proof)))
                         result)
-                      #f #t (and (pair? evaluation) (cdr evaluation))))))))))
+                      #f #t (and (pair? evaluation) (cdr evaluation)) functional-update))))))))
 
 ;;; Only the owner mutates source cuts, generation and publication. A run owns
 ;;; a private evaluator; its monitor cannot publish. Cancel credit is observed by
@@ -379,7 +388,11 @@
                            (set! committed pending)
                            (set! published (vector-ref outcome 1))
                            (set! branching-frontier
-                             (and (> (vector-length outcome) 4) (vector-ref outcome 4))))
+                             (and (> (vector-length outcome) 4) (vector-ref outcome 4)))
+                           (when (> (vector-length outcome) 5)
+                             (let (update (vector-ref outcome 5))
+                               (when update
+                                 (source-slot-cache-functional-view! (car update) (cdr update))))))
                          (set! retained (vector-ref outcome 2))
                          (reply! (actor-run-reply running) (vector #t (vector-ref outcome 1))))
                        (begin

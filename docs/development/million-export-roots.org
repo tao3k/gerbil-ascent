@@ -447,3 +447,43 @@ Staging verified every row across all 80 shards. First-page P95 was
 45.90/8.80 ms for widths 128/512, and complete P95 was 133.72/137.17 ms.
 The original million-row projection list gate failed at 110.20 ms.
 The preceding 104.05 ms staging failure remains separate evidence.
+
+** Staging page request costs
+
+The request starts before source replacement. Clock replacement, the
+Session run through publication and cursor creation independently. Each
+pull encloses send to dispatch, private staging, commit copy and reply
+to resumption. The ordered oracle runs between pulls. Use the same
+request's collection clock as an enclosed interval.
+=paged_request_phase_bounds= checks the disjoint wall-time accounting.
+
+In 100 paired staging requests per width, publication averaged
+11.25/3.15 ms, private staging 14.62/10.48 ms, commit copy 2.80/2.42 ms,
+Actor handoff 0.86/0.94 ms, and the oracle 25.77/25.86 ms. GC accounted
+for 1.47/1.23 ms on average within those requests. The two SDKs had
+similar phase medians in this cohort, where both full P95 values stayed
+below the historical staging tails.
+
+Reuse the packed backing only after matching every supplied field in
+order. The backing carries its original ordering certificate and the
+functional view from an accepted publication. The current and
+alternate backings bound retention. Keep the new run's output budget
+check and its own Result and page cursors.
+=packed_functional_cache_exact= and
+=rejected_run_preserves_functional_cache= check these boundaries.
+
+The paired median publication savings were 10.83/2.75 ms.
+The complete request medians fell by 10.66/3.14 ms. Each arm
+collected in four requests per width. All eight cached requests
+with handoffs above 5 ms coincided with GC.
+
+The uninstrumented paired matrix verified 1,000 requests per width
+per arm. The reference first-page and complete P95 were 19.18/4.42
+and 94.40/58.96 ms. The candidate initially used the SDK's default C
+host limit and measured 2.38/1.39 and 51.34/54.38 ms.
+
+With the repository's production C host limit restored, the candidate
+verified all 80 shards. First-page P95 was 4.47/1.63 ms and complete
+P95 was 74.44/74.33 ms. The 512 complete P95 exceeded the reference
+in these runs, and its measured collections rose from 40 to 80.
+The million-row mutable-list failure remains on record.

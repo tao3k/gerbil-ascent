@@ -49,12 +49,16 @@
 
 ;; Disjoint chains give a closed-form oracle independent of the rule engine.
 (def (edges groups width offset)
-  (append-map
-    (lambda (group)
-      (map (lambda (column)
-             (let (left (+ offset (* group width) column)) (list left (+ left 1))))
-           (iota (- width 1))))
-    (iota groups)))
+  (def (chain group)
+    (map (lambda (column)
+           (let (left (+ offset (* group width) column)) (list left (+ left 1))))
+         (iota (- width 1))))
+  (let (ordinals (iota groups))
+    ;; Keep the projection setup. Both SDKs agree on singleton groups.
+    (if (= width 2)
+      (append-map chain ordinals)
+      ;; The release fixture emitted each chain's edges in descending order.
+      (foldl (lambda (group rows) (foldl cons rows (chain group))) [] (reverse ordinals)))))
 
 (def (output-count groups width)
   (quotient (* groups width (- width 1)) 2))
@@ -546,6 +550,9 @@
 
 (def actor-million-oracle-test
   (test-suite "million-workload oracle refusal controls"
+    (test-case "chain inputs preserve the release order across SDKs"
+      (check (edges 2 4 10) => '((12 13) (11 12) (10 11) (16 17) (15 16) (14 15)))
+      (check (edges 2 2 10) => '((10 11) (12 13))))
     (test-case "complete disconnected-chain rows and displaced cuts"
       (let (rows '((0 1) (0 2) (1 2) (3 4) (3 5) (4 5)))
         (check (verify rows 2 3 0 #t) => 6)

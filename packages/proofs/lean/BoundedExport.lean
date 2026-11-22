@@ -413,6 +413,26 @@ theorem ordinal_link_stream_matches_saved_scan {α : Type}
     simp only [List.foldl_cons, List.map_cons]
     exact ih _
 
+/-- The release fixture traversed the chain groups in ascending order
+and reversed the ascending edges within each group. -/
+def releaseChainCut (ascending : Nat → List Row) (groups : Nat) : List Row :=
+  (List.range groups).flatMap fun group => (ascending group).reverse
+
+/-- Prepend ascending edges from the highest remaining group, then
+continue with the lower groups. This mirrors the two fixture loops. -/
+def prependChainGroups (ascending : Nat → List Row) : Nat → List Row → List Row
+  | 0, tail => tail
+  | groups + 1, tail =>
+    prependChainGroups ascending groups ((ascending groups).foldl (fun acc row => row :: acc) tail)
+
+theorem prepend_chain_groups_matches_release (ascending : Nat → List Row) (groups : Nat)
+    (tail : List Row) :
+    prependChainGroups ascending groups tail = releaseChainCut ascending groups ++ tail := by
+  induction groups generalizing tail with
+  | zero => rfl
+  | succ groups ih =>
+    simp [prependChainGroups, ih, releaseChainCut, List.range_succ, List.append_assoc]
+
 /-- The producer clips the current window to the remaining page extent.
 It can resume at the resulting ordinal or advance to the next window. -/
 theorem clip_window_at_page_boundary (start stop room : Nat) (ordered : start ≤ stop) :
@@ -499,5 +519,6 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.first_page_phase_bounds
 #print axioms Ascent.BoundedExport.ordinal_link_matches_scan
 #print axioms Ascent.BoundedExport.ordinal_link_stream_matches_saved_scan
+#print axioms Ascent.BoundedExport.prepend_chain_groups_matches_release
 #print axioms Ascent.BoundedExport.clip_window_at_page_boundary
 #print axioms Ascent.BoundedExport.clipped_window_resume_field

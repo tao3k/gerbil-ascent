@@ -426,3 +426,24 @@ probes. The production view already constructs the detached list
 directly from affine descriptors. The fixed-layout evidence supports
 keeping that path. The uninstrumented replay verified all 1,000 outputs
 and missed the original gate at 109.01 ms P95.
+
+** Ordered chain inputs across SDKs
+
+The native two-chain control traced the divergence to the fixture's
+=std/list/list= import. Gerbil =1cfb032= uses =foldl cons= inside
+=append-map= and reverses each mapped chain. The staging Gerbil SDK
+with Gambit =2df89af= uses =foldl append= and preserves each mapped
+chain. The admitted successor direction changed from +1 to -1.
+With identical inputs, both SDKs produced the same =rows-of= and page
+sequences for each tested direction.
+
+=prepend_chain_groups_matches_release= checks the release input order.
+Visit groups from highest to lowest and prepend each group's ascending
+edges. The resulting cut has ascending groups and descending edges
+within each group. Use that explicit order in the fixture so the input
+and the independent output oracle agree across SDKs.
+
+Staging verified every row across all 80 shards. First-page P95 was
+45.90/8.80 ms for widths 128/512, and complete P95 was 133.72/137.17 ms.
+The original million-row projection list gate failed at 110.20 ms.
+The preceding 104.05 ms staging failure remains separate evidence.

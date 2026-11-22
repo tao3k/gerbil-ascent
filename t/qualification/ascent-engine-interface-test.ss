@@ -190,8 +190,21 @@
              (finally (gerbil-ascent-session-close! session)))))
        (let* ((limit (##greatest-fixnum))
               (descending (map (lambda (i) (list (- limit i) (- i))) (iota 40)))
-              (chain (map (lambda (i) (list i (+ i 1))) (iota 40))))
-         (list (list #f descending 40) (list #t chain 820) (list #t (reverse chain) 820)))))
+              (chain (map (lambda (i) (list i (+ i 1))) (iota 40)))
+              (nonuniform
+               (map (lambda (i)
+                      (list (if (< i 20) i (+ i 3))
+                            (if (< (+ i 1) 20) (+ i 1) (+ i 4))))
+                 (iota 40)))
+              (second-chain
+               (map (lambda (i) (list (+ 1000 (* 3 i)) (+ 1003 (* 3 i))))
+                 (iota 40))))
+         (list (list #f descending 40)
+               (list #t chain 820)
+               (list #t (reverse chain) 820)
+               (list #t nonuniform 820)
+               (list #t (append chain second-chain) 1640)))))
+
     (test-case "packed caller buffers preserve capture order without exposing backing cells"
       (let* ((rows (map (lambda (i) (list (- 11 i) (modulo i 7))) (iota 64)))
              (session (open-ordered-actor rows))

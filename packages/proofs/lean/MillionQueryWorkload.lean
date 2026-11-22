@@ -189,6 +189,24 @@ theorem affine_copy_cell_bounds (start count capacity i : Nat)
 theorem affine_copy_ordinals_disjoint (start a b : Nat) (before : a < b) :
     start + 2 * a + 1 < start + 2 * b := by omega
 
+/-- An ordinal link and a constant edge gap certify both field strides.
+The reverse visit uses the same identity with the two rows exchanged. -/
+theorem constant_gap_ordinal_link (left right nextLeft nextRight gap : Int)
+    (link : right = nextLeft) (oldGap : right = left + gap)
+    (newGap : nextRight = nextLeft + gap) :
+    nextLeft = left + gap ∧ nextRight = right + gap := by omega
+
+/-- Certification reads both source fields once. Each visited window
+then reads its first field pair and one already certified stride. -/
+def ordinalAffineReadCount (sourceRows windows : Nat) : Nat :=
+  2 * sourceRows + 3 * windows
+
+theorem uniform_ten_million_window_reads :
+    ordinalAffineReadCount 157480 157480 = 787400 ∧
+    ordinalAffineReadCount 39347 39347 = 196735 ∧
+    787400 < 2 * closureRows 1240 128 ∧
+    196735 < 2 * closureRows 77 512 := by decide
+
 end AffineExport
 
 section ProjectionCollector

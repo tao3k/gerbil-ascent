@@ -365,6 +365,33 @@ excluded from the merged percentile. A publication-only
 observation and a limited first-origin read belong to the separate
 SCC benchmark.
 
+** Certified affine windows in the direct recursive copy
+
+The ordinal partition already establishes that an edge target is the
+next origin inside its run. The direct copier can test whether each
+run also has a constant positive edge gap, using the retained numeric
+columns. =constant_gap_ordinal_link= relates that evidence to the
+stride of both columns. A window loads its original first pair,
+then advances both fields in the original traversal direction. The
+iterator shares its window boundaries and order with the ordinary
+field traversal. =affine_copy_cell_bounds= applies after the copier
+checks the destination extent of each whole window.
+
+The check is local to the direct copy. It retains no mutable state
+on the published Result and adds no work to list export. A mismatch
+selects the generic ordinal copy before writing any destination
+cells. The controlled delivery still uses the existing checked
+packet and publication checkpoint.
+
+=ordinalAffineReadCount= counts the two source reads per admitted
+edge in the check, plus the base field pair and stored stride per
+nonempty window. Select certification only when its bound, using
+the maximum window count, is below the ordinary field-read count.
+=uniform_ten_million_window_reads= evaluates both profiles. This
+models source-column traffic and stride lookups. The copy still
+writes two destination fields per delivered row, and the client
+still verifies every row.
+
 * POO reuse boundaries
 
 Yuanxu's pinned POO already provides persistent correlated table indexes

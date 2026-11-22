@@ -426,6 +426,56 @@ addressing, duplicate probes and writes under their observed cache
 conditions. Only the pass with all checks supplies a complete oracle
 result. Keep the diagnostic out of the acceptance cohort.
 
+** Million-row tail attribution and ordinal publication
+
+Pair source replacement, run and publication, delivery, and oracle
+verification for each request. Use the process CPU and collector clocks
+inside the same brackets. Wall time minus non-collector CPU and collector
+wall time is an outside-collector residual. It includes preemption and
+waiting beyond the Actor mailbox. The switches between the caller,
+coordinator, and worker on the same VM also consume process CPU.
+
+The earlier 109.818 ms projection receipt records 0.178 s for
+publication and 24.011 s for delivery across 1,000 requests. Its
+whole-window collector wall time was 21.731 s. The earlier 60.512 ms
+recursive-buffer receipt records 6.652 s for publication, 3.616 s
+for delivery, and 12.652 s for verification. Its nine collector
+events all also appear in the publication receipt. Subtracting
+non-collector process CPU and the measured collector wall time
+leaves 8.111 s outside the collector across the request window,
+including 2.219 s in publication. These are sums from the original
+receipts. The original gates do not retain their phase times per
+request, so the diagnostic attributes the tail of its own samples.
+
+In the 1,000-request projection diagnostic, the P95 request spent
+110.737 ms in detached delivery, including 108.171 ms of collector
+wall time. There were 53 requests with at least 100 ms of collector
+CPU in that stage. =RuntimeMeasurement.bounded_phase_misses_p95=
+applies at the measured collection cadence. The source and output
+pair ownership in =million-export-roots.org= applies to this cut.
+The projection diagnostic adds instrumentation and complements the
+existing uninstrumented gate.
+
+In the recursive buffer diagnostic, all nine collections occurred
+inside run and publication. The independently checked buffer path
+already writes affine windows without per-row allocation. The main
+publication opportunity is the temporary functional index.
+The published origin lane uses =label - low= for dense intervals.
+=dense_origin_slot_injective= justifies duplicate detection while
+filling that lane. Sparse intervals admit the same labels through
+the hash map. =dense_origin_lookup_exact= preserves successful and
+missing lookups for successor linking and bound reads.
+
+The existing =ordinal-runs= recognizer checks the actual successor
+lanes and their direction. For each adjacent run whose boundaries
+are certified by that recognizer, the remaining lengths go from its
+width down to one in reachability order. =ordinal_run_triangular=
+connects the sum of those lengths to the exact count used for
+publication. =ordinal_run_budget_prefix= justifies the earliest
+refusal at a run boundary. The generic distance memo covers the
+other successor graphs. The order and affine window copier both
+consume the same certified boundaries.
+
 * POO reuse boundaries
 
 Yuanxu's pinned POO already provides persistent correlated table indexes

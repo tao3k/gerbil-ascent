@@ -371,6 +371,33 @@ theorem functional_origin_slot (first extent label : Nat)
     (within : first ≤ label ∧ label < first + extent) :
     label - first < extent ∧ first + (label - first) = label := by omega
 
+theorem dense_origin_slot_injective (first a b : Nat)
+    (aInside : first ≤ a) (bInside : first ≤ b) :
+    a - first = b - first ↔ a = b := by omega
+
+/-- One ordinal run has one final edge per origin. Its successive
+remaining edge lengths are the positive integers through the run width. -/
+def ordinalRunRows : Nat → Nat
+  | 0 => 0
+  | n + 1 => ordinalRunRows n + (n + 1)
+
+theorem ordinal_run_triangular (n : Nat) :
+    ordinalRunRows n = n * (n + 1) / 2 := by
+  have twice (k : Nat) : 2 * ordinalRunRows k = k * (k + 1) := by
+    induction k with
+    | zero => rfl
+    | succ n ih =>
+      simp only [ordinalRunRows, Nat.succ_eq_add_one, Nat.mul_add, Nat.add_mul] at *
+      omega
+  have exact := twice n
+  omega
+
+/-- The prefix admission check can refuse as soon as the accumulated
+cardinality exceeds the limit. Later disjoint runs cannot reduce it. -/
+theorem ordinal_run_budget_prefix (published runWidth rest room : Nat)
+    (tooLarge : room < published + ordinalRunRows runWidth) :
+    room < published + ordinalRunRows runWidth + rest := by omega
+
 /-- The signed lane lookup implements the old origin map when the filled
 interval represents its entries and the map has no entry outside it. -/
 theorem dense_origin_lookup_exact (first extent : Nat) (lane old : Nat → Option Nat)

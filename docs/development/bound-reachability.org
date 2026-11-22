@@ -309,3 +309,29 @@ than walking the selected components. It still checks cancellation
 before each mask and while traversing deviations. An edit with a work
 meter keeps the original per-target work checkpoints. Query order,
 source ownership, and witness traversal use the same packed index.
+
+** Full-component split cost
+
+For a split that affects the original SCC, time the packed component
+walk in =split-local= before any owner or quotient reconstruction.
+In =repair-local= time mask reconstruction and =close-edited-quotient=
+separately from rebuilding ordered runs and counting the result rows.
+Align each interval with the process CPU and GC deltas and the task
+runnable counter. A wall interval can include time when the process
+was runnable and did not execute. Report that signal with the sampled
+edit rather than using it as a measurement of work in the Scheme
+function. Acceptance uses the original uninstrumented invocation.
+
+Each nontrivial SCC has an internal edge witnessed by its own
+partition. Its new direct mask can start with the self bit, and the
+packed cursor can compare the target owner against the current owner
+before testing the mask. The traversal still checkpoints each member
+and each concrete edge. Singleton self edges still pass through the
+mask path. The incoming scan for retained components still resolves
+the actual destination; it cannot seed a new group for a retained
+source. =seeded_self_bit_exact= and =split_mask_fold_exact= account for
+the direct mask across all targets. =split_mask_word_step_exact=
+checks the integer bit test in the Scheme update.
+=seeded_split_mask_probes= counts the probes that remain. The full split traverses 201649 edges, of
+which 201600 are internal to its 50 new SCCs. Ordered runs, source
+cuts and owner acceptance use their existing paths.

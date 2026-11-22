@@ -86,7 +86,7 @@
       (receipt 'session-open (list (cons 'wall-ns (nanoseconds open))))
       session)))
 
-(def (verify rows groups width offset recursive?)
+(def (verify-exact rows groups width offset recursive?)
   (let ((seen (make-u8vector (* groups width width) 0))
         (expected (if recursive? (output-count groups width) (* groups (- width 1))))
         (count 0))
@@ -108,6 +108,78 @@
     (unless (= count expected) (error "incomplete exported relation" count expected))
     count))
 
+(def (verify-fixnum rows width offset end expected seen chain-ends)
+  (let ((width-two? (and (not chain-ends) (fx= width 2)))
+        (last-column (fx- width 1)))
+    (let walk ((rest rows) (count 0))
+      (cond
+       ((pair? rest)
+        (let (row (car rest))
+          (unless (and (pair? row) (pair? (cdr row)) (null? (cddr row)))
+            (error "invalid exported row" row))
+          (let ((origin (car row)) (target (cadr row)))
+            (unless (and (fixnum? origin) (fixnum? target)
+                         (fx<= offset origin) (fx< origin target) (fx< target end))
+              (error "row outside independent chain oracle" row))
+            (let* ((left (fx- origin offset))
+                   (right (fx- target offset))
+                   (index
+                    (cond
+                     (chain-ends
+                      (unless (fx< right (vector-ref chain-ends left))
+                        (error "row outside independent chain oracle" row))
+                      (fx+ (fx* left width) (fx- right left)))
+                     (width-two?
+                      (unless (and (fx= (fx+ left 1) right) (fx= (fxand left 1) 0))
+                        (error "row outside independent chain oracle" row))
+                      (fxquotient left 2))
+                     (else
+                      (unless (and (fx= (fx+ left 1) right)
+                                   (fx< (fxremainder left width) last-column))
+                        (error "row outside independent chain oracle" row))
+                      left))))
+              (unless (fx= (u8vector-ref seen index) 0)
+                (error "duplicate exported row" row))
+              (u8vector-set! seen index 1)
+              (walk (cdr rest) (fx+ count 1))))))
+       ((null? rest)
+        (unless (fx= count expected) (error "incomplete exported relation" count expected))
+        count)
+       (else (error "invalid exported relation" rest))))))
+
+(def (chain-end-ordinals span width)
+  (let (ends (make-vector span))
+    (let fill ((start 0))
+      (when (fx< start span)
+        (let (end (fx+ start width))
+          (let fill-chain ((left start))
+            (unless (fx= left end)
+              (vector-set! ends left end)
+              (fill-chain (fx+ left 1))))
+          (fill end))))
+    ends))
+
+(def (make-chain-verifier groups width recursive?)
+  (let* ((span (* groups width))
+         (expected (if recursive? (output-count groups width) (* groups (- width 1))))
+         (slots (cond (recursive? (* span width)) ((= width 2) groups) (else span))))
+    (if (and (fixnum? groups) (fx>= groups 0)
+             (fixnum? width) (fx> width 0) (fixnum? span)
+             (fixnum? expected) (fixnum? slots))
+      (let ((seen (make-u8vector slots 0))
+            (chain-ends (and recursive? (chain-end-ordinals span width))))
+        (lambda (rows offset)
+          (let (end (+ offset span))
+            (if (and (fixnum? offset) (fixnum? end))
+              (begin
+                (u8vector-fill! seen 0)
+                (verify-fixnum rows width offset end expected seen chain-ends))
+              (verify-exact rows groups width offset recursive?)))))
+      (lambda (rows offset) (verify-exact rows groups width offset recursive?)))))
+
+(def (verify rows groups width offset recursive?)
+  ((make-chain-verifier groups width recursive?) rows offset))
+
 (def (record-run-cost! totals before after)
   ;; Slot order follows the Gambit process-statistics API.
   (let ((cpu (+ (- (f64vector-ref after 0) (f64vector-ref before 0))
@@ -119,7 +191,7 @@
     (f64vector-set! totals 1 (+ (f64vector-ref totals 1) gc-cpu))
     (f64vector-set! totals 2 (+ (f64vector-ref totals 2) collections))))
 
-(def (query session groups width offset recursive? run-cost (source-size #f))
+(def (query session verify-rows offset run-cost (source-size #f))
   (let* ((before (##process-statistics))
          (start (tick))
          (result (gerbil-ascent-session-run session))
@@ -131,7 +203,7 @@
       (when source-size
         (unless (= source-size (cdr (assq 'edge ((.ref result 'relation-sizes)))))
           (error "query did not publish the expected source size" source-size)))
-      (verify rows groups width offset recursive?)
+      (verify-rows rows offset)
       (values run-ns (- query-ns run-ns) (- (nanoseconds start) query-ns)))))
 
 (def (report-query-work phase completed replace-ns run-ns export-ns oracle-ns wall-ns cost)
@@ -192,13 +264,14 @@
          (first (make-query-cut groups width 0 shortcuts?))
          (second (and (not append-shortcuts?) (make-query-cut groups width span shortcuts?)))
          (session (open-session first groups width recursive? input-facts: capacity))
+         (verify-rows (make-chain-verifier groups width recursive?))
          (samples (make-f64vector 1000 0.)))
     (try
       (receipt 'prepared (list (cons 'input-facts input) (cons 'expected-rows output)
                                (cons 'input-fact-capacity capacity)
                                (cons 'recursive recursive?) (cons 'wall-ns (nanoseconds begin))))
       (let (cost (make-f64vector 3 0.))
-        (let-values (((run-ns export-ns oracle-ns) (query session groups width 0 recursive? cost)))
+        (let-values (((run-ns export-ns oracle-ns) (query session verify-rows 0 cost)))
           (let (cold (+ run-ns export-ns))
             (receipt 'cold-complete-query
               (list (cons 'query-and-export-ns cold) (cons 'with-oracle-ns (+ cold oracle-ns))
@@ -218,7 +291,7 @@
                 (gerbil-ascent-session-replace-source! session 'edge (if use-second? second first)))
               (let ((replace-ns (nanoseconds request)))
                 (let-values (((run-ns export-ns oracle-ns)
-                              (query session groups width offset recursive? cost
+                              (query session verify-rows offset cost
                                 (and append-shortcuts? (+ input index 1)))))
                   (set! replace-total (+ replace-total replace-ns))
                   (set! run-total (+ run-total run-ns))
@@ -304,6 +377,23 @@
     (test-case "base-only queries cannot reuse a recursive oracle"
       (check (verify '((0 1) (1 2) (3 4) (4 5)) 2 3 0 #f) => 4)
       (check-exception (verify '((0 1) (0 2) (3 4) (4 5)) 2 3 0 #f) true))
+    (test-case "bitmap lanes accept reordering and reject malformed or foreign rows"
+      (check (verify '((2 3) (0 1)) 2 2 0 #f) => 2)
+      (check (verify '((4 5) (0 1) (3 4) (1 2)) 2 3 0 #f) => 4)
+      (check (verify '((-3 -1) (-2 -1) (-3 -2)) 1 3 -3 #t) => 3)
+      (for-each (lambda (rows) (check-exception (verify rows 2 2 0 #f) true))
+        '(((0 1) (0 1)) ((0 1) (1 2)) ((0 1) (2 3 4))
+          ((0 1) (2 3.0)) ((0 1) (2 . 3)) ((0 1) (3 4))
+          ((0 1) . invalid)))
+      (let (offset (expt 2 80))
+        (check (verify (list (list offset (+ offset 1))) 1 2 offset #f) => 1)))
+    (test-case "the bitmap is clean after acceptance and rejection across cuts"
+      (let (verify-rows (make-chain-verifier 1 3 #t))
+        (check (verify-rows '((0 2) (0 1) (1 2)) 0) => 3)
+        (check-exception (verify-rows '((3 4) (3 4) (4 5)) 3) true)
+        (check (verify-rows '((4 5) (3 4) (3 5)) 3) => 3)
+        (check-exception (verify-rows '((4 5) (3 4) (3 5)) 0) true)
+        (check (verify-rows '((0 1) (1 2) (0 2)) 0) => 3)))
     (test-case "million dimensions count data independently of request samples"
       (check (* 1000000 (- 2 1)) => 1000000)
       (check (output-count 128 128) => 1040384))))

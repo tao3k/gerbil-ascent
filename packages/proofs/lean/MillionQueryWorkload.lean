@@ -257,6 +257,19 @@ theorem redundant_projection_root_no_reachable_saving {Root Object : Type}
   · rintro ⟨root, owned, reachable⟩
     exact ⟨root, Or.inl owned, reachable⟩
 
+/-- The affine slot's ordered promise forces its newest-first lane
+before reversing the outer list. Reversal shares each inner row. -/
+def affineFallbackPairWords (rows : Nat) (newestForced orderedForced : Bool) : Nat :=
+  (if newestForced || orderedForced then projectionCopyWords rows else 0) +
+    (if orderedForced then 3 * rows else 0)
+
+theorem affine_views_leave_fallback_unforced (rows : Nat) :
+    affineFallbackPairWords rows false false = 0 := rfl
+
+theorem affine_ordered_fallback_shares_row_cells (rows : Nat) (newestForced : Bool) :
+    affineFallbackPairWords rows newestForced true = projectionCopyWords rows + 3 * rows := by
+  simp [affineFallbackPairWords]
+
 end ProjectionCollector
 
 section FunctionalOriginOwnership
@@ -397,6 +410,85 @@ theorem bitmap_index_injective (width left right otherLeft otherRight : Nat)
   simp [bitmapIndex, Nat.add_mod, Nat.mod_eq_of_lt rightBound,
     Nat.mod_eq_of_lt otherBound] at remainder
   exact ⟨divide, remainder⟩
+
+/-- Translate signed labels only after the absolute interval check. -/
+theorem oracle_offset_bounds (offset span left right : Int) :
+    (offset ≤ left ∧ left < right ∧ right < offset + span) ↔
+      (0 ≤ left - offset ∧ left - offset < right - offset ∧ right - offset < span) := by
+  omega
+
+/-- One forward step stays in a chain exactly when the origin has an
+unused column to its right. This is the projection specialization. -/
+theorem projection_successor_group (width left : Nat) (positive : 0 < width) :
+    left / width = (left + 1) / width ↔ left % width + 1 < width := by
+  let q := left / width
+  let r := left % width
+  have leftEq : left = r + width * q := (Nat.mod_add_div left width).symm
+  have targetEq : left + 1 = (r + 1) + q * width := by
+    rw [leftEq, Nat.mul_comm width q]
+    omega
+  have targetGroup : (left + 1) / width = (r + 1) / width + q := by
+    rw [targetEq, Nat.add_mul_div_right _ _ positive]
+  change q = (left + 1) / width ↔ r + 1 < width
+  rw [targetGroup]
+  rw [show (q = (r + 1) / width + q) ↔ (r + 1) / width = 0 by omega]
+  exact Nat.div_eq_zero_iff_lt positive
+
+/-- A projected row is determined by its left label. Therefore its
+duplicate slot needs only the left ordinal, irrespective of row order. -/
+theorem projection_slot_exact (left right otherLeft otherRight : Nat)
+    (successor : right = left + 1) (otherSuccessor : otherRight = otherLeft + 1) :
+    left = otherLeft ↔ (left, right) = (otherLeft, otherRight) := by
+  constructor
+  · intro same
+    subst otherLeft
+    rw [successor, otherSuccessor]
+  · exact congrArg Prod.fst
+
+theorem width_two_projection_origin (left : Nat) :
+    left % 2 + 1 < 2 ↔ left % 2 = 0 := by omega
+
+theorem width_two_projection_slot (left otherLeft : Nat)
+    (even : left % 2 = 0) (otherEven : otherLeft % 2 = 0) :
+    left / 2 = otherLeft / 2 ↔ left = otherLeft := by omega
+
+/-- The prepared recursive bound for an origin is the first label of
+the next chain. A forward target below that bound is in the same chain. -/
+theorem recursive_target_bound (width left right : Nat)
+    (positive : 0 < width) (forward : left ≤ right) :
+    right < (left / width + 1) * width ↔ left / width = right / width := by
+  rw [← Nat.div_lt_iff_lt_mul positive]
+  have ordered : left / width ≤ right / width := Nat.div_le_div_right forward
+  omega
+
+theorem recursive_gap_slot_exact (width left right otherLeft otherRight : Nat)
+    (forward : left ≤ right) (otherForward : otherLeft ≤ otherRight)
+    (gap : right - left < width) (otherGap : otherRight - otherLeft < width) :
+    bitmapIndex width left (right - left) = bitmapIndex width otherLeft (otherRight - otherLeft)
+      ↔ (left, right) = (otherLeft, otherRight) := by
+  constructor
+  · intro same
+    obtain ⟨origin, distance⟩ := bitmap_index_injective width left (right - left)
+      otherLeft (otherRight - otherLeft) gap otherGap same
+    have target : right = otherRight := by omega
+    rw [origin, target]
+  · intro same
+    have origin := congrArg Prod.fst same
+    have target := congrArg Prod.snd same
+    simp only at origin target
+    rw [origin, target]
+
+/-- Filling the existing bitmap leaves every legal slot with exactly
+the value produced by allocating a new zeroed bitmap. -/
+theorem oracle_bitmap_reset (previous : List UInt8) (slot : Nat) :
+    (previous.map (fun _ => (0 : UInt8)))[slot]? =
+      (List.replicate previous.length (0 : UInt8))[slot]? := by
+  have reset : previous.map (fun _ => (0 : UInt8)) =
+      List.replicate previous.length (0 : UInt8) := by
+    induction previous with
+    | nil => rfl
+    | cons _ _ ih => simp [List.replicate_succ, ih]
+  rw [reset]
 
 structure DataEvidence where
   inputFacts : Nat

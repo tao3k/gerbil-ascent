@@ -230,29 +230,36 @@
           (checkpoint!)
           (let (next (vector-ref translate h))
             (if next (bitwise-ior out (slot-bit next)) out))) bits))
-    (def (scan members mask target?)
-      (for-each
-       (lambda (v)
-         (checkpoint!)
-         (for-neighbor (w (vector-ref adjacent v))
+    (defrule (scan vertices initial (w include?) (h already-set?))
+      (let (mask initial)
+        (for-each
+         (lambda (v)
            (checkpoint!)
-           (when (target? w)
-             (let (h (vector-ref owner w))
-               (unless (bit-set? h mask) (set! mask (bitwise-ior mask (slot-bit h))))))))
-       members)
-      mask)
+           (for-neighbor (w (vector-ref adjacent v))
+             (checkpoint!)
+             (when include?
+               (let (h (vector-ref owner w))
+                 (unless (or already-set? (bit-set? h mask))
+                   (set! mask (bitwise-ior mask (slot-bit h))))))))
+         vertices)
+        mask))
     (for-each
      (lambda (old g)
        (let (mask (remap old 0))
          (vector-set! direct g
            (if (and split? (not (zero? (bitwise-and affected (vector-ref prior.direct old)))))
              (scan (vector-ref prior.members old) mask
-               (lambda (w) (bit-set? (vector-ref prior.owner w) affected)))
+               (w (bit-set? (vector-ref prior.owner w) affected)) (h #f))
              mask))))
      old-order (iota fresh-at))
     (if split?
       (for (g (in-range fresh-at groups))
-        (vector-set! direct g (scan (vector-ref members g) 0 (lambda (_) #t))))
+        (let* ((vertices (vector-ref members g))
+               ;; A nontrivial SCC already has an internal arc.
+               (internal? (pair? (cdr vertices)))
+               (initial (if internal? (slot-bit g) 0)))
+          (vector-set! direct g
+            (scan vertices initial (w #t) (h (and internal? (fx= h g)))))))
       ;; The newly added edge is internal. It supplies a self bit even
       ;; when none of the merged groups previously had a self bit.
       (vector-set! direct fresh-at (fold-members affected remap (slot-bit fresh-at))))

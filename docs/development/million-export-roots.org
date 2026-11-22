@@ -1,5 +1,41 @@
 #+title: Live roots during million-row Actor export
 
+* Independent complete-row oracle
+
+The native request timer includes source replacement, evaluation, detached
+export and verification. The separate oracle phase starts after the
+export. The verifier reads the detached list, with no access to the
+Session, its indexes or its source view. It checks the exact two-field
+shape, integer range and cut offset, forward ordering, same-chain
+membership, successor-only projection, duplicate freedom and final
+cardinality. =complete_oracle= derives coverage from membership,
+uniqueness and cardinality.
+
+=oracle_offset_bounds= moves the range check before subtraction. The
+absolute cut bounds make the normalized subtraction fit in a fixnum.
+=projection_successor_group= replaces two chain quotients with one
+remainder for a successor-only result. Such a row is determined by its
+left ordinal (=projection_slot_exact=). In width two each origin is
+even, so the slot is its chain ordinal (=width_two_projection_slot=).
+For recursion, =recursive_target_bound= replaces per-row division
+with an immutable one-past-chain bound shared by the two input cuts.
+=recursive_gap_slot_exact= checks the =left * width + (right - left)=
+slot. =oracle_bitmap_reset= models clearing the fixture-owned bitmap
+before checking each output. This work remains inside the request timer. Reordered
+rows are still accepted, with the same membership and cardinality
+conditions. Larger arithmetic uses the exact-integer verifier.
+
+The original =for-each= invokes a Scheme callback for each row, with
+generic arithmetic, two chain divisions and a dense bitmap sized for
+recursive reachability even in projection. The packed fixnum loop
+moves extent arithmetic out of the traversal and retains one occupancy test
+and mark for each accepted row. Acceptance includes the entire 1,000
+requests, through natural process exit, under the original watchdog.
+The compiled test module is produced by the official =gerbil compile -O=
+command and loaded as an SSI by =gerbil test=, following the caller
+compilation control in [[file:../../benchmarks/README.org][the benchmark guide]].
+The Scheme source entry remains available for oracle refusal controls.
+
 * Recursive export
 
 The original 81.51 ms and 109.60 ms runs verified the same 1,000
@@ -192,6 +228,40 @@ arms passed the local-edit assertions. The candidate deletion P95 values
 were 1.326 and 1.153 ms. First-origin P95 values in the production run
 were 15.08 us after deletion and 25.79 us after restoration.
 The pure projection failure blocks promotion to PR #2.
+
+* Live roots on an all-affine cut
+
+=actor-terminal-result= in =program/actor-session.ss= uses the same
+admitted source view for both the source and the nonrecursive target
+when the target starts empty. =make-affine-source-slot= in
+=program/source-cut.ss= captures five numeric fields. Its newest-first
+and chronological lists are promises for the fallback evaluator. The
+terminal publication uses the view and leaves both promises unforced.
+=affine_views_leave_fallback_unforced= counts zero row pair words for
+those promises. For fallback, forcing the chronological promise first
+forces the newest-first lane and then allocates a reversed outer spine
+that shares each row (=affine_ordered_fallback_shares_row_cells=).
+
+The owner retains its original declarations for fallback. The timed
+fixture holds both caller cuts independently and alternates them for
+all requests. Dropping the owner's alias to the original declaration
+rows would therefore release none of those pairs
+(=redundant_projection_root_no_reachable_saving=). Pending and committed
+cuts share their admitted slots after publication. The detached result
+from =rows-of= is produced afresh by the view exporter. Its in-flight
+suffix stays reachable until the callback returns the complete list
+(=projection_accumulator_order=). These ownership statements concern
+row pairs. They leave object headers, VM metadata and the private
+oracle bitmap as separate heap contributions.
+
+For the collector diagnostic, record accounted live and movable bytes
+at actual export collections and identify the accumulator's current row
+interval. Hold the same caller cuts and a fixed suffix across an
+independent Session-liveness control. Measure loaded fixture metadata
+separately. The capacity counters account for live objects in Gambit's
+units. They give neither an object-by-object scan trace nor the number
+of bytes physically copied. The native acceptance run uses the release
+runtime and exporter with the diagnostic hooks absent.
 
 * Upstream Ascent with Rayon on the same two workloads
 

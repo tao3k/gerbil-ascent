@@ -244,6 +244,65 @@ theorem seeded_self_bit_exact {Group : Type} [DecidableEq Group]
     simp [internal]
   · simp [same]
 
+/-- The split repair visits every original target in order. A certified,
+already seeded self target requires no mask lookup or insertion. -/
+def splitMaskStep {Group : Type} [DecidableEq Group] (group : Group)
+    (seeded : Bool) (mask : List Group) (target : Group) : List Group :=
+  if seeded && decide (target = group) then mask
+  else if target ∈ mask then mask else target :: mask
+
+theorem split_mask_step_exact {Group : Type} [DecidableEq Group]
+    (group target : Group) (seeded : Bool) (mask : List Group)
+    (seed : seeded = true → group ∈ mask) :
+    splitMaskStep group seeded mask target =
+      (if target ∈ mask then mask else target :: mask) := by
+  cases seeded
+  · simp [splitMaskStep]
+  · by_cases same : target = group
+    · subst target
+      simp [splitMaskStep, seed rfl]
+    · simp [splitMaskStep, same]
+
+theorem split_mask_fold_exact {Group : Type} [DecidableEq Group]
+    (group : Group) (seeded : Bool) (targets mask : List Group)
+    (seed : seeded = true → group ∈ mask) :
+    targets.foldl (splitMaskStep group seeded) mask =
+      targets.foldl (fun out target => if target ∈ out then out else target :: out) mask := by
+  induction targets generalizing mask with
+  | nil => rfl
+  | cons target rest ih =>
+    simp only [List.foldl_cons]
+    rw [split_mask_step_exact group target seeded mask seed]
+    apply ih
+    intro active
+    split
+    · exact seed active
+    · exact List.mem_cons_of_mem target (seed active)
+
+theorem split_mask_word_step_exact (group target mask : Nat) (seeded : Bool)
+    (seed : seeded = true → mask.testBit group = true) :
+    (if (seeded && decide (target = group)) || mask.testBit target
+      then mask else mask ||| (2 ^ target)) =
+    (if mask.testBit target then mask else mask ||| (2 ^ target)) := by
+  cases seeded
+  · simp
+  · by_cases same : target = group
+    · subst target
+      simp [seed rfl]
+    · simp [same]
+
+/-- There is one checkpoint per packed cursor step, including self arcs.
+The saved operation is a mask probe, not an edge visit or admission check. -/
+def splitMaskProbes {Group : Type} [DecidableEq Group]
+    (group : Group) (seeded : Bool) (targets : List Group) : Nat :=
+  (targets.filter (fun target => !(seeded && decide (target = group)))).length
+
+theorem seeded_split_mask_probes {Group : Type} [DecidableEq Group]
+    (group : Group) (targets : List Group) :
+    splitMaskProbes group true targets =
+      (targets.filter (fun target => decide (target ≠ group))).length := by
+  simp [splitMaskProbes, decide_not]
+
 /-- Two edges with the same quotient target set the same mask bit. -/
 theorem repeated_quotient_target_exact {Group : Type} [DecidableEq Group]
     (target candidate : Group) (mask : List Group) :

@@ -5,27 +5,42 @@ use std::time::{Duration, Instant};
 type Row = (usize, usize);
 const REQUESTS: usize = 1_000;
 
-macro_rules! programs {
-    ($engine:ident, $recursive:ident, $projection:ident) => {
-        ascent::$engine! {
-            struct $recursive;
-            relation edge(usize, usize);
-            relation reach(usize, usize);
-            reach(x, y) <-- edge(x, y);
-            reach(x, z) <-- reach(x, y), edge(y, z);
-        }
-
-        ascent::$engine! {
-            struct $projection;
-            relation edge(usize, usize);
-            relation reach(usize, usize);
-            reach(x, y) <-- edge(x, y);
-        }
-    };
+ascent::ascent! {
+    struct Recursive;
+    relation edge(usize, usize);
+    relation reach(usize, usize);
+    reach(x, y) <-- edge(x, y);
+    reach(x, z) <-- reach(x, y), edge(y, z);
 }
 
-programs!(ascent, Recursive, Projection);
-programs!(ascent_par, ParallelRecursive, ParallelProjection);
+ascent::ascent! {
+    struct Projection;
+    relation edge(usize, usize);
+    relation reach(usize, usize);
+    reach(x, y) <-- edge(x, y);
+}
+
+#[expect(
+    clippy::used_underscore_binding,
+    reason = "Ascent 0.8.1 emits used underscore-prefixed bindings for parallel relations"
+)]
+mod parallel {
+    ascent::ascent_par! {
+        pub(super) struct ParallelRecursive;
+        relation edge(usize, usize);
+        relation reach(usize, usize);
+        reach(x, y) <-- edge(x, y);
+        reach(x, z) <-- reach(x, y), edge(y, z);
+    }
+
+    ascent::ascent_par! {
+        pub(super) struct ParallelProjection;
+        relation edge(usize, usize);
+        relation reach(usize, usize);
+        reach(x, y) <-- edge(x, y);
+    }
+}
+use parallel::{ParallelProjection, ParallelRecursive};
 
 struct Workload {
     groups: usize,
@@ -85,7 +100,7 @@ fn report(phase: &str, mut values: Vec<Duration>) {
 }
 
 fn measure<Program: Default>(
-    workload: Workload,
+    workload: &Workload,
     set_source: impl Fn(&mut Program, &[Row]),
     solve: impl Fn(&mut Program),
     export: impl Fn(&Program) -> Vec<Row>,
@@ -160,25 +175,25 @@ pub(super) fn run(recursive: bool, parallel: bool) {
     }
     match (recursive, parallel) {
         (true, false) => measure::<Recursive>(
-            workload,
+            &workload,
             |program, rows| program.edge.extend_from_slice(rows),
             Recursive::run,
             |program| program.reach.clone(),
         ),
         (false, false) => measure::<Projection>(
-            workload,
+            &workload,
             |program, rows| program.edge.extend_from_slice(rows),
             Projection::run,
             |program| program.reach.clone(),
         ),
         (true, true) => measure::<ParallelRecursive>(
-            workload,
+            &workload,
             |program, rows| program.edge.extend(rows.iter().copied()),
             ParallelRecursive::run,
             |program| program.reach.iter().copied().collect(),
         ),
         (false, true) => measure::<ParallelProjection>(
-            workload,
+            &workload,
             |program, rows| program.edge.extend(rows.iter().copied()),
             ParallelProjection::run,
             |program| program.reach.iter().copied().collect(),

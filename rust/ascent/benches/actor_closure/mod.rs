@@ -1,7 +1,5 @@
 //! Native sequential Ascent comparison for the Gerbil Actor closure workload.
-#[path = "actor_closure/bridge.rs"]
 mod bridge;
-#[path = "actor_closure/million.rs"]
 mod million;
 
 use std::hint::black_box;

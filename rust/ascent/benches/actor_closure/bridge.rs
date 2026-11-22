@@ -69,15 +69,15 @@ fn publish(input: &[Row]) -> Publication {
     solver.edge.extend_from_slice(input);
     let replaced = Instant::now();
     solver.run();
-    let solved = Instant::now();
+    let evaluated_at = Instant::now();
     let mut ordered = mem::take(&mut solver.reach);
     ordered.sort_unstable();
     let ready = Instant::now();
     Publication {
         ordered,
         replace: replaced - begin,
-        solve: solved - replaced,
-        sorted: ready - solved,
+        solve: evaluated_at - replaced,
+        sorted: ready - evaluated_at,
         publish: ready - replaced,
     }
 }
@@ -109,7 +109,7 @@ fn time(operation: impl FnOnce()) -> Duration {
 fn report(name: &str, mut values: Vec<Duration>) {
     values.sort_unstable();
     let count = values.len();
-    let p95 = (95 * count + 99) / 100 - 1;
+    let p95 = (95 * count).div_ceil(100) - 1;
     println!(
         "TIMING {name} {count} {:.9} {:.9}",
         values[p95].as_secs_f64() * 1000.0,
@@ -138,7 +138,7 @@ impl Samples {
         }
     }
 
-    fn add(&mut self, result: Publication, removed: bool, bound_first: bool) {
+    fn add(&mut self, result: &Publication, removed: bool, bound_first: bool) {
         let bound = || double_bound(&result.ordered, HIT, !removed);
         let origin = || one_origin(&result.ordered, removed);
         if bound_first {
@@ -189,8 +189,8 @@ pub(super) fn run(bound_first: bool) {
     let mut removal = Samples::new();
     let mut restoration = Samples::new();
     for completed in 1..=EDITS {
-        removal.add(publish(&split), true, bound_first);
-        restoration.add(publish(&intact), false, bound_first);
+        removal.add(&publish(&split), true, bound_first);
+        restoration.add(&publish(&intact), false, bound_first);
         println!("VERIFIED_EDIT_PAIR {completed}");
     }
     removal.report("removed", bound_first);

@@ -175,6 +175,20 @@ theorem stepped_affine_avoids_per_row_multiplication (last : Nat) :
       (steppedAffineWork last).fieldMultiplications + 2 * last := by
   simp [indexedAffineWork, steppedAffineWork, Nat.mul_add, Nat.add_comm]
 
+theorem affine_copy_row_step (first stride : AffineRow) (i : Nat) :
+    affineRowAt first stride (i + 1) =
+      ((affineRowAt first stride i).1 + stride.1, (affineRowAt first stride i).2 + stride.2) := by
+  simp [affineRowAt, affine_field_next]
+
+/-- A validated destination interval gives both fields of every ordinal
+a distinct in-range address, even when the caller starts at an odd cell. -/
+theorem affine_copy_cell_bounds (start count capacity i : Nat)
+    (room : start + 2 * count ≤ capacity) (inside : i < count) :
+    start + 2 * i < capacity ∧ start + 2 * i + 1 < capacity := by omega
+
+theorem affine_copy_ordinals_disjoint (start a b : Nat) (before : a < b) :
+    start + 2 * a + 1 < start + 2 * b := by omega
+
 end AffineExport
 
 section ProjectionCollector

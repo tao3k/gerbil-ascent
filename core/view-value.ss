@@ -8,7 +8,7 @@
   make-ordered-binary-visitors
   make-packed-binary-visitors
   gerbil-ascent-ordered-binary-row-parts?
-  gerbil-ascent-ordered-binary-copy!
+  gerbil-ascent-ordered-binary-copy! gerbil-ascent-binary-destination-end
   (struct-out rectangle-visitors)
   (struct-out row-stream)
   (struct-out rectangle)
@@ -35,7 +35,7 @@
 (defstruct part-visitors (checked admitted))
 ;; Only the owner of an exact integer field stream certifies its full export.
 (defstruct (ordered-binary-visitors part-visitors) (exporter))
-;; The copier captures private immutable cells, never the caller's buffer.
+;; The copier reads a frozen view and writes into an exclusively held buffer.
 (defstruct (packed-binary-visitors ordered-binary-visitors) (copy) final: #t)
 ;; Built-in products additionally own a direct selected-result collector.
 ;; Custom visitors keep their existing callback and ordering protocol.
@@ -97,6 +97,14 @@
   (and (gerbil-ascent-ordered-binary-row-parts? view)
        (let (parts (relation-view-parts view))
          (and (packed-binary-visitors? parts) (packed-binary-visitors-copy parts)))))
+(def (gerbil-ascent-binary-destination-end destination start count)
+  (unless (and (s64vector? destination) (fixnum? start) (fx>= start 0))
+    (error "ASCENT invalid integer reply destination" start))
+  (let (end (+ start (* 2 count)))
+    (unless (<= end (s64vector-length destination))
+      (error "ASCENT integer reply exceeds buffer capacity"))
+    end))
+
 ;; : (-> PartVisitor RowSource Void)
 (def (gerbil-ascent-for-each-row-parts consume rows)
   (if (relation-view? rows) (gerbil-ascent-visit-view-parts! rows [] [] consume)

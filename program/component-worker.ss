@@ -8,7 +8,8 @@
         (only-in :std/list/list-builder with-list-builder)
         (only-in :std/struct/rbtree RBTree rbtree-get rbtree-put)
         (only-in :gerbil-ascent/core/relation-view make-relation-view)
-        (only-in :gerbil-ascent/core/view-value make-part-visitors)
+        (only-in :gerbil-ascent/core/view-value
+                 make-part-visitors make-packed-binary-visitors gerbil-ascent-binary-destination-end)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-advance! row-indexes-plan-positive-rules!)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan! gerbil-ascent-pure-positive-plan?))
 (export make-component-snapshot gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!
@@ -503,7 +504,7 @@
           (checkpoint!)
           (scan (fx+ i 1) (max depth width)))))))
 
-(def (visit-ordinal-run-fields! runs depths origins targets consume)
+(defrule (visit-ordinal-run-fields runs depths origins targets (left right) emit-fields)
   (let* ((direction (car runs)) (bounds (cdr runs))
          (count (fx- (vector-length bounds) 1)))
     ;; The public list reverses emission. Deliver the same sequence from
@@ -526,11 +527,16 @@
                         (end (if forward? until (fx- from 1))))
                     (let emit ((i start))
                       (unless (fx= i end)
-                        (consume [] (u64vector-ref origins i)
-                                    (u64vector-ref targets (fx+ i shift)))
+                        (let ((left (u64vector-ref origins i))
+                              (right (u64vector-ref targets (fx+ i shift))))
+                          emit-fields)
                         (emit (fx+ i step)))))))
               (visit (fx+ run step)))))
         (depth (fx- offset 1))))))
+
+(def (visit-ordinal-run-fields! runs depths origins targets consume)
+  (visit-ordinal-run-fields runs depths origins targets (left right)
+    (consume [] left right)))
 
 (def (make-functional-origin-lookup positions origins size low high checkpoint!)
   (let (extent (+ 1 (fx- high low)))
@@ -655,8 +661,20 @@
     (if (and depths (null? columns))
       (visit-ordinal-run-fields! runs depths origins targets consume)
       (for-each (lambda (row) (consume [] (car row) (cadr row))) (collect columns key))))
+  (def (copy! destination start)
+    (let ((end (gerbil-ascent-binary-destination-end destination start count))
+          (offset start))
+      (visit-ordinal-run-fields runs depths origins targets (left right)
+        (begin
+          (when (fx>= offset end) (error "ASCENT ordered field count exceeded"))
+          (##s64vector-set! destination offset left)
+          (##s64vector-set! destination (fx+ offset 1) right)
+          (set! offset (fx+ offset 2))))
+      (unless (fx= offset end) (error "ASCENT ordered field count incomplete"))))
   (make-relation-view #f #f 0 'total count count
     (lambda (columns key consume) (for-each consume (collect columns key)))
     (lambda (row) (and (pair? row) (pair? (cdr row)) (null? (cddr row))
                        (pair? (collect '(0 1) row))))
-    export (make-part-visitors visit-parts visit-parts)))
+    export (if depths
+             (make-packed-binary-visitors visit-parts visit-parts export copy!)
+             (make-part-visitors visit-parts visit-parts))))

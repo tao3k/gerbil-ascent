@@ -18,6 +18,7 @@
 (export actor-million-oracle-test actor-million-state-test
         actor-million-state-contention-test
         actor-million-query-test actor-million-recursive-test
+        million-query
         actor-ten-thousand-closure-test
         actor-million-list-delivery-test actor-million-visit-test
         actor-million-fields-test actor-million-fields-controls-test
@@ -111,41 +112,53 @@
 (def (verify-fixnum rows width offset end expected seen chain-ends)
   (let ((width-two? (and (not chain-ends) (fx= width 2)))
         (last-column (fx- width 1)))
-    (let walk ((rest rows) (count 0))
-      (cond
-       ((pair? rest)
-        (let (row (car rest))
-          (unless (and (pair? row) (pair? (cdr row)) (null? (cddr row)))
-            (error "invalid exported row" row))
-          (let ((origin (car row)) (target (cadr row)))
-            (unless (and (fixnum? origin) (fixnum? target)
-                         (fx<= offset origin) (fx< origin target) (fx< target end))
-              (error "row outside independent chain oracle" row))
-            (let* ((left (fx- origin offset))
-                   (right (fx- target offset))
-                   (index
-                    (cond
-                     (chain-ends
-                      (unless (fx< right (vector-ref chain-ends left))
-                        (error "row outside independent chain oracle" row))
-                      (fx+ (fx* left width) (fx- right left)))
-                     (width-two?
-                      (unless (and (fx= (fx+ left 1) right) (fx= (fxand left 1) 0))
-                        (error "row outside independent chain oracle" row))
-                      (fxquotient left 2))
-                     (else
-                      (unless (and (fx= (fx+ left 1) right)
-                                   (fx< (fxremainder left width) last-column))
-                        (error "row outside independent chain oracle" row))
-                      left))))
-              (unless (fx= (u8vector-ref seen index) 0)
-                (error "duplicate exported row" row))
-              (u8vector-set! seen index 1)
-              (walk (cdr rest) (fx+ count 1))))))
-       ((null? rest)
-        (unless (fx= count expected) (error "incomplete exported relation" count expected))
-        count)
-       (else (error "invalid exported relation" rest))))))
+    (defrule (mark origin target datum)
+      (begin
+        (unless (and (fixnum? origin) (fixnum? target)
+                     (fx<= offset origin) (fx< origin target) (fx< target end))
+          (error "row outside independent chain oracle" datum))
+        (let* ((left (fx- origin offset))
+               (right (fx- target offset))
+               (index
+                (cond
+                 (chain-ends
+                  (unless (fx< right (vector-ref chain-ends left))
+                    (error "row outside independent chain oracle" datum))
+                  (fx+ (fx* left width) (fx- right left)))
+                 (width-two?
+                  (unless (and (fx= (fx+ left 1) right) (fx= (fxand left 1) 0))
+                    (error "row outside independent chain oracle" datum))
+                  (fxquotient left 2))
+                 (else
+                  (unless (and (fx= (fx+ left 1) right)
+                               (fx< (fxremainder left width) last-column))
+                    (error "row outside independent chain oracle" datum))
+                  left))))
+          (unless (fx= (u8vector-ref seen index) 0)
+            (error "duplicate exported row" datum))
+          (u8vector-set! seen index 1))))
+    (if (s64vector? rows)
+      (let (size (s64vector-length rows))
+        (unless (= size (* 2 expected))
+          (error "incorrect binary relation extent" size expected))
+        (let walk ((i 0))
+          (if (fx= i size) expected
+            (let ((origin (##s64vector-ref rows i)) (target (##s64vector-ref rows (fx+ i 1))))
+              (mark origin target (list origin target))
+              (walk (fx+ i 2))))))
+      (let walk ((rest rows) (count 0))
+        (cond
+         ((pair? rest)
+          (let (row (car rest))
+            (unless (and (pair? row) (pair? (cdr row)) (null? (cddr row)))
+              (error "invalid exported row" row))
+            (let ((origin (car row)) (target (cadr row)))
+              (mark origin target row)
+              (walk (cdr rest) (fx+ count 1)))))
+         ((null? rest)
+          (unless (fx= count expected) (error "incomplete exported relation" count expected))
+          count)
+         (else (error "invalid exported relation" rest)))))))
 
 (def (chain-end-ordinals span width)
   (let (ends (make-vector span))
@@ -191,14 +204,14 @@
     (f64vector-set! totals 1 (+ (f64vector-ref totals 1) gc-cpu))
     (f64vector-set! totals 2 (+ (f64vector-ref totals 2) collections))))
 
-(def (query session verify-rows offset run-cost (source-size #f))
+(def (query session verify-rows offset run-cost (source-size #f) (deliver #f))
   (let* ((before (##process-statistics))
          (start (tick))
          (result (gerbil-ascent-session-run session))
          (run-ns (nanoseconds start)))
     (record-run-cost! run-cost before (##process-statistics))
     (unless (.ref result 'finished) (error "query did not finish"))
-    (let* ((rows ((.ref result 'rows-of) 'reach))
+    (let* ((rows (if deliver (deliver session) ((.ref result 'rows-of) 'reach)))
            (query-ns (nanoseconds start)))
       (when source-size
         (unless (= source-size (cdr (assq 'edge ((.ref result 'relation-sizes)))))
@@ -215,7 +228,7 @@
           (cons 'run-gc-cpu-seconds (f64vector-ref cost 1))
           (cons 'run-natural-collections (f64vector-ref cost 2)))))
 
-(def (report-samples phase input output samples wall cpu before (delivered #f))
+(def (report-samples phase input output samples wall cpu before (delivered #f) (limit 100000000))
   (let* ((after (##process-statistics))
          (ordered (list-sort < (f64vector->list samples)))
          (count (length ordered))
@@ -233,7 +246,7 @@
             (cons 'allocation-bytes (and (zero? collections) (>= allocated 0) allocated))
             (cons 'p50-ns (list-ref ordered (quotient (- count 1) 2)))
             (cons 'p95-ns p95) (cons 'max-ns (list-ref ordered (- count 1)))))
-    (check (< p95 100000000) => #t)))
+    (check (< p95 limit) => #t)))
 
 (def (chain-shortcut group width offset)
   (let (first (+ offset (* group width)))
@@ -249,7 +262,7 @@
       base)))
 
 (def (million-query groups width recursive? shortcuts?: (shortcuts? #f)
-                    append-shortcuts?: (append-shortcuts? #f))
+                    append-shortcuts?: (append-shortcuts? #f) copy-into: (copy-into #f))
   (check (##current-vm-processor-count) => 1)
   (when (or shortcuts? append-shortcuts?)
     (check (and recursive? (>= width 3)) => #t))
@@ -265,13 +278,20 @@
          (second (and (not append-shortcuts?) (make-query-cut groups width span shortcuts?)))
          (session (open-session first groups width recursive? input-facts: capacity))
          (verify-rows (make-chain-verifier groups width recursive?))
+         (deliver
+          (and copy-into
+               (let (buffer (make-s64vector (* 2 output)))
+                 (lambda (session)
+                   (let (count (copy-into session 'reach buffer))
+                     (unless (eqv? count output) (error "incomplete caller-buffer delivery" count))
+                     buffer)))))
          (samples (make-f64vector 1000 0.)))
     (try
       (receipt 'prepared (list (cons 'input-facts input) (cons 'expected-rows output)
                                (cons 'input-fact-capacity capacity)
                                (cons 'recursive recursive?) (cons 'wall-ns (nanoseconds begin))))
       (let (cost (make-f64vector 3 0.))
-        (let-values (((run-ns export-ns oracle-ns) (query session verify-rows 0 cost)))
+        (let-values (((run-ns export-ns oracle-ns) (query session verify-rows 0 cost #f deliver)))
           (let (cold (+ run-ns export-ns))
             (receipt 'cold-complete-query
               (list (cons 'query-and-export-ns cold) (cons 'with-oracle-ns (+ cold oracle-ns))
@@ -292,7 +312,7 @@
               (let ((replace-ns (nanoseconds request)))
                 (let-values (((run-ns export-ns oracle-ns)
                               (query session verify-rows offset cost
-                                (and append-shortcuts? (+ input index 1)))))
+                                (and append-shortcuts? (+ input index 1)) deliver)))
                   (set! replace-total (+ replace-total replace-ns))
                   (set! run-total (+ run-total run-ns))
                   (set! export-total (+ export-total export-ns))
@@ -302,9 +322,11 @@
               (report-query-work 'progress (+ index 1) replace-total run-total export-total
                 oracle-total (nanoseconds start) cost))
             (loop (+ index 1))))
-        (report-samples (if append-shortcuts? 'appended-complete-query 'changed-complete-query)
+        (report-samples (cond (deliver 'changed-buffer-query)
+                              (append-shortcuts? 'appended-complete-query)
+                              (else 'changed-complete-query))
           input output samples
-          (nanoseconds start) (- (cpu-time) cpu) before))
+          (nanoseconds start) (- (cpu-time) cpu) before #f (if deliver 50000000 100000000)))
       (finally (gerbil-ascent-session-close! session)))))
 
 (def actor-million-state-test

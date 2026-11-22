@@ -10,6 +10,7 @@
         (only-in :gerbil-ascent/core/relation-view make-relation-view)
         (only-in :gerbil-ascent/core/view-value
                  make-ordered-binary-visitors make-packed-binary-visitors
+                 gerbil-ascent-binary-destination-end
                  gerbil-ascent-visit-admitted-view-parts!)
         (only-in "scheme-checked.ss" relational-scalar?))
 (export gerbil-ascent-make-source-cut gerbil-ascent-source-cut-rows
@@ -113,6 +114,15 @@
 (def (make-affine-source-slot count left right left-stride right-stride)
   (defrule (left-at i) (fx+ left (fx* i left-stride)))
   (defrule (right-at i) (fx+ right (fx* i right-stride)))
+  (def (copy! destination start)
+    (let (end (gerbil-ascent-binary-destination-end destination start count))
+      (let write-fields ((offset start) (x left) (y right))
+        (unless (fx= offset end)
+          (##s64vector-set! destination offset x)
+          (##s64vector-set! destination (fx+ offset 1) y)
+          ;; The admitted interval bounds both fields. The final unused
+          ;; successor can wrap without being read or written.
+          (write-fields (fx+ offset 2) (fxwrap+ x left-stride) (fxwrap+ y right-stride))))))
   (let (lane
         (delay-atomic
           (let collect ((i 0) (rows []))
@@ -120,7 +130,7 @@
               (collect (fx+ i 1) (cons (list (left-at i) (right-at i)) rows))))))
     (make-source-slot lane (delay-atomic (reverse (force lane))) count #t
       (binary-source-view count (fx> left-stride 0) #t
-        (lambda (i) (left-at i)) (lambda (i) (right-at i)) #f)
+        (lambda (i) (left-at i)) (lambda (i) (right-at i)) copy!)
       #f #f)))
 
 (def (fixnum-binary-row? row)

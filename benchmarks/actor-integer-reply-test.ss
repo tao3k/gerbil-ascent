@@ -2,6 +2,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import :std/test
+        (only-in "actor-million-test.ss" million-query)
         (only-in :std/list/list append-map)
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/interface/engine-api ascent-engine-relation-answer
@@ -13,7 +14,8 @@
         (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-actor-session
                  gerbil-ascent-session-close!))
 (export actor-million-integer-list-test actor-million-integer-view-test
-        actor-million-integer-buffer-test actor-million-integer-packed-buffer-test)
+        actor-million-integer-buffer-test actor-million-integer-packed-buffer-test
+        actor-million-query-buffer-test actor-million-recursive-buffer-test)
 
 (def row-count 1000000)
 (def request-count 128)
@@ -156,3 +158,13 @@
 (def actor-million-integer-packed-buffer-test
   (test-suite "Integer replies from a packed Actor Session into a caller buffer"
     (test-case "copy every non-affine tuple in publication order" (measure 'packed-buffer))))
+
+(def actor-million-query-buffer-test
+  (test-suite "million-input query into a caller buffer"
+    (test-case "verify all one million rows after each of 1,000 replacements below 50 ms P95"
+      (million-query 1000000 2 #f copy-into: ascent-engine-session-copy-integer-relation!))))
+
+(def actor-million-recursive-buffer-test
+  (test-suite "million-output recursive query into a caller buffer"
+    (test-case "verify all 1,040,384 rows after each of 1,000 replacements below 50 ms P95"
+      (million-query 128 128 #t copy-into: ascent-engine-session-copy-integer-relation!))))

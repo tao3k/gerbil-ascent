@@ -63,15 +63,22 @@
 (def (ordered-rows offset)
   (map (lambda (i) (list (- offset i) (+ offset (* 2 i)))) (iota 2048)))
 
-(def (open-ordered-actor edges)
-  (let ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y)))
+(def (open-ordered-actor edges (recursive? #f))
+  (let* ((x (gerbil-ascent-variable 'x)) (y (gerbil-ascent-variable 'y))
+         (z (gerbil-ascent-variable 'z))
+         (edge (gerbil-ascent-atom 'edge (list x y)))
+         (reach (gerbil-ascent-atom 'reach (list x y)))
+         (base (gerbil-ascent-rule (list reach) (list edge))))
     (gerbil-ascent-open-actor-session
      (gerbil-ascent-program
       (list (gerbil-ascent-relation 'edge 2 edges)
             (gerbil-ascent-relation 'reach 2 []))
-      (list (gerbil-ascent-rule
-             (list (gerbil-ascent-atom 'reach (list x y)))
-             (list (gerbil-ascent-atom 'edge (list x y)))))
+      (if recursive?
+        (list base
+              (gerbil-ascent-rule
+               (list (gerbil-ascent-atom 'reach (list x z)))
+               (list reach (gerbil-ascent-atom 'edge (list y z)))))
+        (list base))
       2048 2048 4096)
      workers: 1)))
 
@@ -158,6 +165,33 @@
 
 (def ascent-engine-interface-test
   (test-suite "Public inert engine contract for C ABI consumers"
+    (test-case "affine and recursive copiers preserve the detached row order"
+      (for-each
+       (lambda (case)
+         (let* ((recursive? (car case))
+                (rows (cadr case))
+                (count (caddr case))
+                (session (open-ordered-actor rows recursive?))
+                (target (make-s64vector (+ 2 (* 2 count)) -1)))
+           (try
+             (let* ((result (gerbil-ascent-session-run session))
+                    (list-rows ((.ref result 'rows-of) 'reach))
+                    (copy! ((.ref result 'with-ordered-binary-fields)
+                            'reach (lambda (_count _visit copy!) copy!) #t)))
+               (check-equal? (length list-rows) count)
+               (check-equal? (procedure? copy!) #t)
+               (check-exception (copy! target 3) true)
+               (check-equal? target (make-s64vector (+ 2 (* 2 count)) -1))
+               (check-equal? (ascent-engine-session-copy-integer-relation! session 'reach target 1) count)
+               (check-equal? (s64vector->list target)
+                             (cons -1 (append (apply append list-rows) '(-1))))
+               (s64vector-set! target 1 -2)
+               (check-equal? ((.ref result 'rows-of) 'reach) list-rows))
+             (finally (gerbil-ascent-session-close! session)))))
+       (let* ((limit (##greatest-fixnum))
+              (descending (map (lambda (i) (list (- limit i) (- i))) (iota 40)))
+              (chain (map (lambda (i) (list i (+ i 1))) (iota 40))))
+         (list (list #f descending 40) (list #t chain 820) (list #t (reverse chain) 820)))))
     (test-case "packed caller buffers preserve capture order without exposing backing cells"
       (let* ((rows (map (lambda (i) (list (- 11 i) (modulo i 7))) (iota 64)))
              (session (open-ordered-actor rows))

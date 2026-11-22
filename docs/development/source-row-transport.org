@@ -392,6 +392,40 @@ models source-column traffic and stride lookups. The copy still
 writes two destination fields per delivered row, and the client
 still verifies every row.
 
+** Ordered independent validation for the two large fixtures
+
+Each expected tuple is identified by its positive gap, its chain
+number and its in-chain origin. =chain_oracle_coordinates_exact=
+characterizes their complete range, and =chain_oracle_fields_unique=
+shows that distinct coordinates give distinct field pairs.
+=chain_oracle_coordinates_nodup= rules out duplicate expected tuples.
+The order of the independent
+enumerator is descending gap, with ascending chains and descending origins
+at odd gaps, and descending chains and ascending origins at even gaps. It computes
+each tuple directly from the fixture geometry and cut offset.
+=ten_million_recursive_oracle_traffic= counts the two inspected
+fields per row in both paths. The ordered pass removes the
+=groups * width * width= bitmap resets and one membership read
+and write per returned row. These are logical memory operations.
+The paired diagnostic measures their actual elapsed cost.
+
+The fast comparison checks the shape of every list row or the
+complete interleaved buffer extent, compares both fields at every
+position, and verifies the final length. An ordering mismatch falls
+back to the previously admitted bitmap checker on the original
+result. This preserves unordered acceptance and rejection of invalid,
+duplicate or incomplete results. The bitmap is allocated only when
+needed. The native receipt counts fallback uses in the timed window.
+
+To measure the original oracle, keep the delivered object fixed and
+alternate the order of a membership-only diagnostic and the complete
+bitmap verifier. Time bitmap clearing separately and read the
+collector's elapsed counter around the full oracle. The difference
+between the two row passes estimates the incremental cost of bitmap
+addressing, duplicate probes and writes under their observed cache
+conditions. Only the pass with all checks supplies a complete oracle
+result. Keep the diagnostic out of the acceptance cohort.
+
 * POO reuse boundaries
 
 Yuanxu's pinned POO already provides persistent correlated table indexes

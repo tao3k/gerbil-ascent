@@ -190,6 +190,58 @@
               (verify-exact rows groups width offset recursive?)))))
       (lambda (rows offset) (verify-exact rows groups width offset recursive?)))))
 
+(defrule (for-each-expected-chain-row groups width offset (left right) body ...)
+  (let (last-base (fx+ offset (fx* (fx- groups 1) width)))
+    (let visit-gap ((gap (fx- width 1)))
+      (unless (fx= gap 0)
+        (let* ((chains-forward? (odd? gap))
+               (step (if chains-forward? -1 1))
+               (base-step (if chains-forward? width (fx- 0 width)))
+               (extent (fx- width gap)))
+          (let visit-chain ((base (if chains-forward? offset last-base)) (remaining groups))
+            (unless (fx= remaining 0)
+              (let (start (if chains-forward? (fx+ base (fx- extent 1)) base))
+                (let visit-row ((left start) (right (fx+ start gap)) (remaining extent))
+                  (unless (fx= remaining 0)
+                    body ...
+                    (visit-row (fxwrap+ left step) (fxwrap+ right step) (fx- remaining 1)))))
+              (visit-chain (fxwrap+ base base-step) (fx- remaining 1)))))
+        (visit-gap (fx- gap 1))))))
+
+(def (ordered-chain-count rows groups width offset expected)
+  (let/cc unordered
+    (if (s64vector? rows)
+      (let ((size (s64vector-length rows)) (cell 0))
+        (unless (= size (* 2 expected)) (unordered #f))
+        (for-each-expected-chain-row groups width offset (left right)
+          (unless (and (fx< cell size)
+                       (eq? left (##s64vector-ref rows cell))
+                       (eq? right (##s64vector-ref rows (fx+ cell 1))))
+            (unordered #f))
+          (set! cell (fx+ cell 2)))
+        (unless (fx= cell size) (unordered #f)))
+      (let (rest rows)
+        (for-each-expected-chain-row groups width offset (left right)
+          (unless (pair? rest) (unordered #f))
+          (let (row (car rest))
+            (unless (and (pair? row) (eq? left (car row))
+                         (pair? (cdr row)) (eq? right (cadr row)) (null? (cddr row)))
+              (unordered #f)))
+          (set! rest (cdr rest)))
+        (unless (null? rest) (unordered #f))))
+    expected))
+
+(def (make-ordered-chain-verifier groups width on-fallback!)
+  (let ((span (* groups width))
+        (expected (output-count groups width))
+        (bitmap (delay (make-chain-verifier groups width #t))))
+    (lambda (rows offset)
+      (or (and (fixnum? offset) (fixnum? (+ offset span))
+               (ordered-chain-count rows groups width offset expected))
+          (begin
+            (on-fallback!)
+            ((force bitmap) rows offset))))))
+
 (def (verify rows groups width offset recursive?)
   ((make-chain-verifier groups width recursive?) rows offset))
 
@@ -287,7 +339,11 @@
          (initial (if alternate-first? first second))
          (initial-offset (if alternate-first? 0 span))
          (session (open-session initial groups width recursive? input-facts: capacity))
-         (verify-rows (make-chain-verifier groups width recursive?))
+         (oracle-fallbacks 0)
+         (verify-rows (if shard
+                        (make-ordered-chain-verifier groups width
+                          (lambda () (set! oracle-fallbacks (+ oracle-fallbacks 1))))
+                        (make-chain-verifier groups width recursive?)))
          (deliver
           (and copy-into
                (let (buffer (make-s64vector (* 2 output)))
@@ -313,6 +369,7 @@
                     (cons 'exported-rows output))))
           (report-query-work 'cold-query-phases 1 0 run-ns export-ns oracle-ns
             (+ run-ns export-ns oracle-ns) cost)))
+      (set! oracle-fallbacks 0)
       (let ((start (tick)) (cpu (cpu-time)) (before (##process-statistics))
             (replace-total 0) (run-total 0) (export-total 0) (oracle-total 0)
             (cost (make-f64vector 3 0.)))
@@ -342,7 +399,8 @@
                                 (deliver 'changed-buffer-query)
                                 (append-shortcuts? 'appended-complete-query)
                                 (else 'changed-complete-query))
-            input output samples elapsed used before #f latency-limit shard-info)
+            input output samples elapsed used before #f latency-limit
+            (if shard (cons (cons 'oracle-fallbacks oracle-fallbacks) shard-info) []))
           (when shard
             (report-query-work 'ten-million-phases requests replace-total run-total
               export-total oracle-total elapsed cost))))
@@ -454,6 +512,22 @@
         (check (verify-rows '((4 5) (3 4) (3 5)) 3) => 3)
         (check-exception (verify-rows '((4 5) (3 4) (3 5)) 0) true)
         (check (verify-rows '((0 1) (1 2) (0 2)) 0) => 3)))
+    (test-case "ordered oracle verifies both representations and retains unordered acceptance"
+      (let* ((fallbacks 0)
+             (check-rows (make-ordered-chain-verifier 2 3
+                           (lambda () (set! fallbacks (+ fallbacks 1)))))
+             (rows '((3 5) (0 2) (1 2) (0 1) (4 5) (3 4))))
+        (check (check-rows rows 0) => 6)
+        (check (check-rows '#s64(3 5 0 2 1 2 0 1 4 5 3 4) 0) => 6)
+        (check fallbacks => 0)
+        (check (check-rows (reverse rows) 0) => 6)
+        (check fallbacks => 1)
+        (check-exception (check-rows (cdr rows) 0) true)
+        (check-exception (check-rows (cons (cadr rows) (cdr rows)) 0) true)
+        (check-exception (check-rows rows 6) true)
+        (check-exception (check-rows '#s64(3 5 0 2 1 2 0 1 4 5 4 5) 0) true)
+        (check-exception (check-rows '#s64(3 5 0 2 1 2 0 1 4 5) 0) true)
+        (check (check-rows rows 0) => 6)))
     (test-case "million dimensions count data independently of request samples"
       (check (* 1000000 (- 2 1)) => 1000000)
       (check (output-count 128 128) => 1040384))))

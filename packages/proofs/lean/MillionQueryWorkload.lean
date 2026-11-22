@@ -580,6 +580,101 @@ theorem oracle_bitmap_reset (previous : List UInt8) (slot : Nat) :
     | cons _ _ ih => simp [List.replicate_succ, ih]
   rw [reset]
 
+def orientedOrdinals (ascending : Bool) (size : Nat) : List Nat :=
+  if ascending then List.range size else (List.range size).reverse
+
+theorem oriented_ordinals_member (ascending : Bool) (size ordinal : Nat) :
+    ordinal ∈ orientedOrdinals ascending size ↔ ordinal < size := by
+  cases ascending <;> simp [orientedOrdinals]
+
+theorem oriented_ordinals_nodup (ascending : Bool) (size : Nat) :
+    (orientedOrdinals ascending size).Nodup := by
+  cases ascending
+  · exact (List.reverse_perm (List.range size)).nodup_iff.mpr List.nodup_range
+  · exact List.nodup_range
+
+/-- The independent oracle visits decreasing gaps. Odd gaps enumerate
+chains forwards and origins backwards. Even gaps reverse both directions. -/
+def chainOracleCoordinates (groups width : Nat) : List (Nat × Nat × Nat) :=
+  (orientedOrdinals false (width - 1)).flatMap fun depth =>
+    let gap := depth + 1
+    let chainsForward := gap % 2 == 1
+    (orientedOrdinals chainsForward groups).flatMap fun group =>
+      (orientedOrdinals (!chainsForward) (width - gap)).map fun origin => (gap, group, origin)
+
+theorem chain_oracle_coordinates_exact (groups width gap group origin : Nat) :
+    (gap, group, origin) ∈ chainOracleCoordinates groups width ↔
+      0 < gap ∧ group < groups ∧ origin + gap < width := by
+  simp only [chainOracleCoordinates, List.mem_flatMap, List.mem_map, oriented_ordinals_member]
+  constructor
+  · rintro ⟨depth, depthBound, g, groupBound, a, originBound, same⟩
+    simp only [Prod.mk.injEq] at same
+    obtain ⟨gapEq, groupEq, originEq⟩ := same
+    exact ⟨by omega, by omega, by omega⟩
+  · rintro ⟨positive, groupBound, originBound⟩
+    exact ⟨gap - 1, by omega, group, groupBound, origin, by omega, by
+      have gapEq : gap - 1 + 1 = gap := by omega
+      rw [gapEq]⟩
+
+theorem chain_oracle_coordinates_nodup (groups width : Nat) :
+    (chainOracleCoordinates groups width).Nodup := by
+  unfold chainOracleCoordinates
+  apply List.pairwise_flatMap.mpr
+  constructor
+  · intro depth _
+    apply List.pairwise_flatMap.mpr
+    constructor
+    · intro group _
+      apply List.pairwise_map.mpr
+      exact (oriented_ordinals_nodup _ _).imp fun different equal =>
+        different (congrArg (fun row : Nat × Nat × Nat => row.2.2) equal)
+    · apply (oriented_ordinals_nodup _ _).imp
+      intro first second different x hx y hy equal
+      obtain ⟨_, _, rfl⟩ := List.mem_map.mp hx
+      obtain ⟨_, _, rfl⟩ := List.mem_map.mp hy
+      exact different (congrArg (fun row : Nat × Nat × Nat => row.2.1) equal)
+  · apply (oriented_ordinals_nodup _ _).imp
+    intro first second different x hx y hy equal
+    obtain ⟨_, _, hx⟩ := List.mem_flatMap.mp hx
+    obtain ⟨_, _, rfl⟩ := List.mem_map.mp hx
+    obtain ⟨_, _, hy⟩ := List.mem_flatMap.mp hy
+    obtain ⟨_, _, rfl⟩ := List.mem_map.mp hy
+    have same := congrArg (fun row : Nat × Nat × Nat => row.1) equal
+    exact different (Nat.succ.inj same)
+
+def chainOracleFields (width gap group origin : Nat) : Nat × Nat :=
+  let left := group * width + origin
+  (left, left + gap)
+
+theorem chain_oracle_fields_unique (width gap group origin otherGap otherGroup otherOrigin : Nat)
+    (inside : origin < width) (otherInside : otherOrigin < width)
+    (equal : chainOracleFields width gap group origin =
+      chainOracleFields width otherGap otherGroup otherOrigin) :
+    gap = otherGap ∧ group = otherGroup ∧ origin = otherOrigin := by
+  have left := congrArg Prod.fst equal
+  have right := congrArg Prod.snd equal
+  obtain ⟨groupEq, originEq⟩ := bitmap_index_injective width group origin otherGroup otherOrigin
+    inside otherInside left
+  have gapEq : gap = otherGap := by
+    simp [chainOracleFields, groupEq, originEq] at right
+    exact right
+  exact ⟨gapEq, groupEq, originEq⟩
+
+/-- Loop counts for the successful ordered comparison and the original
+recursive bitmap comparison. Both inspect both fields of every row. -/
+def recursiveOracleTraffic (groups width : Nat) (ordered : Bool) :
+    Nat × Nat × Nat × Nat :=
+  let rows := closureRows groups width
+  if ordered then (2 * rows, 0, 0, 0)
+  else (2 * rows, groups * width * width, rows, rows)
+
+theorem ten_million_recursive_oracle_traffic :
+    recursiveOracleTraffic 1240 128 false = (20157440, 20316160, 10078720, 10078720) ∧
+    recursiveOracleTraffic 1240 128 true = (20157440, 0, 0, 0) ∧
+    recursiveOracleTraffic 77 512 false = (20145664, 20185088, 10072832, 10072832) ∧
+    recursiveOracleTraffic 77 512 true = (20145664, 0, 0, 0) := by
+  decide
+
 structure DataEvidence where
   inputFacts : Nat
   exportedRows : Nat
@@ -1536,6 +1631,10 @@ theorem compact_terminal_prefix_fits (source derived output count : Nat)
 end Ascent.MillionQueryWorkload
 
 #print axioms Ascent.MillionQueryWorkload.complete_oracle
+#print axioms Ascent.MillionQueryWorkload.chain_oracle_coordinates_exact
+#print axioms Ascent.MillionQueryWorkload.chain_oracle_coordinates_nodup
+#print axioms Ascent.MillionQueryWorkload.chain_oracle_fields_unique
+#print axioms Ascent.MillionQueryWorkload.ten_million_recursive_oracle_traffic
 #print axioms Ascent.MillionQueryWorkload.bitmap_index_injective
 #print axioms Ascent.MillionQueryWorkload.state_reply_cannot_certify_complete_query
 #print axioms Ascent.MillionQueryWorkload.indexed_witnesses_exact

@@ -15,7 +15,8 @@
                  gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!)
         (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-condensed-actor-session
                  gerbil-ascent-session-cancel! gerbil-ascent-session-state gerbil-ascent-session-edit-edge!
-                 gerbil-ascent-session-last-completed gerbil-ascent-session-close!)
+                 gerbil-ascent-session-last-completed gerbil-ascent-session-close!
+                 gerbil-ascent-session-open-integer-pages gerbil-ascent-session-pull-integer-page!)
         (only-in :gerbil-ascent/program/condensed-closure condensed-witness-vertices))
 (export ascent-condensed-session-test)
 
@@ -96,6 +97,35 @@
 
 (def ascent-condensed-session-test
   (test-suite "Versioned condensed binary closure in an Actor Session"
+    (test-case "paged SCC output interleaves component members in public order"
+      (let* ((edges (interleaved-cliques #t #f))
+             (session (gerbil-ascent-open-condensed-actor-session (program edges 512 512 1024)))
+             (expected (closure-oracle 20 edges))
+             (buffer (make-s64vector 14)))
+        (try
+          (let* ((result (gerbil-ascent-session-run session))
+                 (proof (witness result 0 1 512))
+                 (cursor (gerbil-ascent-session-open-integer-pages session 'reach 7 (length expected))))
+            (check (replay result proof) => #t)
+            (let pull ((rest expected))
+              (let (n (gerbil-ascent-session-pull-integer-page! session cursor buffer))
+                (check n => (min 7 (length rest)))
+                (unless (zero? n)
+                  (let compare ((i 0) (rest rest))
+                    (if (= i n) (pull rest)
+                      (begin
+                        (check (list (s64vector-ref buffer (* 2 i))
+                                     (s64vector-ref buffer (+ 1 (* 2 i)))) => (car rest))
+                        (compare (+ i 1) (cdr rest))))))))
+            (let ((next (edit-edge session result 'delete 18 1))
+                  (last (s64vector-copy buffer)))
+              (check (rows next) => (closure-oracle 20 (interleaved-cliques #f #f)))
+              (check (replay next proof) => #f)
+              (check (replay result proof) => #t)
+              (check (refused? (lambda () (gerbil-ascent-session-pull-integer-page! session cursor buffer))) => #t)
+              (check (equal? buffer last) => #t)))
+          (finally (gerbil-ascent-session-close! session)))))
+
     (test-case "borrowed SCCs match independent reachability and quotient order"
       (for-each
        (lambda (mask)

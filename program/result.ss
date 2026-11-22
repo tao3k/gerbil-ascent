@@ -8,7 +8,7 @@
 ;;; Slot zero carries the invocation deadline and is never captured by results.
 (import :gerbil-ascent/core/relation-view
         (only-in :gerbil-ascent/core/view-value gerbil-ascent-ordered-binary-row-parts?
-                 gerbil-ascent-ordered-binary-copy!)
+                 gerbil-ascent-ordered-binary-copy! gerbil-ascent-ordered-binary-pages)
         (only-in :std/iter for in-range)
         (only-in :std/list/list-builder with-list-builder)
         (only-in :clan/poo/object .o))
@@ -220,6 +220,12 @@
                        (if copy?
                          (receive count visit (gerbil-ascent-ordered-binary-copy! view))
                          (receive count visit))))))))
+      (with-ordered-binary-pages
+       (lambda (name receive)
+         (and complete?
+              (let (index (position-of name))
+                (and (= (vector-ref arity index) 2)
+                     (gerbil-ascent-ordered-binary-pages (vector-ref snapshots index) receive))))))
       (rows-of (lambda (name)
         (let (index (position-of name))
           (gerbil-ascent-public-snapshot-rows (vector-ref snapshots index)

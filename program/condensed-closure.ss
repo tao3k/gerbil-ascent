@@ -4,7 +4,7 @@
 
 (import (only-in :std/iter for in-range)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components/packed)
-        (only-in :gerbil-ascent/core/view-value make-relation-view make-part-visitors))
+        (only-in :gerbil-ascent/core/view-value make-relation-view make-paged-binary-visitors))
 (export gerbil-ascent-condense-closure gerbil-ascent-extend-condensed-closure
         gerbil-ascent-remove-condensed-edge
         condensed-closure? condensed-closure-source condensed-closure-size
@@ -509,9 +509,24 @@
                      ([right left] (visit-pair left right '(1 0) right left))
                      (else (scan))))
             (else (scan))))
+        (def (stage destination state length)
+          (let (end (fx* 2 length))
+            (let fill ((origins (car state)) (rights (cdr state)) (write 0))
+              (cond ((fx= write end) (cons origins rights))
+                    ((null? origins) (error "ASCENT condensed page incomplete"))
+                    ((not rights)
+                     (let* ((vertex (hash-get positions (car origins)))
+                            (group (vector-ref owner vertex)))
+                       (fill origins (force (vector-ref targets group)) write)))
+                    ((null? rights) (fill (cdr origins) #f write))
+                    (else
+                     (##s64vector-set! destination write (car origins))
+                     (##s64vector-set! destination (fx+ write 1) (car rights))
+                     (fill origins (cdr rights) (fx+ write 2)))))))
         (make-relation-view index.source version 0 'total count groups
           (lambda (columns key consume) (parts columns key (lambda (_ a b) (consume (list a b)))))
-          contains? #f (make-part-visitors parts parts))))))
+          contains? #f (make-paged-binary-visitors parts parts #f #f
+                          (cons (condensed-order-labels order) #f) stage))))))
 
 (defstruct condensed-witness (identity version path) final: #t)
 

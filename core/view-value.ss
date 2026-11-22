@@ -6,7 +6,8 @@
   (struct-out relation-view)
   (struct-out part-visitors)
   make-ordered-binary-visitors
-  make-packed-binary-visitors
+  make-packed-binary-visitors make-paged-binary-visitors
+  gerbil-ascent-ordered-binary-pages
   gerbil-ascent-ordered-binary-row-parts?
   gerbil-ascent-ordered-binary-copy! gerbil-ascent-binary-destination-end
   (struct-out rectangle-visitors)
@@ -36,7 +37,9 @@
 ;; Only the owner of an exact integer field stream certifies its full export.
 (defstruct (ordered-binary-visitors part-visitors) (exporter))
 ;; The copier reads a frozen view and writes into an exclusively held buffer.
-(defstruct (packed-binary-visitors ordered-binary-visitors) (copy) final: #t)
+(defstruct (packed-binary-visitors ordered-binary-visitors) (copy))
+;; Seed and stage describe the same order as the captured exporter.
+(defstruct (paged-binary-visitors packed-binary-visitors) (seed stage) final: #t)
 ;; Built-in products additionally own a direct selected-result collector.
 ;; Custom visitors keep their existing callback and ordering protocol.
 (defstruct (rectangle-visitors part-visitors) (materialize) final: #t)
@@ -91,7 +94,15 @@
   (and (relation-view? view)
        (let (parts (relation-view-parts view))
          (and (ordered-binary-visitors? parts)
+              (procedure? (relation-view-export view))
               (eq? (ordered-binary-visitors-exporter parts) (relation-view-export view))))))
+(def (gerbil-ascent-ordered-binary-pages view receive)
+  (and (relation-view? view)
+       (let (parts (relation-view-parts view))
+         (and (paged-binary-visitors? parts)
+              (eq? (ordered-binary-visitors-exporter parts) (relation-view-export view))
+              (receive (relation-view-count view)
+                (paged-binary-visitors-seed parts) (paged-binary-visitors-stage parts))))))
 ;; Only a copier with the current export order may commit to a destination.
 (def (gerbil-ascent-ordered-binary-copy! view)
   (and (gerbil-ascent-ordered-binary-row-parts? view)

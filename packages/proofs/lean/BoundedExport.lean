@@ -138,6 +138,49 @@ theorem completed_pulls_equal_full_result (cut : Publication Row) {start finish 
     rw [ih complete, advance, exactPage, ← read_page_exact]
     exact read_page_and_suffix cut.rows start.next width
 
+/-- The final check runs before either externally visible write. The
+state models the exclusive destination and the owner-serialized cursor. -/
+def commitStaged (current : CutIdentity) (cancelled : Bool) (start : Nat)
+    (before : Cursor × List Row) (staged : Option (List Row × Cursor)) : Cursor × List Row :=
+  if cancelled || decide (before.1.cut ≠ current) then before else
+    match staged with
+    | none => before
+    | some (page, next) =>
+      (next, before.2.take start ++ page ++ before.2.drop (start + page.length))
+
+theorem commit_refusal_preserves_buffer_and_cursor (current : CutIdentity) (cancelled : Bool)
+    (start : Nat) (before : Cursor × List Row) (staged : Option (List Row × Cursor))
+    (refused : cancelled = true ∨ before.1.cut ≠ current ∨ staged = none) :
+    commitStaged current cancelled start before staged = before := by
+  rcases refused with rejected | changed | absent
+  · simp [commitStaged, rejected]
+  · simp [commitStaged, changed]
+  · simp [commitStaged, absent]
+
+theorem commit_accepts_both (current : CutIdentity) (start : Nat) (before : Cursor × List Row)
+    (page : List Row) (next : Cursor) (unchanged : before.1.cut = current) :
+    commitStaged current false start before (some (page, next)) =
+      (next, before.2.take start ++ page ++ before.2.drop (start + page.length)) := by
+  simp [commitStaged, unchanged]
+
+/-- Whole SCCs may interleave in the public vertex order. Visit each origin
+in that order, then its ascending target axis, never the component blocks. -/
+theorem interleaved_scc_target_order (origins : List Int) (targets : Int → List Int)
+    (originOrder : origins.Pairwise (· < ·))
+    (targetOrder : ∀ origin ∈ origins, (targets origin).Pairwise (· < ·)) :
+    (origins.flatMap fun a => (targets a).map (a, ·)).Pairwise
+      (fun a b => a.1 < b.1 ∨ a.1 = b.1 ∧ a.2 < b.2) := by
+  apply List.pairwise_flatMap.2
+  constructor
+  · intro origin member
+    apply List.pairwise_map.2
+    exact (targetOrder origin member).imp (fun smaller => Or.inr ⟨rfl, smaller⟩)
+  · apply originOrder.imp
+    intro left right smaller a fromLeft b fromRight
+    obtain ⟨_, _, rfl⟩ := List.mem_map.mp fromLeft
+    obtain ⟨_, _, rfl⟩ := List.mem_map.mp fromRight
+    exact Or.inl smaller
+
 /-- A quotient-reachability rectangle can use two indexed axes. The rank
 encodes the origin-major order and requires one read from each axis. -/
 def rectangle (left : Array α) (right : Array β) : IndexedRows (α × β) where
@@ -319,3 +362,5 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.measured_gc_floor
 #print axioms Ascent.BoundedExport.saved_interior_pair_keeps_child
 #print axioms Ascent.BoundedExport.observed_capacity_can_be_consumed
+#print axioms Ascent.BoundedExport.commit_refusal_preserves_buffer_and_cursor
+#print axioms Ascent.BoundedExport.interleaved_scc_target_order

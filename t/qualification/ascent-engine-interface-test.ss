@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :std/test :std/encoding/json :gerbil-ascent/interface/engine-api
+        (only-in :std/list/list take)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/core/view-value make-relation-view make-ordered-binary-visitors
                  make-packed-binary-visitors gerbil-ascent-ordered-binary-copy!
@@ -11,7 +12,8 @@
         (only-in :gerbil-ascent/program/func gerbil-ascent-program gerbil-ascent-relation
                  gerbil-ascent-variable gerbil-ascent-rule gerbil-ascent-atom)
         (only-in :gerbil-ascent/program/actor-session gerbil-ascent-open-actor-session
-                 gerbil-ascent-session-close! gerbil-ascent-session-last-completed)
+                 gerbil-ascent-session-close! gerbil-ascent-session-last-completed
+                 gerbil-ascent-session-open-integer-pages gerbil-ascent-session-pull-integer-page!)
         (only-in :gerbil-ascent/program/session gerbil-ascent-session-run
                  gerbil-ascent-session-replace-source!))
 (export ascent-engine-interface-test)
@@ -212,6 +214,49 @@
                (list #t nonuniform 820)
                (list #t (append chain second-chain) 1640)))))
 
+    (test-case "ordinal pages preserve order and commit the buffer and cursor together"
+      (let* ((edges (append (map (lambda (i) (list i (+ i 1))) (iota 19))
+                     (map (lambda (i) (list (+ 100 (* 3 i)) (+ 103 (* 3 i)))) (iota 22))))
+             (session (open-ordered-actor edges #t))
+             (buffer (make-s64vector 23 -1)))
+        (try
+          (let* ((result (gerbil-ascent-session-run session))
+                 (expected ((.ref result 'rows-of) 'reach))
+                 (cursor (gerbil-ascent-session-open-integer-pages session 'reach 11 (length expected)))
+                 (limited (gerbil-ascent-session-open-integer-pages session 'reach 11 12))
+                 (limited-buffer (make-s64vector 22 -1)))
+            (check-equal? (gerbil-ascent-session-pull-integer-page! session limited limited-buffer) 11)
+            (let (last (s64vector-copy limited-buffer))
+              (check-exception (gerbil-ascent-session-pull-integer-page! session limited limited-buffer) true)
+              (check-equal? limited-buffer last))
+            (check-exception (gerbil-ascent-session-pull-integer-page! session cursor buffer 2) true)
+            (let (checks 0)
+              (parameterize ((current-ascent-execution-control
+                               (lambda (_work _facts)
+                                 (set! checks (+ checks 1))
+                                 (when (= checks 2) (error "cancel staged page")))))
+                (check-equal? (with-catch error-message (lambda ()
+                                (gerbil-ascent-session-pull-integer-page! session cursor buffer 1)))
+                              "cancel staged page")))
+            (check-equal? buffer (make-s64vector 23 -1))
+            (let pull ((remaining expected))
+              (let (n (gerbil-ascent-session-pull-integer-page! session cursor buffer 1))
+                (check-equal? (s64vector-ref buffer 0) -1)
+                (check-equal? n (min 11 (length remaining)))
+                (unless (= n 0)
+                  (let verify ((rest remaining) (i 0))
+                    (if (= i n) (pull rest)
+                      (begin
+                        (check-equal? (list (s64vector-ref buffer (+ 1 (* 2 i)))
+                                            (s64vector-ref buffer (+ 2 (* 2 i)))) (car rest))
+                        (verify (cdr rest) (+ i 1))))))))
+            (gerbil-ascent-session-replace-source! session 'edge edges)
+            (gerbil-ascent-session-run session)
+            (let (last (s64vector-copy buffer))
+              (check-exception (gerbil-ascent-session-pull-integer-page! session cursor buffer 1) true)
+              (check-equal? buffer last)))
+          (finally (gerbil-ascent-session-close! session)))))
+
     (test-case "packed caller buffers preserve capture order without exposing backing cells"
       (let* ((rows (map (lambda (i) (list (- 11 i) (modulo i 7))) (iota 64)))
              (session (open-ordered-actor rows))
@@ -225,6 +270,10 @@
             (check-equal? (ascent-engine-relation-answer result 'reach #f values) rows)
             (check-equal? (ascent-engine-session-copy-integer-relation! session 'reach target 1) 64)
             (check-equal? (s64vector->list target) expected)
+            (let ((cursor (gerbil-ascent-session-open-integer-pages session 'reach 7 64))
+                  (page (make-s64vector 14)))
+              (check-equal? (gerbil-ascent-session-pull-integer-page! session cursor page) 7)
+              (check-equal? (s64vector->list page) (take (cdr expected) 14)))
             (s64vector-set! target 1 65536)
             (let (checks 0)
               (parameterize ((current-ascent-execution-control

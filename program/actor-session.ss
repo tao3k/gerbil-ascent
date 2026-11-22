@@ -12,6 +12,7 @@
         (only-in :gerbil-ascent/core/positive-plan
                  current-positive-plan-cost gerbil-ascent-pure-positive-plan?)
         (only-in :gerbil-ascent/core/relation-view relation-view-count)
+        (only-in :gerbil-ascent/core/view-value gerbil-ascent-binary-destination-end)
         (only-in "source-cut.ss" gerbil-ascent-make-source-cut
                  gerbil-ascent-source-cut-rows gerbil-ascent-source-cut-update
                  gerbil-ascent-source-cut-terminal-slot gerbil-ascent-source-cut-edit-edge
@@ -37,13 +38,17 @@
 (export gerbil-ascent-open-actor-session gerbil-ascent-open-condensed-actor-session
         gerbil-ascent-session-cancel! gerbil-ascent-session-edit-edge!
         gerbil-ascent-session-last-completed gerbil-ascent-session-close!
-        gerbil-ascent-session-state)
+        gerbil-ascent-session-state gerbil-ascent-session-open-integer-pages
+        gerbil-ascent-session-pull-integer-page!)
 
 (defstruct actor-run (epoch token worker monitor reply authority sources accept-result fallback) final: #t)
 (defstruct actor-job (epoch evaluate) final: #t)
 (defstruct actor-edge-edit (insert? row) final: #t)
 (defstruct actor-engine (run token) final: #t)
 (defstruct state-request (reply) final: #t)
+;; The coordinator owns the mutable position and private numeric staging area.
+(defstruct integer-page-cursor (owner result total width stage scratch position) final: #t)
+(defstruct integer-page-position (seed ordinal remaining) final: #t)
 
 (def Session. (.ref GerbilAscentSessionContract 'proto))
 
@@ -552,6 +557,43 @@
                          (or (terminal-result sources token epoch edit)
                              (error "ASCENT edge edit could not publish within the admitted fact limits"))))
                      #f)))
+               (def (open-pages name width budget)
+                 (unless (and (fixnum? width) (fx> width 0)
+                              (<= (* 2 width) (##greatest-fixnum))
+                              (exact-integer? budget) (>= budget 0))
+                   (error "invalid ASCENT integer page width or budget"))
+                 (ascent-execution-checkpoint!)
+                 (and published
+                      ((.ref published 'with-ordered-binary-pages) name
+                        (lambda (total seed stage)
+                          (let (width (min width total))
+                            (make-integer-page-cursor gate published total width stage
+                              (make-s64vector (* 2 (min width budget)))
+                              (make-integer-page-position seed 0 budget)))))))
+               (def (pull-page! channel cursor destination start)
+                 (unless (and (integer-page-cursor? cursor)
+                              (eq? gate (integer-page-cursor-owner cursor))
+                              (eq? published (integer-page-cursor-result cursor)))
+                   (error "ASCENT stale or foreign integer page cursor"))
+                 (using (cursor :- integer-page-cursor)
+                   (using (position cursor.position :- integer-page-position)
+                     (let (count (min cursor.width (- cursor.total position.ordinal)))
+                       (gerbil-ascent-binary-destination-end destination start count)
+                       (when (> count position.remaining)
+                         (error "ASCENT integer page row budget exceeded"))
+                       (ascent-execution-checkpoint!)
+                       (if (zero? count) (reply! channel (vector #t 0))
+                         (let* ((seed (cursor.stage cursor.scratch position.seed count))
+                                (next (make-integer-page-position seed (+ position.ordinal count)
+                                        (- position.remaining count)))
+                                (answer (vector #t count))
+                                (cells (* 2 count)))
+                           (ascent-execution-checkpoint!)
+                           ;; No callbacks or validation between writing the
+                           ;; caller-owned destination and advancing the cursor.
+                           (s64vector-copy! destination start cursor.scratch 0 cells)
+                           (set! cursor.position next)
+                           (reply! channel answer)))))))
                (def (dispatch-request! channel authority operation args)
                  (with-catch (lambda (failure) (reply! channel (vector #f failure)))
                    (lambda ()
@@ -566,6 +608,8 @@
                          ((replace-many) (update! (car args) #f) (reply! channel (vector #t (void))))
                          ((cancel) (mark-canceled!) (reply! channel (vector #t (if running 'draining 'idle))))
                          ((result) (reply! channel (vector #t published)))
+                         ((open-pages) (reply! channel (vector #t (apply open-pages args))))
+                         ((pull-page) (apply pull-page! channel args))
                          ((state) (reply! channel (vector #t (read-state))))
                          ((close) (mark-canceled!) (set! closing (cons channel closing))))))))
                (def (dispatch-message! message)
@@ -684,6 +728,9 @@
                      (request 'edit-edge expected name operation left right)))
                   (.cancel! (lambda () (request 'cancel)))
                   (.last-completed (lambda () (request 'result)))
+                  (.open-integer-pages (lambda (name width budget) (request 'open-pages name width budget)))
+                  (.pull-integer-page! (lambda (cursor destination start)
+                    (request 'pull-page cursor destination start)))
                   (.state request-state)
                   (.close! (lambda () (request 'close) (thread-join! owner)))))))
 
@@ -694,5 +741,11 @@
 
 (def (gerbil-ascent-session-cancel! session) ((.ref session '.cancel!)))
 (def (gerbil-ascent-session-last-completed session) ((.ref session '.last-completed)))
+(def (gerbil-ascent-session-open-integer-pages session name width budget)
+  ((.ref session '.open-integer-pages) name width budget))
+;; The destination remains exclusive until the call returns. A cursor is
+;; attached to the completed result and rejected after another publication.
+(def (gerbil-ascent-session-pull-integer-page! session cursor destination (start 0))
+  ((.ref session '.pull-integer-page!) cursor destination start))
 (def (gerbil-ascent-session-state session) ((.ref session '.state)))
 (def (gerbil-ascent-session-close! session) ((.ref session '.close!)))

@@ -14,11 +14,12 @@
         (only-in :gerbil-ascent/program/actor-session
                  gerbil-ascent-open-actor-session gerbil-ascent-session-state
                  gerbil-ascent-session-last-completed
-                 gerbil-ascent-session-close!))
+                 gerbil-ascent-session-close! gerbil-ascent-session-open-integer-pages
+                 gerbil-ascent-session-pull-integer-page!))
 (export actor-million-oracle-test actor-million-state-test
         actor-million-state-contention-test
         actor-million-query-test actor-million-recursive-test
-        million-query ten-million-query
+        million-query ten-million-query ten-million-paged-query
         actor-ten-thousand-closure-test
         actor-million-list-delivery-test actor-million-visit-test
         actor-million-fields-test actor-million-fields-controls-test
@@ -411,19 +412,79 @@
   (measure-chain-query groups width recursive? shortcuts? append-shortcuts? copy-into
     1000 (if copy-into 50000000 100000000)))
 
-(def (ten-million-query width (copy-into #f))
-  (let ((groups (case width
-                  ((128) 1240)
-                  ((512) 77)
-                  (else (error "unsupported delivery chain width" width))))
-        (shard (string->number (getenv "ASCENT_DELIVERY_SHARD" "0"))))
+(def (ten-million-groups width)
+  (case width
+    ((128) 1240)
+    ((512) 77)
+    (else (error "unsupported delivery chain width" width))))
+
+(def (ten-million-shard)
+  (let (shard (string->number (getenv "ASCENT_DELIVERY_SHARD" "0")))
     (unless (and (fixnum? shard) (fx<= 0 shard) (fx< shard 40))
       (error "ASCENT_DELIVERY_SHARD must be an integer from 0 to 39" shard))
+    shard))
+
+(def (ten-million-query width (copy-into #f))
+  (let ((groups (ten-million-groups width)) (shard (ten-million-shard)))
     (receipt 'ten-million-plan
       (list (cons 'delivery (if copy-into 'buffer 'list))
             (cons 'groups groups) (cons 'width width)
             (cons 'shard shard) (cons 'planned-requests 25)))
     (measure-chain-query groups width #t #f #f copy-into 25 #f shard)))
+
+(def (ten-million-paged-query width)
+  (check (##current-vm-processor-count) => 1)
+  (let* ((groups (ten-million-groups width)) (shard (ten-million-shard))
+         (expected (output-count groups width)) (span (* groups width))
+         (first (make-query-cut groups width 0 #f))
+         (second (make-query-cut groups width span #f))
+         (start-with-first? (even? shard))
+         (session (open-session (if start-with-first? first second) groups width #t))
+         (page-width 8192) (buffer (make-s64vector (* 2 page-width)))
+         (requests 25) (first-page (make-f64vector requests)) (completion (make-f64vector requests)))
+    (def (deliver offset start)
+      (unless (.ref (gerbil-ascent-session-run session) 'finished) (error "query did not finish"))
+      (let* ((cursor (gerbil-ascent-session-open-integer-pages session 'reach page-width expected))
+             (remaining expected) (cell 0)
+             (size (* 2 (gerbil-ascent-session-pull-integer-page! session cursor buffer)))
+             (first-ns (nanoseconds start)))
+        (unless (= size (* 2 page-width)) (error "incorrect first page size" size))
+        (for-each-expected-chain-row groups width offset (left right)
+          (when (fx= cell size)
+            (let (received (gerbil-ascent-session-pull-integer-page! session cursor buffer))
+              (unless (= received (min remaining page-width))
+                (error "incorrect page size" received remaining))
+              (set! size (fx* 2 received))
+              (set! cell 0)))
+          (unless (and (eq? left (##s64vector-ref buffer cell))
+                       (eq? right (##s64vector-ref buffer (fx+ cell 1))))
+            (error "page order or row mismatch" left right remaining))
+          (set! cell (fx+ cell 2))
+          (set! remaining (fx- remaining 1)))
+        (unless (and (= remaining 0) (= size cell)
+                     (= 0 (gerbil-ascent-session-pull-integer-page! session cursor buffer)))
+          (error "incomplete paged delivery" remaining))
+        first-ns))
+    (try
+      (let* ((start (tick)) (first-ns (deliver (if start-with-first? 0 span) start)))
+        (receipt 'cold-ten-million-pages
+          (list (cons 'first-page-ns first-ns) (cons 'complete-ns (nanoseconds start)))))
+      (let ((start (tick)) (cpu (cpu-time)) (before (##process-statistics)))
+        (for-each
+          (lambda (i)
+            (let* ((initial? (eq? (even? i) start-with-first?)) (request (tick)))
+              (gerbil-ascent-session-replace-source! session 'edge (if initial? second first))
+              (let (first-ns (deliver (if initial? span 0) request))
+                (f64vector-set! first-page i (exact->inexact first-ns))
+                (f64vector-set! completion i (exact->inexact (nanoseconds request))))))
+          (iota requests))
+        (let ((wall (nanoseconds start)) (used (- (cpu-time) cpu)))
+          (report-samples 'ten-million-paged-delivery (* groups (- width 1)) expected
+            completion wall used before #f #f
+            (list (cons 'width width) (cons 'groups groups) (cons 'shard shard)
+                  (cons 'first-request (* shard requests)) (cons 'page-rows page-width)))
+          (receipt 'first-page-samples (f64vector->list first-page))))
+      (finally (gerbil-ascent-session-close! session)))))
 
 (def actor-million-state-test
   (test-suite "million-row resident Session state"

@@ -9,7 +9,7 @@
                  rbtree-empty? rbtree-for-each)
         (only-in :gerbil-ascent/core/relation-view make-relation-view)
         (only-in :gerbil-ascent/core/view-value
-                 make-ordered-binary-visitors make-packed-binary-visitors
+                 make-ordered-binary-visitors make-packed-binary-visitors make-paged-binary-visitors
                  gerbil-ascent-binary-destination-end
                  gerbil-ascent-visit-admitted-view-parts!)
         (only-in "scheme-checked.ss" relational-scalar?))
@@ -99,10 +99,18 @@
         (if (fx< i 0) rows
           (collect (fx- i 1)
             (cons (list (read-left i) (read-right i)) rows)))))
+    (def (stage destination start length)
+      (let (end (fx+ start length))
+        (let fill ((i start) (at 0))
+          (if (fx= i end) end
+            (begin
+              (##s64vector-set! destination at (read-left i))
+              (##s64vector-set! destination (fx+ at 1) (read-right i))
+              (fill (fx+ i 1) (fx+ at 2)))))))
     (make-relation-view #f #f 0 'total count count visit contains? export
       (let (copy copy-cells)
         (if copy
-          (make-packed-binary-visitors parts parts export copy)
+          (make-paged-binary-visitors parts parts export copy 0 stage)
           (make-ordered-binary-visitors parts parts export))))))
 
 (def (packed-source-view cells count ascending? (indexed? #t))

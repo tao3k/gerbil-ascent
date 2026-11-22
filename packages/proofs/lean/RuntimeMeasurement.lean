@@ -40,6 +40,44 @@ theorem phase_decomposition (t : Trace) (h : Ordered t) :
   unfold latency queueTime executionTime publicationTime
   omega
 
+/-- Events for one terminal job. Each boundary is sampled by the thread
+performing the send, receive, or publication in the production Actor path. -/
+structure ActorJobTrace where
+  callerSend : Nat
+  ownerReceive : Nat
+  workerSend : Nat
+  workerReceive : Nat
+  workerDone : Nat
+  ownerReceiveResult : Nat
+  replyPost : Nat
+  callerResume : Nat
+
+def actorJobOrdered (t : ActorJobTrace) : Prop :=
+  t.callerSend ≤ t.ownerReceive ∧ t.ownerReceive ≤ t.workerSend ∧
+  t.workerSend ≤ t.workerReceive ∧ t.workerReceive ≤ t.workerDone ∧
+  t.workerDone ≤ t.ownerReceiveResult ∧ t.ownerReceiveResult ≤ t.replyPost ∧
+  t.replyPost ≤ t.callerResume
+
+def actorHandoffTime (t : ActorJobTrace) : Nat :=
+  (t.ownerReceive - t.callerSend) + (t.workerReceive - t.workerSend) +
+  (t.ownerReceiveResult - t.workerDone) + (t.callerResume - t.replyPost)
+
+def actorActiveTime (t : ActorJobTrace) : Nat :=
+  (t.workerSend - t.ownerReceive) + (t.workerDone - t.workerReceive) +
+  (t.replyPost - t.ownerReceiveResult)
+
+theorem actor_job_trace_exact (t : ActorJobTrace) (ordered : actorJobOrdered t) :
+    t.callerResume - t.callerSend = actorHandoffTime t + actorActiveTime t := by
+  unfold actorJobOrdered at ordered
+  unfold actorHandoffTime actorActiveTime
+  omega
+
+/-- Consecutive collector clock deltas are parts of the same cumulative
+clock. Sum them once even if a collector event occurs during a handoff. -/
+theorem collector_intervals_exact (first middle last : Nat)
+    (firstLe : first ≤ middle) (middleLe : middle ≤ last) :
+    (middle - first) + (last - middle) = last - first := by omega
+
 structure Evidence where
   unit : Unit
   planned : Nat

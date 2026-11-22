@@ -458,7 +458,7 @@
                  (or (fx= direction 0) (fx= direction step))
                  (inspect (fx+ i 1) step))))))))
 
-(def (export-ordinal-runs runs origins targets)
+(def (export-ordinal-runs runs origins targets strides)
   (let* ((direction (car runs)) (bounds (cdr runs))
          (count (fx- (vector-length bounds) 1))
          (active (make-s32vector count)))
@@ -478,17 +478,31 @@
                  (from (if (fx< direction 0) (fx+ lo offset) lo))
                  (until (if (fx> direction 0) (fx- hi offset) hi))
                  (output
-                  (if (fx> step 0)
+                  (cond
+                   (strides
+                    (let* ((first (if (fx> step 0) from (fx- until 1)))
+                           (gap (s64vector-ref strides run))
+                           (advance (if (fx= direction step) gap (fx- 0 gap))))
+                      (let emit ((remaining (fx- until from))
+                                 (left (u64vector-ref origins first))
+                                 (right (u64vector-ref targets (fx+ first shift)))
+                                 (rows output))
+                        (if (fx= remaining 0) rows
+                          (emit (fx- remaining 1)
+                            (fxwrap+ left advance) (fxwrap+ right advance)
+                            (cons (list left right) rows))))))
+                   ((fx> step 0)
                     (let emit ((i from) (rows output))
                       (if (fx= i until) rows
                         (emit (fx+ i 1)
                           (cons (list (u64vector-ref origins i)
-                                      (u64vector-ref targets (fx+ i shift))) rows))))
+                                      (u64vector-ref targets (fx+ i shift))) rows)))))
+                   (else
                     (let emit ((i (fx- until 1)) (rows output))
                       (if (fx< i from) rows
                         (emit (fx- i 1)
                           (cons (list (u64vector-ref origins i)
-                                      (u64vector-ref targets (fx+ i shift))) rows)))))))
+                                      (u64vector-ref targets (fx+ i shift))) rows))))))))
             (if (fx= (fx- until from) 1)
               (gather (fx+ read step) write output)
               (begin
@@ -683,8 +697,13 @@
                   (s32vector-set! active write origin-index)
                   (s32vector-set! ends write extension)
                   (visit (fx+ read step) (fx+ write step) output)))))))))
+  (def (affine-window-steps)
+    (and depths
+         (let (window-limit (* depths (- (vector-length (cdr runs)) 1)))
+           (and (< (+ (* 2 size) (* 3 window-limit)) (* 2 count))
+                (ordinal-affine-steps runs origins targets)))))
   (def export
-    (if runs (lambda () (export-ordinal-runs runs origins targets))
+    (if runs (lambda () (export-ordinal-runs runs origins targets (affine-window-steps)))
       (lambda () (gather left right #t))))
   (def (collect columns key)
     (def (matches? origin target)
@@ -707,9 +726,7 @@
   (def (copy! destination start)
     (let* ((end (gerbil-ascent-binary-destination-end destination start count))
            (offset start)
-           (window-limit (* depths (- (vector-length (cdr runs)) 1)))
-           (steps (and (< (+ (* 2 size) (* 3 window-limit)) (* 2 count))
-                       (ordinal-affine-steps runs origins targets))))
+           (steps (affine-window-steps)))
       (if steps
         (let (direction (car runs))
           (visit-ordinal-run-windows runs depths (run first last step shift)

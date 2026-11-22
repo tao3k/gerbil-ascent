@@ -476,6 +476,56 @@ refusal at a run boundary. The generic distance memo covers the
 other successor graphs. The order and affine window copier both
 consume the same certified boundaries.
 
+** Pair terminal Actor events with delivery
+
+=actor_job_trace_exact= partitions an individual resident =run= in
+=program/actor-session.ss=. Sample before the caller sends its request,
+at owner dispatch, before the resident job send, before worker evaluation,
+after worker evaluation, at owner dispatch of =resident-terminal=, before
+the reply is posted, and after the caller returns from =completion-wait!=.
+The four handoffs have both endpoints. Their time includes message
+transport, wakeup, and any preemption between the two stamps. The
+coordinator and worker spans fill the rest of the bracket.
+
+Use the same send, dispatch, post, and resume points for source replacement
+and for the completed-result read made by the caller-buffer API. The
+list exporter uses the returned Result directly and has no result-read
+mailbox span. Bracket actual delivery and end the request after the
+independent oracle. Sample the cumulative collector elapsed clock and
+collection count at each boundary. =collector_intervals_exact= explains
+why these deltas can be summed without overlapping phases. Collector time
+inside a handoff is a subset of that handoff, not a separate charge.
+
+Keep the same source cuts, fixture ordinals, heap cap, watchdog, and
+oracle. Pair requests across reference and candidate by width, delivery
+mode, shard, and request index. Counterfactual replacement of a single
+span preserves each request's pairing. Comparing marginal percentiles
+does not locate the cause of an end-to-end percentile change.
+
+The complete-list exporter reuses the binary writer's constant-stride
+certificate when its logical read bound is below ordinary ordinal
+delivery. =ordinal_window_prepend_exact= takes the existing detached
+suffix as an explicit argument. Carrying the first pair and the signed
+advance preserves each window's prepending order in both directions.
+The number of freshly allocated pair cells remains three per row.
+Uncertified windows retain the indexed traversal.
+
+The fixed diagnostic comparison runs four paired shards per workload
+and alternates arm order between shards. The trace of the earlier
+publication change reproduced the P95 increase for the width-128
+complete list. On the 100 paired requests, substituting only the
+reference handoff spans changed candidate P95 by 0.002 ms. Substituting
+the non-collector delivery spans reduced it by 129.949 ms. These
+within-request substitutions diagnose the observed cohort. They do not
+predict the distribution that an implementation change will produce.
+
+A second paired comparison changed only the list field traversal.
+The mean delivery wall time outside GC fell from 123.709 to 39.838 ms
+at width 128 and from 131.879 to 31.127 ms at width 512. The mean
+collector times were 121.069 and 121.357 ms at width 128, and 75.432
+and 72.966 ms at width 512. The production qualification uses the
+uninstrumented module and the original gates.
+
 * POO reuse boundaries
 
 Yuanxu's pinned POO already provides persistent correlated table indexes

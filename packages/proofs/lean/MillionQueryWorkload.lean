@@ -180,6 +180,29 @@ theorem affine_copy_row_step (first stride : AffineRow) (i : Nat) :
       ((affineRowAt first stride i).1 + stride.1, (affineRowAt first stride i).2 + stride.2) := by
   simp [affineRowAt, affine_field_next]
 
+/-- The ordinal exporter prepends in the original emission order.
+Each window starts with the existing detached suffix. -/
+def indexedWindowPrepend (first advance : AffineRow) :
+    Nat → Nat → List AffineRow → List AffineRow
+  | _, 0, suffix => suffix
+  | i, n + 1, suffix =>
+      indexedWindowPrepend first advance (i + 1) n (affineRowAt first advance i :: suffix)
+
+def carriedWindowPrepend (advance : AffineRow) :
+    AffineRow → Nat → List AffineRow → List AffineRow
+  | _, 0, suffix => suffix
+  | row, n + 1, suffix =>
+      carriedWindowPrepend advance (row.1 + advance.1, row.2 + advance.2) n (row :: suffix)
+
+theorem ordinal_window_prepend_exact (first advance : AffineRow)
+    (start size : Nat) (suffix : List AffineRow) :
+    carriedWindowPrepend advance (affineRowAt first advance start) size suffix =
+      indexedWindowPrepend first advance start size suffix := by
+  induction size generalizing start suffix with
+  | zero => rfl
+  | succ n ih =>
+    rw [carriedWindowPrepend, indexedWindowPrepend, ← affine_copy_row_step, ih]
+
 /-- A validated destination interval gives both fields of every ordinal
 a distinct in-range address, even when the caller starts at an odd cell. -/
 theorem affine_copy_cell_bounds (start count capacity i : Nat)

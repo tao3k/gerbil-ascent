@@ -361,6 +361,44 @@ theorem directly_measured_page_phases (t : PagePhaseTicks)
       (t.copyEnd - t.copyStart) + (t.resumed - t.post) ≤ t.resumed - t.send := by
   omega
 
+/-- Measured page boundaries cover all owner and caller intervals. A
+collection already within one of these intervals must not be added again. -/
+theorem measured_page_partition (t : PagePhaseTicks)
+    (sent : t.send ≤ t.receive) (entered : t.receive ≤ t.stageStart)
+    (staged : t.stageStart ≤ t.stageEnd) (beforeCopy : t.stageEnd ≤ t.copyStart)
+    (copied : t.copyStart ≤ t.copyEnd) (beforePost : t.copyEnd ≤ t.post)
+    (returned : t.post ≤ t.resumed) :
+    (t.receive - t.send) + (t.stageStart - t.receive) +
+      (t.stageEnd - t.stageStart) + (t.copyStart - t.stageEnd) +
+      (t.copyEnd - t.copyStart) + (t.post - t.copyEnd) +
+      (t.resumed - t.post) = t.resumed - t.send := by
+  omega
+
+/-- Staging reads an immutable publication. A caller-side preparation may
+linearize through the same commit only if neither its publication nor its
+cursor changed. A cancellation at the final check must also win. -/
+def commitPreparedPage (current : CutIdentity) (cancelled : Bool) (start : Nat)
+    (observed : Cursor) (before : Cursor × List Row) (staged : Option (List Row × Cursor)) :
+    Cursor × List Row :=
+  if before.1 = observed then commitStaged current cancelled start before staged else before
+
+theorem same_cursor_preparation_refines_owner_commit (current : CutIdentity)
+    (cancelled : Bool) (start : Nat) (before : Cursor × List Row)
+    (staged : Option (List Row × Cursor)) :
+    commitPreparedPage current cancelled start before.1 before staged =
+      commitStaged current cancelled start before staged := by
+  simp [commitPreparedPage]
+
+theorem prepared_page_refusal_preserves_buffer_and_cursor (current : CutIdentity)
+    (cancelled : Bool) (start : Nat) (observed : Cursor) (before : Cursor × List Row)
+    (staged : Option (List Row × Cursor))
+    (refused : before.1 ≠ observed ∨ before.1.cut ≠ current ∨ cancelled = true) :
+    commitPreparedPage current cancelled start observed before staged = before := by
+  rcases refused with mismatch | stale | canceled
+  · simp [commitPreparedPage, mismatch]
+  · simp [commitPreparedPage, commitStaged, stale]
+  · simp [commitPreparedPage, commitStaged, canceled]
+
 /-- Pull clocks enclose the two Actor handoffs, staging and the commit
 copy. The independent oracle has disjoint intervals between pulls. -/
 theorem paged_request_phase_bounds
@@ -744,3 +782,6 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.incoming_ordinal_membership
 #print axioms Ascent.BoundedExport.reverse_prepend_terminal_index
 #print axioms Ascent.BoundedExport.ordinal_containing_run_halves
+
+#print axioms Ascent.BoundedExport.measured_page_partition
+#print axioms Ascent.BoundedExport.prepared_page_refusal_preserves_buffer_and_cursor

@@ -244,6 +244,37 @@ theorem uniform_ten_million_window_reads :
     787400 < 2 * closureRows 1240 128 ∧
     196735 < 2 * closureRows 77 512 := by decide
 
+/-- An unboxed unsigned lane carries the two's-complement bit pattern.
+At a written row, admission identifies it with a nonnegative fixnum. -/
+def affineWord (x : Int) : Int := x % (2 ^ 64)
+
+def carriedAffineWord (first stride : Int) : Nat → Int
+  | 0 => affineWord first
+  | i + 1 => affineWord (carriedAffineWord first stride i + affineWord stride)
+
+theorem carried_affine_word_exact (first stride : Int) (i : Nat) :
+    carriedAffineWord first stride i = affineWord (affineField first stride i) := by
+  induction i with
+  | zero => simp [carriedAffineWord, affineField]
+  | succ i ih =>
+    rw [carriedAffineWord, ih, affine_field_next]
+    exact (Int.add_emod (affineField first stride i) stride (2 ^ 64)).symm
+
+theorem carried_affine_word_writes_admitted_value (first stride : Int) (i : Nat)
+    (low : 0 ≤ affineField first stride i)
+    (high : affineField first stride i < 2 ^ 63) :
+    carriedAffineWord first stride i = affineField first stride i := by
+  rw [carried_affine_word_exact]
+  unfold affineWord
+  have width : (2 : Int) ^ 63 < 2 ^ 64 := by decide
+  exact Int.emod_eq_of_lt low (Int.lt_trans high width)
+
+theorem affine_window_chunk_cells (start length cursor count capacity : Nat)
+    (room : start + 2 * length ≤ capacity) (subwindow : cursor + count ≤ length)
+    (lane : Nat) (inside : lane < count) :
+    start + 2 * cursor + 2 * lane + 1 < capacity := by
+  omega
+
 end AffineExport
 
 section ProjectionCollector
@@ -1817,3 +1848,6 @@ end Ascent.MillionQueryWorkload
 #print axioms Ascent.MillionQueryWorkload.indexed_layer_has_public_order
 
 #print axioms Ascent.MillionQueryWorkload.indexed_predecessor_head_fold
+
+#print axioms Ascent.MillionQueryWorkload.carried_affine_word_writes_admitted_value
+#print axioms Ascent.MillionQueryWorkload.affine_window_chunk_cells

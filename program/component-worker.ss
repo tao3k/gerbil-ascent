@@ -706,6 +706,39 @@
           (##s64vector-set! destination (fx+ at 7) (fxwrap+ right advance3))
           (blocks (fx+ at 8) (fxwrap+ left advance4) (fxwrap+ right advance4)))))))
 
+;; Keep source-loading and large windows on the Scheme recurrence.
+;; The C lane writes a certified, private subwindow of at most 512 rows.
+(cond-expand
+  (,(compilation-target? C)
+   (defrule (fill-staged-affine-window! destination offset finish length advance left right)
+     (let (rows length)
+       (if (fx<= rows 512)
+         (##c-code #<<END-C
+{
+    typedef ___U64 AffinePair __attribute__((vector_size(16)));
+    ___S64 *out = ___CAST(___S64 *, ___BODY_AS(___ARG1, ___tS64VECTOR)) + ___INT(___ARG2);
+    ___WORD count = ___INT(___ARG3);
+    ___U64 stride = ___CAST(___U64, ___INT(___ARG4));
+    AffinePair step = {stride, stride};
+    AffinePair row = {___CAST(___U64, ___INT(___ARG5)), ___CAST(___U64, ___INT(___ARG6))};
+    for (; count >= 4; count -= 4, out += 8) {
+        __builtin_memcpy(out, &row, sizeof(row)); row += step;
+        __builtin_memcpy(out + 2, &row, sizeof(row)); row += step;
+        __builtin_memcpy(out + 4, &row, sizeof(row)); row += step;
+        __builtin_memcpy(out + 6, &row, sizeof(row)); row += step;
+    }
+    for (; count > 0; --count, out += 2) {
+        __builtin_memcpy(out, &row, sizeof(row)); row += step;
+    }
+    ___RESULT = ___VOID;
+}
+END-C
+           destination offset rows advance left right)
+         (fill-affine-binary-window! destination offset finish rows advance left right)))))
+  (else
+   (defrule (fill-staged-affine-window! destination offset finish length advance left right)
+     (fill-affine-binary-window! destination offset finish length advance left right))))
+
 (defrule (ordinal-terminal-edge bounds direction run)
   (if (fx> direction 0)
     (fx- (vector-ref bounds (fx+ run 1)) 1)
@@ -918,7 +951,7 @@
                     (if steps
                       (let* ((gap (##s64vector-ref steps run))
                              (advance (if (fx= direction step) gap (fx- 0 gap))))
-                        (fill-affine-binary-window! destination write finish rows advance
+                        (fill-staged-affine-window! destination write finish rows advance
                           (##u64vector-ref origins start)
                           (##u64vector-ref targets (fx+ start shift))))
                       (let fill ((i start) (target write))

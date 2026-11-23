@@ -375,6 +375,40 @@
               (check-equal? buffer last)))
           (finally (gerbil-ascent-session-close! session)))))
 
+    (test-case "affine pages keep odd spans and descending or ascending signed strides"
+      (let* ((maximum (##greatest-fixnum))
+             (gap (quotient maximum 43))
+             (base (- maximum (* 40 gap)))
+             (ascending (map (lambda (i)
+                               (list (+ base (* i gap)) (+ base (* (+ i 1) gap))))
+                             (iota 40))))
+        (for-each
+         (lambda (edges)
+           (let (session (open-ordered-actor edges #t))
+             (try
+               (let* ((result (gerbil-ascent-session-run session))
+                      (expected ((.ref result 'rows-of) 'reach)))
+                 (check-equal? (length expected) 820)
+                 (for-each
+                  (lambda (width)
+                    (let ((cursor (gerbil-ascent-session-open-integer-pages session 'reach width 820))
+                          (destination (make-s64vector (+ (* 2 width) 2) -1)))
+                      (let next-page ((remaining expected))
+                        (let (n (gerbil-ascent-session-pull-integer-page! session cursor destination 1))
+                          (check-equal? n (min width (length remaining)))
+                          (check-equal? (s64vector-ref destination 0) -1)
+                          (check-equal? (s64vector-ref destination (+ (* 2 width) 1)) -1)
+                          (unless (zero? n)
+                            (let verify ((rows remaining) (i 0))
+                              (if (= n i) (next-page rows)
+                                (begin
+                                  (check-equal? (s64vector-ref destination (+ 1 (* 2 i))) (caar rows))
+                                  (check-equal? (s64vector-ref destination (+ 2 (* 2 i))) (cadar rows))
+                                  (verify (cdr rows) (+ i 1))))))))))
+                  '(3 11 66)))
+               (finally (gerbil-ascent-session-close! session)))))
+         (list ascending (reverse ascending)))))
+
     (test-case "packed caller buffers preserve capture order without exposing backing cells"
       (let* ((rows (map (lambda (i) (list (- 11 i) (modulo i 7))) (iota 64)))
              (session (open-ordered-actor rows))

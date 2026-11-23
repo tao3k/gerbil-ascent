@@ -353,6 +353,63 @@ successful reductions. This input is a fixed regression on the
 production path. A second regression tampers with a witness's supporting
 assignment while retaining the original head and checks rejection.
 
+** Deferred result construction during choice search
+
+The child-run diagnostic split showed 3421 evaluation freezes on the
+disconnected graph. Those calls accounted for 64.890 MiB of observed
+allocation in intervals with no collection, compared with 10.904 MiB
+for flushing staged sources and 11.750 MiB for the two Session source
+snapshot operations. These counters are nested under the corresponding
+solve or restore interval.
+
+A completed choice evaluation now retains its frozen publication under
+a private result identity. The parent restore still checks the owner,
+branch and publication identity, while checkpoint accounting sums the
+frozen relation sizes. A full offer rescan reads the chronological rows
+from the same cut through the existing ordered delta reader. Only model
+delivery constructs a public result on the checked ordered-cut path.
+A fallback without an ordered cut can force the original result and
+use the ordinary query surface. Result detachment and commitment still
+use their existing owners.
+
+A separate instrumented run on the disconnected graph counted 3421
+public result constructions per baseline solve and 81 per candidate
+solve. Across five solves per arm, the median sum of observed
+allocations in collector-free constructor intervals fell from
+56.48 MiB to 1.34 MiB. This measures the constructor only.
+
+The Lean lemmas =choice_cut_units_exact= and
+=choice_full_offer_scan_exact= match the vector charge and raw-row
+accumulator against their eager definitions.
+=choice_deferred_result_exact= and =choice_deferred_model_order= state
+the frozen-cut and ordered-projection laws. The generated Scheme
+checks cover the source seam, including mutation of a returned row and
+list spine after the sibling visits.
+
+With the same Gerbil staging image and frozen Dusa Figure 3 inputs,
+four native processes ran in baseline/candidate/candidate/baseline
+order. Each arm has ten full-solve measurements per graph.
+
+| Graph | Baseline median / maximum (ms) | Candidate median / maximum (ms) |
+|-------+--------------------------------+---------------------------------|
+| Path | 186.296 / 248.549 | 113.156 / 305.270 |
+| Clique | 95.319 / 110.573 | 80.373 / 297.006 |
+| Disconnected | 229.448 / 287.866 | 109.273 / 119.557 |
+
+The work receipts match for each graph, including visited states, offer
+rebuilds, parent restores, retained units and prefix work. End-to-end
+timings come from uninstrumented runs. The path and clique each had
+one slower tail sample in the candidate. These receipts have no phase
+data for either event. The original 545.393 ms sample remains a
+separate observation.
+
+The private evaluator uses its own constructor. Adding a keyword to
+the ordinary constructor in an initial candidate changed Gerbil's
+compiled direct-call entry and caused a native Actor crash. The
+ordinary entry retains the baseline signature. The same previously
+compiled Actor module passed all 40 of its native Session cases after
+the private constructor was introduced.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

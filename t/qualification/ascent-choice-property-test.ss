@@ -7,7 +7,7 @@
         (prefix-in :clan/poo/testing/property/generator generator.)
         (prefix-in :clan/poo/testing/property/replay replay.)
         (only-in :clan/poo/testing/property/test require-passed)
-        (only-in :gerbil-ascent/program/api relational-choice-solve)
+        (only-in :gerbil-ascent/program/api relational-choice-solve relational-program-query)
         (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement)
         (only-in "../../benchmarks/dusa-representative-test.ss"
                  representative-program components oracle-models model-rows model-witnesses))
@@ -143,6 +143,18 @@
        '(20261123 20261124)))
     (test-case "two independent edges keep their parent constraints isolated"
       (check-equal? (graph-property '(4 ((0 1) (2 3)))) #t))
+    (test-case "published leaf rows remain detached after all sibling visits"
+      (let* ((arcs '((0 1) (2 3)))
+             (models (relational-choice-solve (representative-program '(0 1 2 3) arcs) state-budget: 64))
+             (first (car models))
+             (expected (model-rows models))
+             (witnesses (model-witnesses models))
+             (rows (relational-program-query first 'representative)))
+        (check-equal? (length models) 4)
+        (set-car! (car rows) 'caller-edit)
+        (set-cdr! rows [])
+        (check-equal? (model-rows models) expected)
+        (check-equal? (model-witnesses models) witnesses)))
     (test-case "an otherwise valid head rejects a sibling's grounded support"
       (let* ((arcs '((0 1) (1 2)))
              (models (relational-choice-solve (representative-program '(0 1 2) arcs) state-budget: 64))

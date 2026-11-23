@@ -9,10 +9,10 @@
 (import :gerbil-ascent/core/relation-view
         (only-in :gerbil-ascent/core/view-value gerbil-ascent-ordered-binary-row-parts?
                  gerbil-ascent-ordered-binary-copy! gerbil-ascent-ordered-binary-pages)
-        (only-in :std/iter for in-range)
+        (only-in :std/iter for for/fold in-range)
         (only-in :std/list/list-builder with-list-builder)
         (only-in :gerbil-ascent/core/execution-control ascent-execution-checkpoint!)
-        (only-in :clan/poo/object .o))
+        (only-in :clan/poo/object .o .ref))
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
         gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows
@@ -20,6 +20,26 @@
 ;; Internal handoff only: public Result methods continue to detach row spines.
 (export gerbil-ascent-make-owned-result gerbil-ascent-publication-reader gerbil-ascent-publication-size)
 (defstruct owned-publication (result snapshots sizes position-of) final: #t)
+
+(export gerbil-ascent-result-complete? gerbil-ascent-materialize-result
+        gerbil-ascent-result-row-units)
+;; A private choice token identifies one completed cut. Its promise retains
+;; detached metadata and persistent row roots, never the live evaluator.
+(defstruct deferred-result (sizes materialize) final: #t)
+
+(def (gerbil-ascent-result-complete? result)
+  (or (deferred-result? result) (.ref result 'finished)))
+
+(def (gerbil-ascent-materialize-result result)
+  (if (deferred-result? result) (force (deferred-result-materialize result)) result))
+
+(def (gerbil-ascent-result-row-units result)
+  (if (deferred-result? result)
+    (let (sizes (deferred-result-sizes result))
+      (for/fold (units 0) (index (in-range (vector-length sizes)))
+        (+ units 1 (vector-ref sizes index))))
+    (foldl (lambda (entry units) (+ units 1 (cdr entry))) 0
+           ((.ref result 'relation-sizes)))))
 
 ;; Private cut identity. Only detached row copies leave this module.
 (export make-ordered-row-cut ordered-row-cut-delta)
@@ -59,11 +79,16 @@
 
 ;; : (forall (n a r s o p e) (-> n a r s o o p Boolean Boolean (Or Boolean (Vector Boolean)) (Values e (Maybe (OwnedPublication e r)))))
 ;; : (-> Names Arities SnapshotVector Sizes Representations Observation
-;;        NameResolver Boolean Boolean (Or Boolean (Vector Boolean)) (Values EvaluationResult (Maybe OwnedPublication)))
+;;        NameResolver Boolean Boolean (Or Boolean (Vector Boolean)) Boolean
+;;        (Values EvaluationResult (Maybe OwnedPublication)))
 (def (gerbil-ascent-make-owned-result names arity snapshots sizes representations observation
-                                    position-of complete? session? (detach session?))
-  (let (result (gerbil-ascent-make-published-result names arity snapshots sizes
-                 representations observation position-of complete? detach))
+                                    position-of complete? session? (detach session?) (defer? #f))
+  (def (materialize)
+    (gerbil-ascent-make-published-result names arity snapshots sizes
+      representations observation position-of complete? detach))
+  (let (result (if (and defer? session? complete?)
+                 (make-deferred-result sizes (delay (materialize)))
+                 (materialize)))
     (values result (and session? (make-owned-publication result snapshots sizes position-of)))))
 
 ;; gerbil-ascent-publication-cache

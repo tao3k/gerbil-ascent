@@ -3,9 +3,10 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import "func.ss" "scheme-checked.ss" "scheme-session.ss"
-        (only-in "scheme-query.ss" relational-program-query
+        (only-in "scheme-query.ss" relational-program-query make-relational-program-solution
                  relational-program-solution-with-provenance relational-program-solution-result)
-        (only-in "result.ss" ordered-row-cut-delta)
+        (only-in "result.ss" ordered-row-cut-delta gerbil-ascent-result-row-units
+                 gerbil-ascent-materialize-result)
         (only-in :gerbil-ascent/core/positive-plan current-retained-positive-plan-cost
                  make-positive-plan-cost positive-plan-cost-snapshot
                  current-static-prefix-cache make-bounded-static-prefix-cache)
@@ -241,8 +242,7 @@
     (when (and (not mode) (> children 1) offer-roots (andmap identity offer-roots))
       ;; Charge even the shared static rows. The existing state budget also
       ;; bounds total retained logical rows and relation headers here.
-      (let* ((sizes ((.ref (relational-program-solution-result result) 'relation-sizes)))
-             (units (foldl (lambda (entry total) (+ total 1 (cdr entry))) 0 sizes)))
+      (let (units (gerbil-ascent-result-row-units (relational-program-solution-result result)))
         (when (<= (+ parent-units units) budget)
           (let (cut (save-parent state))
             (when cut
@@ -323,7 +323,17 @@
              (using (offer :- relational-choice-offer)
                (let* ((update (and updates (vector-ref updates offer.ordinal)))
                       (start (if update (car update) 0))
-                      (rows (if update (cdr update) (relational-program-query result offer.relation))))
+                      (rows
+                       (cond
+                        (update (cdr update))
+                        ;; A full scan of a private ordered cut is its delta
+                        ;; from the empty cut. Keep chronological row order.
+                        ((and (not mode) roots (list-ref roots offer.ordinal))
+                         => (lambda (root) (cdr (ordered-row-cut-delta root))))
+                        (else
+                         (relational-program-query
+                          (make-relational-program-solution (gerbil-ascent-materialize-result completed))
+                          offer.relation)))))
                  (when meter
                    (using (meter :- choice-measurement)
                      (let* ((read (length rows)) (size (+ start read))
@@ -348,10 +358,10 @@
           (set! offer-sizes sizes)))
       (if (rbtree-empty? constraints)
         (begin
-          (when (and meter (not (choice-measurement-first-model meter)))
-            (choice-measurement-first-model-set! meter (elapsed-ns (choice-measurement-start meter))))
           (set! models (cons (relational-program-solution-with-provenance result
-                               (cut explain-choice trace names <>)) models)))
+                               (cut explain-choice trace names <>)) models))
+          (when (and meter (not (choice-measurement-first-model meter)))
+            (choice-measurement-first-model-set! meter (elapsed-ns (choice-measurement-start meter)))))
         (let ((forced #f) (closed-key #f))
           (def (later? prior constraint)
             (or (not prior)
@@ -396,7 +406,8 @@
                      (lambda (reader capture restore)
                        (set! read-root reader)
                        (set! save-parent capture)
-                       (set! restore-parent! restore))))
+                       (set! restore-parent! restore))
+                     (not mode)))
       (let search ()
         (unless (null? pending)
           (checkpoint!)

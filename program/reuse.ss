@@ -5,7 +5,8 @@
 ;;; Completed-closure reuse admission and engine-local rule activation.
 (import (only-in "activation.ss" gerbil-ascent-activate-plans)
         (only-in :std/func @compose1)
-        (only-in "result.ss" gerbil-ascent-publication-reader gerbil-ascent-publication-size)
+        (only-in "result.ss" gerbil-ascent-publication-reader gerbil-ascent-publication-size
+                 gerbil-ascent-result-complete? gerbil-ascent-materialize-result)
         (only-in "scheme-checked.ss" relational-scalar?)
         (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?)
@@ -61,7 +62,7 @@
 ;;   %
 (def (gerbil-ascent-prepare-session-reuse previous candidate completed analysis
                                        (source-cut #f) (publication #f))
-  (unless (.ref completed 'finished) (error "cannot reuse a partial closure"))
+  (unless (gerbil-ascent-result-complete? completed) (error "cannot reuse a partial closure"))
   ;; Root evidence specializes only source equality; completed/eligible
   ;; admission and transitive dependency closure remain authoritative.
   (alet (affected (gerbil-ascent-update-selection previous candidate analysis source-cut))
@@ -197,7 +198,7 @@
                                 (session-reuse-publication reuse) (session-reuse-result reuse)
                                 (vector-ref names index))))
             (let* ((rows ((or (session-reuse-reader reuse)
-                             (.ref (session-reuse-result reuse) 'rows-of))
+                             (.ref (gerbil-ascent-materialize-result (session-reuse-result reuse)) 'rows-of))
                           (vector-ref names index)))
                    (base (vector-ref all index))
                    (check (vector-ref field-checkers index))

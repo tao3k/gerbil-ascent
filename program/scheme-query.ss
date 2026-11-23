@@ -4,7 +4,8 @@
 
 
 ;;; Completed solutions and detached public queries. No engine is constructed here.
-(import (only-in :clan/poo/object .ref)
+(import (only-in "result.ss" gerbil-ascent-materialize-result)
+        (only-in :clan/poo/object .ref)
         (only-in :clan/poo/type validate)
         (only-in "types.ss" GerbilAscentFragmentContract))
 (export relational-export relational-prepare-query relational-prepare-queries relational-query relational-query-name relational-program-query
@@ -16,7 +17,8 @@
 (defstruct (choice-program-solution relational-program-solution) (provenance))
 
 (def (relational-program-solution-with-provenance solution provenance)
-  (make-choice-program-solution (relational-program-solution-result solution) provenance))
+  (make-choice-program-solution
+   (gerbil-ascent-materialize-result (relational-program-solution-result solution)) provenance))
 
 (def (copy-query-rows rows)
   (map (lambda (row) (map identity row)) rows))

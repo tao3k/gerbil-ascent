@@ -30,7 +30,7 @@
                  lattice-frontier-stage! lattice-frontier-rows lattice-frontier-clear!)
         (only-in "admission.ss" gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
-        (only-in "result.ss" gerbil-ascent-publication-cache
+        (only-in "result.ss" gerbil-ascent-result-complete? gerbil-ascent-publication-cache
                  gerbil-ascent-result-observation make-ordered-row-cut)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
@@ -74,6 +74,12 @@
            analysis schema measure-rule-times? (source-cut #f) (publication #f))
   (gerbil-ascent-make-engine-state candidate analysis schema measure-rule-times? #f
     (gerbil-ascent-prepare-session-reuse previous candidate completed analysis source-cut publication)))
+
+;; Only the private Choice Session consumes deferred cuts. Keep the ordinary
+;; entry points available to already compiled Session and Actor callers.
+(export gerbil-ascent-make-choice-engine-state)
+(def (gerbil-ascent-make-choice-engine-state program analysis schema (reuse #f))
+  (%make-engine program #t analysis schema #f #f reuse defer-result?: #t))
 
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
@@ -134,7 +140,7 @@
                    (schema-override #f) (measure-rule-times? #f)
                    (plan-error #f) (reuse #f) (workers 1) (canceled? #f)
                    (empty-bucket-reuse? #f) (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f)
-                   (retain-actor-output? #f))
+                   (retain-actor-output? #f) defer-result?: (defer-result? #f))
   (let-values (((relations rules input-limit derived-limit output-limit)
                 (gerbil-ascent-admit-engine program session? measure-rule-times? reuse workers canceled?
                   empty-bucket-reuse? actor-sources owned-actor-inputs? retain-actor-output?)))
@@ -419,7 +425,8 @@
                           (gerbil-ascent-publish-execution! execution-publication
                             names arity all all-size deadline observation position-of complete? session?
                             (or retain-actor-output? session?
-                                (and actor-sources (gerbil-ascent-source-cut-export-mask actor-sources))))))
+                                (and actor-sources (gerbil-ascent-source-cut-export-mask actor-sources)))
+                            defer-result?)))
               (set! owned-publication publication)
               (set! last-result result))))
         (def (deadline-jiffy duration)
@@ -997,7 +1004,7 @@
                   (run-retained! published))))
             (def (publication (completed #f) (name #f))
               (if completed
-                (and (eq? completed last-result) (.ref completed 'finished)
+                (and (eq? completed last-result) (gerbil-ascent-result-complete? completed)
                      (let* ((index (position-of name)) (rows (vector-ref all index)))
                        (and (not (relation-view? rows))
                             (make-ordered-row-cut rows (vector-ref all-size index)))))

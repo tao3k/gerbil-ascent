@@ -1071,4 +1071,60 @@ theorem release_choice_parent_units (used weight budget : Nat) (within : used �
     used - weight ≤ budget :=
   Nat.le_trans (Nat.sub_le _ _) within
 
+/-- The internal evaluation retains the completed cut and its relation
+sizes. Public projection is needed only at accepted leaves. -/
+def choiceCutUnits (sizes : List Nat) : Nat :=
+  sizes.foldl (fun units size => units + (1 + size)) 0
+
+theorem choice_cut_units_fold (sizes : List Nat) (units : Nat) :
+    sizes.foldl (fun total size => total + (1 + size)) units =
+      units + (sizes.map (fun size => 1 + size)).sum := by
+  induction sizes generalizing units with
+  | nil => simp
+  | cons head tail ih => simp [ih, Nat.add_assoc]
+
+theorem choice_cut_units_exact {Name : Type} (sizes : List (Name × Nat)) :
+    choiceCutUnits (sizes.map Prod.snd) =
+      sizes.foldl (fun total entry => total + 1 + entry.2) 0 := by
+  have same (entries : List (Name × Nat)) (units : Nat) :
+      (entries.map Prod.snd).foldl (fun total size => total + (1 + size)) units =
+        entries.foldl (fun total entry => total + 1 + entry.2) units := by
+    induction entries generalizing units with
+    | nil => rfl
+    | cons head tail ih => simp [ih, Nat.add_assoc]
+  exact same sizes 0
+
+/-- The raw offer cut is newest-first. Scanning a cut from an empty
+predecessor builds the same oldest-first order as public export. -/
+def scanPrivateOfferRows {Row : Type} : List Row → List Row → List Row
+  | [], acc => acc
+  | row :: tail, acc => scanPrivateOfferRows tail (row :: acc)
+
+theorem choice_full_offer_scan_exact {Row : Type} (rows acc : List Row) :
+    scanPrivateOfferRows rows acc = rows.reverse ++ acc := by
+  induction rows generalizing acc with
+  | nil => rfl
+  | cons head tail ih => simp [scanPrivateOfferRows, ih]
+
+/-- A deferred result closes over its own immutable cut. A sibling can
+change the working cut without changing what the saved model projects. -/
+theorem choice_deferred_result_exact {Cut Result : Type} (project : Cut → Result)
+    (completed sibling : Cut) :
+    (let frozen := completed
+     let delayed := fun () => project frozen
+     let _current := sibling
+     delayed ()) = project completed := rfl
+
+/-- Materializing only accepted leaves preserves the order and values
+of eagerly projected accepted leaves. -/
+theorem choice_deferred_model_order {Cut Result : Type}
+    (project : Cut → Result) (visits : List (Bool × Cut)) :
+    (visits.filterMap fun (accepted, cut) => if accepted then some cut else none).map project =
+      visits.filterMap (fun (accepted, cut) => if accepted then some (project cut) else none) := by
+  induction visits with
+  | nil => rfl
+  | cons head tail ih =>
+    cases head with
+    | mk accepted cut => cases accepted <;> simp [ih]
+
 end Ascent.FiniteChoice

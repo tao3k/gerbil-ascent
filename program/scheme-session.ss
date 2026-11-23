@@ -12,6 +12,7 @@
                  gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-replace-sources! gerbil-ascent-session-run)
         (only-in "types.ss" GerbilAscentFragmentContract)
+        (only-in "result.ss" gerbil-ascent-result-complete?)
         (only-in :clan/poo/object .ref)
         (only-in :clan/poo/type validate)
         (only-in :std/list/list find))
@@ -49,12 +50,12 @@
      arities)))
 
 (def (relational-open-program-session program)
-  (open-program-session program #f))
+  (open-program-session program #f #f))
 
-(def (relational-open-program-session/choice program receive)
-  (open-program-session program receive))
+(def (relational-open-program-session/choice program receive (defer-result? #f))
+  (open-program-session program receive defer-result?))
 
-(def (open-program-session program receive-choice-operations)
+(def (open-program-session program receive-choice-operations defer-result?)
   (let* ((snapshot (relational-snapshot-program program))
          (arities (relational-source-arities snapshot)))
     ;; Compiled programs may contain derived relations. Their query handles
@@ -62,7 +63,7 @@
     ;; source-only arity list, shared with fragment Sessions below.
     (make-relational-program-session
      (if receive-choice-operations
-       (gerbil-ascent-open-session/choice snapshot receive-choice-operations)
+       (gerbil-ascent-open-session/choice snapshot receive-choice-operations defer-result?)
        (gerbil-ascent-open-session snapshot))
      arities)))
 
@@ -298,7 +299,7 @@
 
 (def (relational-session-result engine)
   (let (result (gerbil-ascent-session-run engine))
-    (unless (.ref result 'finished)
+    (unless (gerbil-ascent-result-complete? result)
       (error "relational session did not complete"))
     result))
 

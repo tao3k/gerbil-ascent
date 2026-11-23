@@ -399,6 +399,45 @@ theorem prepared_page_refusal_preserves_buffer_and_cursor (current : CutIdentity
   · simp [commitPreparedPage, commitStaged, stale]
   · simp [commitPreparedPage, commitStaged, canceled]
 
+/-- Ordinary requests own one credit from admission through their
+reply. A direct pull holds the same gate used to admit those requests.
+An owner publication comes from a still-credited run. -/
+structure IdlePageGate where
+  pending : Nat
+  closed : Bool
+  held : Bool
+  published : Option CutIdentity
+
+def IdlePageGate.ordered (s : IdlePageGate) : Prop :=
+  s.held = true → s.pending = 0 ∧ s.closed = false
+
+inductive IdlePageStep : IdlePageGate → IdlePageGate → Prop where
+  | admit (s : IdlePageGate) (unheld : s.held = false) (live : s.closed = false) :
+      IdlePageStep s { s with pending := s.pending + 1 }
+  | retire (s : IdlePageGate) (unheld : s.held = false) (active : 0 < s.pending) :
+      IdlePageStep s { s with pending := s.pending - 1 }
+  | publish (s : IdlePageGate) (active : 0 < s.pending) (cut : CutIdentity) :
+      IdlePageStep s { s with published := some cut }
+  | close (s : IdlePageGate) (unheld : s.held = false) (active : 0 < s.pending) :
+      IdlePageStep s { s with closed := true }
+  | enter (s : IdlePageGate) (unheld : s.held = false) (idle : s.pending = 0)
+      (live : s.closed = false) : IdlePageStep s { s with held := true }
+  | leave (s : IdlePageGate) (held : s.held = true) :
+      IdlePageStep s { s with held := false }
+
+theorem idle_page_gate_preserves_order {s t : IdlePageGate}
+    (initial : s.ordered) (step : IdlePageStep s t) : t.ordered := by
+  cases step <;> simp_all [IdlePageGate.ordered]
+
+/-- During a direct pull neither a new ordinary request nor a previously
+admitted publisher can pass the gate. The final primitive copy can use
+the same seal as the earlier validation. -/
+theorem held_idle_page_gate_keeps_publication {s t : IdlePageGate}
+    (ordered : s.ordered) (held : s.held = true) (step : IdlePageStep s t) :
+    t.published = s.published ∧ t.closed = false := by
+  have quiet := ordered held
+  cases step <;> simp_all
+
 /-- Pull clocks enclose the two Actor handoffs, staging and the commit
 copy. The independent oracle has disjoint intervals between pulls. -/
 theorem paged_request_phase_bounds
@@ -785,3 +824,6 @@ end Ascent.BoundedExport
 
 #print axioms Ascent.BoundedExport.measured_page_partition
 #print axioms Ascent.BoundedExport.prepared_page_refusal_preserves_buffer_and_cursor
+
+#print axioms Ascent.BoundedExport.idle_page_gate_preserves_order
+#print axioms Ascent.BoundedExport.held_idle_page_gate_keeps_publication

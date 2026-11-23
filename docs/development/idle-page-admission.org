@@ -1,0 +1,105 @@
+#+TITLE: Concurrent admission for an idle page pull
+
+* Protocol in the isolated candidate
+
+An Actor Session owns publication, close, and its cursor mutations.
+The candidate gives each normal mailbox request one admission credit.
+The sender records the credit under the existing lifecycle mutex
+after a successful send. The owner retires it after posting the
+reply, including replies to an abandoned caller and replies produced
+while draining a close. Worker completion cannot publish without
+the credit of its original run. The specialized state request does
+not use a credit or modify a Result or cursor.
+
+An ordinary pull executes on its caller only under the lifecycle
+mutex, on a single VM processor, with a live Session and zero admitted
+requests. An external execution-control callback, foreign runtime,
+or larger page takes the existing mailbox path. The candidate caps
+the direct page at 8192 rows, keeping its maximum copy span within
+the existing bounded delivery geometry. That span limit does not
+bound work inside the stage closure.
+
+Both paths call the same function for owner identity, latest Result,
+destination extent, row budget, and the two checkpoints. Stage
+writes only private scratch. The commit still moves exactly the
+written scratch extent before advancing the cursor. In candidate
+generated C the validated =##subs64vector-move!= call resolves to
+the pinned Gambit primitive that calls =memmove= and returns. The
+generated continuation writes the position with no interrupt poll
+in between. This supports the copy-and-advance boundary on this
+particular SDK.
+
+=idle_page_gate_preserves_order= proves that in the state model a
+held direct gate implies zero credits and a live session.
+=held_idle_page_gate_keeps_publication= rules out an intervening
+publication or close while the gate is held. The runtime
+correspondence requires one credit per admitted request and one
+owner retirement, plus the primitive boundary described above.
+This is the linearization condition for the page operation.
+See [[https://www.cs.cmu.edu/~wing/publications/HerlihyWing90.pdf][Herlihy and Wing]].
+
+* Native interleaving controls
+
+Run the same interface, Actor Session and condensed Session tests on
+the reference and the isolated candidate using =gerbil test=. Both
+arms passed. Two added interface cases release two callers onto the
+same cursor, then compare the union against two disjoint prefixes,
+and pause an admitted replacement while a reader tries to use the
+older cursor. The latter also covers a close enqueued ahead of that
+reader. The rejected reader leaves the sentinel destination untouched.
+The existing second-checkpoint cancellation test also passed.
+
+Removing the zero-credit guard from the candidate changed the queued
+reader's result from rejection to 11 committed rows of the old cut.
+The native suite rejected that mutation with exit 42. The test
+therefore exercises the handoff ordering, including a real older
+publication, rather than simply comparing sequential results.
+The guarded Lean inventory passed all 196 jobs.
+
+* Remaining lock scope
+
+The lifecycle mutex is still held during preparation in this
+candidate. In =program/component-worker.ss= the first ordinal page
+may certify affine strides by scanning the index. In
+=program/condensed-closure.ss= stage can force the target list of a
+component before producing the next row. The small destination span
+does not cap either operation. Blocking unrelated admission over
+those operations is a production liability.
+
+A separate cursor reservation would protect scratch while staging
+outside the lifecycle mutex. A short final lock would check liveness,
+published Result identity, unchanged cursor and mailbox ordering.
+A refusal must release the scratch reservation before falling back
+to a queued pull, so an already queued reader cannot block the
+owner while the caller waits for it. This protocol also needs direct
+tests for an interrupt or abandonment before commit. The current
+gate proof and tests do not verify those interleavings.
+
+* Ten-million-row comparison
+
+Both arms invoke the public Session pagination API. The caller-side
+frozen reader from the earlier control is disabled. The same compiled
+benchmark module, source cuts, per-field oracle, 256 KiB buffer
+geometry, 2 GiB heap, and 90-second watchdog apply. Both widths and
+both arms verified 100 requests in four matched shards. All 16
+processes ended naturally, with a maximum process time of 15.659 s.
+
+| Width | Alloc counter median | Complete P50 (ms) | Complete P95 (ms) | GC count | First-page P95 (ms) | CPU (s) |
+|-------+----------------------+-------------------+-------------------+----------+---------------------+---------|
+| 128 | 7209104 -> 2027744 | 51.177 -> 49.011 | 259.371 -> 271.491 | 4 -> 4 | 19.657 -> 25.357 | 5.538 -> 5.443 |
+| 512 | 7280272 -> 2103088 | 54.391 -> 42.692 | 173.841 -> 184.322 | 4 -> 0 | 4.861 -> 4.459 | 5.017 -> 4.456 |
+
+The controlled counter deltas fell 71.9 and 71.1 percent. The counter
+includes stack accounting and uses monotone samples within one epoch.
+The earlier single-reader experiment reached roughly 0.3 million units.
+The real admission protocol retains additional work. There is no
+measurement assigning that residual to an individual construct.
+
+The prototype missed the wall objective in both full paired
+distributions, despite the reduced working cost. The 512-wide
+candidate had no collections but still reached a 255.032 ms
+maximum. The 128-wide first-page P95 also rose. No samples were
+dropped. Store the Scheme prototype, interleaving cases, negative
+control and raw receipts in the cache. The original Session path,
+100 ms and 90-second gates, and the 105.93 ms failed million-row
+receipt remain intact. The production lock scope is still open.

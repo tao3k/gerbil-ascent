@@ -1042,4 +1042,33 @@ theorem checked_static_prefix_exact {Row Slots : Type}
     matchedPrefix bind current = matchedPrefix bind recorded := by
   rw [sameOrder]
 
+def choiceBucketEdit {Key Bucket : Type} [DecidableEq Key]
+    (root : Key → Option Bucket) (key : Key) (value : Option Bucket) : Key → Option Bucket :=
+  fun query => if query = key then value else root query
+
+/-- A branch update installs a new root. Other buckets and the retained
+parent's bucket at the edited key still resolve as before. -/
+theorem choice_bucket_edit_exact {Key Bucket : Type} [DecidableEq Key]
+    (parent : Key → Option Bucket) (key : Key) (value : Option Bucket) :
+    choiceBucketEdit parent key value key = value ∧
+      ∀ query, query ≠ key → choiceBucketEdit parent key value query = parent query := by
+  exact ⟨by simp [choiceBucketEdit], fun query other => by simp [choiceBucketEdit, other]⟩
+
+theorem choice_bucket_siblings_isolated {Key Bucket : Type} [DecidableEq Key]
+    (parent : Key → Option Bucket) (left right : Key) (leftValue rightValue : Option Bucket)
+    (different : left ≠ right) :
+    choiceBucketEdit parent left leftValue right = parent right ∧
+      choiceBucketEdit parent right rightValue left = parent left := by
+  simp [choiceBucketEdit, different, Ne.symm different]
+
+/-- Charging each saved root independently is conservative even when their
+rows are physically shared. Rejecting a capture leaves the charge unchanged. -/
+theorem choice_parent_units_bounded (used weight budget : Nat) (within : used ≤ budget) :
+    (if used + weight ≤ budget then used + weight else used) ≤ budget := by
+  split <;> assumption
+
+theorem release_choice_parent_units (used weight budget : Nat) (within : used ≤ budget) :
+    used - weight ≤ budget :=
+  Nat.le_trans (Nat.sub_le _ _) within
+
 end Ascent.FiniteChoice

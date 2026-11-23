@@ -181,6 +181,21 @@
           (left saved branch)
           (check-equal? (relational-program-query (relational-program-session-run first) 'input)
                         '((1))))))
+    (test-case "a full parent cache allowance still enumerates all models"
+      (let (program
+             (relational-choice-program
+               (relation static (value) '((9)))
+               (choice color (node value))
+               (rule (closed (color 0) (0 1)))
+               (limits 8 8 8)))
+        (let-values (((models work)
+                      (call-with-relational-choice-measurement
+                       (lambda () (relational-choice-solve program state-budget: 3)))))
+          (check-equal? (length models) 2)
+          (check-equal? (cdr (assq 'parent-captures work)) 0)
+          (check-equal? (cdr (assq 'source-replacements work)) 1)
+          (check-exception (relational-choice-solve program state-budget: 2)
+                           RelationalChoiceLimit?))))
     (test-case "distinct named and anonymous body witnesses count as distinct grounding rows"
       (let* ((edges '((0 1) (0 2)))
              (make-program

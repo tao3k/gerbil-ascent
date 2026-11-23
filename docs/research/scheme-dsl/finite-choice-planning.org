@@ -134,12 +134,12 @@ assignments. MiniDusa's =private/runtime.rkt= illustrates deduction before
 search and matches rule premises when checking for the next deduction.
 
 The incremental choice implementation consumes only the verified new
-offer rows of a completed direct child. A single saved parent allows
-some alternatives to resume from that parent's offers and closure.
+offer rows of a completed direct child. Budgeted parent checkpoints
+allow alternatives to resume from their parent's offers and closure.
 Branch-invariant first atoms can also reuse checked matching rows in
 publication order. The
 [[file:../../../dev/finite-choice/README.org][finite-choice notes]]
 record the measured restore counts, timed workloads and Lean
-obligations. Copying a constraint table and rebuilding the parent's
-mutable indexes still costs time. POO's graph index ownership and
-sparse edits give a concrete design to compare at this boundary.
+obligations. The constraint tree now shares its root across alternatives,
+using the sparse-edit ownership pattern from POO's graph index. The
+Session still rebuilds mutable relation indexes on restore.

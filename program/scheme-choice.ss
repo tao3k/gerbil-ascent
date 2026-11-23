@@ -12,6 +12,8 @@
         :gerbil-ascent/core/execution-control
         (only-in :clan/poo/object .ref)
         (only-in :std/list/list split-at take drop delete-duplicates/hash list-sort)
+        (only-in :std/struct/rbtree RBTree rbtree-copy rbtree-get rbtree-put!
+                 rbtree-remove! rbtree-empty? rbtree-for-each rbtree->list)
         (only-in :std/error deferror-class))
 
 (export make-relational-choice-head lower-relational-choice-program
@@ -20,16 +22,18 @@
 
 (defstruct relational-choice-head (kind relation keys values body origin))
 (defstruct relational-choice-offer (relation kind attribute bindings width ordinal rule premises))
+;; Frozen buckets. Tree headers fork in constant time and each write replaces
+;; a bucket, so a saved parent never observes a child's edits.
 (defstruct choice-constraint (rank first-closed closed open closed-support) final: #t)
 (defstruct choice-entry (state parent addition trace) final: #t)
 (defstruct choice-step (assignment kind support) final: #t)
-(defstruct choice-parent (branch cut constraints remaining) final: #t)
+(defstruct choice-parent (cut constraints units remaining) final: #t)
 (defstruct relational-choice-program (grounding offers choice-names))
 (deferror-class RelationalChoiceLimit ())
 
 (defstruct choice-measurement
   (mode start first-model states new-offers repeat-offers rebuilds extensions
-   source-replacements parent-restores) final: #t)
+   source-replacements parent-restores parent-captures peak-parent-units) final: #t)
 (def current-choice-measurement (make-parameter #f))
 (def (elapsed-ns start)
   (quotient (* (- (current-jiffy) start) 1000000000) (jiffies-per-second)))
@@ -37,7 +41,7 @@
 ;; Benchmark one native invocation without changing its publication boundary.
 (def (call-with-relational-choice-measurement run (mode #f))
   (let* ((prefix (make-positive-plan-cost #f))
-         (meter (make-choice-measurement mode (current-jiffy) #f 0 0 0 0 0 0 0))
+         (meter (make-choice-measurement mode (current-jiffy) #f 0 0 0 0 0 0 0 0 0))
          (models (parameterize ((current-choice-measurement meter)
                                 (current-retained-positive-plan-cost prefix))
                    (run)))
@@ -51,6 +55,8 @@
               (cons 'extensions meter.extensions)
               (cons 'source-replacements meter.source-replacements)
               (cons 'parent-restores meter.parent-restores)
+              (cons 'parent-captures meter.parent-captures)
+              (cons 'peak-parent-units meter.peak-parent-units)
               (cons 'first-model-ns meter.first-model) (cons 'total-ns duration)))))))
 
 (def (rank<? left right)
@@ -223,33 +229,37 @@
   (def read-root #f)
   (def save-parent #f)
   (def restore-parent! #f)
-  (def saved #f)
+  (def saved (make-hash-table-eq))
+  (def parent-units 0)
   (def offers (relational-choice-program-offers program))
   (def meter (current-choice-measurement))
   (def mode (and meter (choice-measurement-mode meter)))
   (def rescan? (eq? mode #t))
   (def (read-offer-roots completed)
     (map (lambda (offer) (read-root completed (relational-choice-offer-relation offer))) offers))
-  (def (copy-constraints table)
-    (let (copy (make-hash-table-eqv))
-      (hash-for-each
-       (lambda (id (record :- choice-constraint))
-         (ascent-execution-checkpoint!)
-         (hash-put! copy id (make-choice-constraint record.rank record.first-closed
-                              record.closed record.open record.closed-support))) table)
-      copy))
-  (def (remember-parent! state children)
-    (when (and (not mode) (not saved) (> children 1) offer-roots (andmap identity offer-roots))
-      (let (cut (save-parent state))
-        (when cut
-          (set! saved (make-choice-parent state cut (copy-constraints constraints) children))))))
+  (def (remember-parent! state result children)
+    (when (and (not mode) (> children 1) offer-roots (andmap identity offer-roots))
+      ;; Charge even the shared static rows. The existing state budget also
+      ;; bounds total retained logical rows and relation headers here.
+      (let* ((sizes ((.ref (relational-program-solution-result result) 'relation-sizes)))
+             (units (foldl (lambda (entry total) (+ total 1 (cdr entry))) 0 sizes)))
+        (when (<= (+ parent-units units) budget)
+          (let (cut (save-parent state))
+            (when cut
+              (set! parent-units (+ parent-units units))
+              (hash-put! saved state (make-choice-parent cut (rbtree-copy constraints) units children))
+              (when meter
+                (using (meter :- choice-measurement)
+                  (set! meter.parent-captures (+ 1 meter.parent-captures))
+                  (set! meter.peak-parent-units (max parent-units meter.peak-parent-units))))))))))
   (def (take-parent! parent)
-    (and saved (eq? parent (choice-parent-branch saved))
-         (let (candidate saved)
-           (using (candidate :- choice-parent)
-             (set! candidate.remaining (- candidate.remaining 1))
-             (when (zero? candidate.remaining) (set! saved #f)))
-           candidate)))
+    (alet (candidate (hash-get saved parent))
+      (using (candidate :- choice-parent)
+        (set! candidate.remaining (- candidate.remaining 1))
+        (when (zero? candidate.remaining)
+          (set! parent-units (- parent-units candidate.units))
+          (hash-remove! saved parent)))
+      candidate))
   (def (process! state result trace addition)
     (let/cc finish
       (def children 0)
@@ -261,25 +271,24 @@
         (filter (lambda (value) (checkpoint!) (member value right)) left))
       (def (register! id open? values support)
         (let* ((rank (car support))
-               (constraint
-                (or (hash-get constraints id)
-                    (let (fresh (make-choice-constraint rank #f #f [] []))
-                      (hash-put! constraints id fresh)
-                      fresh))))
-          (using (constraint :- choice-constraint)
-            (when (rank<? rank constraint.rank) (set! constraint.rank rank))
+               (prior (rbtree-get constraints id))
+               (earliest (and prior (choice-constraint-rank prior)))
+               (order (if (and earliest (rank<? earliest rank)) earliest rank))
+               (first (and prior (choice-constraint-first-closed prior)))
+               (closed (and prior (choice-constraint-closed prior)))
+               (open (if prior (choice-constraint-open prior) []))
+               (supports (if prior (choice-constraint-closed-support prior) [])))
+          (rbtree-put! constraints id
             (if open?
-              (set! constraint.open (cons support constraint.open))
-              (let* ((first? (or (not constraint.first-closed)
-                                 (rank<? rank constraint.first-closed)))
+              (make-choice-constraint order first closed (cons support open) supports)
+              (let* ((earlier? (or (not first) (rank<? rank first)))
                      (allowed
-                      (cond ((not constraint.closed) (delete-duplicates/hash values))
-                            (first? (intersect (delete-duplicates/hash values) constraint.closed))
-                            (else (intersect constraint.closed values)))))
+                      (cond ((not closed) (delete-duplicates/hash values))
+                            (earlier? (intersect (delete-duplicates/hash values) closed))
+                            (else (intersect closed values)))))
                 (when (null? allowed) (reject!))
-                (when first? (set! constraint.first-closed rank))
-                (set! constraint.closed allowed)
-                (set! constraint.closed-support (cons support constraint.closed-support)))))))
+                (make-choice-constraint order (if earlier? rank first) allowed open
+                  (cons support supports)))))))
       (def (support-order supports)
         (list-sort (lambda (a b) (rank<? (car b) (car a))) supports))
       (def (schedule! id value kind supports)
@@ -299,13 +308,13 @@
             (if updates (set! meter.extensions (+ meter.extensions 1))
               (set! meter.rebuilds (+ meter.rebuilds 1)))))
         (if updates
-          (let* ((id (car addition)) (cached (hash-get constraints id)))
+          (let* ((id (car addition)) (cached (rbtree-get constraints id)))
             (checkpoint!)
             (when cached
               (let (closed (choice-constraint-closed cached))
                 (when (and closed (not (member (cdr addition) closed))) (reject!)))
-              (hash-remove! constraints id)))
-          (set! constraints (make-hash-table-eqv)))
+              (rbtree-remove! constraints id)))
+          (set! constraints (RBTree -)))
         (set! offer-roots roots)
         (let (sizes (and meter (make-vector (length offers) 0)))
           (for-each
@@ -337,46 +346,45 @@
                      (scan (cdr rows) (+ position 1)))))))
            offers)
           (set! offer-sizes sizes)))
-      ;; Rank by the first published support, even when a later cut adds
-      ;; rows to an earlier rule. This preserves full-scan branch ordering.
-      (let (order (list-sort (lambda (a b)
-                               (rank<? (choice-constraint-rank (hash-ref constraints b))
-                                       (choice-constraint-rank (hash-ref constraints a))))
-                    (hash-keys constraints)))
-        (if (null? order)
-          (begin
-            (when (and meter (not (choice-measurement-first-model meter)))
-              (choice-measurement-first-model-set! meter (elapsed-ns (choice-measurement-start meter))))
-            (set! models (cons (relational-program-solution-with-provenance result
-                                 (cut explain-choice trace names <>)) models)))
-          (let ((forced #f) (closed-key #f))
+      (if (rbtree-empty? constraints)
+        (begin
+          (when (and meter (not (choice-measurement-first-model meter)))
+            (choice-measurement-first-model-set! meter (elapsed-ns (choice-measurement-start meter))))
+          (set! models (cons (relational-program-solution-with-provenance result
+                               (cut explain-choice trace names <>)) models)))
+        (let ((forced #f) (closed-key #f))
+          (def (later? prior constraint)
+            (or (not prior)
+                (rank<? (choice-constraint-rank (cdr prior)) (choice-constraint-rank constraint))))
+          ;; The first forced or closed key in reverse publication order
+          ;; can be selected in one pass. Sort only when visiting every open key.
+          (rbtree-for-each
+           (lambda (id (constraint :- choice-constraint))
+             (when constraint.closed
+               (when (later? closed-key constraint) (set! closed-key (cons id constraint)))
+               (when (and (null? (cdr constraint.closed)) (later? forced constraint))
+                 (set! forced (cons id constraint)))))
+           constraints)
+          (if (or forced closed-key)
+            (let* ((entry (or forced closed-key)) (id (car entry)) (constraint (cdr entry)))
+              (using (constraint :- choice-constraint)
+                (let (supports (map cdr (support-order constraint.closed-support)))
+                  (for-each (lambda (value)
+                              (schedule! id value (if forced 'deduction 'branch) supports))
+                            constraint.closed))))
+            ;; With only open offers, another key can enable a new value.
             (for-each
-             (lambda (id)
-               (let (closed (choice-constraint-closed (hash-ref constraints id)))
-                 (when closed
-                   (unless closed-key (set! closed-key id))
-                   (when (and (not forced) (null? (cdr closed))) (set! forced id)))))
-             order)
-            (cond
-             ((or forced closed-key)
-              (let* ((id (or forced closed-key)) (constraint (hash-ref constraints id)))
-                (using (constraint :- choice-constraint)
-                  (let (supports (map cdr (support-order constraint.closed-support)))
-                    (for-each (lambda (value)
-                                (schedule! id value (if forced 'deduction 'branch) supports))
-                              constraint.closed)))))
-             (else
-              ;; With only open offers, another key can enable a new value.
-              (for-each
-               (lambda (id)
-                 (for-each
-                  (lambda (ranked)
-                    (let* ((support (cdr ranked)) (offer (car support)) (row (cdr support)))
-                      (using (offer :- relational-choice-offer)
-                        (schedule! id (list-ref row (+ offer.bindings offer.width)) 'branch (list support)))))
-                  (support-order (choice-constraint-open (hash-ref constraints id)))))
-               order))))))
-      (remember-parent! state children)))
+             (lambda (entry)
+               (for-each
+                (lambda (ranked)
+                  (let* ((support (cdr ranked)) (offer (car support)) (row (cdr support)))
+                    (using (offer :- relational-choice-offer)
+                      (schedule! (car entry) (list-ref row (+ offer.bindings offer.width)) 'branch (list support)))))
+                (support-order (choice-constraint-open (cdr entry)))))
+             (list-sort (lambda (a b)
+                          (rank<? (choice-constraint-rank (cdr b)) (choice-constraint-rank (cdr a))))
+                        (rbtree->list constraints))))))
+      (remember-parent! state result children)))
   ;; Intermediate Session commits are private. Keep cancellation and all
   ;; work charges active, but linearize only the final public model list.
   (enqueue! [] #f #f [])
@@ -398,7 +406,7 @@
               (let (parent (take-parent! entry.parent))
                 (when (and parent (not (eq? entry.parent current)))
                   (let (completed (restore-parent! (choice-parent-cut parent) entry.parent))
-                    (set! constraints (copy-constraints (choice-parent-constraints parent)))
+                    (set! constraints (rbtree-copy (choice-parent-constraints parent)))
                     (set! offer-roots (read-offer-roots completed))
                     (set! current entry.parent)
                     (when meter

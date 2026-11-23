@@ -193,11 +193,12 @@ therefore keep their own rows when the current cache is cleared.
 
 ** Backtracking to a completed parent
 
-Keep one checkpoint only while it has pending alternatives. The search
-entry names its actual parent by identity. The Session separately checks
-that the token belongs to this invocation and rebuilds mutable indexes
-from the parent's completed Set publication. With identical source logs
-there are no affected rules to rerun while restoring this parent.
+Keep a checkpoint only while it has pending alternatives and fits the
+retention allowance. The search entry names its actual parent by
+identity. The Session checks that the token belongs to this invocation
+and rebuilds mutable indexes from the parent's completed Set
+publication. The identical source log leaves the affected rule set
+empty when restoring the parent.
 Apply the queued assignment through the normal append and fixed-point
 path. Restore the parent's constraint buckets, then consume only the new
 child offer rows using the existing suffix check. Other transitions use
@@ -207,7 +208,24 @@ the ordinary source replacement and offer rebuild.
 =restored_child_witness_exact= composes the selected parent with the
 child's delta. The mutable evaluator's restore code uses the existing
 completed-closure admission. No child retains the parent's writable
-index or constraint table. Saved witnesses share only detached rows.
+index or constraint header. Saved witnesses share detached rows.
+
+=rbtree-copy= shares the immutable root and allocates just the header.
+A write replaces one constraint record and path-copies the edited
+tree nodes. The scheduler finds a closed or forced key using the
+largest publication rank in one scan. It sorts keys only for the
+open-only case, which enumerates alternatives of all open keys.
+=choice_bucket_edit_exact= and =choice_bucket_siblings_isolated= give
+the lookup and isolation laws. The physical implementation reuses
+=:std/struct/rbtree=, the same library used by POO's graph index and
+ASCENT's bound reachability index.
+
+The sum of retained rows plus relation headers fits the state budget,
+counting each saved checkpoint independently, including shared rows.
+The last pending child releases its parent's charge. An over-budget
+capture falls back to the same source replacement and search. The
+state-count and fact limits keep their previous meanings. See
+=choice_parent_units_bounded= and =release_choice_parent_units=.
 
 The native dependency graph marks every relation reachable from a
 choice write. Sharing a first-atom match across alternatives requires a
@@ -248,7 +266,7 @@ The incremental arm rebuilt 24, 12 and 110 cuts, respectively. These
 small graphs measure removed offer reads. They give limited evidence
 about latency at larger graph sizes.
 
-** Larger representative workloads with parent restore
+** Original single-parent measurements
 
 The reference retains direct-child offer updates from the preceding
 implementation. The candidate also restores an owned parent and replays
@@ -271,17 +289,40 @@ and 341 to 306. The disconnected graph spent 6.5 percent longer in
 the full solve. The single retained parent still leaves most such
 switches on the rebuild path. Timing includes the diagnostic counters.
 
+** Shared constraint roots and budgeted parent restores
+
+Compare the exact =73cb1a13= implementation with the shared-root
+candidate using the same larger representative tests and independent
+oracle. Each build ran twice, in reversed process order, with five
+alternating native pairs per process. The table compares the existing
+single-parent arm with the new budgeted arm, using all ten samples per
+build. The published models and witnesses matched each run's reference
+arm, and the state sets have the same cardinalities.
+
+| Graph | States | Offer rebuilds, old / new | Source replacements, old / new | Native prefix matches, old / new | First model median (ms) | Full solve median (ms) |
+|-------+--------+---------------------------+--------------------------------+----------------------------------+-------------------------+------------------------|
+| Path | 2305 | 1 / 1 | 0 / 0 | 4889 / 4889 | 7.833 / 7.328 | 200.309 / 181.625 |
+| Clique | 485 | 1 / 1 | 0 / 0 | 11803 / 11803 | 7.860 / 7.771 | 97.144 / 93.216 |
+| Disconnected | 3080 | 307 / 1 | 306 / 0 | 20318 / 5630 | 5.739 / 5.701 | 245.697 / 220.460 |
+
+The disconnected case retained 38 eligible parent checkpoints over
+the search and restored them 341 times, against 35 restores previously.
+Peak charged parent units were 243, 743 and 210 for the three graphs
+under the unchanged 20,000-state budget. The latest disconnected arm's
+slowest full solve was 545.393 ms versus 282.356 ms in the previous arm.
+The measured improvement applies to the median. The replayed work and
+checkpoints do not explain that single tail sample.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and
 =.defgeneric= for index build, extend and lookup. This remains the
 extension point for a table or graph-backed lookup implementation.
 POO's =feedback-graph.ss= uses a published SCC owner map and a revision
-guard. Its =support/index.ss= shares a cold base with sparse edits
-when creating a new owner. The relevant next adaptation is a
-structurally shared constraint/index root at a choice checkpoint.
-The current candidate copies its one checkpoint's constraint table and
-restores the evaluator with fresh mutable indexes.
+guard. Its =support/index.ss= shares roots and path-copies sparse edits
+when creating a new owner. The choice checkpoints now apply that
+ownership pattern to their constraint maps through the standard red-black
+tree. Session restoration still reconstructs mutable relation indexes.
 
 POO's published graph owner uses symbolic keys. The ASCENT evaluator
 uses dense relation positions and integer attribute IDs. A backend
@@ -290,6 +331,11 @@ rows and revision ownership in the comparison. The Figure 3 graph
 partition is independent of which representative values are reachable
 through closed and open choice rules. The graph oracle checks expected
 models and provenance still follows the actual solver transitions.
+
+The pinned local POO =30fe206= passed its native feedback graph and
+revision suites, 25 cases in total. The ASCENT checks passed 89 native
+cases, including the representative suites and the retention refusal
+case, and the guarded Lean build completed all 196 jobs.
 
 ** Derivation witness query
 

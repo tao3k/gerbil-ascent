@@ -422,6 +422,25 @@
             (check (replay split old-proof) => #f)
             (check (replay split new-proof) => #t))
           (finally (gerbil-ascent-session-close! session)))))
+    (test-case "A retained predecessor can enter two distinct parts of a split"
+      (let* ((base (append-map (lambda (g) (cycle 8 (* g 8))) (iota 5)))
+             (fork (append base '((7 16) (6 24) (15 16) (14 24) (23 32) (31 32))))
+             (intact (append fork '((39 8)))))
+        (for-each
+          (lambda (change?)
+            (let (session (gerbil-ascent-open-condensed-actor-session (program intact 60 1600 1660)))
+              (try
+                (let* ((prior (gerbil-ascent-session-run session))
+                       (cut (if change? (edit-edge session prior 'insert 5 8) prior))
+                       (proof (witness cut 6 24 16))
+                       (result (edit-edge session cut 'delete 39 8))
+                       (expected (closure-oracle 40 (if change? (append fork '((5 8))) fork))))
+                  (check-result result expected 'split-local)
+                  (check-right-column result expected '(8 16 24 32))
+                  (check (replay cut proof) => #t)
+                  (check (replay result proof) => #f))
+                (finally (gerbil-ascent-session-close! session)))))
+          '(#f #t))))
     (test-case "Cold split handles capture overflow and singleton self bits"
       (let* ((vertices (iota 40))
              (acyclic (append

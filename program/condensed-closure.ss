@@ -17,11 +17,11 @@
 ;; Construction owns the ordinal map and adjacency, and publishes only after
 ;; every source row is admitted. A delta copies only the changing vectors.
 (defstruct condensed-closure
-  (source size positions labels adjacent members owner direct incoming reach order merge-undo)
+  (source size positions labels adjacent members owner direct incoming reach order cross merge-undo)
   final: #t)
 ;; Store only the immutable partition payload. Keeping a predecessor cut
 ;; here would also keep its source journal, adjacency and any earlier undo.
-(defstruct condensed-merge-undo (from to members owner direct incoming reach order) final: #t)
+(defstruct condensed-merge-undo (from to members owner direct incoming reach order cross) final: #t)
 (defstruct condensed-order (labels runs count) final: #t)
 (defstruct condensed-run (group start stop) final: #t)
 
@@ -154,6 +154,8 @@
          (groups (vector-length members))
          (owner (make-vector (vector-length adjacent) #f))
          (direct (make-vector groups 0))
+         (width (vector-length adjacent))
+         (cross (make-vector groups [])) (cross-count 0)
          (single? (= groups 1))
          (cyclic? (and single? (> size 0))))
     ;; A nonempty graph with one SCC has just the self bit.
@@ -175,16 +177,20 @@
                 (vector-set! direct g mask)
                 (begin
                   (checkpoint!)
-                  (let* ((h (vector-ref owner (u16vector-ref row offset)))
-                         (next
-                          (cond ((fx= g h)
-                                 (if nontrivial? mask
-                                   (begin
-                                     (set! cyclic? #t)
-                                     (bitwise-ior (slot-bit g) mask))))
-                                ((bit-set? h mask) mask)
-                                (else (bitwise-ior (slot-bit h) mask)))))
-                    (walk (fx+ offset 1) next)))))))))
+                  (let* ((w (u16vector-ref row offset)) (h (vector-ref owner w)))
+                    (cond
+                     ((fx= g h)
+                      (unless nontrivial? (set! cyclic? #t))
+                      (walk (fx+ offset 1) (if nontrivial? mask (bitwise-ior (slot-bit g) mask))))
+                     (else
+                      (when cross
+                        (if (fx< cross-count width)
+                          (begin
+                            (set! cross-count (fx+ cross-count 1))
+                            (vector-set! cross h (cons (fx+ (fx* v width) w) (vector-ref cross h))))
+                          (set! cross #f)))
+                      (walk (fx+ offset 1)
+                        (if (bit-set? h mask) mask (bitwise-ior (slot-bit h) mask)))))))))))))
     (and cyclic?
          (let ((reach (vector-copy direct)) (incoming (make-vector groups 0)))
            (let close ((g (- groups 1)))
@@ -203,7 +209,7 @@
              adjacent members owner direct incoming reach
              (build-condensed-order (or ordered (list-sort < (vector->list labels)))
                positions owner checkpoint!)
-             #f)))))
+             cross #f)))))
 
 (def (repair-partition (prior :- condensed-closure) source size adjacent checkpoint!)
   (condense-adjacent source size prior.positions prior.labels adjacent
@@ -257,7 +263,9 @@
                            replacements)))
          (groups (vector-length members))
          (owner (make-vector (vector-length adjacent) #f))
-         (direct (make-vector groups 0)))
+         (direct (make-vector groups 0))
+         (cross (and boundary prior.cross))
+         (vertex-count (vector-length adjacent)))
     (for-each (lambda (old g) (vector-set! translate old g)) old-order (iota fresh-at))
     (unless split?
       (fold-members affected (lambda (old _) (vector-set! translate old fresh-at)) #f))
@@ -282,8 +290,13 @@
                    (set! mask (bitwise-ior mask (slot-bit h))))))))
          vertices)
         mask))
-    (def (quotient-split! minimum maximum arcs)
-      (let (count (vector-length owner))
+    (def (project-cross! edge)
+      (checkpoint!)
+      (let* ((from (vector-ref owner (fxquotient edge vertex-count)))
+             (to (vector-ref owner (fxremainder edge vertex-count))))
+        (vector-set! direct from (bitwise-ior (slot-bit to) (vector-ref direct from)))))
+    (def (quotient-split! first minimum maximum arcs)
+      (let (count vertex-count)
         (def (component-span vertices group)
           (let ((low count) (high 0) (width 0))
             (for-each
@@ -300,11 +313,6 @@
                          (checkpoint!)
                          (and (fx= (vector-ref owner v) group) (verify (fx+ v 1))))))
                  (cons low high))))
-        (def (project-arcs targets mask)
-          (if (null? targets) mask
-            (begin
-              (checkpoint!)
-              (project-arcs (cdr targets) (bitwise-ior mask (slot-bit (vector-ref owner (car targets))))))))
         (for (g (in-range fresh-at groups))
           (let* ((vertices (vector-ref members g))
                  (internal? (pair? (cdr vertices)))
@@ -313,27 +321,36 @@
             (let project ((remaining vertices) (mask (if internal? self 0)))
               (if (null? remaining)
                 (vector-set! direct g mask)
-                (let* ((v (car remaining)) (lo (u16vector-ref minimum v)))
+                (let* ((v (car remaining)) (at (fx- v first)) (lo (u16vector-ref minimum at)))
                   (checkpoint!)
                   (let (next
                         (cond
-                         ((fx= lo count) (project-arcs (vector-ref arcs v) mask))
+                         ((fx= lo count) mask)
                          ((and span (fx< lo count) (fx<= (car span) lo)
-                               (fx<= (u16vector-ref maximum v) (cdr span)))
-                          (project-arcs (vector-ref arcs v) (if internal? mask (bitwise-ior mask self))))
+                               (fx<= (u16vector-ref maximum at) (cdr span)))
+                          (if internal? mask (bitwise-ior mask self)))
                          (else (scan (list v) mask (w #t) (h (and internal? (fx= h g)))))))
-                    (project (cdr remaining) next)))))))))
+                    (project (cdr remaining) next))))))))
+      ;; Rows that fell back may also have recorded edges. A repeated
+      ;; concrete witness sets the same destination bit.
+      (for-each project-cross! arcs))
     (for-each
      (lambda (old g)
        (let (mask (remap old 0))
          (vector-set! direct g
-           (if (and split? (not (zero? (bitwise-and affected (vector-ref prior.direct old)))))
+           (if (and split? (not cross)
+                    (not (zero? (bitwise-and affected (vector-ref prior.direct old)))))
              (scan (vector-ref prior.members old) mask
                (w (bit-set? (vector-ref prior.owner w) affected)) (h #f))
              mask))))
      old-order (iota fresh-at))
     (cond
-     (boundary (quotient-split! (vector-ref boundary 0) (vector-ref boundary 1) (vector-ref boundary 2)))
+     (boundary
+      (quotient-split! (vector-ref boundary 0) (vector-ref boundary 1)
+        (vector-ref boundary 2) (vector-ref boundary 3))
+      (when cross
+        (fold-members affected
+          (lambda (g _) (for-each project-cross! (vector-ref cross g))) #f)))
      (split?
       (for (g (in-range fresh-at groups))
         (let* ((vertices (vector-ref members g))
@@ -350,7 +367,7 @@
         adjacent members owner direct incoming reach
         (build-condensed-order (condensed-order-labels prior.order)
           prior.positions owner checkpoint!)
-        undo))))
+        #f undo))))
 
 (def (merge-local (prior :- condensed-closure) source size adjacent a b checkpoint! undo)
   (let* ((forward (bitwise-ior (slot-bit b) (vector-ref prior.reach b)))
@@ -375,7 +392,7 @@
                    (values (gerbil-ascent-graph-components/packed adjacent checkpoint! selected) #f))))
     (if (null? (cdr parts))
       (make-condensed-closure source size prior.positions prior.labels
-        adjacent prior.members prior.owner prior.direct prior.incoming prior.reach prior.order #f)
+        adjacent prior.members prior.owner prior.direct prior.incoming prior.reach prior.order prior.cross #f)
       (repair-local prior source size adjacent (slot-bit group) parts #t checkpoint! #f boundary))))
 
 (def (gerbil-ascent-condensed-same-partition? (prior :- condensed-closure)
@@ -421,7 +438,7 @@
              (if local?
                (let (undo (and reuse-merge? (not packed-edit?)
                                 (make-condensed-merge-undo x y prior.members prior.owner
-                                  prior.direct prior.incoming prior.reach prior.order)))
+                                  prior.direct prior.incoming prior.reach prior.order prior.cross)))
                  (merge-local prior source size adjacent a b checkpoint! undo))
                (repair-partition prior source size adjacent checkpoint!))
              (let* ((direct (vector-copy prior.direct)) (reach (vector-copy prior.reach))
@@ -434,7 +451,8 @@
                  (when (or (= g a) (bit-set? a (vector-ref prior.reach g)))
                    (vector-set! reach g (bitwise-ior (vector-ref prior.reach g) suffix))))
                (make-condensed-closure source size prior.positions prior.labels
-                 adjacent prior.members prior.owner direct incoming reach prior.order #f)))))))
+                 adjacent prior.members prior.owner direct incoming reach prior.order
+                 (and (= a b) prior.cross) #f)))))))
 
 (def (has-cross-edge? adjacent members owner a b checkpoint!)
   (let/cc found
@@ -471,7 +489,7 @@
                                source size adjacent checkpoint!)
   (checkpoint!)
   (make-condensed-closure source size prior.positions prior.labels
-    adjacent undo.members undo.owner undo.direct undo.incoming undo.reach undo.order #f))
+    adjacent undo.members undo.owner undo.direct undo.incoming undo.reach undo.order undo.cross #f))
 
 ;; A non-self edge inside a component may split it, but both endpoints
 ;; remain incident. A cross-edge edit retains both cyclic owner domains.
@@ -503,7 +521,7 @@
                    (vector-set! direct a (bitwise-and (vector-ref direct a) (bitwise-not (slot-bit a))))
                    (set! reach (withdrawal-reach direct reach a checkpoint!)))
                  (make-condensed-closure source size prior.positions prior.labels
-                   adjacent prior.members prior.owner direct prior.incoming reach prior.order #f)))
+                   adjacent prior.members prior.owner direct prior.incoming reach prior.order prior.cross #f)))
               ((and (not (= a b))
                     (or local? (and (bit-set? a (vector-ref prior.direct a))
                                     (bit-set? b (vector-ref prior.direct b)))))
@@ -518,7 +536,7 @@
                    (set! incoming (edit-incoming incoming a b #f))
                    (set! reach (withdrawal-reach direct reach a checkpoint!)))
                  (make-condensed-closure source size prior.positions prior.labels
-                   adjacent prior.members prior.owner direct incoming reach prior.order #f)))
+                   adjacent prior.members prior.owner direct incoming reach prior.order #f #f)))
              (else #f)))))))
 
 ;; Group masks are exact, including the self bit only for a nonempty path.
@@ -658,9 +676,9 @@
 ;; A held Result keeps witness inputs but cannot retain the Session's
 ;; preceding partition purely because it published a merging edit.
 (def (gerbil-ascent-condensed-witness-index (index :- condensed-closure))
-  (if index.merge-undo
+  (if (or index.merge-undo index.cross)
     (make-condensed-closure index.source index.size index.positions index.labels
-      index.adjacent index.members index.owner index.direct index.incoming index.reach index.order #f)
+      index.adjacent index.members index.owner index.direct index.incoming index.reach index.order #f #f)
     index))
 
 (defstruct condensed-witness (identity version path) final: #t)

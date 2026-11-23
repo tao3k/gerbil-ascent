@@ -453,6 +453,63 @@ theorem singleton_boundary_self (owner : Nat → Nat) (v : Nat) (rows : List Nat
     subst w
     simp
 
+/-- Select concrete boundary edges by the old destination component.
+Filtering only the old quotient bits loses the endpoint needed by the
+new owner map. For a retained origin the destination-bucket projection
+has exactly the same membership as scanning its full row. -/
+def incomingBucket (edges : List (Nat × Nat)) (oldOwner : Nat → Nat) (group : Nat) :
+    List (Nat × Nat) :=
+  edges.filter (fun e => decide (oldOwner e.1 ≠ group ∧ oldOwner e.2 = group))
+
+theorem retained_incoming_projection_exact (edges : List (Nat × Nat))
+    (oldOwner newOwner : Nat → Nat) (split retained target : Nat)
+    (other : retained ≠ split) :
+    (∃ e ∈ incomingBucket edges oldOwner split,
+      oldOwner e.1 = retained ∧ newOwner e.2 = target) ↔
+    (∃ e ∈ edges, oldOwner e.1 = retained ∧
+      oldOwner e.2 = split ∧ newOwner e.2 = target) := by
+  constructor
+  · rintro ⟨e, member, source, destination⟩
+    obtain ⟨raw, _, reachesSplit⟩ := by
+      simpa [incomingBucket] using member
+    exact ⟨e, raw, source, reachesSplit, destination⟩
+  · rintro ⟨e, raw, source, reachesSplit, destination⟩
+    have cross : oldOwner e.1 ≠ split := source ▸ other
+    have member : e ∈ incomingBucket edges oldOwner split := by
+      simp [incomingBucket, raw, cross, reachesSplit]
+    exact ⟨e, member, source, destination⟩
+
+/-- An edge edit internal to an unchanged partition cannot alter any
+cross bucket, even if that edge supplied its group's diagonal bit. -/
+theorem internal_removal_preserves_incoming (edges : List (Nat × Nat))
+    (owner : Nat → Nat) (removed : Nat × Nat) (group : Nat)
+    (internal : owner removed.1 = owner removed.2) :
+    incomingBucket (edges.filter (fun e => decide (e ≠ removed))) owner group =
+      incomingBucket edges owner group := by
+  unfold incomingBucket
+  rw [List.filter_filter]
+  apply List.filter_congr
+  intro e _
+  by_cases h : e = removed
+  · subst e
+    by_cases same : owner removed.2 = group <;> simp [same, internal]
+  · simp [h]
+
+/-- Dense vertex IDs stay in one temporary interval. Subtracting the
+first selected ordinal gives an injective zero-based scratch address. -/
+theorem selected_boundary_offset (lo hi v w : Nat)
+    (vInside : lo ≤ v ∧ v ≤ hi) (wInside : lo ≤ w ∧ w ≤ hi) :
+    v - lo < hi - lo + 1 ∧ ((v - lo = w - lo) ↔ v = w) := by omega
+
+/-- Encoding the raw endpoints adds no quotient-ID dependency. -/
+theorem packed_cross_endpoints (count source target : Nat) (bounded : target < count) :
+    (source * count + target) / count = source ∧
+      (source * count + target) % count = target := by
+  have positive : 0 < count := by omega
+  constructor
+  · rw [Nat.mul_comm source count, Nat.mul_add_div positive, Nat.div_eq_of_lt bounded, Nat.add_zero]
+  · rw [Nat.mul_comm source count, Nat.mul_add_mod, Nat.mod_eq_of_lt bounded]
+
 end QuotientConstruction
 
 /-- Sum the vertex count of the selected groups by counting set bits

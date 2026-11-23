@@ -1,0 +1,111 @@
+#+TITLE: Concrete incoming endpoints for cold SCC splits
+
+* Source and proof
+
+The existing incoming quotient mask tells which components have a
+cross edge into the selected SCC. It cannot distinguish two edges from
+the same predecessor that land in different vertices of that SCC.
+The source view has no target-bound index, and the edit journal indexes
+changes only. Reusing either alone would lose the new target owner.
+
+The already-required cold quotient scan captures the concrete cross
+edges in buckets keyed by the existing destination component ordinal.
+A bucket is complete or is unavailable. Capture stores at most as many
+edges as vertices for the entire index. A split with a complete bucket
+translates the retained direct masks, then visits the selected bucket
+and adds the new target bits for the retained source owners. The
+fallback scans the original rows whenever the certificate is absent or
+the edit is metered. An internal edit preserving membership can retain
+the buckets. A changed cross edge or repartition discards them, and an
+exact merge inverse restores the saved payload. Result witness closures
+carry no copy of this worker-only index.
+
+=retained_incoming_projection_exact= proves that a bucket supplies exactly
+the cross bits that the retained predecessor scan would supply. The
+raw coordinates remain valid while the concrete graph and old owner
+map match the payload. =internal_removal_preserves_incoming= justifies
+sharing across an internal edge removal. =packed_cross_endpoints=
+connects the packed representation to the concrete endpoints. The
+existing closure, owner checkpoints and ordered witness adjacency
+remain the sources of reachability and publication semantics.
+
+The temporary min/max arrays of the packed SCC walk use the extent of
+the selected vertices, through =selected_boundary_offset=. Observed
+arrows are one list of packed endpoint pairs. Certified rows can skip
+their internal intervals. Uncertified rows still read their adjacency.
+Projecting an already seen fallback edge again is idempotent, using
+=repeated_quotient_target_exact=. This eliminates the extra full-graph
+array of per-row capture lists. Caps and publication checks are unchanged.
+
+* Native cold-delete comparison
+
+The reference was =a9d62dd6=. Both arms used the same one-processor
+Gerbil on Gambit =2df89af=, the same production compiler options, a
+2 GiB heap and the existing 90-second watchdog. Each timed deletion
+started from a fresh merged Session on the existing 50- and 71-clique
+fixtures. Four alternating batches of eight requests gave 32 cold
+samples per arm and fixture. Separate compatible instrumented builds
+counted actual adjacency reads and projected packed entries.
+
+| Fixture | Metric | Reference | Candidate |
+|---------+--------+-----------+-----------|
+| Local | Packed SCC edge reads | 8065 | 8065 |
+| Local | Retained predecessor adjacency reads | 4033 | 0 |
+| Local | Indexed predecessor entries visited | 0 | 1 |
+| Local | Publication wall P95 (ms) | 0.820 | 0.690 |
+| Local | Publication CPU P95 (ms) | 0.817 | 0.681 |
+| Local | Allocation P95 (bytes) | 333680 | 276272 |
+| Global | Total adjacency reads | 201649 | 201649 |
+| Global | Publication wall P95 (ms) | 7.977 | 23.138 |
+| Global | Publication CPU P95 (ms) | 5.949 | 8.148 |
+| Global | Allocation P95 (bytes) | 378272 | 352864 |
+
+The local merged graph retained 69 concrete cross entries during cold
+construction. Its repair visited one matching entry and used 128 slots
+per temporary envelope, down from 4,544. The forked regression projected
+two different endpoints of one predecessor into two replacement SCCs.
+After a cross insertion invalidated the certificate, the same test used
+11 predecessor adjacency reads and produced the independently expected
+rows and versioned witnesses.
+
+The global wall median was 4.746 versus 4.961 ms. Later batch medians
+were 4.785 versus 4.842 ms and 4.689 versus 4.720 ms. The longest
+candidate request spent 33.113 ms on the wall with 7.609 ms of process
+CPU and no collection. This comparison records the worse global tail.
+It does not identify the non-CPU portion or establish a global latency
+improvement.
+
+* Contemporaneous recursive-buffer comparison
+
+The unchanged native suite delivered and checked all 1,040,384 rows
+for each of 1,000 requests per arm, under the original 50 ms gate.
+Both arms passed. The earlier 83.29 ms failure was preserved. The
+phase values below are cumulative wall time, in seconds.
+
+| Run | P95 (ms) | Request wall (s) | Process CPU (s) | Replace | Run and publish | Export | Oracle | Collections |
+|-----+----------+------------------+-----------------+---------+-----------------+--------+--------+-------------|
+| Earlier failure | 83.289 | 24.948 | 11.781 | 0.301 | 0.577 | 3.980 | 20.061 | 0 |
+| Current reference | 9.828 | 9.507 | 9.406 | 0.156 | 0.165 | 1.516 | 7.659 | 0 |
+| Current candidate | 10.174 | 9.723 | 9.579 | 0.237 | 0.180 | 1.590 | 7.705 | 1 |
+
+Most of the earlier run's accumulated excess wall time is in the
+independent row verifier. That run collected no garbage. The regular
+Actor Session used by this buffer fixture does not take the condensed
+split path. The old transcript has ten-request phase totals and cannot
+explain which phase accounted for an individual tail request or what
+caused it to wait.
+
+* Acceptance
+
+The condensed Actor, regular Actor, engine interface, SCC execution,
+SCC summary and independent oracle suites passed. The complete guarded
+Lean check passed all 196 jobs. Existing cancellation, budget and witness
+checks ran with their original settings.
+
+The million-row projection list completed all 1,000 independent checks
+and failed its original 100 ms assertion at 103.99 ms. It recorded 227
+collections and 20.55 seconds of cumulative GC wall time. The previous
+complete-list failures remain in their preceding reports. The recursive
+list and projection buffer passed at 69.08 and 10.06 ms P95. The
+90-second timeout was unchanged. The candidate remains local and has
+not met the publication conditions for PR #2.

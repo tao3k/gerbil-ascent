@@ -231,29 +231,34 @@
     start u16vector-length fx< u16vector-ref advance ignore-boundary!))
 
 ;; Capture an exact subset of raw arrows. The complementary observations
-;; only need their ordinal envelope. Overflowed rows fall back to their
-;; original adjacency so dense quotients cannot grow capture storage.
+;; only need their ordinal envelope in the selected extent. A packed
+;; list avoids a full-domain vector of mostly empty capture rows.
 (def (gerbil-ascent-graph-components/packed-boundary successors checkpoint! selected)
   (let* ((count (vector-length successors)) (overflow (fx+ count 1))
-         (minimum (make-u16vector count count)) (maximum (make-u16vector count 0))
-         (arcs (make-vector count [])) (recorded 0))
-    (defrule (start row) 0)
-    (defrule (advance cursor) (fx+ cursor 1))
-    (defrule (observe! source target retired?)
-      (let ((v source) (w target))
-        (let (lo (u16vector-ref minimum v))
+         (first count) (last 0))
+    (for-each (lambda (v)
+                (checkpoint!)
+                (when (fx< v first) (set! first v))
+                (when (fx> v last) (set! last v))) selected)
+    (let* ((span (max 0 (fx+ (fx- last first) 1)))
+           (minimum (make-u16vector span count)) (maximum (make-u16vector span 0))
+           (arcs []) (recorded 0))
+      (defrule (start row) 0)
+      (defrule (advance cursor) (fx+ cursor 1))
+      (defrule (observe! source target retired?)
+        (let* ((v source) (w target) (at (fx- v first)) (lo (u16vector-ref minimum at)))
           (when (fx<= lo count)
             (if retired?
               (if (fx< recorded count)
                 (begin
                   (set! recorded (fx+ recorded 1))
-                  (vector-set! arcs v (cons w (vector-ref arcs v))))
-                (u16vector-set! minimum v overflow))
+                  (set! arcs (cons (fx+ (fx* v count) w) arcs)))
+                (u16vector-set! minimum at overflow))
               (begin
-                (when (fx< w lo) (u16vector-set! minimum v w))
-                (when (fx> w (u16vector-ref maximum v))
-                  (u16vector-set! maximum v w))))))))
-    (let (parts (borrowed-components successors checkpoint! selected
-                  make-u32vector u32vector-set! u32vector-ref
-                  start u16vector-length fx< u16vector-ref advance observe!))
-      (values parts (vector minimum maximum arcs)))))
+                (when (fx< w lo) (u16vector-set! minimum at w))
+                (when (fx> w (u16vector-ref maximum at))
+                  (u16vector-set! maximum at w)))))))
+      (let (parts (borrowed-components successors checkpoint! selected
+                    make-u32vector u32vector-set! u32vector-ref
+                    start u16vector-length fx< u16vector-ref advance observe!))
+        (values parts (vector first minimum maximum arcs))))))

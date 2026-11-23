@@ -14,7 +14,7 @@
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "evaluate.ss" gerbil-ascent-make-engine-state gerbil-ascent-make-updated-engine-state
                  gerbil-ascent-make-choice-engine-state)
-        (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse)
+        (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse gerbil-ascent-prepare-parent-reuse)
         (only-in "engine-state.ss" engine-state-append-source! engine-state-replace-source! engine-state-run
                  engine-state-run-timeout engine-state-analysis engine-state-schema
                  engine-state-publication engine-state-recomputed?
@@ -57,11 +57,12 @@
       (if defer-result?
         (gerbil-ascent-make-choice-engine-state candidate analysis schema)
         (gerbil-ascent-make-engine-state candidate analysis schema measure?))))
-  (def (updated-engine previous candidate result analysis schema measure? cut publication)
+  (def (updated-engine previous candidate result analysis schema measure? cut publication (parent? #f))
     (parameterize ((current-positive-prefix-budget prefix-budget))
       (if defer-result?
         (gerbil-ascent-make-choice-engine-state candidate analysis schema
-          (gerbil-ascent-prepare-session-reuse previous candidate result analysis cut publication))
+          ((if parent? gerbil-ascent-prepare-parent-reuse gerbil-ascent-prepare-session-reuse)
+           previous candidate result analysis cut publication))
         (gerbil-ascent-make-updated-engine-state previous candidate result
           analysis schema measure? cut publication))))
   (def (copy-source-rows rows)
@@ -433,7 +434,7 @@
             (let* ((candidate (source-snapshot-program saved.snapshot))
                    (fresh (updated-engine saved.sources candidate saved.result
                             engine-analysis engine-schema measure-rule-times?
-                            saved.snapshot saved.publication))
+                            saved.snapshot saved.publication #t))
                    (result ((engine-state-run fresh))))
               (unless (gerbil-ascent-result-complete? result)
                 (error "ASCENT choice parent did not complete"))

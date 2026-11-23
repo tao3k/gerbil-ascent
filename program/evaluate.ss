@@ -45,7 +45,7 @@
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut row-indexes-publish-old-tail!)
         (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
-                 gerbil-ascent-seed-session-reuse! make-closure-seed-state session-reuse-affected)
+                 gerbil-ascent-seed-session-reuse! gerbil-ascent-ensure-reuse-membership! make-closure-seed-state session-reuse-affected)
         (only-in "analysis.ss" gerbil-ascent-program-analysis
                  gerbil-ascent-program-schema)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
@@ -380,7 +380,7 @@
                                   (gerbil-ascent-set-batch-admit!
                                    (vector-ref source-additions index)
                                    staged-count
-                                   (vector-ref seen index)
+                                   (gerbil-ascent-ensure-reuse-membership! all seen index)
                                    (and (null? (vector-ref all index))
                                         (null? (vector-ref source-originals
                                                            index))))))
@@ -492,6 +492,9 @@
                            (not (view-relation? index))
                            (or (vector-ref pending-seen index)
                                (let (fresh (make-hash-table))
+                                 ;; From this point to round commit all row
+                                 ;; membership probes use the same table.
+                                 (gerbil-ascent-ensure-reuse-membership! all seen index)
                                  (vector-set! pending-seen index fresh)
                                  fresh)))))
                 (let (check (vector-ref field-checkers index))
@@ -853,7 +856,7 @@
                 (flush-staged-set-rows!))
               (when (and (>= (+ source-materialized-count derived-count)
                              output-limit)
-                         (not (hash-get (vector-ref seen index) row)))
+                         (not (hash-get (gerbil-ascent-ensure-reuse-membership! all seen index) row)))
                 (error "ASCENT session output fact budget exceeded"))
               (set! source-count (+ source-count 1))
               (vector-set! source-additions index

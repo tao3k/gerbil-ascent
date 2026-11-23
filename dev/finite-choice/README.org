@@ -552,6 +552,55 @@ The production path keeps ordered-content checks. Restoring the
 raw spine still leaves fresh engine admission and relation membership
 reconstruction, which are the larger operations to isolate next.
 
+** Deferred membership for completed choice parents
+
+In a separate phase profile of 32 restores of 4,096 derived rows,
+the old membership and row-admission pass averaged 0.793 ms.
+Source initialization averaged 0.630 ms, and reversing the accepted
+row spine averaged 0.006 ms. Copying the row spine accounted for
+less than one percent of the measured restore time.
+
+The private choice Session checks checkpoint owner and branch, then
+uses the normal reuse selection for the saved source cut. An
+unchanged canonical Set with an empty admitted base can charge the
+frozen publication cardinality directly. It still reverses the rows
+into engine order. The first frontier or source update requiring
+membership builds a fresh private hash table from the committed
+rows. The budget check runs before publication. An already-controlled
+restore uses ordinary admission, and a later controlled membership
+build checks for cancellation before each insertion and installs its
+table only on success. Nonempty bases and ordinary Session updates
+use the existing membership and row-admission pass.
+
+=choice_empty_base_charge= equates the first-miss count with the
+frozen size of a duplicate-free Set. =choice_deferred_membership_exact=
+connects the reversed engine spine to the same membership predicate.
+The added native case verifies duplicate suppression on the first
+write, the exact derived budget, recovery of the accepted result,
+and a subsequent sibling restore.
+
+In 32 collector-free isolated restores of 4,096 derived rows,
+the median fell from 1.497 to 0.695 ms and allocation from
+1,361,648 to 1,095,792 bytes. A separate instrumented solve of the
+disconnected representative fixture deferred membership for 22,287
+rows and later hashed 4,896 of them. The path deferred 6,674 rows
+and needed none of those tables.
+
+Ordinary native solves had these wall-clock results, ten samples per arm.
+
+| Graph | Old / new median (ms) | Old / new maximum (ms) |
+|-------+-----------------------+------------------------|
+| Path | 37.642 / 35.617 | 110.004 / 89.715 |
+| Clique | 28.832 / 25.083 | 223.900 / 60.126 |
+| Disconnected | 98.023 / 91.926 | 127.363 / 103.563 |
+
+The separate five-solve 128-vertex metered median improved from
+497.375 to 457.324 ms. In the ten-solve four-process metered cohort,
+the 48-vertex path median regressed from 59.320 to 74.238 ms.
+The metered state, offer, and index work receipts matched. The
+metered regression has no per-sample phase attribution. Source
+initialization and save/restore preparation remain visible costs.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

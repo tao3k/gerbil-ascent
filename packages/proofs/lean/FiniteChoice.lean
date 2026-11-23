@@ -1191,4 +1191,36 @@ theorem choice_single_delta_ordered_admission
         (fun row => (row, fresh))).foldl admit initial := by
   rw [choice_single_delta_bucket_exact prefixKey freshKey prefixRows fresh]
 
+/-- The former restore walk charges each row on its first membership miss. -/
+def restoreFreshCount {Row : Type} [DecidableEq Row] : List Row → List Row → Nat
+  | [], _ => 0
+  | row :: tail, seen =>
+    if row ∈ seen then restoreFreshCount tail seen
+    else 1 + restoreFreshCount tail (row :: seen)
+
+theorem restore_fresh_count_disjoint
+    {Row : Type} [DecidableEq Row] (rows seen : List Row)
+    (distinct : rows.Nodup) (fresh : ∀ row ∈ rows, row ∉ seen) :
+    restoreFreshCount rows seen = rows.length := by
+  induction rows generalizing seen with
+  | nil => rfl
+  | cons row tail ih =>
+    have split := List.nodup_cons.mp distinct
+    have miss : row ∉ seen := fresh row (by simp)
+    have rest : ∀ item ∈ tail, item ∉ row :: seen := by
+      intro item mem
+      have differs : item ≠ row := fun eq => split.1 (eq ▸ mem)
+      have absent := fresh item (by simp [mem])
+      simp [differs, absent]
+    simp [restoreFreshCount, miss, ih _ split.2 rest, Nat.add_comm]
+
+/-- An empty base can charge the frozen cardinality of an exact Set cut. -/
+theorem choice_empty_base_charge
+    {Row : Type} [DecidableEq Row] (rows : List Row) (distinct : rows.Nodup) :
+    restoreFreshCount rows [] = rows.length :=
+  restore_fresh_count_disjoint rows [] distinct (by simp)
+
+theorem choice_deferred_membership_exact {Row : Type} (rows : List Row) (row : Row) :
+    row ∈ rows.reverse ↔ row ∈ rows := List.mem_reverse
+
 end Ascent.FiniteChoice

@@ -5,8 +5,11 @@
 (import :std/test
         (only-in :gerbil-ascent/program/api relational-choice-program relational-choice-solve
                  RelationalChoiceLimit? relational-program-query relational-program
-                 relational-program-session-run)
+                 relational-program-session-run relational-program-append-source!)
         (only-in :gerbil-ascent/program/scheme-session relational-open-program-session/choice)
+        (only-in :gerbil-ascent/program/scheme-query relational-program-solution-result
+                 make-relational-program-solution)
+        (only-in :gerbil-ascent/program/result gerbil-ascent-materialize-result)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
         (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement)
         (only-in "../../dev/finite-choice/oracle.ss" finite-choice-solutions))
@@ -181,6 +184,35 @@
           (left saved branch)
           (check-equal? (relational-program-query (relational-program-session-run first) 'input)
                         '((1))))))
+    (test-case "restored Set membership deduplicates first writes and charges frozen rows"
+      (let* ((program (relational-program
+                        (relation input (owner value) '((0 11)))
+                        (relation output (value))
+                        (rule (output ?value) (input ?owner ?value))
+                        (limits 8 2 12)))
+             (branch (list 'parent))
+             (save #f) (restore #f)
+             (session (relational-open-program-session/choice program
+                        (lambda (_ capture restorer)
+                          (set! save capture)
+                          (set! restore restorer)) #t)))
+        (def (run) (relational-program-solution-result (relational-program-session-run session)))
+        (def (rows result)
+          (relational-program-query
+           (make-relational-program-solution (gerbil-ascent-materialize-result result)) 'output))
+        (let* ((initial (run)) (saved (save branch)))
+          (check (and saved #t) => #t)
+          (check-equal? (rows (restore saved branch)) '((11)))
+          (relational-program-append-source! session 'input '(1 11))
+          (check-equal? (rows (run)) '((11)))
+          (relational-program-append-source! session 'input '(2 13))
+          (check-equal? (rows (run)) '((11) (13)))
+          (relational-program-append-source! session 'input '(3 17))
+          (check-exception (run) true)
+          (check-equal? (rows (run)) '((11) (13)))
+          (check-equal? (rows (restore saved branch)) '((11)))
+          (relational-program-append-source! session 'input '(4 19))
+          (check-equal? (rows (run)) '((11) (19))))))
     (test-case "a full parent cache allowance still enumerates all models"
       (let (program
              (relational-choice-program

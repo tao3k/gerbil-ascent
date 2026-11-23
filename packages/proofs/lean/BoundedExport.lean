@@ -340,6 +340,21 @@ theorem whole_list_preserved_phases_limit (observations : List (Nat × Nat × Na
   simpa [phases, List.filter_map, Function.comp_def] using
     (RuntimeMeasurement.bounded_phase_misses_p95 bound phases phasesSlow)
 
+/-- Replay a uniform reduction of the observed delivery GC interval.
+The independently measured oracle and the chosen remaining phases stay fixed. -/
+def wholeListMeetsPauseTarget (bound reduction : Nat) (keepOther : Bool)
+    (observation : Nat × Nat × Nat) : Bool :=
+  decide (observation.1 - reduction + observation.2.1 +
+    (if keepOther then observation.2.2 else 0) < bound)
+
+theorem whole_list_pause_target_mono {bound a b : Nat} {keepOther : Bool}
+    {observation : Nat × Nat × Nat} (ordered : a ≤ b)
+    (accepted : wholeListMeetsPauseTarget bound a keepOther observation = true) :
+    wholeListMeetsPauseTarget bound b keepOther observation = true := by
+  simp only [wholeListMeetsPauseTarget, decide_eq_true_eq] at accepted ⊢
+  have reduced := Nat.sub_le_sub_left ordered observation.1
+  omega
+
 /-- A successful nonempty page has one owner interval and two handoffs.
 Oracle time is measured separately between returned pages. -/
 structure PagePhaseTicks where
@@ -838,6 +853,7 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.whole_list_phase_bounds
 #print axioms Ascent.BoundedExport.observed_allocation_valid
 #print axioms Ascent.BoundedExport.whole_list_preserved_phases_limit
+#print axioms Ascent.BoundedExport.whole_list_pause_target_mono
 #print axioms Ascent.BoundedExport.saved_interior_pair_keeps_child
 #print axioms Ascent.BoundedExport.observed_capacity_can_be_consumed
 #print axioms Ascent.BoundedExport.commit_refusal_preserves_buffer_and_cursor

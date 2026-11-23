@@ -68,6 +68,38 @@ zero other work, at most 944 requests qualify if those GC and oracle
 intervals are fixed. The strict P95 requires 950. The replay used the
 original Guard settings and retains the earlier failed elaborations.
 
+* Historical receipts and pause targets
+
+The uninstrumented million-row list receipts recorded 109.009,
+107.561 and 105.931 ms P95. An earlier staging run recorded 104.050 ms.
+These are separate runs. The 156.339 ms value from the later affine
+page kernel is the maximum for a ten-million-row paged delivery at
+width 512. That workload's P95 went from 62.381 to 59.272 ms. Its new
+kernel enters the page staging path in =program/component-worker.ss=.
+The complete mutable list still goes through =rows-of= and the source
+view exporter in =program/source-cut.ss=. The list gate was not timed
+again at the page-kernel commit. See [[file:affine-page-kernel.org]].
+
+The table replays two separate instrumented traces of 1,000 verified
+requests. It subtracts the same duration from each recorded delivery
+GC interval, stopping at zero, and keeps the measured oracle time.
+The minimum reduction reaches 950 requests strictly below the target.
+Lean checked these counts and that a reduction one nanosecond smaller
+leaves only 949. The monotonicity result
+=whole_list_pause_target_mono= excludes all smaller reductions.
+
+| Trace wall P95 (ms) | Target (ms) | Qualify with zero other time | Minimum GC reduction with zero other time (ms) | Minimum GC reduction with observed other time (ms) |
+|---------------------+-------------+------------------------------+-------------------------------------------------+----------------------------------------------------|
+|             110.491 |         100 |                          872 |                                       5.717869 |                                          10.491083 |
+|             105.228 |         100 |                          944 |                                       0.674849 |                                           5.227666 |
+|             110.491 |          80 |                          782 |                                      25.717869 |                                          30.491083 |
+|             105.228 |          80 |                          777 |                                      20.674849 |                                          25.227666 |
+
+The replay fixes pause placement and oracle durations. It quantifies
+the reduction a collector or a changed live object set would have to
+show in these traces. It supplies no timing claim for a new heap
+layout. Raw traces and generated proof inputs stay in the cache.
+
 * Owner-only root control
 
 Both arms kept the same two caller lists and the same verified suffix of

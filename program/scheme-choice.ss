@@ -26,7 +26,7 @@
 ;; Frozen buckets. Tree headers fork in constant time and each write replaces
 ;; a bucket, so a saved parent never observes a child's edits.
 (defstruct choice-constraint (rank first-closed closed open closed-support) final: #t)
-(defstruct choice-entry (state parent addition trace) final: #t)
+(defstruct choice-entry (key parent addition trace) final: #t)
 (defstruct choice-step (assignment kind support) final: #t)
 (defstruct choice-parent (cut constraints units remaining) final: #t)
 (defstruct relational-choice-program (grounding offers choice-names))
@@ -138,10 +138,10 @@
 
 ;; Canonical numeric attribute identities make state equality independent
 ;; of the path used to derive it. Existing entries are immutable.
-(def (insert-choice state id value)
-  (if (or (null? state) (< id (caar state)))
-    (cons (cons id value) state)
-    (cons (car state) (insert-choice (cdr state) id value))))
+(def (insert-choice state assignment)
+  (if (or (null? state) (< (car assignment) (caar state)))
+    (cons assignment state)
+    (cons (car state) (insert-choice (cdr state) assignment))))
 
 ;; A completed solution retains one derivation in deduction order. The
 ;; grounded supports are owned rows from the predecessor cut of each step.
@@ -178,24 +178,27 @@
     (error "invalid relational choice solve inputs"))
   (def control (current-ascent-execution-control))
   (def (checkpoint!) (ascent-execution-checkpoint! 1 0))
-  (def seen (make-hash-table))
+  ;; Equal canonical states have equal incremental digests. The native
+  ;; table still checks the full key, including on digest collisions.
+  (def seen (make-hash-table hash: car test: equal?))
   (def attributes (make-hash-table))
   (def keys (make-hash-table-eqv))
   (def names (relational-choice-program-choice-names program))
   (def pending [])
   (def models [])
   (def current [])
-  (def (enqueue! state parent addition trace (kind #f) (support []))
+  (def (enqueue! state digest parent addition trace (kind #f) (support []))
     (checkpoint!)
-    (unless (hash-get seen state)
-      (when (>= (hash-length seen) budget)
-        (raise (RelationalChoiceLimit "finite-choice state budget exhausted" irritants: (list budget))))
-      (hash-put! seen state #t)
-      (set! pending
-        (cons (make-choice-entry state parent addition
-                (if kind (cons (make-choice-step (source-row addition) kind support) trace) trace))
-              pending))
-      #t))
+    (let (key (cons digest state))
+      (unless (hash-get seen key)
+        (when (>= (hash-length seen) budget)
+          (raise (RelationalChoiceLimit "finite-choice state budget exhausted" irritants: (list budget))))
+        (hash-put! seen key #t)
+        (set! pending
+          (cons (make-choice-entry key parent addition
+                  (if kind (cons (make-choice-step (source-row addition) kind support) trace) trace))
+                pending))
+        #t)))
   (def (attribute-id name args)
     (let (key (cons name args))
       (or (hash-get attributes key)
@@ -262,7 +265,7 @@
           (set! parent-units (- parent-units candidate.units))
           (hash-remove! saved parent)))
       candidate))
-  (def (process! state result trace addition)
+  (def (process! state digest result trace addition)
     (let/cc finish
       (def children 0)
       (def (reject!)
@@ -304,8 +307,10 @@
         (list-sort (lambda (a b) (rank<? (car b) (car a))) supports))
       (def (schedule! id value kind supports)
         (checkpoint!)
-        (let (assignment (cons id value))
-          (when (enqueue! (insert-choice state id value) state assignment trace kind supports)
+        (let* ((assignment (cons id value))
+               (child-digest (bitwise-xor digest (equal?-hash assignment))))
+          (when (enqueue! (insert-choice state assignment) child-digest
+                          state assignment trace kind supports)
             (set! children (+ children 1)))))
       (let* ((completed (relational-program-solution-result result))
              (roots (and (not rescan?) (read-offer-roots completed)))
@@ -408,7 +413,7 @@
       (remember-parent! state result children)))
   ;; Intermediate Session commits are private. Keep cancellation and all
   ;; work charges active, but linearize only the final public model list.
-  (enqueue! [] #f #f [])
+  (enqueue! [] 0 #f #f [])
   (parameterize
     ((current-ascent-execution-control
       (and control (lambda (work facts) (control (if (= work -1) 0 work) facts))))
@@ -422,7 +427,9 @@
       (let search ()
         (unless (null? pending)
           (checkpoint!)
-          (let (entry (car pending))
+          (let* ((entry (car pending))
+                 (key (choice-entry-key entry))
+                 (state (cdr key)))
             (set! pending (cdr pending))
             (using (entry :- choice-entry)
               (let (parent (take-parent! entry.parent))
@@ -439,12 +446,12 @@
                   ;; Release the discarded branch before materializing its sibling.
                   (set! offer-roots #f)
                   (set! constraints #f)
-                  (when (and meter (not (eq? entry.state current)))
+                  (when (and meter (not (eq? state current)))
                     (choice-measurement-source-replacements-set! meter
                       (+ 1 (choice-measurement-source-replacements meter)))))
-                (let (result (install-state! session entry.state entry.parent entry.addition))
-                  (set! current entry.state)
-                  (process! entry.state result entry.trace addition))))
+                (let (result (install-state! session state entry.parent entry.addition))
+                  (set! current state)
+                  (process! state (car key) result entry.trace addition))))
             (search))))))
   (let (result (reverse! models))
     (ascent-accept-publication!)

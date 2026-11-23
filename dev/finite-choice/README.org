@@ -935,12 +935,13 @@ including 101.149 ms CPU and 31.222 ms of collector wall time.
 The baseline P95 request recorded 100.690 ms solve CPU and
 35.073 ms collector wall time. These receipts leave the extra
 elapsed interval unassigned. Its metered P95 also increased from
-116.040 to 317.423 ms. The full timing criterion precludes adoption.
+116.040 to 317.423 ms. The shared-key candidate is included in the
+existing pull request for review with this performance result open.
 
 Both candidates passed 145 native cases, including both seeds
 and all one thousand property-generated graphs. The Lean guard
-completed its 196 build jobs. The two patches and full receipts
-are retained in the local experiment cache.
+completed its 196 build jobs. The experiment receipts are retained
+in the local cache.
 
 ** POO graph and index correspondence
 

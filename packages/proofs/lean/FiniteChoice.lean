@@ -1239,4 +1239,38 @@ theorem choice_single_value_intersection {Value : Type} [DecidableEq Value]
       (if value ∈ allowed then [value] else []) := by
   by_cases allowedValue : value ∈ allowed <;> simp [allowedValue]
 
+/-- The runtime inserts assignments in ascending attribute order. Existing
+elements are preserved, so a digest can be updated from just the new pair. -/
+def choiceStateInsert {Binding : Type} (key : Binding → Nat)
+    (binding : Binding) : List Binding → List Binding
+  | [] => [binding]
+  | head :: tail =>
+      if key binding < key head then binding :: head :: tail
+      else head :: choiceStateInsert key binding tail
+
+def choiceStateDigest {Binding : Type} (mix : Binding → Nat) (state : List Binding) : Nat :=
+  state.foldr (fun binding suffix => mix binding ^^^ suffix) 0
+
+theorem choice_state_digest_insert {Binding : Type} (key mix : Binding → Nat)
+    (binding : Binding) (state : List Binding) :
+    choiceStateDigest mix (choiceStateInsert key binding state) =
+      choiceStateDigest mix state ^^^ mix binding := by
+  induction state with
+  | nil => simp [choiceStateInsert, choiceStateDigest]
+  | cons head tail ih =>
+    by_cases earlier : key binding < key head
+    · simp [choiceStateInsert, earlier, choiceStateDigest]
+      exact Nat.xor_comm _ _
+    · simp only [choiceStateInsert, earlier, ite_false, choiceStateDigest, List.foldr_cons] at ih ⊢
+      rw [ih, Nat.xor_assoc]
+
+/-- The digest selects a bucket. It has no authority to decide state identity. -/
+theorem choice_state_key_exact {Binding : Type} (mix : Binding → Nat)
+    (left right : List Binding) :
+    (choiceStateDigest mix left, left) = (choiceStateDigest mix right, right) ↔ left = right := by
+  constructor
+  · exact fun equalKey => congrArg Prod.snd equalKey
+  · rintro rfl
+    rfl
+
 end Ascent.FiniteChoice

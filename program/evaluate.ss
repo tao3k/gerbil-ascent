@@ -39,15 +39,14 @@
                  current-static-prefix-single-delta static-prefix-cache-sources
                  gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?
                  current-positive-plan-cost positive-plan-cost-admit!)
-        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
-        (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
-        (only-in "scheme-checked.ss" relational-scalar?)
+        (only-in "activation.ss" gerbil-ascent-annotate-scalar-pivots!)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut row-indexes-publish-old-tail!)
         (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
                  gerbil-ascent-seed-session-reuse! gerbil-ascent-ensure-reuse-membership! make-closure-seed-state session-reuse-affected)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
-                 gerbil-ascent-program-schema)
+        (only-in "analysis.ss" gerbil-ascent-program-analysis gerbil-ascent-program-schema
+                 gerbil-ascent-stable-scalar-schema? gerbil-ascent-scalar-set-plans?
+                 gerbil-ascent-positive-rule-plans? gerbil-ascent-static-prefix-affected)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
@@ -242,33 +241,15 @@
                      (gerbil-ascent-prepare-program
                       relations rules schema plan-error)))))
              (rule-plans (vector-ref analysis 2))
-             ;; Only trusted scalar field predicates certify stable equality
-             ;; without scanning unchecked source values or invoking user code.
-             (stable-scalar-schema?
-              (andmap
-               (lambda (relation)
-                 (let (predicates (.ref relation 'field-predicates))
-                   (and (or (zero? (.ref relation 'arity)) (pair? predicates))
-                        (andmap (lambda (predicate)
-                          (or (eq? predicate relational-scalar?) (eq? predicate exact-integer?))) predicates))))
-               relations))
+             (stable-scalar-schema? (gerbil-ascent-stable-scalar-schema? relations))
              (checked-scalar-fields?
               (and (not session?) (not reuse) (= workers 1) (not canceled?) stable-scalar-schema?))
              (prefix-scalar-fields?
               (and (> (current-positive-prefix-budget) 0) (= workers 1) (not canceled?) stable-scalar-schema?))
              (scalar-set-plans?
               (and (or checked-scalar-fields? prefix-scalar-fields? (current-positive-plan-cost))
-                   (gerbil-ascent-update-eligible? program)
-                   (andmap (lambda (plans)
-                             (andmap (lambda (rule)
-                                       (gerbil-ascent-pure-positive-plan?
-                                        (vector-ref rule 5))) plans))
-                           (vector->list (vector-ref analysis 5)))
-                   (andmap gerbil-ascent-canonical-set-storage-provider?
-                           (vector->list storage-providers))
-                   (andmap gerbil-ascent-canonical-hash-index-provider?
-                           (vector->list index-providers))
-                   (andmap not (vector->list lattice-joins))))
+                   (gerbil-ascent-scalar-set-plans? program analysis storage-providers
+                     index-providers lattice-joins)))
              (_cost-admission
               (when (current-positive-plan-cost)
                 (unless scalar-set-plans?
@@ -282,20 +263,9 @@
                               (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
              (all-active (gerbil-ascent-activate-rules analysis))
-             ;; An empty selected delta makes a pure scalar body impossible.
-             ;; Skip before rebuilding any earlier bound/indexed prefix. Only
-             ;; the fresh engine's activation is changed, never cached analysis.
              (_scalar-pivot-pruning
               (when (and checked-scalar-fields? scalar-set-plans?)
-                (for-each
-                 (lambda (rules)
-                   (for-each
-                    (lambda (rule)
-                      (vector-set! rule 4
-                        (list->vector
-                         (map (lambda (clause) (vector-ref (vector-ref clause 1) 0))
-                              (vector-ref rule 1))))) rules))
-                 (vector->list all-active))))
+                (gerbil-ascent-annotate-scalar-pivots! all-active)))
              ;; A later callback may observe rows injected by an earlier pure
              ;; rule. Preserve ordered traversal across the entire program.
              (ordered-execution?
@@ -341,14 +311,7 @@
               (and session?
                    (gerbil-ascent-lattice-feeds-relation?
                     rule-plans kinds)))
-             (positive-rules?
-              (and session?
-                   (andmap
-                    (lambda (rule)
-                      (andmap (lambda (clause)
-                                (eq? (vector-ref clause 0) 'atom))
-                              (vector-ref rule 1)))
-                    rule-plans)))
+             (positive-rules? (and session? (gerbil-ascent-positive-rule-plans? rule-plans)))
              (single-set-source?
               (and positive-rules? (= count 1)
                    (not (vector-ref lattice-joins 0))
@@ -815,10 +778,8 @@
                                (vector->list storage-providers))
                        (andmap gerbil-ascent-canonical-hash-index-provider?
                                (vector->list index-providers))
-                       (let (affected (make-vector count #f))
-                         (for-each (lambda (name) (vector-set! affected (position-of name) #t))
-                                   (static-prefix-cache-sources cache))
-                         (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)
+                       (let (affected (gerbil-ascent-static-prefix-affected analysis count
+                                        position-of (static-prefix-cache-sources cache)))
                          (lambda (index) (and (not first-run?) (not (vector-ref affected index))))))))
             (def (replay-source! mode index rows)
               ;; Both eager update forms prepare and solve before adoption.

@@ -5,10 +5,17 @@
 ;;; Immutable declaration schema and rule-plan cache shared by evaluation engines.
 (import (only-in :gerbil/runtime/hash HashTable Locker make-locked-hash-table)
         (only-in :clan/poo/object .ref)
-        (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-extension))
+        (only-in "scheme-checked.ss" relational-scalar?)
+        (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
+        (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-pure-positive-plan?)
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
+        (only-in :gerbil-ascent/table/storage gerbil-ascent-storage-engine-extension
+                 gerbil-ascent-canonical-set-storage-provider?))
 
-(export gerbil-ascent-program-analysis
-        gerbil-ascent-program-schema)
+(export gerbil-ascent-program-analysis gerbil-ascent-program-schema
+        gerbil-ascent-stable-scalar-schema? gerbil-ascent-scalar-set-plans?
+        gerbil-ascent-positive-rule-plans? gerbil-ascent-static-prefix-affected)
 
 ;; Program declarations are POO values. Their lowered rule plan is immutable
 ;; and can be shared; each evaluation still creates its own relation state.
@@ -102,3 +109,43 @@
                             kinds storage-providers field-predicates))
           (hash-put! +program-schema-cache+ program fresh)
           fresh)))))
+
+
+;; : (-> RelationDeclarations Boolean)
+(def (gerbil-ascent-stable-scalar-schema? relations)
+  ;; Only trusted scalar field predicates certify stable equality without
+  ;; scanning unchecked source values or invoking user code.
+  (andmap
+   (lambda (relation)
+     (let (predicates (.ref relation 'field-predicates))
+       (and (or (zero? (.ref relation 'arity)) (pair? predicates))
+            (andmap (lambda (predicate)
+                      (or (eq? predicate relational-scalar?) (eq? predicate exact-integer?)))
+                    predicates))))
+   relations))
+
+;; : (-> Program Analysis StorageProviders IndexProviders LatticeJoins Boolean)
+(def (gerbil-ascent-scalar-set-plans? program analysis storage-providers index-providers lattice-joins)
+  (and (gerbil-ascent-update-eligible? program)
+       (andmap (lambda (plans)
+                 (andmap (lambda (rule) (gerbil-ascent-pure-positive-plan? (vector-ref rule 5)))
+                         plans))
+               (vector->list (vector-ref analysis 5)))
+       (andmap gerbil-ascent-canonical-set-storage-provider? (vector->list storage-providers))
+       (andmap gerbil-ascent-canonical-hash-index-provider? (vector->list index-providers))
+       (andmap not (vector->list lattice-joins))))
+
+;; : (-> RulePlans Boolean)
+(def (gerbil-ascent-positive-rule-plans? rule-plans)
+  (andmap (lambda (rule)
+            (andmap (lambda (clause) (eq? (vector-ref clause 0) 'atom))
+                    (vector-ref rule 1)))
+          rule-plans))
+
+
+;; : (-> Analysis Natural NameResolver SourceNames AffectedRelations)
+(def (gerbil-ascent-static-prefix-affected analysis count position-of sources)
+  (let (affected (make-vector count #f))
+    (for-each (lambda (name) (vector-set! affected (position-of name) #t)) sources)
+    (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)
+    affected))

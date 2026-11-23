@@ -570,6 +570,76 @@ theorem saved_interior_pair_keeps_child :
 
 end FrozenRuntime
 
+def orderedRunTargets (targetAt : Nat → Int) (lo hi : Nat) (forward : Bool) : Prop :=
+  ∀ i j, lo ≤ i → i < j → j < hi →
+    if forward then targetAt i < targetAt j else targetAt j < targetAt i
+
+/-- In a certified run the target is the adjacent edge's origin.
+Forward edge inequalities therefore give strict order over the whole run. -/
+theorem right_selection_targets_increase
+    (targetAt : Nat → Int) (lo hi : Nat) (forward : Bool)
+    (adjacent : ∀ i, lo ≤ i → i + 1 < hi →
+      if forward then targetAt i < targetAt (i + 1)
+      else targetAt (i + 1) < targetAt i) :
+    orderedRunTargets targetAt lo hi forward := by
+  intro i j low before high
+  have span : ∀ d, i + d + 1 < hi →
+      if forward then targetAt i < targetAt (i + d + 1)
+      else targetAt (i + d + 1) < targetAt i := by
+    intro d
+    induction d with
+    | zero =>
+      intro inside
+      simpa using adjacent i low (by omega)
+    | succ d ih =>
+      intro inside
+      have left := ih (by omega)
+      have right := adjacent (i + d + 1) (by omega) (by omega)
+      have next : i + (d + 1) + 1 = i + d + 1 + 1 := by omega
+      rw [next]
+      cases forward <;> simp_all <;> omega
+  have equal : i + (j - i - 1) + 1 = j := by omega
+  simpa only [equal] using span (j - i - 1) (by omega)
+
+/-- A match survives the same half-open interval update used by the Scheme
+binary search. The comparison is flipped for descending storage. -/
+theorem right_selection_search_keeps_match
+    (targetAt : Nat → Int) (lo hi middle hit : Nat) (forward : Bool)
+    (sorted : orderedRunTargets targetAt lo hi forward)
+    (middleIn : lo ≤ middle ∧ middle < hi) (hitIn : lo ≤ hit ∧ hit < hi)
+    (different : hit ≠ middle) :
+    if (if forward then targetAt middle < targetAt hit else targetAt hit < targetAt middle)
+      then middle + 1 ≤ hit ∧ hit < hi
+      else lo ≤ hit ∧ hit < middle := by
+  unfold orderedRunTargets at sorted
+  by_cases before : hit < middle
+  · have order := sorted hit middle hitIn.1 before middleIn.2
+    cases forward <;> simp_all [Int.not_lt_of_ge (Int.le_of_lt order)]
+  · have after : middle < hit := by omega
+    have order := sorted middle hit middleIn.1 after hitIn.2
+    cases forward <;> simp_all <;> omega
+
+/-- At each depth a fixed target gives at most one origin per run.
+The two formulas correspond to advancing opposite to the edge direction. -/
+theorem right_selection_predecessor_ordinals (lo hi edge depth : Nat)
+    (edgeIn : lo ≤ edge ∧ edge < hi) :
+    (depth ≤ edge - lo ↔ lo ≤ edge - depth ∧ depth ≤ edge) ∧
+    (depth < hi - edge ↔ lo ≤ edge + depth ∧ edge + depth < hi) := by
+  omega
+
+/-- Filtering the alternating complete result by target preserves each
+depth group and its order, including the reversed groups. -/
+theorem right_selection_filter_depth_order (groups : List (Bool × List α))
+    (accept : α → Bool) :
+    (groups.flatMap (fun g => if g.1 then g.2.reverse else g.2)).filter accept =
+      groups.flatMap (fun g =>
+        if g.1 then (g.2.filter accept).reverse else g.2.filter accept) := by
+  induction groups with
+  | nil => rfl
+  | cons g rest ih =>
+    rcases g with ⟨reverse, rows⟩
+    cases reverse <;> simp [List.filter_append, List.filter_reverse, ih]
+
 end Ascent.BoundedExport
 
 #print axioms Ascent.BoundedExport.completed_pulls_equal_full_result
@@ -599,3 +669,8 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.paged_collection_phase_counts
 #print axioms Ascent.BoundedExport.clip_window_at_page_boundary
 #print axioms Ascent.BoundedExport.clipped_window_resume_field
+
+#print axioms Ascent.BoundedExport.right_selection_search_keeps_match
+#print axioms Ascent.BoundedExport.right_selection_predecessor_ordinals
+#print axioms Ascent.BoundedExport.right_selection_filter_depth_order
+#print axioms Ascent.BoundedExport.right_selection_targets_increase

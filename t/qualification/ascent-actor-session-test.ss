@@ -11,6 +11,8 @@
         (only-in :clan/poo/object .o .ref)
         (only-in :gerbil-ascent/program/evaluate gerbil-ascent-evaluate-program)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
+        (only-in :gerbil-ascent/core/view-value gerbil-ascent-view-rows)
+        (only-in :gerbil-ascent/program/component-worker gerbil-ascent-functional-result-view)
         :gerbil-ascent/program/func
         :gerbil-ascent/program/session
         :gerbil-ascent/program/actor-session)
@@ -110,6 +112,29 @@
               (check-equal? (at after 206) [])
               (check-equal? (at before 206) '((206 208) (206 207)))))
           (finally (gerbil-ascent-session-close! session)))))
+    (test-case "target selection preserves alternating depth order across shared sinks"
+      (def (chain start count)
+        (map (lambda (i)
+               (let (origin (+ start i))
+                 (list origin (if (= i (- count 1)) 1000 (+ origin 1)))))
+          (iota count)))
+      (let (edges (append (chain 0 12) (chain 100 13) (chain 200 14)))
+        (for-each
+          (lambda (input)
+            (let* ((view (gerbil-ascent-functional-result-view input (length input) 2000 void))
+                   (complete (gerbil-ascent-view-rows view)))
+              (for-each
+                (lambda (sink)
+                  (let ((expected (filter (lambda (row) (equal? (cadr row) sink)) complete))
+                        (selected (gerbil-ascent-view-rows view '(1) (list sink))))
+                    (check-equal? selected expected)
+                    (when (pair? selected)
+                      (set-car! (car selected) -1)
+                      (check-equal? (gerbil-ascent-view-rows view '(1) (list sink)) expected))))
+                '(1000 6 106 202 300 1000.0))
+              (check-equal? (gerbil-ascent-view-rows view '(1 1) '(1000 6)) [])
+              (check-equal? (gerbil-ascent-view-rows view '(0 1) '(0 1000)) '((0 1000)))))
+          (list edges (reverse edges)))))
     (test-case "unchanged scalar cuts reuse private closure and refresh publication"
       (let ((session (gerbil-ascent-open-actor-session (program '((0 1) (1 2))) workers: 1))
             (work 0))

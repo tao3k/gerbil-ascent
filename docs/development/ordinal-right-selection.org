@@ -1,0 +1,80 @@
+#+TITLE: Target-bound selection on ordinal closures
+
+The ten-million-row chain fixtures use the frozen functional result in
+=program/component-worker.ss=. Complete delivery has an output lower
+bound of one operation per delivered row. The latest full paging receipt
+verified each field of 1,000 results per width. At widths 128 and 512,
+complete P95 was 54.007 ms and 45.879 ms. The archived phase comparison
+also identifies independent per-row verification as a substantial cost.
+Target-bound selection has a different cost: the previous =collect=
+can traverse the entire closure to return a single chain's predecessors.
+
+* Source correspondence
+
+=ordinal-runs= admits only a unique successor at the adjacent ordinal
+in one common direction. The constructor requires increasing labels
+along graph edges. Thus target labels within each run are strictly
+monotone in graph direction. A target occurs at most once per run.
+A terminal target may occur in several runs.
+
+=right_selection_search_keeps_match= justifies shrinking the half-open
+search interval. =right_selection_predecessor_ordinals= identifies the
+indices generated backward from the matching edge. The existing
+=gather= reverses depth and alternates ordinal order. The selected
+implementation buckets only matching rows by edge distance, traverses
+buckets from highest to lowest, and reverses the odd-depth buckets.
+=right_selection_filter_depth_order= proves the relevant order law.
+
+The new work is one search per run, one step per predecessor, and a
+bounded pass over depth buckets. The bucket vector is bounded by the
+longest source run. It retains the same frozen
+cut and final key predicate. This changes explicit fixnum target
+selection on certified runs. Inexact keys and non-ordinal graphs keep
+the existing selector. Materialized lists remain caller-owned, and
+publication, page transfer and provenance use their existing paths.
+
+* Native target-selection comparison
+
+The same staged Gerbil on Gambit =2df89af=, original ASCENT dependencies,
+2 GiB heap limit and 90-second process watchdog were used for both arms.
+Each width opened and completed the existing ten-million-row chain
+Session. The measured interval starts at selection on this completed
+Result. In 25 samples per width, 24 different targets and one miss were
+checked against direct arithmetic on the original chain labels. Each
+returned row and its order were checked, without expanding the logical
+ten-million-row result in the oracle.
+
+| Width | Logical rows | Reference P95 | Candidate P95 | Reference query CPU | Candidate query CPU |
+|-------+--------------+---------------+---------------+---------------------+---------------------|
+|   128 |   10,078,720 |     658.03 ms |      43.08 us |             15.82 s |             0.86 ms |
+|   512 |   10,072,832 |     768.77 ms |      22.83 us |             16.14 s |             0.36 ms |
+
+The native Actor Session regression additionally checks a common terminal
+across three runs, both ordinal directions, multiple key predicates and
+mutating a returned row before querying the held view again. Whole
+publication, list, buffer and paging timings have their own gates and
+are measured independently of this selected-result comparison.
+
+* Native delivery acceptance
+
+Both paging widths passed all 40 shards and 1,000 independently verified
+requests. Throughput divides verified row count by the summed request
+wall time. The collection figures are totals over all measured requests.
+
+| Width | First page P95 | Complete P95 | Verified rows/s | Collections | GC wall |
+|-------+----------------+--------------+-----------------+-------------+---------|
+|   128 |       3.216 ms |    72.460 ms |     212,416,320 |          40 |  1.48 s |
+|   512 |       1.279 ms |    62.013 ms |     236,503,103 |          40 |  1.28 s |
+
+These timings are a delivery acceptance run. The earlier paging timings
+were collected in a separate run and do not estimate a selector effect
+on paging. The Actor Session, engine interface, condensed Session,
+independent oracle, SCC edit checks and guarded Lean targets passed.
+
+For the original million-row workloads, the recursive mutable-list P95
+was 70.43 ms, and the projection and recursive buffer P95 values were
+12.27 ms and 15.34 ms. The projection mutable-list case independently
+verified all 1,000 results and failed its original 100 ms assertion at
+114.77 ms. It recorded 230 collections and 22.29 seconds of cumulative
+GC wall time. The 90-second watchdog remained active. This candidate
+has not met the conditions for publishing to PR #2.

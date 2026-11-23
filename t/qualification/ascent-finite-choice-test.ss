@@ -167,6 +167,30 @@
           (check-equal? (map (cut relational-program-query <> 'color provenance?: #t) delta)
                         (map (cut relational-program-query <> 'color provenance?: #t) full))
           (check (> (cdr (assq 'extensions delta-work)) 0) => #t))))
+    (test-case "duplicate derived facts preserve ordered rows and choice witnesses"
+      (let (program
+            (relational-choice-program
+              (relation value (item) '((1) (2) (3)))
+              (relation derived (item))
+              (choice gate (node value))
+              (choice color (node value))
+              (rule (closed (gate 0) (#t)))
+              (rule (derived 1) (gate 0 #t))
+              (rule (derived 1) (gate 0 #t))
+              (rule (derived ?item) (gate 0 #t) (value ?item))
+              (rule (closed (color ?item) (0)) (derived ?item))
+              (limits 16 16 16)))
+        (def (solve) (relational-choice-solve program state-budget: 8))
+        (let*-values (((models _) (call-with-relational-choice-measurement solve))
+                      ((reference _) (call-with-relational-choice-measurement solve 'direct)))
+          (check-equal? (length models) 1)
+          (let (rows (relational-program-query (car models) 'derived))
+            (check-equal? (length rows) 3)
+            (check (andmap (lambda (row) (and (member row rows) #t)) '((1) (2) (3))) => #t)
+            (check-equal? rows (relational-program-query (car reference) 'derived)))
+          (check-equal? (model-colors models) (model-colors reference))
+          (check-equal? (relational-program-query (car models) 'color provenance?: #t)
+                        (relational-program-query (car reference) 'color provenance?: #t)))))
     (test-case "a newly earlier singleton keeps its support when a multi-value offer was already installed"
       (let (program
             (relational-choice-program

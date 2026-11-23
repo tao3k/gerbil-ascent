@@ -650,6 +650,96 @@ collections. Allocations in collector-free solves fell from 75.491
 to 73.078 MiB. The maximum rose from 76.549 to 95.195 ms.
 These results leave ordinary wall-clock tails open.
 
+** Pending Set membership and wall-time counterexamples
+
+The baseline for this comparison is =8cd7b3ba=. On the disconnected
+Figure 3 workload (3,080 states and 81 models), a separate
+instrumented run put the median of the accumulated engine evaluation
+intervals at 41.149 ms. Offer processing was 15.995 ms and parent
+restoration was 21.461 ms. These are instrumented phase totals,
+with nested events where indicated in the raw receipt, and cannot
+explain an individual uninstrumented long sample.
+
+In =program/evaluate.ss=, =emit-row!= lazily creates an exact pending
+hash table for each derived relation that emits in an invocation.
+=admit-stored!= checks committed and pending membership in order.
+=commit!= publishes the pending list and clears the index. The
+experiment used the existing pending list until the second or third
+distinct row needed admission. It preserved the order of row
+publication and left controlled execution and custom providers on
+their existing path. Lean checked the finite membership equivalence.
+The native control checks duplicate suppression through promotion
+and compares output order and provenance against direct grounding.
+
+In one separately instrumented solve, the one-row variant changed
+pending table creations from 2,306 to 2,210 on the path, 486 to 486
+on the clique, and 2,981 to 2,522 on the disconnected graph. Yet
+collector-free allocation rose from 117.929 to 118.202 MiB in
+ordinary disconnected solves. Its P95 rose from 123.183 to
+152.837 ms. The slowest candidate had 169.250 ms wall time,
+96.643 ms CPU and 31.798 ms of GC wall time. This receipt does
+not assign the remaining wall time to any specific runtime event.
+The one-row variant was rejected.
+
+The two-row variant reduced pending table creations to two each
+on the path and disconnected graph. The clique stayed at 486.
+Ordinary collector-free allocation fell from 73.079 to 71.481 MiB
+on the path and from 117.930 to 115.937 MiB on the disconnected
+graph. Native wall time still failed the same criterion.
+
+| Figure 3 graph | Ordinary P50, base / candidate (ms) | Ordinary P95, base / candidate (ms) | Metered P50, base / candidate (ms) | Metered P95, base / candidate (ms) |
+|----------------+------------------------------------+------------------------------------+-----------------------------------+-----------------------------------|
+| Path           | 64.157 / 36.099                    | 91.407 / 192.353                   | 37.503 / 37.355                   | 70.552 / 74.349                    |
+| Clique         | 25.897 / 25.513                    | 63.762 / 60.671                    | 26.304 / 25.291                   | 61.173 / 72.049                    |
+| Disconnected   | 91.792 / 90.435                    | 106.088 / 106.694                  | 90.087 / 88.608                   | 93.250 / 111.628                   |
+
+Each arm used 30 ordinary and 10 metered solves per graph in fresh
+native test processes, ordered baseline/candidate/candidate/baseline.
+P95 uses the nearest rank. The slowest ordinary path solve recorded
+229.773 ms wall, 57.365 ms CPU, and no collection. There is no trace
+naming the remaining wait. The separate 128-vertex path metered median
+moved from 497.715 to 502.655 ms. The original pending-table
+implementation stays in production. Both patches and raw measurements
+are retained in the local cache.
+
+** Source snapshot ownership experiment
+
+The private source-log path in =program/session.ss= produced the
+source snapshot directly in a vector and shallow-copied the vector
+for saved and committed cuts. Paths capable of editing log headers in place continued
+to copy the headers. In the direct path, append writes engine buffers and
+replacement writes a fresh vector slot. A candidate Lean proof
+checked the per-slot source projection and replacement frame.
+The Scheme suite exercised rollback after a refused direct append
+and restored a prior branch after later successful appends.
+
+| Figure 3 graph | Ordinary allocated MiB, base / candidate | Ordinary P50, base / candidate (ms) | Ordinary P95, base / candidate (ms) |
+|----------------+------------------------------------------+------------------------------------+------------------------------------|
+| Path           | 73.078 / 71.151                          | 69.794 / 70.190                    | 120.306 / 212.636                  |
+| Clique         | 35.213 / 34.800                          | 29.207 / 71.976                    | 82.348 / 179.339                   |
+| Disconnected   | 117.929 / 115.186                        | 98.472 / 148.525                   | 162.600 / 284.112                  |
+
+These were separate native cohorts with the same ABBA order and
+30 ordinary solves per arm. Allocation includes only nonnegative
+counter differences without a collection. Metered P95 fell on
+each smaller graph in this cohort, while the 128-vertex metered
+P95 moved from 1,389.713 to 1,460.347 ms across five solves per
+arm. The ordinary regression and the larger path maximum failed
+the wall time criterion. The source snapshot candidate is
+retained in the local cache and was removed from production.
+
+** Forced deduction through the existing Delta
+
+The disconnected work receipt records 3,079 direct extensions,
+341 parent restores, and 38 captures. A direct extension calls
+=relational-program-session-run= from =install-state!= and freezes
+a private result. The larger remaining question is whether a forced
+deduction chain can advance its Delta and retain ordered supports
+without creating a Session result for every step. This would
+require the same state admission, checkpoint, fact charge and
+provenance sequence, including before a rejection or first
+alternative. The present measurements do not qualify such a change.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

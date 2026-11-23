@@ -114,3 +114,51 @@ about the source of the slowest wall interval is made from a shard
 aggregate. The control remains an experiment in the cache. The
 complete mutable-list failure at 105.93 ms and original 100 ms /
 90-second limits remain in force.
+
+* Native CPU time inside one request
+
+This follow-up uses the kept Actor implementation and only the 128-wide
+fixture. Match shards 17 and 34 with 25 requests per shard and arm.
+Both arms use the same wall instrumentation and independent verifier.
+One arm also records Darwin native-thread CPU time at the existing
+stage, copy and oracle boundaries. Each accepted interval has the same
+native thread at both ends. The source of the clock is the pinned
+host's =CLOCK_THREAD_CPUTIME_ID=. Process CPU and natural collection
+counts remain separate. A calibration sleep reported 25.058 ms wall
+and 0.052 ms CPU. Native instrumentation stays in the cache.
+
+All four processes passed. Complete P95 was 63.814 ms in the
+wall-only arm and 88.266 ms with the CPU probe. They measure
+different requests. The difference includes probe effects and process
+scheduling; it is not an estimate of production overhead or a change
+to the gate.
+
+Shard 17, request 21 took 94.781625 ms wall and 60.931 ms process CPU,
+with zero collections. Direct interval measurements were:
+
+| Phase | Wall (ms) | Native-thread CPU (ms) | Difference (ms) |
+|-------+-----------+------------------------+-----------------|
+| Stage | 28.242 | 19.626 | 8.616 |
+| Physical copy | 8.852 | 3.809 | 5.043 |
+| Independent verifier | 44.882 | 29.971 | 14.912 |
+
+The three intervals account for 28.570531 ms not charged to their
+native threads. Their CPU readings include any work scheduled on those
+threads within the interval. The clock pair does not distinguish
+operating-system preemption from blocking. Small CPU-versus-wall
+read-order differences occur on otherwise quiet samples.
+
+Both Actor handoffs together took 3.939833 ms in this request. Even
+charging zero for those handoffs and the entire measured copy interval
+leaves 81.990292 ms if all other intervals keep their observed
+durations. The guarded Lean replay checks both sums from the same
+sample. This fixed-schedule calculation neither predicts future
+scheduling nor attributes the older 113 ms receipt. A separate
+88.266 ms request in the CPU arm had 39.196 ms of collection wall,
+with the collection observed around a handoff.
+
+The measured no-collection request gives limited leverage to further
+copy tuning. It also leaves room for actual staging work, which used
+19.626 ms native-thread CPU in that request versus a 13.793 ms warm
+no-collection median. The production path and the original
+100 ms / 90-second acceptance remain unchanged.

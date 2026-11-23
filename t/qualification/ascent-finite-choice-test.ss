@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import :std/test
+        (only-in :clan/poo/object .ref)
         (only-in :gerbil-ascent/program/api relational-choice-program relational-choice-solve
                  RelationalChoiceLimit? relational-program-query relational-program
                  relational-program-session-run relational-program-append-source!)
@@ -254,6 +255,39 @@
           (check-equal? (rows (restore saved branch)) '((11)))
           (relational-program-append-source! session 'input '(4 19))
           (check-equal? (rows (run)) '((11) (19))))))
+    (test-case "late model projection and repeated parent restore use their own frozen roots"
+      (let* ((program (relational-program
+                        (relation input (value) '((1) (2)))
+                        (relation output (value))
+                        (rule (output ?value) (input ?value))
+                        (limits 12 12 24)))
+             (branch (list 'parent))
+             (save #f) (restore #f)
+             (session (relational-open-program-session/choice program
+                        (lambda (_ capture restorer)
+                          (set! save capture)
+                          (set! restore restorer)) #t)))
+        (def (output result)
+          (relational-program-query
+           (make-relational-program-solution (gerbil-ascent-materialize-result result)) 'output))
+        (let* ((parent (relational-program-solution-result (relational-program-session-run session)))
+               (saved (save branch)))
+          (check (and saved #t) => #t)
+          (relational-program-append-source! session 'input '(3))
+          (let (first (relational-program-solution-result (relational-program-session-run session)))
+            (restore saved branch)
+            (relational-program-append-source! session 'input '(4))
+            (let (second (relational-program-solution-result (relational-program-session-run session)))
+              (restore saved branch)
+              (check-equal? (output second) '((1) (2) (4)))
+              (check-equal? (output first) '((1) (2) (3)))
+              (check-equal? (output parent) '((1) (2)))
+              (check-equal?
+               ((.ref (gerbil-ascent-materialize-result parent) 'relation-sizes))
+               '((input . 2) (output . 2)))
+              (set-car! (car (output first)) 100)
+              (check-equal? (output first) '((1) (2) (3)))
+              (check-equal? (output (restore saved branch)) '((1) (2))))))))
     (test-case "a full parent cache allowance still enumerates all models"
       (let (program
              (relational-choice-program

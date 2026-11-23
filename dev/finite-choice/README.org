@@ -740,6 +740,62 @@ require the same state admission, checkpoint, fact charge and
 provenance sequence, including before a rejection or first
 alternative. The present measurements do not qualify such a change.
 
+** Demand-driven projection of completed choice states
+
+The previous result promise avoided constructing a public result during
+propagation, but every completed state still prepared all ordered
+snapshots and representation descriptors. The offer reader instead
+uses the current raw ordered cut under the completed result identity.
+The candidate therefore freezes the engine root and size vectors at
+every commit and prepares complete projection only when a model or
+query requires it. Parent reuse reads just its unaffected relations
+from the captured roots. Its explicit row reader reverses and copies
+each row spine in one pass, preserving the detachment of the old view.
+
+=choice_demand_rows_exact= matches captured slot order and size to
+eager projection after a working slot update.
+=choice_demand_parent_rows_exact= checks the single-pass detached
+row sequence. The native case holds two completed sibling results
+across repeated restores, reads both after the engine moves, and
+mutates a delivered row before checking the retained cut. Evaluation,
+state admission, the fact budget, and the final publication checkpoint
+remain at their existing call sites.
+
+A separate instrumented run counted full relation projections.
+The counts fell from 2,352 to 48 on the path, 506 to 22 on the
+clique, and 3,421 to 81 on the disconnected graph. Each candidate
+count equals the number of delivered models. Reading those models
+after solving did not trigger a second complete projection. Among
+ordinary disconnected solves without a collection, the median
+allocation fell from 117.933 to 110.175 MiB.
+
+The same native four-process comparison checked models and witnesses.
+There were 30 ordinary solves per arm, including separate timestamps
+at solve completion and after reading every model and witness.
+Indexed and delta work receipts matched in the ten metered solves
+per arm. All values below are elapsed milliseconds.
+
+| Figure 3 graph | Solve P95, base / candidate | Complete delivery P50, base / candidate | Complete delivery P95, base / candidate |
+|----------------+-----------------------------+----------------------------------------+----------------------------------------|
+| Path 48        | 94.989 / 137.880            | 70.178 / 69.150                        | 112.592 / 247.645                      |
+| Clique 22      | 203.080 / 95.868            | 35.623 / 32.043                        | 231.913 / 132.330                      |
+| Disconnected   | 178.593 / 176.781           | 95.785 / 92.694                        | 184.899 / 180.605                      |
+
+The candidate path's delivery P95 sample had already spent 137.880 ms
+solving, including 47.382 ms of collector wall time. It took 109.765 ms
+more to read models and witnesses, with no additional collection.
+This interval does not assign the delay to row reads, witness
+construction or runtime wait. On the disconnected graph, the metered
+P95 increased from 248.902 to 281.528 ms. That candidate sample used
+67.286 ms of CPU with no collection. The five-solve, 128-vertex metered
+path median moved from 473.396 to 539.291 ms.
+
+The allocation, native checks, and guarded Lean proofs support the
+ownership change. The regressions preclude adoption under the elapsed
+time criterion. The implementation, proofs, and raw receipts are kept
+in the local experiment cache. The new native case also runs against
+the existing production implementation.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

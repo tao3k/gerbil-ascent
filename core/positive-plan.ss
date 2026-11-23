@@ -24,6 +24,7 @@
         gerbil-ascent-index-value gerbil-ascent-emit-heads!
         make-positive-plan-cost positive-plan-cost-snapshot positive-plan-cost-visits
         call-with-positive-plan-cost current-positive-plan-cost
+        current-retained-positive-plan-cost
         positive-plan-cost-admit! positive-plan-cost-begin! positive-plan-cost-index!)
 
 ;;; Diagnostic ownership is one fresh serial solve over canonical pure Set
@@ -52,6 +53,9 @@
       (error "native plan cost collector already belongs to a solve"))
     (native-plan-cost-started?-set! cost #t)))
 (def current-positive-plan-cost (make-parameter #f))
+;; The private retained choice measurement aggregates matcher events across
+;; successive completed cuts. Fresh-solve admission remains separate.
+(def current-retained-positive-plan-cost (make-parameter #f))
 (def (call-with-positive-plan-cost cost thunk)
   (unless (and (native-plan-cost? cost) (procedure? thunk))
     (error "invalid native positive-plan cost collector"))
@@ -230,7 +234,8 @@
     (error "ASCENT positive plan delta selector outside compiled atom extent"))
   ;; Decode Option<Nat> once for the entire traversal, not at every join
   ;; continuation. Generated policies retain primitive hot loops.
-  (let ((has-pivot? (>= delta-at 0)) (cost (current-positive-plan-cost)))
+  (let ((has-pivot? (>= delta-at 0))
+        (cost (or (current-positive-plan-cost) (current-retained-positive-plan-cost))))
     (when (and cost (not (gerbil-ascent-pure-positive-plan? plan)))
       (error "native plan cost requires a pure positive plan"))
     (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)

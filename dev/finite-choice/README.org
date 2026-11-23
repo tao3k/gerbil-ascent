@@ -164,6 +164,62 @@ The search order can change the discovery order and the retained
 derivation for a model. Each retained derivation still comes from its
 own branch cut.
 
+** Direct-child offer cut
+
+For a private positive Set relation the completed evaluator publishes a
+newest-first root. On a direct child, walk exactly the size difference
+and check the old root by identity. Only that prefix can enter the
+constraint cache, in publication order. A missing suffix, an unsupported
+representation, or a sibling replacement requires an independent rebuild
+from the current completed result. Check all roots before consuming any
+delta. An unsuccessful or interrupted cut publishes no models.
+
+| Source obligation | Lean check |
+|-------------------+------------|
+| Physical new prefix becomes a chronological suffix | =newest_offer_delta_exact= |
+| The cached intersection narrowed by the delta has the full cut's allowed values. | =closed_delta_intersection_exact= |
+| A direct child changes one assignment. Check its old closed intersection and every new offer, including offers to already assigned keys. | =assignment_recheck_exact= |
+| Cache rebuild sees only the current cut. Saved proofs retain their own detached support rows. | =sibling_offer_cache_exact= |
+
+The proofs relate offers and assignments once the Session's completed
+result identity and persistent suffix checks establish the physical cut.
+They do not model the Gerbil allocator or certify arbitrary providers.
+
+The cache keeps each key and offer's original publication rank. A new
+closed offer from an earlier rule supplies the value ordering for the
+intersection, and scheduled steps return the same support order as a
+full read. The reader returns detached prefix rows. Published witnesses
+therefore keep their own rows when the current cache is cleared.
+
+** Native representative workload
+
+[[https://arxiv.org/html/2405.19040v3#S3.SS2][Figure 3]] appoints one
+representative per undirected connected component. The native benchmark
+checks every result against a standalone graph flood and component
+product. Both arms use the same Session, grounding evaluator and choice
+policy. The full-read arm rebuilds constraints on each state, while the
+incremental arm reads verified prefixes on direct children.
+
+Run =gerbil test benchmarks/dusa-representative-test.ss=. The following
+are five paired runs with alternating execution order per graph. The
+first-model clock ends when a completed model is found internally.
+The public API still publishes only once the search has exhausted.
+
+| Graph (vertices / undirected edges) | Models | States | Native prefix firing events | New offer reads | Repeated offer reads, full / delta | Median first model, full / delta (ms) |
+|-------------------------------------+--------+--------+-----------------------------+-----------------+------------------------------------+--------------------------------------|
+| Path (24 / 23) | 24 | 577 | 27739 | 1680 | 26221 / 0 | 7.032 / 6.456 |
+| Clique (12 / 66) | 12 | 145 | 20934 | 1728 | 10308 / 0 | 5.999 / 5.848 |
+| Two paths and an isolated vertex (11 / 8) | 25 | 552 | 10462 | 2805 | 9491 / 0 | 5.492 / 5.422 |
+
+Prefix firing events are successful partial matches in the native
+positive matcher; repeated firings across cuts are included. New offer
+reads include the full initial or sibling cut and only the newly
+published rows on direct children. Both arms reported the same numbers
+of states and firings and returned the same ordered models and witnesses.
+The incremental arm rebuilt 24, 12 and 110 cuts, respectively. These
+small graphs measure removed offer reads. They give limited evidence
+about latency at larger graph sizes.
+
 ** Derivation witness query
 
 #+begin_src scheme

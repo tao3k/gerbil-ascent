@@ -932,4 +932,66 @@ theorem exhausted_deduction_answers_exact (rules : List Rule)
       exact (List.mem_erase_of_ne other).mpr (missing k v present (by simpa [assign, other] using absent))
   exact enumerate keys.length keys (fun _ => none) rfl initial (by simp) (fun k v h _ => support k v h)
 
+/-! Offer caches consume an explicit publication prefix from a direct child. -/
+
+/-- Physical roots are newest-first. The old root is the verified suffix.
+The choice layer consumes the new rows in chronological order. -/
+theorem newest_offer_delta_exact {Row : Type} (current previous : List Row)
+    (tail : current.drop (current.length - previous.length) = previous) :
+    current.reverse =
+      previous.reverse ++ (current.take (current.length - previous.length)).reverse := by
+  let count := current.length - previous.length
+  calc
+    current.reverse = (current.take count ++ current.drop count).reverse :=
+      congrArg List.reverse (List.take_append_drop count current).symm
+    _ = previous.reverse ++ (current.take count).reverse := by
+      simp [count, tail]
+
+/-- Narrowing a cached closed intersection by the new offers is equivalent
+to testing every closed offer of the extended cut. -/
+theorem closed_delta_intersection_exact (seed : List Nat) (previous delta : List (List Nat))
+    (value : Nat) :
+    value ∈ constrainedValues seed (previous ++ delta) ↔
+      value ∈ constrainedValues seed previous ∧ ∀ offers ∈ delta, value ∈ offers := by
+  simp only [constrained_values_exact, List.mem_append]
+  constructor
+  · rintro ⟨initial, all⟩
+    exact ⟨⟨initial, fun offers present => all offers (Or.inl present)⟩,
+      fun offers present => all offers (Or.inr present)⟩
+  · rintro ⟨⟨initial, old⟩, fresh⟩
+    exact ⟨initial, fun offers present => present.elim (old offers) (fresh offers)⟩
+
+/-- A cache stores all admitted offers by key. Changing an assignment
+requires rechecking the old offers on that key, plus all new offers. -/
+theorem assignment_recheck_exact {Offer Key Value : Type}
+    (keyOf : Offer → Key) (allows : Offer → Option Value → Prop)
+    (before after : Key → Option Value) (assigned : Key)
+    (unchanged : ∀ key, key ≠ assigned → after key = before key)
+    (previous delta : List Offer)
+    (valid : ∀ offer ∈ previous, allows offer (before (keyOf offer))) :
+    (∀ offer ∈ previous ++ delta, allows offer (after (keyOf offer))) ↔
+      (∀ offer ∈ previous, keyOf offer = assigned → allows offer (after assigned)) ∧
+      (∀ offer ∈ delta, allows offer (after (keyOf offer))) := by
+  constructor
+  · intro allValid
+    refine ⟨?_, fun offer present => allValid offer (List.mem_append_right _ present)⟩
+    intro offer present key
+    simpa [key] using allValid offer (List.mem_append_left _ present)
+  · rintro ⟨rechecked, added⟩ offer present
+    rcases List.mem_append.mp present with old | fresh
+    · by_cases same : keyOf offer = assigned
+      · simpa [same] using rechecked offer old same
+      · rw [unchanged _ same]
+        exact valid offer old
+    · exact added offer fresh
+
+/-- Rebuilding on a sibling drops an old witness unless the new
+publication itself contains that witness. -/
+theorem sibling_offer_cache_exact {Offer Key : Type} [DecidableEq Key]
+    (keyOf : Offer → Key) (_previous current : List Offer) (key : Key)
+    (witness : Offer) :
+    witness ∈ current.filter (fun row => keyOf row == key) ↔
+      witness ∈ current ∧ keyOf witness = key := by
+  simp
+
 end Ascent.FiniteChoice

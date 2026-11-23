@@ -11,6 +11,7 @@
                  gerbil-ascent-ordered-binary-copy! gerbil-ascent-ordered-binary-pages)
         (only-in :std/iter for in-range)
         (only-in :std/list/list-builder with-list-builder)
+        (only-in :gerbil-ascent/core/execution-control ascent-execution-checkpoint!)
         (only-in :clan/poo/object .o))
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
@@ -19,6 +20,24 @@
 ;; Internal handoff only: public Result methods continue to detach row spines.
 (export gerbil-ascent-make-owned-result gerbil-ascent-publication-reader gerbil-ascent-publication-size)
 (defstruct owned-publication (result snapshots sizes position-of) final: #t)
+
+;; Private cut identity. Only detached row copies leave this module.
+(export make-ordered-row-cut ordered-row-cut-delta)
+(defstruct ordered-row-cut (root size) final: #t)
+
+;; Return the old size and the new chronological rows, or #f if this
+;; publication does not extend the previous one by an exact shared suffix.
+(def (ordered-row-cut-delta current (previous #f))
+  (let ((before (if previous (ordered-row-cut-size previous) 0))
+        (tail (if previous (ordered-row-cut-root previous) [])))
+    (let scan ((remaining (- (ordered-row-cut-size current) before))
+               (rows (ordered-row-cut-root current)) (added []))
+      (cond
+       ((zero? remaining) (and (eq? rows tail) (cons before added)))
+       ((and (> remaining 0) (pair? rows))
+        (ascent-execution-checkpoint!)
+        (scan (- remaining 1) (cdr rows) (cons (map identity (car rows)) added)))
+       (else #f)))))
 
 ;; : (forall (r p) (-> (Maybe p) r Symbol (Maybe Natural)))
 ;; : (-> (Maybe OwnedPublication) EvaluationResult Symbol (Maybe Natural))

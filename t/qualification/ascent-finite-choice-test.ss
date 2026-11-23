@@ -6,6 +6,7 @@
         (only-in :gerbil-ascent/program/api relational-choice-program relational-choice-solve
                  RelationalChoiceLimit? relational-program-query)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
+        (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement)
         (only-in "../../dev/finite-choice/oracle.ss" finite-choice-solutions))
 
 (export ascent-finite-choice-test)
@@ -142,6 +143,25 @@
         (check-equal? (length actual) 2)
         (check-equal? (length actual) (length expected))
         (check-equal? (andmap (lambda (model) (and (member model actual) #t)) expected) #t)))
+    (test-case "a new earlier closed offer preserves full-scan value and witness order"
+      (let (program
+             (relational-choice-program
+               (choice color (node value))
+               (rule (closed (color 0) (2 1)) (color 1 1))
+               (rule (closed (color 0) (0 1 2)))
+               (rule (closed (color 1) (1)))
+               (limits 24 24 24)))
+        (let*-values (((delta delta-work)
+                       (call-with-relational-choice-measurement
+                        (lambda () (relational-choice-solve program state-budget: 4))))
+                      ((full _)
+                       (call-with-relational-choice-measurement
+                        (lambda () (relational-choice-solve program state-budget: 4)) #t)))
+          (check-equal? (model-colors delta) '(((0 . 1) (1 . 1)) ((0 . 2) (1 . 1))))
+          (check-equal? (model-colors delta) (model-colors full))
+          (check-equal? (map (cut relational-program-query <> 'color provenance?: #t) delta)
+                        (map (cut relational-program-query <> 'color provenance?: #t) full))
+          (check (> (cdr (assq 'extensions delta-work)) 0) => #t))))
     (test-case "distinct named and anonymous body witnesses count as distinct grounding rows"
       (let* ((edges '((0 1) (0 2)))
              (make-program

@@ -9,7 +9,7 @@
         (only-in "types.ss" GerbilAscentFragmentContract))
 (export relational-export relational-prepare-query relational-prepare-queries relational-query relational-query-name relational-program-query
         make-relational-solution make-relational-program-solution
-        relational-program-solution-with-provenance)
+        relational-program-solution-with-provenance relational-program-solution-result)
 
 (defstruct relational-solution (result))
 (defstruct relational-program-solution (result))

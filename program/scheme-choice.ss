@@ -4,22 +4,50 @@
 
 (import "func.ss" "scheme-checked.ss" "scheme-session.ss"
         (only-in "scheme-query.ss" relational-program-query
-                 relational-program-solution-with-provenance)
+                 relational-program-solution-with-provenance relational-program-solution-result)
+        (only-in "result.ss" ordered-row-cut-delta)
+        (only-in :gerbil-ascent/core/positive-plan current-retained-positive-plan-cost
+                 make-positive-plan-cost positive-plan-cost-snapshot)
         :gerbil-ascent/core/execution-control
         (only-in :clan/poo/object .ref)
-        (only-in :std/list/list split-at take drop delete-duplicates/hash)
+        (only-in :std/list/list split-at take drop delete-duplicates/hash list-sort)
         (only-in :std/error deferror-class))
 
 (export make-relational-choice-head lower-relational-choice-program
-        relational-choice-solve RelationalChoiceLimit?)
+        relational-choice-solve RelationalChoiceLimit?
+        call-with-relational-choice-measurement)
 
 (defstruct relational-choice-head (kind relation keys values body origin))
 (defstruct relational-choice-offer (relation kind attribute bindings width ordinal rule premises))
-(defstruct choice-constraint (closed open closed-support) final: #t)
+(defstruct choice-constraint (rank first-closed closed open closed-support) final: #t)
 (defstruct choice-entry (state parent addition trace) final: #t)
 (defstruct choice-step (assignment kind support) final: #t)
 (defstruct relational-choice-program (grounding offers choice-names))
 (deferror-class RelationalChoiceLimit ())
+
+(defstruct choice-measurement
+  (rescan? start first-model states new-offers repeat-offers rebuilds extensions) final: #t)
+(def current-choice-measurement (make-parameter #f))
+(def (elapsed-ns start)
+  (quotient (* (- (current-jiffy) start) 1000000000) (jiffies-per-second)))
+
+;; Benchmark one native invocation without changing its publication boundary.
+(def (call-with-relational-choice-measurement run (rescan? #f))
+  (let* ((prefix (make-positive-plan-cost #f))
+         (meter (make-choice-measurement rescan? (current-jiffy) #f 0 0 0 0 0))
+         (models (parameterize ((current-choice-measurement meter)
+                                (current-retained-positive-plan-cost prefix))
+                   (run))))
+    (using (meter :- choice-measurement)
+      (values models
+        (list (assq 'partial-matches (positive-plan-cost-snapshot prefix))
+              (cons 'new-offers meter.new-offers) (cons 'repeated-offers meter.repeat-offers)
+              (cons 'states meter.states) (cons 'rebuilds meter.rebuilds)
+              (cons 'extensions meter.extensions) (cons 'first-model-ns meter.first-model))))))
+
+(def (rank<? left right)
+  (or (< (car left) (car right))
+      (and (= (car left) (car right)) (< (cdr left) (cdr right)))))
 
 ;; Compile each choice rule to a private positive relation containing the
 ;; grounded attribute arguments followed by its offered values.
@@ -180,85 +208,137 @@
                   state)
         (relational-program-transaction! session
           (map (lambda (name) (cons name (reverse! (hash-ref rows name [])))) names)))))
-  (def (process! state result trace)
-    (let/cc reject
-      (let ((constraints (make-hash-table-eqv)) (order []) (forced #f) (closed-key #f))
-        (def (register! id open? values support)
-          (let (constraint
+  (def constraints #f)
+  (def offer-roots #f)
+  (def offer-sizes #f)
+  (def read-root #f)
+  (def offers (relational-choice-program-offers program))
+  (def meter (current-choice-measurement))
+  (def rescan? (and meter (choice-measurement-rescan? meter)))
+  (def (process! state result trace addition)
+    (let/cc finish
+      (def (reject!)
+        (set! offer-roots #f)
+        (set! constraints #f)
+        (finish (void)))
+      (def (intersect left right)
+        (filter (lambda (value) (checkpoint!) (member value right)) left))
+      (def (register! id open? values support)
+        (let* ((rank (car support))
+               (constraint
                 (or (hash-get constraints id)
-                    (let (fresh (make-choice-constraint #f [] []))
+                    (let (fresh (make-choice-constraint rank #f #f [] []))
                       (hash-put! constraints id fresh)
-                      (set! order (cons id order))
-                      fresh)))
-            (using (constraint :- choice-constraint)
-              (if open?
-                (set! constraint.open (cons support constraint.open))
-                (let (allowed
-                      (if constraint.closed
-                        (filter (lambda (value)
-                                  (checkpoint!)
-                                  (member value values))
-                                constraint.closed)
-                        (delete-duplicates/hash values)))
-                  (when (null? allowed) (reject (void)))
-                  (set! constraint.closed allowed)
-                  (set! constraint.closed-support (cons support constraint.closed-support)))))))
-        (for-each
-         (lambda (offer)
-           (checkpoint!)
-           (using (offer :- relational-choice-offer)
-             (for-each
-              (lambda (row)
-                (checkpoint!)
-                (let-values (((args values) (split-at (drop row offer.bindings) offer.width)))
-                  (let* ((id (attribute-id offer.attribute args))
-                         (prior (assv id state))
-                         (open? (eq? offer.kind 'open)))
-                    (if prior
-                      (unless (or open? (member (cdr prior) values)) (reject (void)))
-                      (register! id open? values (cons offer row))))))
-              (relational-program-query result offer.relation))))
-         (relational-choice-program-offers program))
-        (def (schedule! id value kind support)
-          (checkpoint!)
-          (let (assignment (cons id value))
-            (enqueue! (insert-choice state id value) state assignment
-              trace kind support)))
+                      fresh))))
+          (using (constraint :- choice-constraint)
+            (when (rank<? rank constraint.rank) (set! constraint.rank rank))
+            (if open?
+              (set! constraint.open (cons support constraint.open))
+              (let* ((first? (or (not constraint.first-closed)
+                                 (rank<? rank constraint.first-closed)))
+                     (allowed
+                      (cond ((not constraint.closed) (delete-duplicates/hash values))
+                            (first? (intersect (delete-duplicates/hash values) constraint.closed))
+                            (else (intersect constraint.closed values)))))
+                (when (null? allowed) (reject!))
+                (when first? (set! constraint.first-closed rank))
+                (set! constraint.closed allowed)
+                (set! constraint.closed-support (cons support constraint.closed-support)))))))
+      (def (support-order supports)
+        (list-sort (lambda (a b) (rank<? (car b) (car a))) supports))
+      (def (schedule! id value kind supports)
+        (checkpoint!)
+        (let (assignment (cons id value))
+          (enqueue! (insert-choice state id value) state assignment trace kind supports)))
+      (let* ((completed (relational-program-solution-result result))
+             (roots (and (not rescan?)
+                         (map (lambda (offer) (read-root completed (relational-choice-offer-relation offer))) offers)))
+             (candidate (and addition offer-roots roots
+                             (map (lambda (now before)
+                                    (and now before (ordered-row-cut-delta now before))) roots offer-roots)))
+             (updates (and candidate (andmap identity candidate) (list->vector candidate))))
+        (when meter
+          (using (meter :- choice-measurement)
+            (set! meter.states (+ meter.states 1))
+            (if updates (set! meter.extensions (+ meter.extensions 1))
+              (set! meter.rebuilds (+ meter.rebuilds 1)))))
+        (if updates
+          (let* ((id (car addition)) (cached (hash-get constraints id)))
+            (checkpoint!)
+            (when cached
+              (let (closed (choice-constraint-closed cached))
+                (when (and closed (not (member (cdr addition) closed))) (reject!)))
+              (hash-remove! constraints id)))
+          (set! constraints (make-hash-table-eqv)))
+        (set! offer-roots roots)
+        (let (sizes (and meter (make-vector (length offers) 0)))
+          (for-each
+           (lambda (offer)
+             (checkpoint!)
+             (using (offer :- relational-choice-offer)
+               (let* ((update (and updates (vector-ref updates offer.ordinal)))
+                      (start (if update (car update) 0))
+                      (rows (if update (cdr update) (relational-program-query result offer.relation))))
+                 (when meter
+                   (using (meter :- choice-measurement)
+                     (let* ((read (length rows)) (size (+ start read))
+                            (repeat (if (and (not update) addition offer-sizes)
+                                      (min read (vector-ref offer-sizes offer.ordinal)) 0)))
+                       (vector-set! sizes offer.ordinal size)
+                       (set! meter.new-offers (+ meter.new-offers (- read repeat)))
+                       (set! meter.repeat-offers (+ meter.repeat-offers repeat)))))
+                 (let scan ((rows rows) (position start))
+                   (unless (null? rows)
+                     (checkpoint!)
+                     (let (row (car rows))
+                       (let-values (((args values) (split-at (drop row offer.bindings) offer.width)))
+                         (let* ((id (attribute-id offer.attribute args))
+                                (prior (assv id state))
+                                (open? (eq? offer.kind 'open)))
+                           (if prior
+                             (unless (or open? (member (cdr prior) values)) (reject!))
+                             (register! id open? values (cons (cons offer.ordinal position) (cons offer row)))))))
+                     (scan (cdr rows) (+ position 1)))))))
+           offers)
+          (set! offer-sizes sizes)))
+      ;; Rank by the first published support, even when a later cut adds
+      ;; rows to an earlier rule. This preserves full-scan branch ordering.
+      (let (order (list-sort (lambda (a b)
+                               (rank<? (choice-constraint-rank (hash-ref constraints b))
+                                       (choice-constraint-rank (hash-ref constraints a))))
+                    (hash-keys constraints)))
         (if (null? order)
-          (set! models (cons (relational-program-solution-with-provenance result
-                               (cut explain-choice trace names <>)) models))
           (begin
+            (when (and meter (not (choice-measurement-first-model meter)))
+              (choice-measurement-first-model-set! meter (elapsed-ns (choice-measurement-start meter))))
+            (set! models (cons (relational-program-solution-with-provenance result
+                                 (cut explain-choice trace names <>)) models)))
+          (let ((forced #f) (closed-key #f))
             (for-each
              (lambda (id)
-               (let (constraint (hash-ref constraints id))
-                 (using (constraint :- choice-constraint)
-                   (when constraint.closed
-                     (unless closed-key (set! closed-key id))
-                     (when (and (not forced) (null? (cdr constraint.closed)))
-                       (set! forced (cons id (car constraint.closed))))))))
+               (let (closed (choice-constraint-closed (hash-ref constraints id)))
+                 (when closed
+                   (unless closed-key (set! closed-key id))
+                   (when (and (not forced) (null? (cdr closed))) (set! forced id)))))
              order)
-            ;; Closed offers oblige every compatible model to assign this key.
-            ;; Keep every allowed value, with singletons taking priority.
             (cond
-             (forced
-              (let (support (choice-constraint-closed-support (hash-ref constraints (car forced))))
-                (schedule! (car forced) (cdr forced) 'deduction support)))
-             (closed-key
-              (let (constraint (hash-ref constraints closed-key))
+             ((or forced closed-key)
+              (let* ((id (or forced closed-key)) (constraint (hash-ref constraints id)))
                 (using (constraint :- choice-constraint)
-                  (for-each (lambda (value) (schedule! closed-key value 'branch constraint.closed-support))
-                            constraint.closed))))
-             ;; An open offer may be superseded by a value whose supporting
-             ;; rule becomes enabled after assigning another key.
+                  (let (supports (map cdr (support-order constraint.closed-support)))
+                    (for-each (lambda (value)
+                                (schedule! id value (if forced 'deduction 'branch) supports))
+                              constraint.closed)))))
              (else
+              ;; With only open offers, another key can enable a new value.
               (for-each
                (lambda (id)
-                 (for-each (lambda (support)
-                             (let ((offer (car support)) (row (cdr support)))
-                               (using (offer :- relational-choice-offer)
-                                 (schedule! id (list-ref row (+ offer.bindings offer.width))
-                                            'branch (list support)))))
-                           (choice-constraint-open (hash-ref constraints id))))
+                 (for-each
+                  (lambda (ranked)
+                    (let* ((support (cdr ranked)) (offer (car support)) (row (cdr support)))
+                      (using (offer :- relational-choice-offer)
+                        (schedule! id (list-ref row (+ offer.bindings offer.width)) 'branch (list support)))))
+                  (support-order (choice-constraint-open (hash-ref constraints id)))))
                order))))))))
   ;; Intermediate Session commits are private. Keep cancellation and all
   ;; work charges active, but linearize only the final public model list.
@@ -266,16 +346,22 @@
   (parameterize
     ((current-ascent-execution-control
       (and control (lambda (work facts) (control (if (= work -1) 0 work) facts)))))
-    (let (session (relational-open-program-session (relational-choice-program-grounding program)))
+    (let (session (relational-open-program-session/row-reader (relational-choice-program-grounding program)
+                     (lambda (reader) (set! read-root reader))))
       (let search ()
         (unless (null? pending)
           (checkpoint!)
           (let (entry (car pending))
             (set! pending (cdr pending))
             (using (entry :- choice-entry)
-              (let (result (install-state! session entry.state entry.parent entry.addition))
-                (set! current entry.state)
-                (process! entry.state result entry.trace)))
+              (let (addition (and (eq? entry.parent current) entry.addition))
+                (unless addition
+                  ;; Release the discarded branch before materializing its sibling.
+                  (set! offer-roots #f)
+                  (set! constraints #f))
+                (let (result (install-state! session entry.state entry.parent entry.addition))
+                  (set! current entry.state)
+                  (process! entry.state result entry.trace addition))))
             (search))))))
   (let (result (reverse! models))
     (ascent-accept-publication!)

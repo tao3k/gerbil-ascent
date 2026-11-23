@@ -31,7 +31,7 @@
         (only-in "admission.ss" gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
         (only-in "result.ss" gerbil-ascent-publication-cache
-                 gerbil-ascent-result-observation)
+                 gerbil-ascent-result-observation make-ordered-row-cut)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  make-positive-prefix-state current-positive-prefix-budget
@@ -976,10 +976,17 @@
                 (begin
                   (vector-set! published 0 (deadline-jiffy duration-nanoseconds))
                   (run-retained! published))))
+            (def (publication (completed #f) (name #f))
+              (if completed
+                (and (eq? completed last-result) (.ref completed 'finished)
+                     (let* ((index (position-of name)) (rows (vector-ref all index)))
+                       (and (not (relation-view? rows))
+                            (make-ordered-row-cut rows (vector-ref all-size index)))))
+                owned-publication))
           (make-engine-state
            (if single-set-source? append-single-set-source! append-source!)
            replace-source! run-session! run-timeout! analysis schema
-           (lambda () owned-publication) (lambda () recompute-from-source?)
+           publication (lambda () recompute-from-source?)
            source-additions source-overrides))
           run!)))))
 

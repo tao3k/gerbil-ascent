@@ -24,6 +24,7 @@
 (import :gerbil-ascent/core/execution-control)
 
 (export gerbil-ascent-open-session
+        gerbil-ascent-open-session/row-reader
         gerbil-ascent-session-append-source!
         gerbil-ascent-session-replace-source!
         gerbil-ascent-session-replace-sources!
@@ -35,6 +36,12 @@
 ;;; engine, allowing failed provider updates to rebuild from committed input.
 (def (gerbil-ascent-open-session program
                                  measure-rule-times?: (measure-rule-times? #f))
+  (open-session program measure-rule-times? #f))
+
+(def (gerbil-ascent-open-session/row-reader program receive)
+  (open-session program #f receive))
+
+(def (open-session program measure-rule-times? receive-row-reader)
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
   ;; Capture the optional retention policy once. Recovery/revision cannot
@@ -390,6 +397,13 @@
                 (set! partial? #f))
               (set! partial? #t))
             result))))
+    ;; The private choice owner receives only tokens for this exact completed
+    ;; result. Keep the engine and its mutable vectors behind the reader.
+    (when receive-row-reader
+      (receive-row-reader
+       (lambda (completed name)
+         (and clean? (eq? completed committed-result)
+              ((engine-state-publication engine) completed name)))))
     (gerbil-ascent-make-session-value
       (if direct-appends? direct-append-source! append-source!)
       replace-source! replace-sources! run! run-timeout!)))

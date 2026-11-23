@@ -419,6 +419,24 @@
                 (check-equal? (member `(color 0 ,chosen) (cadddr (car (caddr step))))
                               `((color 0 ,chosen) (path 0 ,(cadr (cadr step))))))
               (cdr proof)))) models proofs)))
+    (test-case "open assignments reached in different orders consume one state per subset"
+      (let (program
+            (relational-choice-program
+              (choice color (node value))
+              (rule (open (color 0) 10))
+              (rule (open (color 1) 11))
+              (rule (open (color 2) 12))
+              (rule (open (color 3) 13))
+              (limits 16 16 16)))
+        (let-values (((models work)
+                      (call-with-relational-choice-measurement
+                       (lambda () (relational-choice-solve program state-budget: 16)))))
+          (check-equal? (model-colors models) '(((0 . 10) (1 . 11) (2 . 12) (3 . 13))))
+          (check-equal? (cdr (assq 'states work)) 16)
+          (let (witness (relational-program-query (car models) 'color provenance?: #t))
+            (check-equal? (map car witness) '(branch branch branch branch))
+            (check-equal? (length witness) 4)))
+        (check-exception (relational-choice-solve program state-budget: 15) RelationalChoiceLimit?)))
     (test-case "the exact distinct-state bound succeeds and a shorter budget raises"
       (let (program
             (relational-choice-program

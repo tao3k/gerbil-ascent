@@ -867,6 +867,81 @@ the other 139 native cases and the Lean Guard's 196 build jobs.
 Both implementation candidates and their receipts are retained
 in the local cache. Production keeps the prior witness projection.
 
+** Incremental hashing of canonical search states
+
+The five instrumented adaptive solves on the 128-vertex path
+entered =install-state!= and =process!= 16,385 times per solve.
+Median cumulative wall intervals were 544.605 ms for installation,
+330.027 ms inside its engine runs, 347.180 ms for offer processing,
+and 215.406 ms inside its 16,384 enqueue attempts. The 127 parent
+restores took 17.450 ms cumulatively. These nested intervals include
+probe overhead and are separate from native paired wall timings.
+
+=enqueue!= previously gave the native structural hash table the
+entire canonical assignment list on both lookup and insertion.
+The candidate carries an incremental digest on the entry. Adding a
+binding XORs the native pair hash into the parent's digest. The
+standard hash table uses that digest to select a bucket and keeps
+full structural equality for the complete key. The ascending
+assignment list, the LIFO search order, state budget checks, and
+choice witnesses still use their existing representation.
+
+=choice_state_digest_insert= relates the incremental update to a
+fold over the sorted assignment list. =choice_state_key_exact=
+shows that the digest plus the canonical list has the original
+logical equality. The native case uses four independent open
+assignments: all sixteen subsets consume a distinct state, multiple
+insertion orders produce one final model, and a budget of fifteen
+fails. An isolated constant-digest build challenges the same
+membership boundary without relying on a naturally occurring collision.
+
+A second instrumented arm kept the same work. Median cumulative
+enqueue CPU fell from 235.799 to 35.200 ms in the 128-vertex solve.
+Its engine-run CPU was 341.313 versus 340.358 ms, locating the
+recorded change in state insertion rather than rule evaluation.
+Collector-free enqueue allocations grew from 45.501 to 46.501
+MiB. The constant-digest build passed all 24 finite-choice cases.
+
+The native 128-vertex comparison timed the entire request externally,
+including model and witness delivery. It moved from 534.029 to
+311.548 ms at P50 and from 701.258 to 597.762 ms at P95. The
+separately metered solve-only median moved from 528.699 to 286.937 ms.
+The disconnected ordinary delivery P95 still increased from 118.126
+to 168.016 ms. Its P95 sample ran for 153.011 ms before delivery,
+used 64.312 ms of CPU in that solve interval and recorded no collection.
+The remaining wall delay has no source-level attribution.
+
+The second candidate shares the canonical key between the index and
+worklist. It also stores the existing assignment pair in the
+canonical list instead of constructing an equivalent copy. The
+worklist entry holds its key once. Interpretation never mutates
+that assignment, and model rows detach at the existing source
+admission and witness delivery boundaries.
+
+The shared-key enqueue probe measured 34.840 ms of cumulative
+CPU and 45.497 MiB of allocations, against 235.799 ms and
+45.501 MiB for the original. Both made 16,384 enqueue attempts.
+The native phase comparison used ten 128-vertex samples per
+arm and measured complete delivery at 517.760 / 801.718 ms
+(P50 / P95) for the original and 308.601 / 344.584 ms for the
+candidate. The corresponding 48-vertex comparison used thirty
+samples per arm, with P50 / P95 of 69.819 / 78.376 ms and
+63.483 / 71.155 ms respectively.
+
+The separately timed, ordinary disconnected delivery cohort
+regressed from 110.841 to 268.649 ms at P95, despite a lower
+median. The selected candidate spent 265.402 ms in the solve,
+including 101.149 ms CPU and 31.222 ms of collector wall time.
+The baseline P95 request recorded 100.690 ms solve CPU and
+35.073 ms collector wall time. These receipts leave the extra
+elapsed interval unassigned. Its metered P95 also increased from
+116.040 to 317.423 ms. The full timing criterion precludes adoption.
+
+Both candidates passed 145 native cases, including both seeds
+and all one thousand property-generated graphs. The Lean guard
+completed its 196 build jobs. The two patches and full receipts
+are retained in the local experiment cache.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

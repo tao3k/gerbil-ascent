@@ -522,6 +522,36 @@ disconnected graph. The candidate path's 141.842 ms maximum used
 237.663 ms, with 118.161 ms CPU and at least 52.066 ms of GC inside
 the solve. These receipts leave the rest of the wall delay open.
 
+** Parent restore root-retention experiment
+
+At =54081232= the retained choice restore rebuilds membership and
+reverses published chronological rows into engine order. A prototype
+retained the already-committed spines and reused them after the
+existing admission and budget checks. Keeping all eligible spines
+slowed the 128-vertex path median from 428.780 to 485.112 ms. A second
+prototype retained only spines allowed by the static dependency mask.
+
+The static-only prototype passed 139 native cases, including the
+1,000 POO graphs and an explicit sibling restore identity check.
+On 32 isolated restores of 4,096 derived rows, the original root
+survived in all 32 candidate restores and none of the baseline
+restores. Median allocation in collector-free samples fell from
+1,361,648 to 1,165,120 bytes. Median restore duration changed from
+1.512 to 1.500 ms. Disconnected Figure 3 solves eliminated all 341
+ordered-cut equality checks while keeping the same work and models.
+
+End-to-end timings did not support adoption. The static-only
+candidate moved the 128-vertex path median from 455.597 to 541.412 ms.
+The disconnected metered maximum rose from 103.543 to 202.772 ms.
+Without the meter the disconnected maximum rose from 102.922 to
+188.297 ms. That 188.297 ms sample recorded 71.666 ms CPU and no GC.
+The exact source of its remaining wall delay is unresolved.
+
+The prototype and raw receipts stay in the local experiment cache.
+The production path keeps ordered-content checks. Restoring the
+raw spine still leaves fresh engine admission and relation membership
+reconstruction, which are the larger operations to isolate next.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

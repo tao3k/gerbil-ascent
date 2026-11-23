@@ -131,7 +131,7 @@ The focused checks subsequently read the fixed source and already generated
 dependency modules; they do not close the clean-install or exact-head CI gate.
 
 The initial old-prefix test failed before evaluation because
-=:clan/poo/object-contract= was absent. A raw dependency invocation exited 70;
+=:clan/poo/types/object-contract= was absent. A raw dependency invocation exited 70;
 the fresh dependency build then exposed missing OpenSSL pkg-config metadata.
 These failures remain in /private/tmp/ascent-rule-cost-*-20261031.log. The failed
 dense hypothesis is =ascent-rule-cost-dsl-source-control-2-20261031.log=; the

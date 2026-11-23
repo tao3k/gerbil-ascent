@@ -3,7 +3,8 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/iter for in-range)
-        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-components/packed)
+        (only-in :gerbil-ascent/core/dependency-graph
+                 gerbil-ascent-graph-components/packed gerbil-ascent-graph-components/packed-boundary)
         (only-in :gerbil-ascent/core/view-value make-relation-view make-paged-binary-visitors))
 (export gerbil-ascent-condense-closure gerbil-ascent-extend-condensed-closure
         gerbil-ascent-remove-condensed-edge
@@ -241,7 +242,7 @@
 ;; Keep the member spines for unchanged SCCs. Translate their old mask
 ;; bits; only a destination that split needs concrete target endpoints.
 (def (repair-local (prior :- condensed-closure) source size adjacent affected replacements split? checkpoint!
-                   (undo #f))
+                   (undo #f) (boundary #f))
   (let* ((old-groups (vector-length prior.members))
          (translate (make-vector old-groups #f))
          (unchanged
@@ -281,6 +282,47 @@
                    (set! mask (bitwise-ior mask (slot-bit h))))))))
          vertices)
         mask))
+    (def (quotient-split! minimum maximum arcs)
+      (let (count (vector-length owner))
+        (def (component-span vertices group)
+          (let ((low count) (high 0) (width 0))
+            (for-each
+              (lambda (v)
+                (checkpoint!)
+                (when (fx< v low) (set! low v))
+                (when (fx> v high) (set! high v))
+                (set! width (fx+ width 1)))
+              vertices)
+            (and (fx= width (fx+ (fx- high low) 1))
+                 (let verify ((v low))
+                   (or (fx> v high)
+                       (begin
+                         (checkpoint!)
+                         (and (fx= (vector-ref owner v) group) (verify (fx+ v 1))))))
+                 (cons low high))))
+        (def (project-arcs targets mask)
+          (if (null? targets) mask
+            (begin
+              (checkpoint!)
+              (project-arcs (cdr targets) (bitwise-ior mask (slot-bit (vector-ref owner (car targets))))))))
+        (for (g (in-range fresh-at groups))
+          (let* ((vertices (vector-ref members g))
+                 (internal? (pair? (cdr vertices)))
+                 (span (component-span vertices g))
+                 (self (slot-bit g)))
+            (let project ((remaining vertices) (mask (if internal? self 0)))
+              (if (null? remaining)
+                (vector-set! direct g mask)
+                (let* ((v (car remaining)) (lo (u16vector-ref minimum v)))
+                  (checkpoint!)
+                  (let (next
+                        (cond
+                         ((fx= lo count) (project-arcs (vector-ref arcs v) mask))
+                         ((and span (fx< lo count) (fx<= (car span) lo)
+                               (fx<= (u16vector-ref maximum v) (cdr span)))
+                          (project-arcs (vector-ref arcs v) (if internal? mask (bitwise-ior mask self))))
+                         (else (scan (list v) mask (w #t) (h (and internal? (fx= h g)))))))
+                    (project (cdr remaining) next)))))))))
     (for-each
      (lambda (old g)
        (let (mask (remap old 0))
@@ -290,17 +332,18 @@
                (w (bit-set? (vector-ref prior.owner w) affected)) (h #f))
              mask))))
      old-order (iota fresh-at))
-    (if split?
+    (cond
+     (boundary (quotient-split! (vector-ref boundary 0) (vector-ref boundary 1) (vector-ref boundary 2)))
+     (split?
       (for (g (in-range fresh-at groups))
         (let* ((vertices (vector-ref members g))
                ;; A nontrivial SCC already has an internal arc.
                (internal? (pair? (cdr vertices)))
                (initial (if internal? (slot-bit g) 0)))
           (vector-set! direct g
-            (scan vertices initial (w #t) (h (and internal? (fx= h g)))))))
-      ;; The newly added edge is internal. It supplies a self bit even
-      ;; when none of the merged groups previously had a self bit.
-      (vector-set! direct fresh-at (fold-members affected remap (slot-bit fresh-at))))
+            (scan vertices initial (w #t) (h (and internal? (fx= h g))))))))
+     ;; The new internal edge supplies a self bit for merged groups.
+     (else (vector-set! direct fresh-at (fold-members affected remap (slot-bit fresh-at)))))
     (let* ((incoming (make-vector groups 0))
            (reach (close-edited-quotient direct incoming checkpoint!)))
       (make-condensed-closure source size prior.positions prior.labels
@@ -324,13 +367,16 @@
             [])))
     (repair-local prior source size adjacent affected (list vertices) #f checkpoint! undo)))
 
-(def (split-local (prior :- condensed-closure) source size adjacent group checkpoint!)
-  (let (parts (gerbil-ascent-graph-components/packed adjacent checkpoint!
-                (vector-ref prior.members group)))
+(def (split-local (prior :- condensed-closure) source size adjacent group checkpoint! fused?)
+  (let*-values (((selected) (vector-ref prior.members group))
+                ((parts boundary)
+                 (if fused?
+                   (gerbil-ascent-graph-components/packed-boundary adjacent checkpoint! selected)
+                   (values (gerbil-ascent-graph-components/packed adjacent checkpoint! selected) #f))))
     (if (null? (cdr parts))
       (make-condensed-closure source size prior.positions prior.labels
         adjacent prior.members prior.owner prior.direct prior.incoming prior.reach prior.order #f)
-      (repair-local prior source size adjacent (slot-bit group) parts #t checkpoint!))))
+      (repair-local prior source size adjacent (slot-bit group) parts #t checkpoint! #f boundary))))
 
 (def (gerbil-ascent-condensed-same-partition? (prior :- condensed-closure)
                                              (next :- condensed-closure))
@@ -430,7 +476,7 @@
 ;; A non-self edge inside a component may split it, but both endpoints
 ;; remain incident. A cross-edge edit retains both cyclic owner domains.
 (def (gerbil-ascent-remove-condensed-edge (prior :- condensed-closure) source size row checkpoint!
-                                           (local? #f) (reuse-merge? #f))
+                                           (local? #f) (unmetered-edit? #f))
   (let ((x (hash-get prior.positions (car row))) (y (hash-get prior.positions (cadr row))))
     (and x y
          (alet (at (neighbor-offset (vector-ref prior.adjacent x) y checkpoint!))
@@ -441,11 +487,11 @@
                      (undo prior.merge-undo))
                  (vector-set! adjacent x (splice-neighbor (vector-ref prior.adjacent x) at 1 #f))
                  (cond
-                  ((and local? reuse-merge? undo (fx= at 0)
+                  ((and local? unmetered-edit? undo (fx= at 0)
                         (fx= x (condensed-merge-undo-from undo))
                         (fx= y (condensed-merge-undo-to undo)))
                    (restore-merge-partition prior undo source size adjacent checkpoint!))
-                  (local? (split-local prior source size adjacent a checkpoint!))
+                  (local? (split-local prior source size adjacent a checkpoint! unmetered-edit?))
                   (else (repair-partition prior source size adjacent checkpoint!)))))
               ((and local? (= x y))
                (let ((adjacent (vector-copy prior.adjacent))

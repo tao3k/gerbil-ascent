@@ -14,7 +14,8 @@
 (export scc-bound-query-test scc-first-origin-test scc-split-merge-test
         scc-ten-million-split-merge-test scc-ten-million-local-split-merge-test
         scc-ten-million-global-edge-edit-test scc-ten-million-local-edge-edit-test
-        scc-ten-million-global-right-selection-test scc-ten-million-local-right-selection-test)
+        scc-ten-million-global-right-selection-test scc-ten-million-local-right-selection-test
+        scc-ten-million-global-cold-split-test scc-ten-million-local-cold-split-test)
 
 (def vertices 1664)
 (def group-width 64)
@@ -378,3 +379,59 @@
   (test-suite "Target selection around a local return bridge"
     (test-case "First and broad right-bound requests on each version"
       (measure-right-selection 71 (* 69 group-width)))))
+
+
+(def (measure-cold-split groups return-target)
+  (check (##current-vm-processor-count) => 1)
+  (let* ((size (* groups group-width))
+         (last (- size 1))
+         (split-rows (* group-width group-width (quotient (* groups (+ groups 1)) 2)))
+         (suffix (- groups (quotient return-target group-width)))
+         (merged-rows (+ split-rows (* group-width group-width (quotient (* suffix (- suffix 1)) 2))))
+         (fixture (program (inputs #f #t size return-target) merged-rows))
+         (bytes (make-f64vector 2 0.))
+         (publication []))
+    (for (_ (in-range 32))
+      ;; Every sample starts from a separately admitted merged graph.
+      (let (session (gerbil-ascent-open-condensed-actor-session fixture))
+        (try
+          (let* ((prior (gerbil-ascent-session-run session))
+                 (proof ((.ref prior 'closure-witness) last return-target 128)))
+            (check ((.ref prior 'verify-closure-witness) proof) => #t)
+            (let-values (((split cost)
+                          (observe-edit bytes
+                            (lambda () (gerbil-ascent-session-edit-edge! session prior 'edge
+                                         'delete last return-target)))))
+              (set! publication (cons cost publication))
+              (check (.ref split 'closure-update) => 'split-local)
+              (check (cdr (assq 'reach ((.ref split 'relation-sizes)))) => split-rows)
+              (check ((.ref split 'closure-witness) last return-target 128) => #f)
+              (check ((.ref split 'verify-closure-witness) proof) => #f)
+              (check ((.ref prior 'verify-closure-witness) proof) => #t)
+              (let ((visit (.ref split 'visit-rows)) (next 0) (right-start (- size group-width)))
+                (visit 'reach '(1) (list return-target)
+                  (lambda (left right)
+                    (unless (and (= left next) (= right return-target))
+                      (error "incorrect ordered prefix after cold split" left right next))
+                    (set! next (+ next 1)))
+                  fields?: #t)
+                (check next => (+ return-target group-width))
+                (visit 'reach '(0) (list last)
+                  (lambda (left right)
+                    (unless (and (= left last) (= right right-start))
+                      (error "incorrect ordered suffix after cold split" left right right-start))
+                    (set! right-start (+ right-start 1)))
+                  fields?: #t)
+                (check right-start => size))))
+          (finally (gerbil-ascent-session-close! session)))))
+    (report-edit 'cold-split [] publication [])))
+
+(def scc-ten-million-global-cold-split-test
+  (test-suite "Cold split of the ten-million-row global bridge fixture"
+    (test-case "Publish a deletion from a fresh merged version"
+      (measure-cold-split 50 0))))
+
+(def scc-ten-million-local-cold-split-test
+  (test-suite "Cold split of the ten-million-row local bridge fixture"
+    (test-case "Publish a deletion from a fresh merged version"
+      (measure-cold-split 71 (* 69 group-width)))))

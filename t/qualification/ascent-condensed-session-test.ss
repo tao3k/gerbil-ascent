@@ -3,6 +3,7 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
 (import (only-in :std/test check test-case test-suite)
+        (only-in :std/list/list append-map)
         (only-in :gerbil/runtime/gambit call-with-output-string display-exception)
         (only-in :std/sync/completion make-completion completion-wait! completion-post!)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
@@ -404,6 +405,41 @@
                  #t)
                => #t)
               (check (selected-rows restored '(0 1) '(47 12)) => [])))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "Cold split preserves interleaved quotient rows and held witnesses"
+      (let* ((split-edges (interleaved-cliques #t #t))
+             (intact (append split-edges '((19 0))))
+             (expected (closure-oracle 20 split-edges))
+             (session (gerbil-ascent-open-condensed-actor-session (program intact 192 400 600))))
+        (try
+          (let* ((original (gerbil-ascent-session-run session))
+                 (old-proof (witness original 19 0 200))
+                 (split (edit-edge session original 'delete 19 0))
+                 (new-proof (witness split 18 1 200)))
+            (check-result split expected 'split-local)
+            (check-right-column split expected (iota 20))
+            (check (replay original old-proof) => #t)
+            (check (replay split old-proof) => #f)
+            (check (replay split new-proof) => #t))
+          (finally (gerbil-ascent-session-close! session)))))
+    (test-case "Cold split handles capture overflow and singleton self bits"
+      (let* ((vertices (iota 40))
+             (acyclic (append
+                        (append-map (lambda (left)
+                                      (map (lambda (right) (list left right))
+                                        (filter (lambda (right) (< left right)) vertices)))
+                          vertices)
+                        '((0 0) (39 39))))
+             (intact (append acyclic '((39 0))))
+             (expected (closure-oracle 40 acyclic))
+             (session (gerbil-ascent-open-condensed-actor-session (program intact 800 1600 2400))))
+        (try
+          (let* ((original (gerbil-ascent-session-run session))
+                 (split (edit-edge session original 'delete 39 0)))
+            (check-result split expected 'split-local)
+            (check (selected-rows split '(0 1) '(0 0)) => '((0 0)))
+            (check (selected-rows split '(0 1) '(1 1)) => [])
+            (check-right-column split expected vertices))
           (finally (gerbil-ascent-session-close! session)))))
     (test-case "A merging insertion can be undone only against its current version"
       (let* ((base (append (cycle 16 0) (cycle 16 16) '((15 16))))

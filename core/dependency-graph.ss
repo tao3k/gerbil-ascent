@@ -10,6 +10,7 @@
 (import (only-in "scc-state.ss" gerbil-ascent-scc-state))
 (export gerbil-ascent-graph-components gerbil-ascent-graph-components/checkpoint
         gerbil-ascent-graph-components/borrowed gerbil-ascent-graph-components/packed
+        gerbil-ascent-graph-components/packed-boundary
         gerbil-ascent-graph-close!)
 
 (defstruct graph-frame (node remaining parent) final: #t)
@@ -137,7 +138,7 @@
 ;; Restricted roots mark all outside vertices retired in either form.
 (defrule (borrowed-components successors checkpoint! selected
                               make-resume save! load
-                              start bound more? target advance)
+                              start bound more? target advance observe!)
   (let* ((count (vector-length successors))
          (infinity (+ (* 2 count) 1))
          (lows (make-u32vector count (if selected infinity 0)))
@@ -179,7 +180,9 @@
               (u32vector-set! lows node low)
               (let (entered (enter! next (fx+ node 1)))
                 (visit next entered)))
-            (walk node row after end (if (fx< other low) (fxior other 1) low))))
+            (begin
+              (observe! node next (fx= other infinity))
+              (walk node row after end (if (fx< other low) (fxior other 1) low)))))
         ;; Read the active parent before installing a follower link.
         (let ((parent (u32vector-ref links node)) (leader? (fx= (fxand low 1) 0)))
           (if leader?
@@ -191,6 +194,7 @@
           (unless (fx= parent 0)
             (let* ((p (fx- parent 1)) (prior (u32vector-ref lows p))
                    (parent-row (vector-ref successors p)))
+              (observe! p node leader?)
               (walk p parent-row (load resume p) (bound parent-row)
                 (if (and (not leader?) (fx< low prior)) (fxior low 1) prior)))))))
     (def (visit-root! root)
@@ -215,11 +219,41 @@
   (defrule (more? cursor end) (pair? cursor))
   (defrule (target row cursor) (car cursor))
   (borrowed-components successors checkpoint! selected
-    make-vector vector-set! vector-ref start bound more? target cdr))
+    make-vector vector-set! vector-ref start bound more? target cdr ignore-boundary!))
+
+(defrule (ignore-boundary! source target retired?) (void))
 
 (def (gerbil-ascent-graph-components/packed successors checkpoint! (selected #f))
   (defrule (start row) 0)
   (defrule (advance cursor) (fx+ cursor 1))
   (borrowed-components successors checkpoint! selected
     make-u32vector u32vector-set! u32vector-ref
-    start u16vector-length fx< u16vector-ref advance))
+    start u16vector-length fx< u16vector-ref advance ignore-boundary!))
+
+;; Capture an exact subset of raw arrows. The complementary observations
+;; only need their ordinal envelope. Overflowed rows fall back to their
+;; original adjacency so dense quotients cannot grow capture storage.
+(def (gerbil-ascent-graph-components/packed-boundary successors checkpoint! selected)
+  (let* ((count (vector-length successors)) (overflow (fx+ count 1))
+         (minimum (make-u16vector count count)) (maximum (make-u16vector count 0))
+         (arcs (make-vector count [])) (recorded 0))
+    (defrule (start row) 0)
+    (defrule (advance cursor) (fx+ cursor 1))
+    (defrule (observe! source target retired?)
+      (let ((v source) (w target))
+        (let (lo (u16vector-ref minimum v))
+          (when (fx<= lo count)
+            (if retired?
+              (if (fx< recorded count)
+                (begin
+                  (set! recorded (fx+ recorded 1))
+                  (vector-set! arcs v (cons w (vector-ref arcs v))))
+                (u16vector-set! minimum v overflow))
+              (begin
+                (when (fx< w lo) (u16vector-set! minimum v w))
+                (when (fx> w (u16vector-ref maximum v))
+                  (u16vector-set! maximum v w))))))))
+    (let (parts (borrowed-components successors checkpoint! selected
+                  make-u32vector u32vector-set! u32vector-ref
+                  start u16vector-length fx< u16vector-ref advance observe!))
+      (values parts (vector minimum maximum arcs)))))

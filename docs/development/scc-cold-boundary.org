@@ -1,0 +1,102 @@
+#+TITLE: Quotient boundary capture during SCC partition repair
+
+* Source correspondence
+
+A cold internal-edge deletion partitions the selected old SCC using
+its existing packed adjacency. The partitioner's ordered discovery and
+retirement transitions remain the source of component membership.
+The fused variant records a concrete arrow when its target is retired,
+including a tree edge whose child retires before returning. The remaining
+targets are summarized in each source row by their minimum and maximum
+vertex ordinals. Retirement is a capture hint. No conclusion about
+final owner equality is drawn from the low-word state alone.
+
+After the partition returns, the new owner vector certifies contiguous
+spans for the new components. The span checker examines only fresh
+components, and gives up before scanning a span wider than its member
+count. A row may use its recorded arrows when its unrecorded interval
+is empty or is contained in its component's certified span. Each recorded target is
+mapped through the actual new owner. An ambiguous or overflowed row uses
+its original adjacency. A nontrivial SCC seeds its self bit. In a singleton,
+a nonempty certified internal interval supplies a self edge, and a stored
+arrow can also supply it. Old quotient bits and retained predecessors
+that enter the split SCC keep the previous translation and scan paths.
+
+In =ComponentClosure.lean=, =boundary_rows_cover= proves the two capture
+lanes cover exactly the original observation stream.
+=boundary_interval_covers= and =boundary_empty_sentinel= give the bounds
+and empty-marker invariants. =boundary_span_certifies= links the span walk and bounds check. The existing =packed_cursor_suffix= at DFS
+suspension leaves the ordered tail at the next offset. The tree target
+is observed once at parent resume, before that suffix begins.
+=fused_quotient_row_exact= proves equality of projected cross destinations,
+including the full-row fallback. =singleton_boundary_self= and the
+existing self-bit proof cover the diagonal. The runtime stores at most
+one capture slot per original vertex in total, with fallback on overflow.
+
+The packed rows are borrowed, and the quotient emits only owner bits.
+The published label spine, query ordering, concrete witness adjacency
+and witness version checks are the existing ones. Metered edits use the
+original walk and exact checkpoint charges. Unmetered edits still check
+cancellation and the owner still controls publication, with the existing
+input, derived and output fact limits.
+
+* Native cold-delete comparison
+
+The reference was =f1d4b5ac=. Both arms used Gerbil on Gambit =2df89af=,
+one VM processor, the same optimized compiler flags, a 2 GiB heap, and
+the same 90-second native process watchdog. The dataset is the existing
+50- or 71-clique bridge fixture. Each of the 32 measured deletions per
+arm opened and evaluated a fresh Session before the timed call. Its
+merged cut had no inverse-edit payload. Four batches of eight samples
+per arm alternated order. The tests verified relation size, both first
+ordered selections and witnesses against their original and new cuts.
+
+| Fixture and arm | Partition edge reads | Quotient edge rereads | Captured arcs projected | Publish wall P95 (ms) | Publish CPU P95 (ms) | Allocation P95 (bytes) |
+|-----------------+----------------------+----------------------+-------------------------+-----------------------+----------------------+------------------------|
+| Global reference | 201649 | 201649 | 0 | 10.822 | 9.705 | 331536 |
+| Global candidate | 201649 | 0 | 49 | 7.232 | 6.558 | 378272 |
+| Local reference | 8065 | 12098 | 0 | 0.932 | 0.928 | 278496 |
+| Local candidate | 8065 | 4033 | 1 | 0.876 | 0.870 | 333680 |
+
+The counts come from separately compiled probes. Both candidate
+fixtures certified every fresh row. The local fixture's remaining
+4,033 rereads belong to a retained predecessor component, outside the
+selected SCC. The span and capture code increases allocation. Wall and
+CPU medians, respectively, changed from 7.526 and 7.522 to 5.772 and
+5.708 ms globally, and from 0.827 and 0.833 to 0.776 and 0.781 ms locally.
+There is no timing result here for internal deletions that leave one
+SCC intact. Interleaved spans or capture overflow can still force
+adjacency rereads, with the same result and ordering.
+
+An initial prototype built a whole-domain run table and a per-row
+projection closure. Its allocation P95 was 592,720 bytes globally and
+351,136 bytes locally. Replacing these with verified spans of only the
+fresh components and a shared projection loop reduced that temporary
+allocation. The final table contains only the matched comparison after
+that code change.
+
+* Original acceptance gates
+
+The earlier projection-list failures at 114.77, 115.98 and 112.41 ms
+remain in the preceding development reports. The native run of the
+new candidate checked all 1,000 projection lists and failed its original
+100 ms gate at 115.09 ms. It recorded 235 collections and 23.22 seconds
+of cumulative GC wall time. The 90-second timeout remains in force.
+The candidate has not met the publication conditions for PR #2.
+
+The recursive list and projection buffer passed at 69.02 and 14.71 ms
+P95. The recursive buffer finished all 1,000 row checks and failed its
+existing 50 ms assertion at 83.29 ms. That run recorded zero collections,
+24.95 seconds of request wall time and 11.78 seconds of process CPU.
+It uses an ordinary Actor Session. There is no contemporaneous buffer
+reference to establish the cause of that wall-time result. No threshold
+was changed and neither failed performance case was repeated.
+
+The complete guarded Lean inventory passed all 196 jobs. The native
+Actor, engine interface and independent oracle suites passed.
+The condensed Session suite passed on both reference and candidate,
+including the interleaved labels, singleton self bits and held witnesses.
+A separate count of the dense singleton case reached its 40-entry
+capture cap and exercised 31 fallback rows. The independent SCC summary
+and execution suites passed after their existing fixtures were loaded
+into the isolated test prefix.

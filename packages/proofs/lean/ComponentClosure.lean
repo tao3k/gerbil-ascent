@@ -355,6 +355,104 @@ theorem single_origin_run_cost {Group Vertex : Type}
     rcases head with ⟨group, labels⟩
     cases selected : allowed group <;> simp [selected, ih]
 
+/-- The packed SCC walk sends each concrete arrow either to its observed
+list or to the growing interval of the other destinations. The hint
+that selects the branch need not characterize a final component. -/
+def boundaryRows (edges : List (Nat × Bool)) (observed : Bool) : List Nat :=
+  (edges.filter (fun e => e.2 == observed)).map Prod.fst
+
+theorem boundary_rows_cover (edges : List (Nat × Bool)) (w : Nat) :
+    w ∈ edges.map Prod.fst ↔ w ∈ boundaryRows edges true ∨ w ∈ boundaryRows edges false := by
+  simp only [boundaryRows, List.mem_map, List.mem_filter, beq_iff_eq]
+  constructor
+  · rintro ⟨⟨v, bit⟩, edge, same⟩
+    cases bit
+    · exact .inr ⟨(v, false), ⟨edge, rfl⟩, same⟩
+    · exact .inl ⟨(v, true), ⟨edge, rfl⟩, same⟩
+  · rintro (⟨e, he, rfl⟩ | ⟨e, he, rfl⟩) <;> exact ⟨e, he.1, rfl⟩
+
+def extendBoundary (extent : Nat × Nat) (v : Nat) : Nat × Nat :=
+  (min extent.1 v, max extent.2 v)
+
+theorem boundary_interval_covers (targets : List Nat) (initial : Nat × Nat)
+    (v : Nat) (member : v ∈ targets) :
+    let final := targets.foldl extendBoundary initial
+    final.1 ≤ v ∧ v ≤ final.2 := by
+  have bound (rows : List Nat) (start : Nat × Nat) :
+      ((rows.foldl extendBoundary start).1 ≤ start.1) ∧
+      (start.2 ≤ (rows.foldl extendBoundary start).2) := by
+    induction rows generalizing start with
+    | nil => exact ⟨Nat.le_refl _, Nat.le_refl _⟩
+    | cons h tail ih =>
+      have next := ih (extendBoundary start h)
+      exact ⟨Nat.le_trans next.1 (Nat.min_le_left _ _),
+        Nat.le_trans (Nat.le_max_left _ _) next.2⟩
+  induction targets generalizing initial with
+  | nil => simp at member
+  | cons head tail ih =>
+    rcases List.mem_cons.mp member with rfl | inTail
+    · have next := bound tail (extendBoundary initial v)
+      exact ⟨Nat.le_trans next.1 (Nat.min_le_right _ _),
+        Nat.le_trans (Nat.le_max_right _ _) next.2⟩
+    · exact ih (extendBoundary initial head) inTail
+
+theorem boundary_empty_sentinel (targets : List Nat) (count : Nat)
+    (valid : ∀ v ∈ targets, v < count) :
+    (targets.foldl extendBoundary (count, 0)).1 = count ↔ targets = [] := by
+  constructor
+  · intro empty
+    cases targets with
+    | nil => rfl
+    | cons head tail =>
+      have first := (boundary_interval_covers (head :: tail) (count, 0)
+        head List.mem_cons_self).1
+      have inside := valid head List.mem_cons_self
+      omega
+  · rintro rfl
+    rfl
+
+theorem boundary_span_certifies {Group : Type} [DecidableEq Group] (owner : Nat → Group)
+    (group : Group) (start width v : Nat)
+    (checked : (List.range width).all (fun k => decide (owner (start + k) = group)) = true)
+    (inside : start ≤ v ∧ v < start + width) : owner v = group := by
+  have member : v - start ∈ List.range width := List.mem_range.mpr (by omega)
+  have covered := List.all_eq_true.mp checked (v - start) member
+  simpa [Nat.add_sub_of_le inside.1] using covered
+
+/-- A certified interval of unrecorded arrows is internal. With no
+certificate the old row is used. Every emitted destination is backed
+by an actual observed source edge, and every cross arrow is included. -/
+theorem fused_quotient_row_exact {Group : Type} (owner : Nat → Group)
+    (source : Nat) (edges : List (Nat × Bool)) (certified : Bool)
+    (internal : certified = true → ∀ w ∈ boundaryRows edges false, owner w = owner source)
+    (group : Group) (cross : group ≠ owner source) :
+    group ∈ (if certified then boundaryRows edges true else edges.map Prod.fst).map owner ↔
+      group ∈ (edges.map Prod.fst).map owner := by
+  cases h : certified
+  · rfl
+  · simp only [ite_true]
+    constructor
+    · intro present
+      obtain ⟨w, hw, same⟩ := List.mem_map.mp present
+      exact List.mem_map.mpr ⟨w, (boundary_rows_cover edges w).mpr (.inl hw), same⟩
+    · intro present
+      obtain ⟨w, hw, same⟩ := List.mem_map.mp present
+      rcases (boundary_rows_cover edges w).mp hw with seen | deferred
+      · exact List.mem_map.mpr ⟨w, seen, same⟩
+      · exact False.elim (cross (same ▸ internal h w deferred))
+
+/-- For a certified row of a singleton component, an unrecorded edge
+exists exactly when that part of the row contains a self loop. -/
+theorem singleton_boundary_self (owner : Nat → Nat) (v : Nat) (rows : List Nat)
+    (singleton : ∀ w, owner w = owner v → w = v)
+    (internal : ∀ w ∈ rows, owner w = owner v) : rows ≠ [] ↔ v ∈ rows := by
+  cases rows with
+  | nil => simp
+  | cons w rest =>
+    have same := singleton w (internal w List.mem_cons_self)
+    subst w
+    simp
+
 end QuotientConstruction
 
 /-- Sum the vertex count of the selected groups by counting set bits

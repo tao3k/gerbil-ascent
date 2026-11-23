@@ -313,6 +313,46 @@ slowest full solve was 545.393 ms versus 282.356 ms in the previous arm.
 The measured improvement applies to the median. The replayed work and
 checkpoints do not explain that single tail sample.
 
+** Tail counterexample and property checks
+
+The retained 545.393 ms sample at =b6ec2538= is the two nine-vertex
+paths plus an isolated vertex. Its receipt contains 81 models, 3080
+states, 341 parent restores, one offer rebuild and no source
+replacements. The receipt has no per-phase CPU or GC timestamps.
+
+A separate native diagnostic run of five paired solves on this input
+measured 242.207--277.115 ms in the cached arm. The slowest of those
+solves spent 197.286 ms in 3079 child appends and solves, 37.468 ms in
+341 parent restores and 19.714 ms in constraint processing. Parent
+engine construction took 25.071 ms within the restore interval. The
+three GC pauses accounted for 86.064 ms of wall time in that solve.
+Sampling timestamps give a conservative bound of at least 86.042 ms
+inside child appends and solves, allowing for the time used to read
+counters. Publication was below 0.001 ms. These timings describe the
+instrumented run. The original sample's tail remains unexplained.
+The next cost to isolate is row and index construction inside child
+solves, including which allocations survive between children.
+
+Run the generated test with
+=gerbil test t/qualification/ascent-choice-property-test.ss=. Seeds
+20261123 and 20261124 each accept 500 graphs with coverage checks for
+connected and disconnected inputs, isolated vertices, self-loops,
+edgeless graphs and nested alternatives. The test compares the models
+with an independent connected-component oracle and checks each witness
+against the input and its preceding assignments. It also checks the
+full model and witness order against direct search, requires actual
+parent restores on nontrivial components, and bounds the retained
+parent units.
+
+For the negative control, capture a parent's writable constraint
+tree directly at =remember-parent!=, omitting =rbtree-copy=. The
+generated test rejected this mutant on the first trial of seed
+20261123. POO reported =((0 1) (2 3))= on four vertices as minimized
+under its configured shrinker, with 12 attempted reductions and zero
+successful reductions. This input is a fixed regression on the
+production path. A second regression tampers with a witness's supporting
+assignment while retaining the original head and checks rejection.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

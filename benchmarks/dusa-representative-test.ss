@@ -7,7 +7,8 @@
         (only-in :gerbil-ascent/program/api relational-choice-program
                  relational-choice-solve relational-program-query)
         (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement))
-(export dusa-representative-test dusa-parent-representative-test)
+(export dusa-representative-test dusa-parent-representative-test
+        representative-program components oracle-models model-rows model-witnesses)
 
 ;; Figure 3 of Finite-Choice Logic Programming (POPL 2025).
 (def (representative-program nodes arcs)

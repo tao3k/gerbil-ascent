@@ -510,6 +510,46 @@ theorem packed_cross_endpoints (count source target : Nat) (bounded : target < c
   · rw [Nat.mul_comm source count, Nat.mul_add_div positive, Nat.div_eq_of_lt bounded, Nat.add_zero]
   · rw [Nat.mul_comm source count, Nat.mul_add_mod, Nat.mod_eq_of_lt bounded]
 
+/-- The packed walk keeps one dirty envelope in the current row's
+scalar slots and writes it back before selecting a different source. -/
+structure EnvelopeRow (Extent : Type) where
+  backing : Nat → Extent
+  active : Option (Nat × Extent)
+
+def envelopeAt (cache : EnvelopeRow Extent) (row : Nat) : Extent :=
+  match cache.active with
+  | none => cache.backing row
+  | some (source, extent) => if row = source then extent else cache.backing row
+
+def observeEnvelope (cache : EnvelopeRow Extent) (source : Nat) (advance : Extent → Extent) :
+    EnvelopeRow Extent :=
+  match cache.active with
+  | none => ⟨cache.backing, some (source, advance (cache.backing source))⟩
+  | some (current, extent) =>
+    if current = source then ⟨cache.backing, some (source, advance extent)⟩
+    else ⟨envelopeAt cache, some (source, advance (cache.backing source))⟩
+
+theorem observed_envelope_exact (cache : EnvelopeRow Extent)
+    (source row : Nat) (advance : Extent → Extent) :
+    envelopeAt (observeEnvelope cache source advance) row =
+      if row = source then advance (envelopeAt cache row) else envelopeAt cache row := by
+  rcases cache with ⟨backing, active⟩
+  cases active with
+  | none => by_cases h : row = source <;> simp [observeEnvelope, envelopeAt, h]
+  | some current =>
+    rcases current with ⟨prior, extent⟩
+    by_cases same : prior = source
+    · subst prior
+      by_cases rowIsSource : row = source <;> simp [observeEnvelope, envelopeAt, rowIsSource]
+    · by_cases rowIsSource : row = source
+      · subst row
+        simp [observeEnvelope, envelopeAt, same, Ne.symm same]
+      · simp [observeEnvelope, envelopeAt, same, rowIsSource]
+
+/-- The final spill publishes only the one pending scratch row. -/
+theorem flush_envelope_exact (cache : EnvelopeRow Extent) (row : Nat) :
+    envelopeAt (⟨envelopeAt cache, none⟩ : EnvelopeRow Extent) row = envelopeAt cache row := rfl
+
 end QuotientConstruction
 
 /-- Sum the vertex count of the selected groups by counting set bits

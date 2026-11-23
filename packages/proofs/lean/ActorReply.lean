@@ -84,6 +84,38 @@ theorem wait_refinement (logical : Endpoint Payload) (native : CompletionState P
       subst actual
       simp [completionWait, Corresponds]
 
+/-- Consecutive marks of one accepted edited cut. Endpoints bound
+handoffs directly, so an interval measured inside a worker is never
+counted a second time as mailbox wait. -/
+def editIntervals (start : Nat) : List Nat → List Nat
+  | [] => []
+  | next :: rest => (next - start) :: editIntervals next rest
+
+def orderedMarks (start : Nat) : List Nat → Prop
+  | [] => True
+  | next :: rest => start ≤ next ∧ orderedMarks next rest
+
+def lastMark (start : Nat) : List Nat → Nat
+  | [] => start
+  | next :: rest => lastMark next rest
+
+theorem edit_mark_endpoint_le (start : Nat) (marks : List Nat)
+    (monotone : orderedMarks start marks) : start ≤ lastMark start marks := by
+  induction marks generalizing start with
+  | nil => exact Nat.le_refl _
+  | cons next rest ih => exact Nat.le_trans monotone.1 (ih next monotone.2)
+
+theorem edit_phase_wall_exact (start : Nat) (marks : List Nat)
+    (monotone : orderedMarks start marks) :
+    (editIntervals start marks).sum = lastMark start marks - start := by
+  induction marks generalizing start with
+  | nil => simp [editIntervals, lastMark]
+  | cons next rest ih =>
+    have startToNext := monotone.1
+    have nextToEnd := edit_mark_endpoint_le next rest monotone.2
+    simp only [editIntervals, List.sum_cons, lastMark, ih next monotone.2]
+    omega
+
 end Ascent.ActorReply
 
 #print axioms Ascent.ActorReply.post_then_take_exact

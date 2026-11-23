@@ -634,6 +634,17 @@
         (check-equal? (read-count cost 'cross-plan-candidate-revisits) 2)
         (check-equal? (read-count cost 'same-plan-prefix-revisits) 0)
         (check-equal? (read-count cost 'same-plan-candidate-revisits) 0)))
+    (test-case "numeric counters preserve emitted rows and match the full trace counts"
+      (def (observe record?)
+        (let ((cost (make-positive-plan-cost record? record?)) (emitted []))
+          (call-with-positive-plan-cost cost
+            (lambda ()
+              (gerbil-ascent-run-positive-plan! (fixture) (make-vector 2 #f) -1 inputs
+                (lambda (head row) (set! emitted (cons (cons (vector-ref head 0) row) emitted))))))
+          (cons (reverse! emitted)
+                (map (lambda (name) (read-count cost name))
+                     '(candidate-rows partial-matches complete-witnesses head-proposals)))))
+      (check-equal? (observe #f) (observe #t)))
     (test-case "unrecorded repeated prefixes are unknown rather than zero"
       (let (cost (make-positive-plan-cost #f))
         (call-with-positive-plan-cost cost

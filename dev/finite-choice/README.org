@@ -410,6 +410,67 @@ ordinary entry retains the baseline signature. The same previously
 compiled Actor module passed all 40 of its native Session cases after
 the private constructor was introduced.
 
+** Work counters and single-row delta joins
+
+The Figure 3 benchmark enabled a numeric work meter. The executable
+also built slot signatures and supporting-row spines at each candidate,
+even when no trace or prefix attribution was requested. In a native
+on/off pairing on =9f598d4e=, each graph used ten solves per mode.
+The path median was 113.405 ms with the meter and 85.494 ms without it.
+The slowest metered path took 260.913 ms wall and 129.363 ms CPU.
+At least 124.322 ms of GC was inside that solve after deducting the
+sampling window. The clique medians were 81.358 and 46.903 ms, and the
+disconnected medians were 112.721 and 105.772 ms. Each pair had equal
+ordered models and witnesses and agreed with the graph oracle. The
+earlier 305.270 and 297.006 ms samples have no phase data.
+
+The matcher now builds support spines only for prefix attribution or
+explicit visit traces. A four-process paired native comparison using
+the original metered benchmark gave these full-solve results. Work
+counters were identical for every graph.
+
+| Graph | Original meter median / max (ms) | Numeric-only meter median / max (ms) |
+|-------+----------------------------------+---------------------------------------|
+| Path | 87.025 / 116.243 | 60.179 / 89.759 |
+| Clique | 76.811 / 128.937 | 74.642 / 81.794 |
+| Disconnected | 106.180 / 120.792 | 103.433 / 107.995 |
+
+The revised meter and ordinary execution had nearly equal path
+medians in a separate paired run, 86.811 ms and 86.979 ms. The
+disconnected ordinary arm still produced a 324.538 ms sample without
+the meter. Its CPU time was 117.211 ms, with one collector event
+accounting for at least 110.054 ms of solve wall time. Its paired
+metered run took 136.215 ms with at least 31.312 ms in GC. The receipt
+does not identify the source of the remaining wall delay.
+
+The remaining algorithm question is which prefix rows the matcher
+visits. [[https://arxiv.org/html/2405.19040v3#S7.SS1][Dusa Section 7.1]]
+uses prefix firings to explain work. The same idea applies to
+=visit-static-prefix!=: cached bindings still replay across the entire
+ordered prefix when the first fresh row is in the second atom. For
+Figure 3, the edge replay count plus the initial prefix build equals
+twice the number of undirected edges times the number of extensions.
+Each closed offer records its complete binding, so subtracting the
+one-time open offer per vertex gives the number of matching edge
+bindings in this fixture.
+
+| Graph | Edge prefix visits | Matching edge bindings | Visit ratio |
+|-------+--------------------+------------------------+-------------|
+| Path | 216576 | 4512 | 48.0 |
+| Clique | 223608 | 10164 | 22.0 |
+| Disconnected | 98528 | 5499 | 17.9 |
+
+=choice_single_delta_bucket_exact= proves ordered list equality
+between scanning the whole prefix and visiting an exact bucket for a
+single fresh key. It keeps repeated row occurrences and pairs each
+with the same fresh supporting row. The accompanying visit bound
+excludes index construction. Applying the theorem to the Scheme
+scheduler still needs an exact physical bucket tied to the same static
+cut, an actual singleton delta check, and a proof of callback and
+budget behavior. A multi-row delta also needs a merge that recovers
+the original prefix order. The visit ratios describe the join work
+available to remove, before any wall-clock measurement of that change.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

@@ -1127,4 +1127,30 @@ theorem choice_deferred_model_order {Cut Result : Type}
     cases head with
     | mk accepted cut => cases accepted <;> simp [ih]
 
+/-- The one-fresh-row join can select a bucket of the ordered static prefix.
+A physical index must return exactly this stable projection of its owning cut. -/
+def orderedChoiceBucket {Key Prefix : Type} [DecidableEq Key]
+    (keyOf : Prefix → Key) (key : Key) (prefixRows : List Prefix) : List Prefix :=
+  prefixRows.filter fun row => decide (keyOf row = key)
+
+theorem choice_single_delta_bucket_exact
+    {Key Prefix Fresh : Type} [DecidableEq Key]
+    (prefixKey : Prefix → Key) (freshKey : Fresh → Key)
+    (prefixRows : List Prefix) (fresh : Fresh) :
+    (prefixRows.flatMap fun row =>
+        if prefixKey row = freshKey fresh then [(row, fresh)] else []) =
+      (orderedChoiceBucket prefixKey (freshKey fresh) prefixRows).map
+        (fun row => (row, fresh)) := by
+  induction prefixRows with
+  | nil => rfl
+  | cons head tail ih =>
+    by_cases same : prefixKey head = freshKey fresh <;>
+      simp [orderedChoiceBucket, same] at ih ⊢ <;> exact ih
+
+theorem choice_single_delta_bucket_visit_bound
+    {Key Prefix : Type} [DecidableEq Key]
+    (keyOf : Prefix → Key) (key : Key) (prefixRows : List Prefix) :
+    (orderedChoiceBucket keyOf key prefixRows).length ≤ prefixRows.length :=
+  List.length_filter_le _ _
+
 end Ascent.FiniteChoice

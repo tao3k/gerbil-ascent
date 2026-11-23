@@ -250,10 +250,13 @@
     (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
                           frame (if has-pivot? delta-at 0) has-pivot?
                           0 rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost [] [] (and cost plan) scope prefix-state plan)))
+                          cost [] []
+                          (and cost (or (native-plan-cost-prefixes cost)
+                                        (native-plan-cost-visits cost)) plan)
+                          scope prefix-state plan)))
 
-(def (emit-complete-heads! heads frame emit-row! cost signature witness owner)
-  (when cost (cost-prefix! cost 'complete 11 signature witness owner))
+(def (emit-complete-heads! heads frame emit-row! cost signature witness trace-owner)
+  (when trace-owner (cost-prefix! cost 'complete 11 signature witness trace-owner))
   (cost-add! cost 2)
   (emit-parts-heads! heads frame emit-row! cost))
 
@@ -308,17 +311,19 @@
 ;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
 ;; : (-> Atoms Heads Frame Integer Nat RowsAccess EmitRow Void)
-(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness owner scope prefix-state plan)
+(def (visit-positive-atoms! atoms heads frame pivot has-pivot? depth rows-access emit-row! checkpoint! parts-access old-rows-access cost signature witness trace-owner scope prefix-state plan)
   ;; Syntax owns the candidate protocol; no continuation closure per row.
   ;; Observe the remaining action tail after user code, at the original boundary.
   (defrule (resume next-depth next-signature next-witness)
     (visit-positive-atoms! (cdr atoms) heads frame pivot has-pivot? next-depth
                           rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost next-signature next-witness owner scope prefix-state plan))
+                          cost next-signature next-witness trace-owner scope prefix-state plan))
   (defrule (accept matched? row action reused?)
     (let ((matched matched?) (next-signature signature) (next-witness witness))
       (unless reused? (cost-add! cost 0))
-      (when cost
+      ;; Numeric counters do not need a support spine. Prefix attribution
+      ;; and ordered visit traces still retain the original rows and slots.
+      (when trace-owner
         ;; Slot identities alpha-normalize variables by first occurrence.
         ;; Include full supporting rows, not stale suffix frame contents.
         (set! next-signature
@@ -326,19 +331,20 @@
                       (vector-ref action 1)) signature))
         (set! next-witness (cons row witness))
         (unless reused?
-        (let (repeat (cost-prefix! cost 'candidate 6 next-signature next-witness owner))
-          (when (native-plan-cost-visits cost)
-            (native-plan-cost-visits-set! cost
-              (cons (list scope (if has-pivot? pivot -1) depth (and matched #t)
-                          (if (native-plan-cost-prefixes cost) repeat 'unrecorded)
-                          (reverse next-witness)) (native-plan-cost-visits cost))))))
-        (when (and matched (not reused?))
-          (cost-add! cost 1)
-          (cost-prefix! cost 'partial 5 next-signature next-witness owner)))
+          (let (repeat (cost-prefix! cost 'candidate 6 next-signature next-witness trace-owner))
+            (when (native-plan-cost-visits cost)
+              (native-plan-cost-visits-set! cost
+                (cons (list scope (if has-pivot? pivot -1) depth (and matched #t)
+                            (if (native-plan-cost-prefixes cost) repeat 'unrecorded)
+                            (reverse next-witness)) (native-plan-cost-visits cost)))))))
+      (when (and matched (not reused?))
+        (cost-add! cost 1)
+        (when trace-owner
+          (cost-prefix! cost 'partial 5 next-signature next-witness trace-owner)))
       (when checkpoint! (checkpoint!))
       (when matched
         (if (null? (cdr atoms))
-          (emit-complete-heads! heads frame emit-row! cost next-signature next-witness owner)
+          (emit-complete-heads! heads frame emit-row! cost next-signature next-witness trace-owner)
           (resume (+ depth 1) next-signature next-witness)))))
   (defrule (match-parts action matcher prefix left right)
     (let (specialized matcher)
@@ -346,7 +352,7 @@
         (specialized prefix left right frame)
         (match-parts! (vector-ref action 1) prefix left right frame))))
   (match atoms
-    ([] (emit-complete-heads! heads frame emit-row! cost signature witness owner))
+    ([] (emit-complete-heads! heads frame emit-row! cost signature witness trace-owner))
     ([action . _]
      (case (vector-ref action 0)
        ((callbacks) (when ((vector-ref action 1) frame) (resume depth signature witness)))
@@ -404,7 +410,7 @@
                                    (set! charged 0) (set! retaining? #f) (set! records [])))))
                            ;; Streaming never stops at the retention boundary:
                            ;; no restart, lost continuation or query-budget change.
-                           (accept matched (and cost row) action #f)))
+                           (accept matched (and trace-owner row) action #f)))
                        (old-rows-access (vector-ref action 0) frame (vector-ref action 2) #f))
                       (when retaining?
                         (hash-put! (prefix-lane-entries lane) key (cons #t (reverse records)))
@@ -416,7 +422,7 @@
                     (lambda (prefix left right)
                       (accept (match-parts action (or (vector-ref action 4) (vector-ref action 3))
                                 prefix left right)
-                              (and cost (append prefix (list left right))) action #f))))
+                              (and trace-owner (append prefix (list left right))) action #f))))
           (let (rows (if old?
                       (old-rows-access (vector-ref action 0) frame (vector-ref action 2) checkpoint!)
                       (rows-access (vector-ref action 0) frame
@@ -428,11 +434,11 @@
                                   (current-static-prefix-cache))))
                  (if cache
                    (visit-static-prefix! cache action rows frame
-                     (lambda (matched row replayed?) (accept matched (and cost row) action replayed?)) cost)
+                     (lambda (matched row replayed?) (accept matched (and trace-owner row) action replayed?)) cost)
                    (let candidates ((remaining rows))
                      (unless (null? remaining)
                        (accept (match-row! (vector-ref action 1) (car remaining) frame)
-                               (and cost (car remaining)) action #f)
+                               (and trace-owner (car remaining)) action #f)
                        (candidates (cdr remaining)))))))
               ((compiled-provider-packet? rows)
                (let* ((terms (vector-ref action 1))
@@ -440,18 +446,18 @@
                  (for-each
                   (lambda (fields)
                     (accept (match-vector-row! terms fields frame width)
-                            (and cost (vector->list fields)) action #f))
+                            (and trace-owner (vector->list fields)) action #f))
                   (compiled-provider-packet-rows rows))))
               ((gerbil-ascent-row-parts? rows)
                (gerbil-ascent-for-each-row-parts
                 (lambda (prefix left right)
                   (accept (match-parts action (vector-ref action 3) prefix left right)
-                          (and cost (append prefix (list left right))) action #f)) rows))
+                          (and trace-owner (append prefix (list left right))) action #f)) rows))
               (else
                (gerbil-ascent-for-each-row
                 (lambda (row)
                   (accept (match-row! (vector-ref action 1) row frame)
-                          (and cost row) action #f)) rows)))))))))))))
+                          (and trace-owner row) action #f)) rows)))))))))))))
 
 ;;; Build the provider's ordered key after index construction. Compiled terms
 ;;; read proved frame slots; the general path preserves expression callbacks.

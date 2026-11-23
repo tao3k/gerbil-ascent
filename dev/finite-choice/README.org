@@ -601,6 +601,55 @@ The metered state, offer, and index work receipts matched. The
 metered regression has no per-sample phase attribution. Source
 initialization and save/restore preparation remain visible costs.
 
+** Metered path diagnosis and singleton closed offers
+
+The original 74.238 ms median has no per-solve collector receipt.
+A fresh comparison on the 48-vertex path used the same state budget
+and result/witness checks. In the native benchmark's metered arm,
+the membership-deferred version moved from 42.055 to 69.644 ms
+against its preceding baseline. Collections moved from 4 to 6 in ten
+solves, while CPU excluding recorded GC moved from 39.853 to 38.701 ms.
+A 197.637 ms sample recorded about 99.872 ms of GC wall time, with a
+13 microsecond sampling window. The rest of the wall time remains
+unattributed by that receipt.
+
+A separate reference/candidate alternating diagnostic gave the
+membership-deferred arm 36.482 ms across twenty counted solves with
+no collection. The same native invocation could place collections
+on either the ordinary or the metered solve when the two shared a
+process. The checked-in benchmark now times all candidate solves
+before the heavier reference for each fixture. It stores detached
+rows and witnesses for comparison, checks every solve against the
+independent graph oracle, and records wall, CPU, collector time/count,
+sampling window, and collector-free allocated bytes per solve.
+The five solves per lane and the logical gates are unchanged.
+
+The pinned Gerbil STD hash normalizer creates a table even for one
+value. The Dusa constraint merger now admits the empty or singleton
+domain directly. When the left side of an intersection contains one
+value it retains that list on a match, after the same checkpoint.
+Wider domains preserve the existing STD normalization and order.
+Lean verifies the singleton normal form and ordered intersection.
+The native test checks a singleton that becomes active after a
+multivalue offer, including the original support order.
+
+A separate activity probe observed 2,256 skipped hash
+normalizations on the 48-vertex path and 16,256 on the 128-vertex
+path. Under the same metered benchmark protocol the immediate
+before/after medians were 69.644 to 40.902 ms and 575.518 to
+473.123 ms respectively. Collector-free allocation for the smaller
+path was 75.626 to 73.213 MiB. The work receipts matched. The
+disconnected metered median moved from 65.077 to 91.130 ms, with
+four versus six collections and CPU excluding GC of 62.844 versus
+63.677 ms.
+
+A separate ordinary-only path run used fresh native processes,
+twenty samples per version, and no reference, meter, or forced GC.
+The medians were 67.040 and 67.551 ms. Both recorded twelve
+collections. Allocations in collector-free solves fell from 75.491
+to 73.078 MiB. The maximum rose from 76.549 to 95.195 ms.
+These results leave ordinary wall-clock tails open.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

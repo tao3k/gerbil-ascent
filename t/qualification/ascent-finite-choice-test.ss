@@ -167,6 +167,23 @@
           (check-equal? (map (cut relational-program-query <> 'color provenance?: #t) delta)
                         (map (cut relational-program-query <> 'color provenance?: #t) full))
           (check (> (cdr (assq 'extensions delta-work)) 0) => #t))))
+    (test-case "a newly earlier singleton keeps its support when a multi-value offer was already installed"
+      (let (program
+            (relational-choice-program
+              (choice color (node value))
+              (choice gate (node value))
+              (rule (closed (color 0) (2)) (gate 0 #t))
+              (rule (closed (color 0) (1 2 1)))
+              (rule (closed (gate 0) (#t)))
+              (limits 16 16 16)))
+        (def (solve) (relational-choice-solve program state-budget: 4))
+        (let*-values (((models _) (call-with-relational-choice-measurement solve))
+                      ((reference _) (call-with-relational-choice-measurement solve #t)))
+          (check-equal? (model-colors models) '(((0 . 2))))
+          (let ((actual (relational-program-query (car models) 'color provenance?: #t))
+                (expected (relational-program-query (car reference) 'color provenance?: #t)))
+            (check-equal? actual expected)
+            (check-equal? (length (caddr (car actual))) 2)))))
     (test-case "a saved parent is scoped to one live session and branch identity"
       (let* ((program (relational-program (relation input (value) '((1))) (limits 8 8 8)))
              (left #f) (right #f) (save #f)

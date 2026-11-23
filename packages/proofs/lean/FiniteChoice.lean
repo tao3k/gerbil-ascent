@@ -1223,4 +1223,20 @@ theorem choice_empty_base_charge
 theorem choice_deferred_membership_exact {Row : Type} (rows : List Row) (row : Row) :
     row ∈ rows.reverse ↔ row ∈ rows := List.mem_reverse
 
+/-- The standard hash normalization keeps the last equal occurrence. -/
+def lastChoiceValues {Value : Type} [DecidableEq Value] : List Value → List Value
+  | [] => []
+  | value :: tail =>
+    if value ∈ tail then lastChoiceValues tail else value :: lastChoiceValues tail
+
+theorem choice_single_value_already_distinct {Value : Type} [DecidableEq Value]
+    (value : Value) : lastChoiceValues [value] = [value] := by
+  simp [lastChoiceValues]
+
+theorem choice_single_value_intersection {Value : Type} [DecidableEq Value]
+    (value : Value) (allowed : List Value) :
+    [value].filter (fun candidate => decide (candidate ∈ allowed)) =
+      (if value ∈ allowed then [value] else []) := by
+  by_cases allowedValue : value ∈ allowed <;> simp [allowedValue]
+
 end Ascent.FiniteChoice

@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import :std/test
+(import :std/test :gerbil/runtime/gambit
         (only-in :std/list/list list-sort)
         (only-in :gerbil-ascent/program/api relational-choice-program
                  relational-choice-solve relational-program-query)
@@ -71,59 +71,83 @@
                             (iota (- width left 1) (+ left 1))))
                      (iota width))))
 
+(def (observe-solve run)
+  (let* ((bytes (make-f64vector 2 0.))
+         (sampling-start (current-jiffy))
+         (before (##process-statistics))
+         (_ (##get-bytes-allocated! bytes 0))
+         (cpu-start (cpu-time)) (start (current-jiffy)))
+    (let-values (((models work) (run)))
+      (let* ((end (current-jiffy)) (cpu-end (cpu-time))
+             (_ (##get-bytes-allocated! bytes 1))
+             (after (##process-statistics)) (sampling-end (current-jiffy))
+             (frequency (jiffies-per-second))
+             (wall-ns (quotient (* 1000000000 (- end start)) frequency))
+             (probe-ns (quotient (* 1000000000 (+ (- start sampling-start)
+                                                   (- sampling-end end))) frequency))
+             (collections (- (f64vector-ref after 6) (f64vector-ref before 6)))
+             (gc-ns (* 1000000000. (- (f64vector-ref after 5) (f64vector-ref before 5))))
+             (gc-cpu-ns (* 1000000000. (+ (- (f64vector-ref after 3) (f64vector-ref before 3))
+                                          (- (f64vector-ref after 4) (f64vector-ref before 4)))))
+             (allocated (- (f64vector-ref bytes 1) (f64vector-ref bytes 0))))
+        (values models work
+          (list (cons 'wall-ns wall-ns) (cons 'cpu-ns (* 1000000000. (- cpu-end cpu-start)))
+                (cons 'collections collections) (cons 'gc-wall-ns gc-ns) (cons 'gc-cpu-ns gc-cpu-ns)
+                (cons 'sampling-wall-ns probe-ns)
+                (cons 'allocated-bytes (and (zero? collections) (>= allocated 0) allocated))))))))
+
 (def (measure-graph label nodes arcs (restore-parent? #f))
   (let* ((program (representative-program nodes arcs))
          (expected (oracle-models (components nodes arcs)))
-         (full-times []) (delta-times []) (full-total []) (delta-total [])
-         (full-work #f) (delta-work #f))
+         (ordered-rows #f) (ordered-witnesses #f))
     (def (run reference?)
       (call-with-relational-choice-measurement
        (lambda () (relational-choice-solve program state-budget: 20000))
        (if restore-parent? (and reference? 'direct) (if reference? #t 'direct))))
-    (def (stable-work receipt)
-      (filter (lambda (entry) (not (memq (car entry) '(first-model-ns total-ns)))) receipt))
-    (for-each
-     (lambda (repetition)
-       (let*-values (((first first-work) (run (even? repetition)))
-                     ((second second-work) (run (odd? repetition))))
-         (let* ((full? (even? repetition))
-                (full (if full? first-work second-work))
-                (delta (if full? second-work first-work))
-                (rows (model-rows first)))
-           (check-equal? (length rows) (length expected))
-           (check-equal? (andmap (lambda (want) (and (member want rows) #t)) expected) #t)
-           (check-equal? rows (model-rows second))
-           (check-equal? (model-witnesses first) (model-witnesses second))
-           (check-equal? (count full 'states) (count delta 'states))
-           (check-equal? (count delta 'repeated-offers) 0)
-           (check (> (count delta 'extensions) 0) => #t)
-           (if restore-parent?
-             (begin
-               (check (< (count delta 'source-replacements) (count full 'source-replacements)) => #t)
-               (check (< (count delta 'partial-matches) (count full 'partial-matches)) => #t)
-               (check (> (count delta 'parent-restores) 0) => #t))
-             (begin
-               (check-equal? (count full 'partial-matches) (count delta 'partial-matches))
-               (check-equal? (count full 'new-offers) (count delta 'new-offers))
-               (check (> (count full 'repeated-offers) 0) => #t)))
-           (when full-work
-             (check-equal? (stable-work full) full-work)
-             (check-equal? (stable-work delta) delta-work))
-           (set! full-work (stable-work full))
-           (set! delta-work (stable-work delta))
-           (set! full-times (cons (count full 'first-model-ns) full-times))
-           (set! delta-times (cons (count delta 'first-model-ns) delta-times))
-           (set! full-total (cons (count full 'total-ns) full-total))
-           (set! delta-total (cons (count delta 'total-ns) delta-total)))))
-     (iota 5))
-    (write (list (if restore-parent? 'DUSA-PARENT 'DUSA-REPRESENTATIVE) label (cons 'vertices (length nodes))
-                 (cons 'undirected-edges (length arcs)) (cons 'models (length expected))
-                 (cons 'rescan full-work) (cons 'delta delta-work)
-                 (cons 'rescan-first-model-ns (reverse full-times))
-                 (cons 'delta-first-model-ns (reverse delta-times))
-                 (cons 'rescan-total-ns (reverse full-total))
-                 (cons 'delta-total-ns (reverse delta-total))))
-    (newline)))
+    (def (measure-lane reference?)
+      (let ((first-times []) (totals []) (receipts []) (prior-work #f))
+        (for-each
+         (lambda (_)
+           (let-values (((models work phases) (observe-solve (cut run reference?))))
+             (let ((rows (model-rows models)) (witnesses (model-witnesses models))
+                   (stable (filter (lambda (entry) (not (memq (car entry) '(first-model-ns total-ns)))) work)))
+               (check-equal? (length rows) (length expected))
+               (check-equal? (andmap (lambda (want) (and (member want rows) #t)) expected) #t)
+               (if ordered-rows
+                 (begin
+                   (check-equal? rows ordered-rows)
+                   (check-equal? witnesses ordered-witnesses))
+                 (begin (set! ordered-rows rows) (set! ordered-witnesses witnesses)))
+               (when prior-work (check-equal? stable prior-work))
+               (set! prior-work stable)
+               (set! first-times (cons (count work 'first-model-ns) first-times))
+               (set! totals (cons (count work 'total-ns) totals))
+               (set! receipts (cons phases receipts)))))
+         (iota 5))
+        (values prior-work (reverse! first-times) (reverse! totals) (reverse! receipts))))
+    ;; Measure all production solves before the more allocation-heavy
+    ;; reference for this fixture. The reference still checks every result.
+    (let*-values (((delta delta-times delta-total delta-phases) (measure-lane #f))
+                  ((full full-times full-total full-phases) (measure-lane #t)))
+      (check-equal? (count full 'states) (count delta 'states))
+      (check-equal? (count delta 'repeated-offers) 0)
+      (check (> (count delta 'extensions) 0) => #t)
+      (if restore-parent?
+        (begin
+          (check (< (count delta 'source-replacements) (count full 'source-replacements)) => #t)
+          (check (< (count delta 'partial-matches) (count full 'partial-matches)) => #t)
+          (check (> (count delta 'parent-restores) 0) => #t))
+        (begin
+          (check-equal? (count full 'partial-matches) (count delta 'partial-matches))
+          (check-equal? (count full 'new-offers) (count delta 'new-offers))
+          (check (> (count full 'repeated-offers) 0) => #t)))
+      (write (list (if restore-parent? 'DUSA-PARENT 'DUSA-REPRESENTATIVE) label
+                   (cons 'vertices (length nodes)) (cons 'undirected-edges (length arcs))
+                   (cons 'models (length expected)) (cons 'rescan full) (cons 'delta delta)
+                   (cons 'rescan-first-model-ns full-times) (cons 'delta-first-model-ns delta-times)
+                   (cons 'rescan-total-ns full-total) (cons 'delta-total-ns delta-total)
+                   (cons 'rescan-samples full-phases) (cons 'delta-samples delta-phases)))
+      (newline))))
 
 (def dusa-representative-test
   (test-suite "Dusa Figure 3 connected-component representatives"

@@ -269,8 +269,17 @@
         (set! offer-roots #f)
         (set! constraints #f)
         (finish (void)))
+      (def (distinct-values values)
+        ;; Empty and singleton domains are already normalized. Offer values
+        ;; have immutable fields and their list never leaves the solver.
+        (if (or (null? values) (null? (cdr values))) values
+          (delete-duplicates/hash values)))
       (def (intersect left right)
-        (filter (lambda (value) (checkpoint!) (member value right)) left))
+        (if (and (pair? left) (null? (cdr left)))
+          (begin
+            (checkpoint!)
+            (if (member (car left) right) left []))
+          (filter (lambda (value) (checkpoint!) (member value right)) left)))
       (def (register! id open? values support)
         (let* ((rank (car support))
                (prior (rbtree-get constraints id))
@@ -285,8 +294,8 @@
               (make-choice-constraint order first closed (cons support open) supports)
               (let* ((earlier? (or (not first) (rank<? rank first)))
                      (allowed
-                      (cond ((not closed) (delete-duplicates/hash values))
-                            (earlier? (intersect (delete-duplicates/hash values) closed))
+                      (cond ((not closed) (distinct-values values))
+                            (earlier? (intersect (distinct-values values) closed))
                             (else (intersect closed values)))))
                 (when (null? allowed) (reject!))
                 (make-choice-constraint order (if earlier? rank first) allowed open

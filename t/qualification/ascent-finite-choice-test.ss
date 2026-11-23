@@ -111,6 +111,37 @@
                       '(((0 . 1) (1 . 1))))
         (check-exception (relational-choice-solve program state-budget: 2)
                          RelationalChoiceLimit?)))
+    (test-case "closed keys avoid enumerating equivalent assignment orders"
+      (let* ((keys (iota 6))
+             (program
+              (relational-choice-program
+                (relation node (key) (map list keys))
+                (choice color (node value))
+                (rule (closed (color ?key) (0 1)) (node ?key))
+                (limits 32 32 32)))
+             (expected
+              (finite-choice-solutions
+               (map (lambda (key) (list 'closed key '(0 1) [])) keys) void))
+             (actual (model-colors (relational-choice-solve program state-budget: 127))))
+        (check-equal? (length expected) 64)
+        (check-equal? (length actual) (length expected))
+        (check-equal? (andmap (lambda (model) (and (member model actual) #t)) expected) #t)
+        (check-exception (relational-choice-solve program state-budget: 126)
+                         RelationalChoiceLimit?)))
+    (test-case "an open offer may need to wait for another key"
+      (let* ((program
+              (relational-choice-program
+                (choice color (node value))
+                (rule (open (color 1) 1))
+                (rule (open (color 0) 0))
+                (rule (open (color 0) 1) (color 1 1))
+                (limits 16 16 16)))
+             (expected (finite-choice-solutions
+                        '((open 0 0 ()) (open 1 1 ()) (open 0 1 ((1 . 1)))) void))
+             (actual (model-colors (relational-choice-solve program state-budget: 16))))
+        (check-equal? (length actual) 2)
+        (check-equal? (length actual) (length expected))
+        (check-equal? (andmap (lambda (model) (and (member model actual) #t)) expected) #t)))
     (test-case "distinct named and anonymous body witnesses count as distinct grounding rows"
       (let* ((edges '((0 1) (0 2)))
              (make-program

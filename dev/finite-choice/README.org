@@ -124,20 +124,45 @@ premise for native Session messages and mutable cache state remains open.
 For each unassigned key, the search intersects every currently enabled closed
 offer and records open offers separately. An empty intersection or an
 incompatible prior assignment rejects the state. A singleton intersection
-schedules only that assignment. With no forced deduction, the search visits
-allowed alternatives of all currently enabled keys so that a later rule can
-authorize a different value on an open key. =closed_intersection_forced=,
+schedules only that assignment. Otherwise, if there is an enabled closed
+offer on an unset key, the search picks one such key and visits every
+value in its intersection. Every compatible saturated model must assign
+that key. In an open-only state the search retains assignments on every
+enabled key, since assigning one key can enable a new value for another.
+=closed_intersection_forced=,
 =forced_step_reachable= and =forced_step_preserves_model= establish that
 prioritizing the singleton preserves every compatible saturated model and
 consumes a valid semantic edge. =missing_assignment_has_offer= establishes
 progress towards a compatible reachable model with a missing assignment.
 =compatible_model_has_scheduled_step= retains such a step under the deduction
-policy. =exhausted_deduction_answers_exact= proves the result equivalence when
+policy and the selected closed key. =compatible_closed_key_has_value=
+establishes that a compatible model's value belongs to every enabled
+closed offer on that key. =exhausted_deduction_answers_exact= proves the result equivalence when
 the worklist is exhausted and the target has finite support, by induction on
 the remaining keys. The native Suite compares with independent ground search
 on all 16 edge subsets of a small diamond. It also exercises native append and
 sibling replacement, exact and insufficient budgets, and cancellation at
 grounding and publication.
+
+** Attribute selection and measured state counts
+
+[[https://arxiv.org/html/2405.19040v3#S6.SS2][Dusa Section 6.2]]
+separates attribute selection from value backtracking. Its constraint
+database supports explicit exclusions for open offers. ASCENT currently
+stores positive assignments. The native open-only regression shows why
+choosing one open key and considering just its currently offered values
+would miss a model.
+
+The native regression with six independent two-valued closed keys finds
+all 64 models with the independent oracle. The original scheduler reaches
+every combination of unset, zero and one (729 states). Selecting one
+closed key at each state creates a binary decision tree (127 states).
+The exact and one-short budgets exercise the state boundary. This counts
+discovered states, including the root and leaves. Elapsed time and
+allocation on a graph workload remain to be measured.
+The search order can change the discovery order and the retained
+derivation for a model. Each retained derivation still comes from its
+own branch cut.
 
 ** Derivation witness query
 

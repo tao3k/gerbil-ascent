@@ -182,7 +182,7 @@
           (map (lambda (name) (cons name (reverse! (hash-ref rows name [])))) names)))))
   (def (process! state result trace)
     (let/cc reject
-      (let ((constraints (make-hash-table-eqv)) (order []) (forced #f))
+      (let ((constraints (make-hash-table-eqv)) (order []) (forced #f) (closed-key #f))
         (def (register! id open? values support)
           (let (constraint
                 (or (hash-get constraints id)
@@ -232,29 +232,34 @@
              (lambda (id)
                (let (constraint (hash-ref constraints id))
                  (using (constraint :- choice-constraint)
-                   (when (and (not forced) (pair? constraint.closed) (null? (cdr constraint.closed)))
-                     (set! forced (cons id (car constraint.closed)))))))
+                   (when constraint.closed
+                     (unless closed-key (set! closed-key id))
+                     (when (and (not forced) (null? (cdr constraint.closed)))
+                       (set! forced (cons id (car constraint.closed))))))))
              order)
-            ;; Only a singleton closed intersection can suppress other
-            ;; scheduling. An open offer may be superseded by a value whose
-            ;; supporting rule has yet to become enabled.
-            (if forced
+            ;; Closed offers oblige every compatible model to assign this key.
+            ;; Keep every allowed value, with singletons taking priority.
+            (cond
+             (forced
               (let (support (choice-constraint-closed-support (hash-ref constraints (car forced))))
-                (schedule! (car forced) (cdr forced) 'deduction support))
+                (schedule! (car forced) (cdr forced) 'deduction support)))
+             (closed-key
+              (let (constraint (hash-ref constraints closed-key))
+                (using (constraint :- choice-constraint)
+                  (for-each (lambda (value) (schedule! closed-key value 'branch constraint.closed-support))
+                            constraint.closed))))
+             ;; An open offer may be superseded by a value whose supporting
+             ;; rule becomes enabled after assigning another key.
+             (else
               (for-each
                (lambda (id)
-                 (let (constraint (hash-ref constraints id))
-                   (using (constraint :- choice-constraint)
-                     (if constraint.closed
-                       (for-each (lambda (value) (schedule! id value 'branch constraint.closed-support))
-                                 constraint.closed)
-                       (for-each (lambda (support)
-                                   (let ((offer (car support)) (row (cdr support)))
-                                     (using (offer :- relational-choice-offer)
-                                       (schedule! id (list-ref row (+ offer.bindings offer.width))
-                                                  'branch (list support)))))
-                                 constraint.open)))))
-               order)))))))
+                 (for-each (lambda (support)
+                             (let ((offer (car support)) (row (cdr support)))
+                               (using (offer :- relational-choice-offer)
+                                 (schedule! id (list-ref row (+ offer.bindings offer.width))
+                                            'branch (list support)))))
+                           (choice-constraint-open (hash-ref constraints id))))
+               order))))))))
   ;; Intermediate Session commits are private. Keep cancellation and all
   ;; work charges active, but linearize only the final public model list.
   (enqueue! [] #f #f [])

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 #+title: Finite-choice research: useful ideas for our existing Scheme DSL
 #+date: 2026-10-31
-#+status: paper-to-design audit; no language or runtime change
+#+status: paper-to-design audit with native search follow-up
 
 * Scope and source
 
@@ -121,3 +121,32 @@ This is the admission criterion for future work, not a completed test run or
 authorization to port an upstream solver. The most immediate design contribution
 is a measurable account of our existing DSL's inference, followed by a bounded
 prefix-retention experiment if the counts identify repeated work.
+
+* Search and grounding follow-up
+
+The native choice solver already uses the checked positive Session to
+ground rules at each branch. See the
+[[file:../../../dev/finite-choice/README.org][current implementation and proof map]]
+for closed-key selection and the independent state-count comparison.
+Dusa Section 6.2 and =src/engine/choiceengine.ts= use a separate exclusion
+branch for open choices. The present ASCENT state records only positive
+assignments. MiniDusa's =private/runtime.rkt= illustrates deduction before
+search and matches rule premises when checking for the next deduction.
+
+The next cost question is how many offer rows the search rereads.
+=program/scheme-choice.ss= can append a direct child to the same Session,
+where positive evaluation consumes deltas. Its =process!= still queries
+and scans every private offer relation at each reached state, rebuilding
+the per-key intersections. Measure newly grounded offer rows separately
+from rows scanned by the choice layer. Use the paper's canonical
+representative graph workload, with unconnected components and a later
+offer that narrows a previously enabled constraint. Report prefix
+firings, offer-row reads, processed states and first-model time with the
+same enumeration and witnesses.
+
+A direct-child offer cache would update only from newly grounded
+witnesses at that cut. Its proof must include the recheck of existing
+offers for the newly assigned key. Replacing sibling sources must restore
+or rebuild the matching offer view so removed witnesses cannot survive.
+The executable bridge and source-bound correspondence for this cache
+remain open.

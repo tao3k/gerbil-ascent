@@ -761,29 +761,56 @@ def allowed (rules : List Rule) (current : Database) (key value : Nat) : Prop :=
   ∀ values, (∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key values) →
     value ∈ values
 
-/-- A scheduler may pick any justified singleton. With none selected it
-retains every supported assignment that satisfies all enabled closed offers. -/
+/-- A closed rule obliges every compatible solution to assign its key.
+A scheduler can visit all admissible values of that key before considering
+other keys. Open offers alone do not justify that restriction. -/
+theorem compatible_closed_key_has_value (rules : List Rule) (current model : Database)
+    (key : Nat) (values : List Nat)
+    (source : ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key values)
+    (target : saturated rules model)
+    (fits : ∀ k v, current k = some v → model k = some v) :
+    ∃ value, model key = some value ∧ value ∈ values ∧ allowed rules current key value := by
+  have accepts (offers : List Nat)
+      (evidence : ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key offers) :
+      ∃ value, value ∈ offers ∧ model key = some value := by
+    obtain ⟨rule, member, active, head⟩ := evidence
+    have result := target rule member (fun f inBody => fits f.1 f.2 (active f inBody))
+    rw [head] at result
+    exact (closed_saturated_iff model key offers).mp result
+  obtain ⟨value, inValues, assigned⟩ := accepts values source
+  refine ⟨value, assigned, inValues, ?_⟩
+  intro offers evidence
+  obtain ⟨prior, offered, found⟩ := accepts offers evidence
+  simpa [Option.some.inj (found.symm.trans assigned)] using offered
+
+/-- A singleton takes priority. Otherwise a selected closed key narrows
+search to its admissible values. Without either, keep all supported moves. -/
 def Scheduled (rules : List Rule) (forced : Database → Option Fact)
+    (closedKey : Database → Option Nat)
     (current : Database) (key value : Nat) : Prop :=
   match forced current with
   | some choice => (key, value) = choice
-  | none => allowed rules current key value ∧
+  | none => (∀ selected, closedKey current = some selected → key = selected) ∧
+      allowed rules current key value ∧
       ∃ rule ∈ rules, enabled current rule ∧
         offersExtension current (assign current key value) rule.head
 
 theorem compatible_model_has_scheduled_step (rules : List Rule)
-    (forced : Database → Option Fact)
+    (forced : Database → Option Fact) (closedKey : Database → Option Nat)
     (justified : ∀ current key value, forced current = some (key, value) →
       current key = none ∧ ∃ seed restrictions,
         (∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key seed) ∧
         (∀ values ∈ restrictions,
           ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key values) ∧
         constrainedValues seed restrictions = [value])
+    (required : ∀ current key, closedKey current = some key →
+      current key = none ∧
+      ∃ rule ∈ rules, enabled current rule ∧ ∃ values, rule.head = .closed key values)
     (current model : Database) (target : solution rules model)
     (fits : ∀ key value, current key = some value → model key = some value)
     (different : current ≠ model) :
     ∃ key value, current key = none ∧ model key = some value ∧
-      Scheduled rules forced current key value := by
+      Scheduled rules forced closedKey current key value := by
   cases decision : forced current with
   | some pair =>
     obtain ⟨key, value⟩ := pair
@@ -793,6 +820,18 @@ theorem compatible_model_has_scheduled_step (rules : List Rule)
       closed_intersection_forced current model key value seed restrictions
         rules source others fits target.2 singleton, by simp [Scheduled, decision]⟩
   | none =>
+    by_cases selected : ∃ key, closedKey current = some key
+    · obtain ⟨key, selection⟩ := selected
+      obtain ⟨unset, rule, member, active, values, head⟩ := required current key selection
+      obtain ⟨value, assigned, offered, permitted⟩ :=
+        compatible_closed_key_has_value rules current model key values
+          ⟨rule, member, active, head⟩ target.2 fits
+      refine ⟨key, value, unset, assigned, ?_⟩
+      simp only [Scheduled, decision]
+      refine ⟨fun k found => Option.some.inj (selection.symm.trans found),
+        permitted, rule, member, active, ?_⟩
+      rw [head]
+      exact ⟨unset, value, offered, rfl⟩
     have missing : ∃ key value, model key = some value ∧ current key ≠ some value := by
       by_cases existsMissing : ∃ key value, model key = some value ∧ current key ≠ some value
       · exact existsMissing
@@ -816,11 +855,12 @@ theorem compatible_model_has_scheduled_step (rules : List Rule)
     have recordStep (key value : Nat) (unset : current key = none)
         (same : successor = assign current key value) :
         ∃ key value, current key = none ∧ model key = some value ∧
-          Scheduled rules forced current key value := by
+          Scheduled rules forced closedKey current key value := by
       have assigned := preserves key value (by simp [same, assign])
       refine ⟨key, value, unset, assigned, ?_⟩
       simp only [Scheduled, decision]
-      refine ⟨?_, rule, member, active, same ▸ extension⟩
+      refine ⟨fun k found => False.elim (selected ⟨k, found⟩), ?_,
+        rule, member, active, same ▸ extension⟩
       rintro values ⟨closedRule, inRules, enabledNow, head⟩
       have result := target.2 closedRule inRules
         (fun fact inBody => fits fact.1 fact.2 (enabledNow fact inBody))
@@ -841,16 +881,20 @@ theorem compatible_model_has_scheduled_step (rules : List Rule)
 saturated models on a finite support. Each compatible scheduled extension
 removes a missing key, even when deduction changes the derivation order. -/
 theorem exhausted_deduction_answers_exact (rules : List Rule)
-    (forced : Database → Option Fact) (processed accepted : Database → Prop)
+    (forced : Database → Option Fact) (closedKey : Database → Option Nat)
+    (processed accepted : Database → Prop)
     (justified : ∀ current key value, forced current = some (key, value) →
       current key = none ∧ ∃ seed restrictions,
         (∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key seed) ∧
         (∀ values ∈ restrictions,
           ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key values) ∧
         constrainedValues seed restrictions = [value])
+    (required : ∀ current key, closedKey current = some key →
+      current key = none ∧
+      ∃ rule ∈ rules, enabled current rule ∧ ∃ values, rule.head = .closed key values)
     (initial : processed (fun _ => none))
     (closed : ∀ current key value, processed current →
-      Scheduled rules forced current key value → processed (assign current key value))
+      Scheduled rules forced closedKey current key value → processed (assign current key value))
     (sound : ∀ current, processed current → Reachable rules current)
     (publish : ∀ current, accepted current ↔ processed current ∧ saturated rules current)
     (model : Database) (keys : List Nat)
@@ -869,7 +913,8 @@ theorem exhausted_deduction_answers_exact (rules : List Rule)
     by_cases same : current = model
     · exact same ▸ done
     · obtain ⟨key, value, unset, assigned, scheduled⟩ :=
-        compatible_model_has_scheduled_step rules forced justified current model target fits same
+        compatible_model_has_scheduled_step rules forced closedKey justified required
+          current model target fits same
       have member := missing key value assigned (by simp [unset])
       have smaller : (todo.erase key).length < n := by
         have nonempty := List.length_pos_of_mem member

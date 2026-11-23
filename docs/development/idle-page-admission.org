@@ -168,3 +168,37 @@ The interleaving gain survives, while the smaller P95 change at width
 or latency promotion. The isolated sources and measurements are
 retained in the cache. This change leaves the earlier full-list
 failure evidence and original 100 ms / 90-second limits intact.
+
+** Reusing the lock entry and exit closures
+
+This experiment changes only the two short lifecycle sections.
+The runtime's =with-dynamic-lock= uses =dynamic-wind= with thunks
+that lock and unlock the mutex. The candidate shares both thunks
+within one Session while retaining =dynamic-wind= at each entry.
+The cursor reservation and final checks are unchanged.
+
+In the native micro-control, 1232 iterations with the same cursor
+scope reduced the allocation counter from 2484224 to 2247680.
+Neither arm collected. The original and shared-thunk variants both
+released the lock on a nonlocal exit and reacquired it on reentry.
+The lower-allocation =with-lock= variant left the mutex owned when
+the continuation escaped. This is a difference in unwinding
+semantics, so the candidate retains =dynamic-wind=.
+
+One paired native shard per width compared the two short-gate
+variants through the same public API. Both arms verified 25
+complete requests per width, with the same fields, order, and
+limits. The saved-thunk variant passed the three interleaving
+cases for publish and close, a queued reader, and caller interrupt.
+
+| Width | Allocation counter median | Complete P95 (ms) |
+|-------+---------------------------+-------------------|
+| 128 | 4018688 -> 3821504 | 62.123 -> 192.969 |
+| 512 | 4092352 -> 3895328 | 144.797 -> 124.645 |
+
+The reduction is close to 160 accounting units per pull in both
+cases, about five percent of the short-gate totals. The single-shard
+P95 changed in opposite directions. This result supports the
+allocation effect and supplies no stable wall benefit. The
+prototype stays in the cache. The production Session, 100 ms /
+90-second gates and 105.93 ms failure receipt are unchanged.

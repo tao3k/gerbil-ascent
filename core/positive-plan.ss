@@ -25,6 +25,8 @@
         make-positive-plan-cost positive-plan-cost-snapshot positive-plan-cost-visits
         call-with-positive-plan-cost current-positive-plan-cost
         current-retained-positive-plan-cost
+        make-bounded-static-prefix-cache static-prefix-cache-sources
+        current-static-prefix-cache current-static-prefix-relation?
         positive-plan-cost-admit! positive-plan-cost-begin! positive-plan-cost-index!)
 
 ;;; Diagnostic ownership is one fresh serial solve over canonical pure Set
@@ -56,6 +58,13 @@
 ;; The private retained choice measurement aggregates matcher events across
 ;; successive completed cuts. Fresh-solve admission remains separate.
 (def current-retained-positive-plan-cost (make-parameter #f))
+(defstruct static-prefix-cache (sources entries remaining) final: #t)
+(defstruct static-prefix-entry (rows slots records charge) final: #t)
+(def current-static-prefix-cache (make-parameter #f))
+(def current-static-prefix-relation? (make-parameter #f))
+
+(def (make-bounded-static-prefix-cache sources budget)
+  (make-static-prefix-cache sources (make-hash-table-eq) budget))
 (def (call-with-positive-plan-cost cost thunk)
   (unless (and (native-plan-cost? cost) (procedure? thunk))
     (error "invalid native positive-plan cost collector"))
@@ -248,6 +257,53 @@
   (cost-add! cost 2)
   (emit-parts-heads! heads frame emit-row! cost))
 
+;; The caller admits only the first atom of a pure plan on a static
+;; relation. Check the actual ordered row list used by the native reader
+;; before replaying across evaluator instances.
+(def (visit-static-prefix! (cache :- static-prefix-cache) action rows frame accept! cost)
+  (let (saved (hash-get cache.entries action))
+    (if (and saved (or (eq? rows (static-prefix-entry-rows saved))
+                       (equal? rows (static-prefix-entry-rows saved))))
+      (using (saved :- static-prefix-entry)
+        (set! saved.rows rows)
+        (if saved.records
+          (for-each
+           (lambda (record)
+             (cost-add! cost 28)
+             (for-each (lambda (slot value) (vector-set! frame slot value))
+                       saved.slots (cdr record))
+             (accept! #t (car record) #t))
+           saved.records)
+          (let ((left (car saved.slots)) (right (cadr saved.slots)))
+            (for-each
+             (lambda (row)
+               (cost-add! cost 28)
+               (vector-set! frame left (car row))
+               (vector-set! frame right (cadr row))
+               (accept! #t row #t))
+             rows))))
+      (let* ((terms (vector-ref action 1))
+             (slots (filter-map (lambda (term) (and (eq? 'fresh (car term)) (cdr term))) terms))
+             (direct-pair? (and (= (length terms) 2) (= (length slots) 2)))
+             (space (+ cache.remaining (if saved (static-prefix-entry-charge saved) 0)))
+             (charge (+ 4 (length slots))) (record-charge (if direct-pair? 0 (+ 2 (length slots))))
+             (records []))
+        (for-each
+         (lambda (row)
+           (let (matched (match-row! terms row frame))
+             (when (and direct-pair? (not matched)) (set! charge (+ space 1)))
+             (set! charge (+ charge 1 (if matched record-charge 0)))
+             (if (<= charge space)
+               (when (and matched (not direct-pair?))
+                 (set! records
+                   (cons (cons row (map (lambda (slot) (vector-ref frame slot)) slots)) records)))
+               (set! records []))
+             (accept! matched row #f))) rows)
+        (when (<= charge space)
+          (set! cache.remaining (- space charge))
+          (hash-put! cache.entries action
+            (make-static-prefix-entry rows slots (and (not direct-pair?) (reverse! records)) charge)))))))
+
 ;;; PartsAccess is private exact canonical selection, synchronous and complete.
 ;;; A false return must invoke no consumer; custom/overselecting providers use RowsAccess.
 ;;; Explicit rows keep the direct list loop; frozen views invoke a local visitor.
@@ -367,11 +423,17 @@
                                    delta? (vector-ref action 2))))
             (cond
               ((or (pair? rows) (null? rows))
-               (let candidates ((remaining rows))
-                 (unless (null? remaining)
-                   (accept (match-row! (vector-ref action 1) (car remaining) frame)
-                           (and cost (car remaining)) action #f)
-                   (candidates (cdr remaining)))))
+               (let* ((static? (and (= depth 0) (not delta?) (current-static-prefix-relation?)))
+                      (cache (and static? (static? (vector-ref (vector-ref action 0) 0))
+                                  (current-static-prefix-cache))))
+                 (if cache
+                   (visit-static-prefix! cache action rows frame
+                     (lambda (matched row replayed?) (accept matched (and cost row) action replayed?)) cost)
+                   (let candidates ((remaining rows))
+                     (unless (null? remaining)
+                       (accept (match-row! (vector-ref action 1) (car remaining) frame)
+                               (and cost (car remaining)) action #f)
+                       (candidates (cdr remaining)))))))
               ((compiled-provider-packet? rows)
                (let* ((terms (vector-ref action 1))
                       (width (vector-match-width terms)))

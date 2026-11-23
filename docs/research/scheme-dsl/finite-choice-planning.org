@@ -133,16 +133,13 @@ branch for open choices. The present ASCENT state records only positive
 assignments. MiniDusa's =private/runtime.rkt= illustrates deduction before
 search and matches rule premises when checking for the next deduction.
 
-The first incremental choice implementation consumes only the verified
-new offer rows of a completed direct child and checks its assignment
-against the previous closed intersection. On sibling replacement it
-rebuilds from that sibling's publication. The representative benchmark
-counts prefix firings and offer reads separately, since earlier
-grounding work can still be repeated when restoring another cut. Its
-small-graph results and the Lean obligations are in the
-[[file:../../../dev/finite-choice/README.org][finite-choice notes]].
-
-Sharing offer or matching state across siblings would require a branch
-identity and proof that each cached witness still belongs to the
-installed cut. That refinement and its cost on larger representative
-graphs remain open.
+The incremental choice implementation consumes only the verified new
+offer rows of a completed direct child. A single saved parent allows
+some alternatives to resume from that parent's offers and closure.
+Branch-invariant first atoms can also reuse checked matching rows in
+publication order. The
+[[file:../../../dev/finite-choice/README.org][finite-choice notes]]
+record the measured restore counts, timed workloads and Lean
+obligations. Copying a constraint table and rebuilding the parent's
+mutable indexes still costs time. POO's graph index ownership and
+sparse edits give a concrete design to compare at this boundary.

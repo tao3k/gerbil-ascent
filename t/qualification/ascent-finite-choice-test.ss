@@ -4,7 +4,9 @@
 
 (import :std/test
         (only-in :gerbil-ascent/program/api relational-choice-program relational-choice-solve
-                 RelationalChoiceLimit? relational-program-query)
+                 RelationalChoiceLimit? relational-program-query relational-program
+                 relational-program-session-run)
+        (only-in :gerbil-ascent/program/scheme-session relational-open-program-session/choice)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
         (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement)
         (only-in "../../dev/finite-choice/oracle.ss" finite-choice-solutions))
@@ -162,6 +164,23 @@
           (check-equal? (map (cut relational-program-query <> 'color provenance?: #t) delta)
                         (map (cut relational-program-query <> 'color provenance?: #t) full))
           (check (> (cdr (assq 'extensions delta-work)) 0) => #t))))
+    (test-case "a saved parent is scoped to one live session and branch identity"
+      (let* ((program (relational-program (relation input (value) '((1))) (limits 8 8 8)))
+             (left #f) (right #f) (save #f)
+             (branch (list 'parent))
+             (first (relational-open-program-session/choice program
+                      (lambda (_ capture restore) (set! save capture) (set! left restore))))
+             (second (relational-open-program-session/choice program
+                       (lambda (_ _capture restore) (set! right restore)))))
+        (relational-program-session-run first)
+        (relational-program-session-run second)
+        (let (saved (save branch))
+          (check (and saved #t) => #t)
+          (check-exception (left saved (list 'parent)) true)
+          (check-exception (right saved branch) true)
+          (left saved branch)
+          (check-equal? (relational-program-query (relational-program-session-run first) 'input)
+                        '((1))))))
     (test-case "distinct named and anonymous body witnesses count as distinct grounding rows"
       (let* ((edges '((0 1) (0 2)))
              (make-program

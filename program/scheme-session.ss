@@ -8,7 +8,7 @@
         (only-in "scheme-query.ss" relational-export
                  make-relational-solution make-relational-program-solution)
         (only-in "scheme-checked.ss" relational-copy-row relational-copy-rows)
-        (only-in "session.ss" gerbil-ascent-open-session gerbil-ascent-open-session/row-reader
+        (only-in "session.ss" gerbil-ascent-open-session gerbil-ascent-open-session/choice
                  gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-replace-sources! gerbil-ascent-session-run)
         (only-in "types.ss" GerbilAscentFragmentContract)
@@ -16,7 +16,7 @@
         (only-in :clan/poo/type validate)
         (only-in :std/list/list find))
 (export relational-open-session relational-open-program-session
-        relational-open-program-session/row-reader
+        relational-open-program-session/choice
         relational-session-append-source! relational-session-replace-source!
         relational-session-replace-sources! relational-session-transaction!
         relational-session-prepare-transaction relational-session-prepare-replacements
@@ -51,18 +51,18 @@
 (def (relational-open-program-session program)
   (open-program-session program #f))
 
-(def (relational-open-program-session/row-reader program receive)
+(def (relational-open-program-session/choice program receive)
   (open-program-session program receive))
 
-(def (open-program-session program receive-row-reader)
+(def (open-program-session program receive-choice-operations)
   (let* ((snapshot (relational-snapshot-program program))
          (arities (relational-source-arities snapshot)))
     ;; Compiled programs may contain derived relations. Their query handles
     ;; are not update authority: every checked mutation uses this immutable
     ;; source-only arity list, shared with fragment Sessions below.
     (make-relational-program-session
-     (if receive-row-reader
-       (gerbil-ascent-open-session/row-reader snapshot receive-row-reader)
+     (if receive-choice-operations
+       (gerbil-ascent-open-session/choice snapshot receive-choice-operations)
        (gerbil-ascent-open-session snapshot))
      arities)))
 

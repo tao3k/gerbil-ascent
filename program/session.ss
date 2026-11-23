@@ -24,7 +24,7 @@
 (import :gerbil-ascent/core/execution-control)
 
 (export gerbil-ascent-open-session
-        gerbil-ascent-open-session/row-reader
+        gerbil-ascent-open-session/choice
         gerbil-ascent-session-append-source!
         gerbil-ascent-session-replace-source!
         gerbil-ascent-session-replace-sources!
@@ -38,10 +38,12 @@
                                  measure-rule-times?: (measure-rule-times? #f))
   (open-session program measure-rule-times? #f))
 
-(def (gerbil-ascent-open-session/row-reader program receive)
+(def (gerbil-ascent-open-session/choice program receive)
   (open-session program #f receive))
 
-(def (open-session program measure-rule-times? receive-row-reader)
+(defstruct session-choice-cut (owner branch sources snapshot result publication) final: #t)
+
+(def (open-session program measure-rule-times? receive-choice-operations)
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
   ;; Capture the optional retention policy once. Recovery/revision cannot
@@ -397,13 +399,42 @@
                 (set! partial? #f))
               (set! partial? #t))
             result))))
-    ;; The private choice owner receives only tokens for this exact completed
-    ;; result. Keep the engine and its mutable vectors behind the reader.
-    (when receive-row-reader
-      (receive-row-reader
-       (lambda (completed name)
-         (and clean? (eq? completed committed-result)
-              ((engine-state-publication engine) completed name)))))
+    (when receive-choice-operations
+      (let (owner (cons #f #f))
+        (def (read-root completed name)
+          (and clean? (eq? completed committed-result)
+               ((engine-state-publication engine) completed name)))
+        (def (save branch)
+          (check-idle!)
+          (and clean? (not partial?)
+               (andmap (lambda (relation) (not (eq? (.ref relation 'storage-kind) 'lattice)))
+                       initial-relations)
+               (let* ((cut (prepare-source-cut committed))
+                      (candidate (source-snapshot-program cut))
+                      (publication ((engine-state-publication engine))))
+                 (and publication (gerbil-ascent-update-eligible? candidate cut)
+                      (make-session-choice-cut owner branch (snapshot-copy committed)
+                        cut committed-result publication)))))
+        (def (restore! saved parent)
+          (check-idle!)
+          (ascent-execution-checkpoint!)
+          (using (saved :- session-choice-cut)
+            (unless (and clean? (eq? saved.owner owner) (eq? saved.branch parent))
+              (error "invalid ASCENT choice parent"))
+            (let* ((candidate (source-snapshot-program saved.snapshot))
+                   (fresh (updated-engine saved.sources candidate saved.result
+                            engine-analysis engine-schema measure-rule-times?
+                            saved.snapshot saved.publication))
+                   (result ((engine-state-run fresh))))
+              (unless (.ref result 'finished) (error "ASCENT choice parent did not complete"))
+              (ascent-accept-publication!)
+              (adopt-engine! fresh saved.snapshot)
+              (set! pending (snapshot-copy saved.sources))
+              (set! committed (snapshot-copy saved.sources))
+              (set! committed-result result)
+              (set! last-result result)
+              result)))
+        (receive-choice-operations read-root save restore!)))
     (gerbil-ascent-make-session-value
       (if direct-appends? direct-append-source! append-source!)
       replace-source! replace-sources! run! run-timeout!)))

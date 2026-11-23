@@ -7,7 +7,7 @@
         (only-in :gerbil-ascent/program/api relational-choice-program
                  relational-choice-solve relational-program-query)
         (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement))
-(export dusa-representative-test)
+(export dusa-representative-test dusa-parent-representative-test)
 
 ;; Figure 3 of Finite-Choice Logic Programming (POPL 2025).
 (def (representative-program nodes arcs)
@@ -70,15 +70,17 @@
                             (iota (- width left 1) (+ left 1))))
                      (iota width))))
 
-(def (measure-graph label nodes arcs)
+(def (measure-graph label nodes arcs (restore-parent? #f))
   (let* ((program (representative-program nodes arcs))
          (expected (oracle-models (components nodes arcs)))
-         (full-times []) (delta-times []) (full-work #f) (delta-work #f))
-    (def (run rescan?)
+         (full-times []) (delta-times []) (full-total []) (delta-total [])
+         (full-work #f) (delta-work #f))
+    (def (run reference?)
       (call-with-relational-choice-measurement
-       (lambda () (relational-choice-solve program state-budget: 20000)) rescan?))
+       (lambda () (relational-choice-solve program state-budget: 20000))
+       (if restore-parent? (and reference? 'direct) (if reference? #t 'direct))))
     (def (stable-work receipt)
-      (filter (lambda (entry) (not (eq? (car entry) 'first-model-ns))) receipt))
+      (filter (lambda (entry) (not (memq (car entry) '(first-model-ns total-ns)))) receipt))
     (for-each
      (lambda (repetition)
        (let*-values (((first first-work) (run (even? repetition)))
@@ -91,25 +93,35 @@
            (check-equal? (andmap (lambda (want) (and (member want rows) #t)) expected) #t)
            (check-equal? rows (model-rows second))
            (check-equal? (model-witnesses first) (model-witnesses second))
-           (check-equal? (count full 'partial-matches) (count delta 'partial-matches))
            (check-equal? (count full 'states) (count delta 'states))
-           (check-equal? (count full 'new-offers) (count delta 'new-offers))
            (check-equal? (count delta 'repeated-offers) 0)
-           (check (> (count full 'repeated-offers) 0) => #t)
            (check (> (count delta 'extensions) 0) => #t)
+           (if restore-parent?
+             (begin
+               (check (< (count delta 'source-replacements) (count full 'source-replacements)) => #t)
+               (check (< (count delta 'partial-matches) (count full 'partial-matches)) => #t)
+               (check (> (count delta 'parent-restores) 0) => #t))
+             (begin
+               (check-equal? (count full 'partial-matches) (count delta 'partial-matches))
+               (check-equal? (count full 'new-offers) (count delta 'new-offers))
+               (check (> (count full 'repeated-offers) 0) => #t)))
            (when full-work
              (check-equal? (stable-work full) full-work)
              (check-equal? (stable-work delta) delta-work))
            (set! full-work (stable-work full))
            (set! delta-work (stable-work delta))
            (set! full-times (cons (count full 'first-model-ns) full-times))
-           (set! delta-times (cons (count delta 'first-model-ns) delta-times)))))
+           (set! delta-times (cons (count delta 'first-model-ns) delta-times))
+           (set! full-total (cons (count full 'total-ns) full-total))
+           (set! delta-total (cons (count delta 'total-ns) delta-total)))))
      (iota 5))
-    (write (list 'DUSA-REPRESENTATIVE label (cons 'vertices (length nodes))
+    (write (list (if restore-parent? 'DUSA-PARENT 'DUSA-REPRESENTATIVE) label (cons 'vertices (length nodes))
                  (cons 'undirected-edges (length arcs)) (cons 'models (length expected))
                  (cons 'rescan full-work) (cons 'delta delta-work)
                  (cons 'rescan-first-model-ns (reverse full-times))
-                 (cons 'delta-first-model-ns (reverse delta-times))))
+                 (cons 'delta-first-model-ns (reverse delta-times))
+                 (cons 'rescan-total-ns (reverse full-total))
+                 (cons 'delta-total-ns (reverse delta-total))))
     (newline)))
 
 (def dusa-representative-test
@@ -118,3 +130,10 @@
     (test-case "dense component" (measure-graph 'clique (iota 12) (clique 12)))
     (test-case "disconnected components with an isolated vertex"
       (measure-graph 'disconnected (iota 11) (append (path 0 5) (path 5 5))))))
+
+(def dusa-parent-representative-test
+  (test-suite "Dusa Figure 3 with completed parent restore"
+    (test-case "48-vertex path" (measure-graph 'path (iota 48) (path 0 48) #t))
+    (test-case "22-vertex dense component" (measure-graph 'clique (iota 22) (clique 22) #t))
+    (test-case "two nine-vertex components and an isolated vertex"
+      (measure-graph 'disconnected (iota 19) (append (path 0 9) (path 9 9)) #t))))

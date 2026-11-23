@@ -35,8 +35,10 @@
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  make-positive-prefix-state current-positive-prefix-budget
+                 current-static-prefix-cache current-static-prefix-relation? static-prefix-cache-sources
                  gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?
                  current-positive-plan-cost positive-plan-cost-admit!)
+        (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
         (only-in "scheme-checked.ss" relational-scalar?)
         (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut row-indexes-publish-old-tail!)
@@ -794,7 +796,19 @@
             last-result
             (run-retained! (and duration (deadline-jiffy duration)))))
         (if session?
-          (let (published (gerbil-ascent-publication-cache count))
+          (let* ((published (gerbil-ascent-publication-cache count))
+                 (cache (current-static-prefix-cache))
+                 (static-prefix?
+                  (and cache stable-scalar-schema? positive-rules?
+                       (andmap gerbil-ascent-canonical-set-storage-provider?
+                               (vector->list storage-providers))
+                       (andmap gerbil-ascent-canonical-hash-index-provider?
+                               (vector->list index-providers))
+                       (let (affected (make-vector count #f))
+                         (for-each (lambda (name) (vector-set! affected (position-of name) #t))
+                                   (static-prefix-cache-sources cache))
+                         (gerbil-ascent-graph-close! (vector-ref analysis 6) affected)
+                         (lambda (index) (and (not first-run?) (not (vector-ref affected index))))))))
             (def (replay-source! mode index rows)
               ;; Both eager update forms prepare and solve before adoption.
               ;; Replacement recounts the complete prospective sources: failed
@@ -965,7 +979,12 @@
                 (replay-source! 'replace index rows)))
             (def (run-session!)
               (if recompute-from-source? last-result
-                (begin (vector-set! published 0 #f) (run-retained! published))))
+                (begin
+                  (vector-set! published 0 #f)
+                  (if static-prefix?
+                    (parameterize ((current-static-prefix-relation? static-prefix?))
+                      (run-retained! published))
+                    (run-retained! published)))))
             (def (run-timeout! duration-nanoseconds)
               (unless (and (exact-integer? duration-nanoseconds)
                            (>= duration-nanoseconds 0))

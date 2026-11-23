@@ -994,4 +994,52 @@ theorem sibling_offer_cache_exact {Offer Key : Type} [DecidableEq Key]
       witness ∈ current ∧ keyOf witness = key := by
   simp
 
+/-! Backtracking restores the completed parent of the queued alternative. -/
+
+structure ChoiceCheckpoint (Owner Branch Offer : Type) where
+  owner : Owner
+  branch : Branch
+  offers : List Offer
+
+def restoreChoiceCheckpoint {Owner Branch Offer : Type} [DecidableEq Owner] [DecidableEq Branch]
+    (saved : ChoiceCheckpoint Owner Branch Offer) (owner : Owner) (parent : Branch) :
+    Option (List Offer) :=
+  if saved.owner = owner ∧ saved.branch = parent then some saved.offers else none
+
+theorem restore_choice_checkpoint_exact {Owner Branch Offer : Type}
+    [DecidableEq Owner] [DecidableEq Branch]
+    (saved : ChoiceCheckpoint Owner Branch Offer) (owner : Owner) (parent : Branch)
+    (offers : List Offer) :
+    restoreChoiceCheckpoint saved owner parent = some offers ↔
+      saved.owner = owner ∧ saved.branch = parent ∧ saved.offers = offers := by
+  unfold restoreChoiceCheckpoint
+  split <;> simp_all
+
+/-- Replaying only a child's fresh offers reads the same witness set as
+reconstructing the child from its full closure. A discarded child's
+additional offers do not participate in the reconstruction. -/
+theorem restored_child_witness_exact {Owner Branch Offer : Type}
+    [DecidableEq Owner] [DecidableEq Branch]
+    (saved : ChoiceCheckpoint Owner Branch Offer) (owner : Owner) (parent : Branch)
+    (parentOffers childOffers delta : List Offer)
+    (installed : restoreChoiceCheckpoint saved owner parent = some parentOffers)
+    (complete : childOffers = parentOffers ++ delta) (witness : Offer) :
+    witness ∈ childOffers ↔ witness ∈ saved.offers ∨ witness ∈ delta := by
+  have exactParent := ((restore_choice_checkpoint_exact saved owner parent parentOffers).mp
+    installed).2.2
+  simp [complete, exactParent]
+
+def matchedPrefix {Row Slots : Type} (bind : Row → Option Slots) (rows : List Row) :
+    List (Row × Slots) :=
+  rows.filterMap fun row => (bind row).map (fun slots => (row, slots))
+
+/-- A shared first atom has no incoming slots. Checking the full ordered
+static view permits restoring its successful slot writes in the same order.
+The continuation and its branch-specific witnesses still execute afresh. -/
+theorem checked_static_prefix_exact {Row Slots : Type}
+    (bind : Row → Option Slots) (recorded current : List Row)
+    (sameOrder : current = recorded) :
+    matchedPrefix bind current = matchedPrefix bind recorded := by
+  rw [sameOrder]
+
 end Ascent.FiniteChoice

@@ -191,6 +191,34 @@ intersection, and scheduled steps return the same support order as a
 full read. The reader returns detached prefix rows. Published witnesses
 therefore keep their own rows when the current cache is cleared.
 
+** Backtracking to a completed parent
+
+Keep one checkpoint only while it has pending alternatives. The search
+entry names its actual parent by identity. The Session separately checks
+that the token belongs to this invocation and rebuilds mutable indexes
+from the parent's completed Set publication. With identical source logs
+there are no affected rules to rerun while restoring this parent.
+Apply the queued assignment through the normal append and fixed-point
+path. Restore the parent's constraint buckets, then consume only the new
+child offer rows using the existing suffix check. Other transitions use
+the ordinary source replacement and offer rebuild.
+
+=restore_choice_checkpoint_exact= checks the owner and parent selection.
+=restored_child_witness_exact= composes the selected parent with the
+child's delta. The mutable evaluator's restore code uses the existing
+completed-closure admission. No child retains the parent's writable
+index or constraint table. Saved witnesses share only detached rows.
+
+The native dependency graph marks every relation reachable from a
+choice write. Sharing a first-atom match across alternatives requires a
+completed relation outside that affected set, immutable scalar rows, a
+non-delta read, and equality of the ordered candidate rows. Its cached
+records include the matching row and the first atom's writes.
+=checked_static_prefix_exact= verifies the replay sequence for that
+ordered read. Downstream atoms are evaluated in the current cut. The
+retained records use a bounded invocation-local budget and pass through
+the original cancellation checkpoint during replay.
+
 ** Native representative workload
 
 [[https://arxiv.org/html/2405.19040v3#S3.SS2][Figure 3]] appoints one
@@ -220,6 +248,49 @@ The incremental arm rebuilt 24, 12 and 110 cuts, respectively. These
 small graphs measure removed offer reads. They give limited evidence
 about latency at larger graph sizes.
 
+** Larger representative workloads with parent restore
+
+The reference retains direct-child offer updates from the preceding
+implementation. The candidate also restores an owned parent and replays
+the checked static prefix. Run
+=gerbil test -r '^dusa-parent-representative-test$' benchmarks/dusa-representative-test.ss=.
+Each graph ran five alternating pairs. All ordered models and witness
+queries agreed between the two arms, and every model matched the
+independent component oracle.
+
+| Graph (vertices / undirected edges) | Models | States | Offer rebuilds, reference / candidate | Native prefix matches, reference / candidate | Median first model (ms) | Median full solve (ms) |
+|-------------------------------------+--------+--------+--------------------------------------+--------------------------------------------+-------------------------+------------------------|
+| Path (48 / 47) | 48 | 2305 | 48 / 1 | 221371 / 4889 | 8.064 / 8.051 | 205.904 / 200.694 |
+| Clique (22 / 231) | 22 | 485 | 22 / 1 | 234949 / 11803 | 8.246 / 8.513 | 103.257 / 98.867 |
+| Two paths and an isolated vertex (19 / 16) | 81 | 3080 | 342 / 307 | 109022 / 20318 | 5.982 / 5.929 | 250.316 / 266.695 |
+
+The candidate made 216482, 223146 and 88704 ordered prefix replays.
+In each case native matches plus replay events equal the reference
+matches. Ordinary source replacements fell from 47 to 0, 21 to 0,
+and 341 to 306. The disconnected graph spent 6.5 percent longer in
+the full solve. The single retained parent still leaves most such
+switches on the rebuild path. Timing includes the diagnostic counters.
+
+** POO graph and index correspondence
+
+The current =table/provider.ss= already uses sealed POO prototypes and
+=.defgeneric= for index build, extend and lookup. This remains the
+extension point for a table or graph-backed lookup implementation.
+POO's =feedback-graph.ss= uses a published SCC owner map and a revision
+guard. Its =support/index.ss= shares a cold base with sparse edits
+when creating a new owner. The relevant next adaptation is a
+structurally shared constraint/index root at a choice checkpoint.
+The current candidate copies its one checkpoint's constraint table and
+restores the evaluator with fresh mutable indexes.
+
+POO's published graph owner uses symbolic keys. The ASCENT evaluator
+uses dense relation positions and integer attribute IDs. A backend
+experiment should exercise the existing provider and keep ordered
+rows and revision ownership in the comparison. The Figure 3 graph
+partition is independent of which representative values are reachable
+through closed and open choice rules. The graph oracle checks expected
+models and provenance still follows the actual solver transitions.
+
 ** Derivation witness query
 
 #+begin_src scheme
@@ -236,4 +307,5 @@ the published solution and cannot read the current mutable Session or mix
 sibling cuts. The query runs the existing execution checkpoints. It reports a
 witness for the selected path. Exhaustive alternate derivations, recursive
 expansion of ordinary premise rows, cross-interface RuleModule =explain=,
-watched constraints and cross-branch prefix reuse remain open.
+and watched constraints remain open. Branch-dependent prefix reuse
+requires a separate ownership and invalidation argument.

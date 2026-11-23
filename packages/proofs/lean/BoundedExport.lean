@@ -640,6 +640,72 @@ theorem right_selection_filter_depth_order (groups : List (Bool × List α))
     rcases g with ⟨reverse, rows⟩
     cases reverse <;> simp [List.filter_append, List.filter_reverse, ih]
 
+/-- The existing origin lookup determines whether a label is internal.
+The terminal index only contains the last edge of each certified run. -/
+def incomingOrdinal (slots : List Int) (next : Int → Option Int)
+    (targetAt : Int → Int) (originOf : Int → Option Int) (direction key : Int) : List Int :=
+  match originOf key with
+  | some position =>
+    let previous := position - direction
+    if previous ∈ slots ∧ next previous = some position then [previous] else []
+  | none => slots.filter fun i => decide (next i = none ∧ targetAt i = key)
+
+theorem incoming_ordinal_membership (slots : List Int) (next : Int → Option Int)
+    (targetAt : Int → Int) (originOf : Int → Option Int) (direction key i : Int)
+    (sealed : ∀ j ∈ slots, originOf (targetAt j) = next j)
+    (unique : ∀ a b p, originOf a = some p → originOf b = some p → a = b)
+    (adjacent : ∀ j p, j ∈ slots → next j = some p → p = j + direction) :
+    i ∈ incomingOrdinal slots next targetAt originOf direction key ↔
+      i ∈ slots ∧ targetAt i = key := by
+  unfold incomingOrdinal
+  cases origin : originOf key with
+  | none =>
+    simp only [List.mem_filter, decide_eq_true_eq]
+    exact ⟨fun ⟨mem, _, label⟩ => ⟨mem, label⟩,
+      fun ⟨mem, label⟩ => ⟨mem, by rw [← sealed i mem, label, origin], label⟩⟩
+  | some position =>
+    dsimp only
+    by_cases yes : position - direction ∈ slots ∧ next (position - direction) = some position
+    · rw [if_pos yes]
+      constructor
+      · intro h
+        have same : i = position - direction := by simpa using h
+        subst i
+        exact ⟨yes.1, unique _ _ _ ((sealed _ yes.1).trans yes.2) origin⟩
+      · rintro ⟨mem, label⟩
+        have link : next i = some position := by rw [← sealed i mem, label, origin]
+        have ord := adjacent i position mem link
+        have same : i = position - direction := by omega
+        simp [same]
+    · rw [if_neg yes]
+      constructor
+      · simp
+      · rintro ⟨mem, label⟩
+        have link : next i = some position := by rw [← sealed i mem, label, origin]
+        have ord := adjacent i position mem link
+        have same : i = position - direction := by omega
+        exact (yes ⟨same ▸ mem, same ▸ link⟩).elim
+
+/-- Traversing terminal slots from the right and prepending to a bucket
+publishes the same ordered matches as filtering the original run sequence. -/
+theorem reverse_prepend_terminal_index (runs : List α) (accepts : α → Bool) :
+    runs.reverse.foldl (fun bucket run => if accepts run then run :: bucket else bucket) [] =
+      runs.filter accepts := by
+  induction runs with
+  | nil => rfl
+  | cons run rest ih =>
+    rw [List.reverse_cons, List.foldl_append, ih]
+    simp only [List.foldl_cons, List.foldl_nil, List.filter_cons]
+
+/-- Each unsuccessful enclosing-run probe at least halves the number of
+intervals. The worker uses the same midpoint for both bounds comparisons. -/
+theorem ordinal_containing_run_halves (lo hi : Nat) (openInterval : lo < hi) :
+    let mid := lo + (hi - lo) / 2
+    mid - lo ≤ (hi - lo) / 2 ∧ hi - (mid + 1) ≤ (hi - lo) / 2 ∧ mid < hi := by
+  dsimp
+  omega
+
+
 end Ascent.BoundedExport
 
 #print axioms Ascent.BoundedExport.completed_pulls_equal_full_result
@@ -674,3 +740,7 @@ end Ascent.BoundedExport
 #print axioms Ascent.BoundedExport.right_selection_predecessor_ordinals
 #print axioms Ascent.BoundedExport.right_selection_filter_depth_order
 #print axioms Ascent.BoundedExport.right_selection_targets_increase
+
+#print axioms Ascent.BoundedExport.incoming_ordinal_membership
+#print axioms Ascent.BoundedExport.reverse_prepend_terminal_index
+#print axioms Ascent.BoundedExport.ordinal_containing_run_halves

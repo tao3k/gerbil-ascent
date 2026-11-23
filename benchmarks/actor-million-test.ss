@@ -19,7 +19,7 @@
 (export actor-million-oracle-test actor-million-state-test
         actor-million-state-contention-test
         actor-million-query-test actor-million-recursive-test
-        million-query ten-million-query ten-million-paged-query
+        million-query ten-million-query ten-million-paged-query ten-million-target-query
         actor-ten-thousand-closure-test
         actor-million-list-delivery-test actor-million-visit-test
         actor-million-fields-test actor-million-fields-controls-test
@@ -488,6 +488,61 @@
             (list (cons 'width width) (cons 'groups groups) (cons 'shard shard)
                   (cons 'first-request (* shard requests)) (cons 'page-rows page-width)))
           (receipt 'first-page-samples (f64vector->list first-page))))
+      (finally (gerbil-ascent-session-close! session)))))
+
+(def (ten-million-target-query width)
+  (check (##current-vm-processor-count) => 1)
+  (let* ((groups (ten-million-groups width))
+         (expected (output-count groups width))
+         (session (open-session (make-query-cut groups width 0 #f) groups width #t)))
+    (try
+      (let* ((started (tick))
+             (result (gerbil-ascent-session-run session))
+             (publish-ns (nanoseconds started))
+             (visit (.ref result 'visit-rows))
+             (samples (vector (make-f64vector 400) (make-f64vector 400) (make-f64vector 400)))
+             (offsets (vector 0 0 0)))
+        (check (.ref result 'finished) => #t)
+        (check (cdr (assq 'reach ((.ref result 'relation-sizes)))) => expected)
+        (receipt 'ten-million-target-publication
+          (list (cons 'width width) (cons 'groups groups) (cons 'wall-ns publish-ns)))
+        (let ((before (##process-statistics)) (cpu (cpu-time)) (start (tick)))
+          (do ((i 0 (+ i 1))) ((= i 1200))
+            (let* ((kind (modulo i 3))
+                   (group (modulo (* 531 (quotient i 3)) groups))
+                   (base (* group width))
+                   (count (case kind ((0) (+ 1 (modulo (quotient i 3) 7)))
+                                      ((1) (- width 1)) (else 0)))
+                   (target (if (= kind 2) (+ (* groups width) i) (+ base count)))
+                   (rows [])
+                   (consume (lambda (left right) (set! rows (cons (cons left right) rows))))
+                   (sample (tick)))
+              (visit 'reach '(1) (list target) consume fields?: #t)
+              (let* ((ns (nanoseconds sample)) (slot (vector-ref offsets kind)))
+                (f64vector-set! (vector-ref samples kind) slot (exact->inexact ns))
+                (vector-set! offsets kind (+ slot 1)))
+              ;; The closed-form predecessor sequence is independent of
+              ;; the rule engine, and callbacks ran in increasing origin order.
+              (let verify ((rest rows) (left (+ base count -1)))
+                (if (< left base)
+                  (unless (null? rest) (error "extra target-bound query rows" target))
+                  (begin
+                    (unless (and (pair? rest) (= (caar rest) left) (= (cdar rest) target))
+                      (error "target-bound row missing or out of order" target left))
+                    (verify (cdr rest) (- left 1)))))))
+          (let* ((wall (nanoseconds start)) (used (- (cpu-time) cpu)) (after (##process-statistics)))
+            (receipt 'ten-million-target-total
+              (list (cons 'width width) (cons 'verified-requests 1200)
+                    (cons 'cpu-seconds used) (cons 'wall-ns wall)
+                    (cons 'gc-count (- (f64vector-ref after 6) (f64vector-ref before 6)))
+                    (cons 'gc-wall-seconds (- (f64vector-ref after 5) (f64vector-ref before 5)))))
+            (for-each
+              (lambda (name kind)
+                (let (ordered (list-sort < (f64vector->list (vector-ref samples kind))))
+                  (receipt 'ten-million-target-selection
+                    (list (cons 'width width) (cons 'query name) (cons 'samples 400)
+                          (cons 'p95-ns (list-ref ordered 379)) (cons 'max-ns (list-ref ordered 399))))))
+              '(interior terminal miss) '(0 1 2)))))
       (finally (gerbil-ascent-session-close! session)))))
 
 (def actor-million-state-test

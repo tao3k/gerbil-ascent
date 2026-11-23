@@ -676,7 +676,8 @@
                              (ordinal-run-count (cdr runs) room checkpoint! fallback)
                              (functional-distance-count next size room checkpoint! fallback)))
                     (depths (and runs (ordinal-visit-depth runs count checkpoint!))))
-               (make-functional-view origin-ordinal origins targets next size count runs depths)))))))
+               (make-functional-view origin-ordinal origins targets next size count runs depths
+                 (and depths (index-ordinal-terminals runs targets checkpoint!)))))))))
 
 ;; An admitted subwindow has two cells per row, with all fields already
 ;; certified as fixnums. Its final zero to three rows use the same recurrence.
@@ -705,48 +706,76 @@
           (##s64vector-set! destination (fx+ at 7) (fxwrap+ right advance3))
           (blocks (fx+ at 8) (fxwrap+ left advance4) (fxwrap+ right advance4)))))))
 
-(def (ordinal-target-position targets forward? target lo hi)
-  (let search ((low lo) (high hi))
-    (and (fx< low high)
-         (let* ((middle (fx+ low (fxquotient (fx- high low) 2)))
-                (value (##u64vector-ref targets middle)))
-           (cond ((fx= value target) middle)
-                 ((if forward? (fx< value target) (fx< target value))
-                  (search (fx+ middle 1) high))
-                 (else (search low middle)))))))
+(defrule (ordinal-terminal-edge bounds direction run)
+  (if (fx> direction 0)
+    (fx- (vector-ref bounds (fx+ run 1)) 1)
+    (vector-ref bounds run)))
 
-(def (collect-ordinal-target runs depths origins targets target matches?)
+(def (index-ordinal-terminals runs targets checkpoint!)
   (let* ((direction (car runs)) (bounds (cdr runs))
-         (forward? (fx> direction 0)) (end (fx- (vector-length bounds) 1))
-         (buckets (make-vector depths [])) (used 0))
-    ;; A terminal target can be shared by multiple runs. In one run each
-    ;; distance supplies exactly one predecessor. Scanning runs in ordinal
-    ;; order and consing yields descending ordinals within each bucket.
-    (let visit ((run 0))
-      (unless (fx= run end)
-        (let* ((lo (vector-ref bounds run)) (hi (vector-ref bounds (fx+ run 1)))
-               (hit (ordinal-target-position targets forward? target lo hi)))
-          (when hit
-            (let ((count (if forward? (fx+ (fx- hit lo) 1) (fx- hi hit))))
-              (set! used (max used count))
-              (let prepend ((i hit) (depth 0))
-                (unless (fx= depth count)
-                  (let (origin (##u64vector-ref origins i))
-                    (when (matches? origin target)
-                      (vector-set! buckets depth
-                        (cons (list origin target) (vector-ref buckets depth)))))
-                  (prepend (fx- i direction) (fx+ depth 1)))))))
-        (visit (fx+ run 1))))
-    ;; The complete collector conses lower depths first. Its even depths
-    ;; finish in descending ordinal order and odd depths in ascending order.
-    (with-list-builder (collect!)
-      (let depth ((i (fx- used 1)))
-        (unless (fx< i 0)
-          (let (rows (vector-ref buckets i))
-            (for-each collect! (if (odd? i) (reverse! rows) rows)))
-          (depth (fx- i 1)))))))
+         (terminals (make-hash-table-eqv)))
+    (let index ((run (fx- (vector-length bounds) 2)))
+      (if (fx< run 0) terminals
+        (let (label (##u64vector-ref targets (ordinal-terminal-edge bounds direction run)))
+          (checkpoint!)
+          (hash-update! terminals label (lambda (later) (cons run later)) [])
+          (index (fx- run 1)))))))
 
-(def (make-functional-view origin-ordinal origins targets next size count runs depths)
+(def (ordinal-containing-run bounds edge)
+  (let search ((lo 0) (hi (fx- (vector-length bounds) 1)))
+    (let (mid (fx+ lo (fxquotient (fx- hi lo) 2)))
+      (cond ((fx< edge (vector-ref bounds mid)) (search lo mid))
+            ((fx>= edge (vector-ref bounds (fx+ mid 1))) (search (fx+ mid 1) hi))
+            (else mid)))))
+
+(def (collect-ordinal-target runs depths origins next origin-ordinal terminals target matches?)
+  (let* ((direction (car runs)) (bounds (cdr runs)) (forward? (fx> direction 0)))
+    (def (stop run)
+      (if forward?
+        (fx- (vector-ref bounds run) 1)
+        (vector-ref bounds (fx+ run 1))))
+    (def (single-run edge run)
+      (let (end (stop run))
+        (let prepend ((i edge) (rows []))
+          (if (fx= i end) rows
+            (let (origin (##u64vector-ref origins i))
+              (prepend (fx- i direction)
+                (if (matches? origin target) (cons (list origin target) rows) rows)))))))
+    (def (shared-terminal hits)
+      (let ((buckets (make-vector depths [])) (used 0))
+        (for-each
+         (lambda (run)
+           (let (end (stop run))
+             (let prepend ((i (ordinal-terminal-edge bounds direction run)) (depth 0))
+               (if (fx= i end) (set! used (max used depth))
+                 (let (origin (##u64vector-ref origins i))
+                   (when (matches? origin target)
+                     (vector-set! buckets depth
+                       (cons (list origin target) (vector-ref buckets depth))))
+                   (prepend (fx- i direction) (fx+ depth 1)))))))
+         hits)
+        ;; Each bucket retains the public order of that depth.
+        (with-list-builder (collect!)
+          (let depth ((i (fx- used 1)))
+            (unless (fx< i 0)
+              (let (rows (vector-ref buckets i))
+                (for-each collect! (if (odd? i) (reverse! rows) rows)))
+              (depth (fx- i 1)))))))
+    (let (origin (origin-ordinal target))
+      (if origin
+        (let (edge (fx- origin direction))
+          (if (and (fx>= edge 0) (fx< edge (s32vector-length next))
+                   (fx= (##s32vector-ref next edge) origin))
+            (single-run edge (ordinal-containing-run bounds edge))
+            []))
+        (let (hits (or (hash-get terminals target) []))
+          (cond ((null? hits) [])
+                ((null? (cdr hits))
+                 (let (run (car hits))
+                   (single-run (ordinal-terminal-edge bounds direction run) run)))
+                (else (shared-terminal hits))))))))
+
+(def (make-functional-view origin-ordinal origins targets next size count runs depths terminals)
   ;; Each read advances one edge per live origin. Successor positions compact
   ;; stably in the current direction, then the next delta reverses that order.
   (defrule (gather origin target keep?)
@@ -794,7 +823,7 @@
                   (if (matches? selected target) (cons (list selected target) output) output)))
               output))
           (if (and depths (not column) (fixnum? (car key)))
-            (collect-ordinal-target runs depths origins targets (car key) matches?)
+            (collect-ordinal-target runs depths origins next origin-ordinal terminals (car key) matches?)
             (gather left right (matches? left right)))))))
   (def (visit-parts columns key consume)
     (if (and depths (null? columns))

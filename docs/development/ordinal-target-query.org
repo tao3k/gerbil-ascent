@@ -1,0 +1,108 @@
+#+TITLE: Indexed right-bound functional closure
+
+* Source correspondence
+
+Applying a known binding before traversing a recursive relation is a
+central idea in [[https://doi.org/10.1145/6012.15399][Magic Sets]].
+Here the binding selects predecessors in an already admitted functional
+view, using the existing forward-link certificate.
+
+The terminal functional worker already links each binary edge to the
+unique ordinal whose origin equals its target. The ordinal recognizer
+checks that every nonterminal link advances by the same signed unit.
+Missing links divide that order into disjoint runs. The prior
+=collect-ordinal-target= searches every run, then emits its matching
+predecessors by decreasing depth and alternating ordinal order.
+
+=incoming_ordinal_membership= derives the exact incoming edges. An
+internal label can only be reached by the edge one signed unit before
+its origin ordinal; the worker checks that this edge actually links to
+the requested ordinal. A terminal label can be shared by several runs.
+Its bucket contains only run ends with that label.
+=reverse_prepend_terminal_index= proves that building the buckets from
+right to left retains ascending run order. The existing predecessor and
+depth-order lemmas account for output order within and across runs.
+A single matching run can emit its predecessors directly without
+building depth buckets.
+
+The target index belongs to the same immutable view as the successor
+vector and run bounds. It is prepared after admission of the output
+cardinality and installed only when that Result publishes. Rejected
+candidates release their private data; retained Results continue to
+address their original view. This is the same publication boundary as
+the functional view cache in =program/actor-session.ss=.
+The existing source checkpoints, Result contracts and paging commit
+protocol still apply. The proof is about the run representation and
+its ordered selection; native tests exercise the Scheme translation.
+
+* Work bounds
+
+With R ordinal runs, the old selector probes all R runs for hits and
+misses. The new selector uses one origin-index lookup, one in-range
+successor check, and at most 11 enclosing-run probes for R = 1240 or
+7 for R = 77. =ordinal_containing_run_halves= checks the same interval
+updates used by =ordinal-containing-run=. Terminal queries use one
+origin lookup and one terminal lookup, followed by just the matched
+runs. Publication builds at most one index entry per run. A shared
+terminal can still require O(depth) scratch slots plus its output.
+
+Selecting a small subset can skip unrelated graph work. Full page
+delivery must write both fields of every output row into the admitted
+buffer and the independent oracle must read each row. Consequently the
+full-delivery comparison measures the cost of adding the index to
+publication and retaining its roots. It keeps the original 8192-row
+pages, 256 KiB combined buffer allowance, and alternating source cuts.
+
+* Native paired acceptance
+
+Reference =2ed4dc73= and the candidate used the same Gerbil executable
+with Gambit =2df89af=, production compilation flags, one VM processor,
+2 GiB heap, and the 90-second process watchdog. Both arms loaded the
+same compiled native test module through =gerbil test=. The test
+processes ran sequentially, alternating the arm order by shard.
+Results below include every completed shard.
+
+Right-bound queries run against the same ten-million-row publications.
+Each arm and width checked 4,800 queries in four processes, with 1,600
+checks per target kind. The independent chain oracle checks every row
+and its position. The reported query latency is the median of four
+shard P95 values. The query clock includes callback delivery and ends
+before verification. The native interface tests additionally cover
+shared terminals, both ordinal directions, misses, contradictory
+bindings and retained older results.
+
+| Width | Interior P95 (us) | Terminal P95 (us) | Miss P95 (us) |
+|-------+------------------+------------------+---------------|
+|   128 | 26.375 -> 1.041  | 30.145 -> 4.479   | 27.312 -> 0.500 |
+|   512 | 4.042 -> 1.478   | 27.270 -> 20.270  | 4.167 -> 1.020 |
+
+At width 128 the whole target suite used 122.04 -> 146.26 ms of CPU
+summed across the four shards. The candidate recorded four collections
+totalling 154.33 ms wall, while the reference recorded zero. At width
+512 suite CPU was 161.96 -> 143.35 ms with four collections in each
+arm. Query P95 is not a whole-suite CPU measure.
+
+The full page test verifies every delivered field inside the request
+clock. Each width and arm completed all 40 shards and 1,000 timed
+requests. The 128-wide fixture delivered 10,078,720 rows per request
+and the 512-wide fixture delivered 10,072,832 rows.
+
+| Width | First page P95 (ms) | Completion P95 (ms) | Max (ms) | At least 100 ms | Rows/s (millions) | Collections and GC wall (s) |
+|-------+---------------------+---------------------+----------+-----------------+--------------------+-----------------------------|
+|   128 | 8.341 -> 15.056    | 98.887 -> 81.687   | 797.79 -> 933.76  | 50 -> 32 | 168.37 -> 166.57 | 40 / 1.915 -> 40 / 1.714 |
+|   512 | 3.985 -> 1.925     | 81.445 -> 71.362   | 1026.14 -> 1473.84 | 49 -> 29 | 168.89 -> 177.58 | 40 / 1.768 -> 40 / 2.132 |
+
+All 176 native processes returned OK; the slowest completed in 32.927 s.
+The longest request in each of the four pagination lanes occurred in
+shard 34. The two candidate maxima exceeded even their entire shard's
+measured GC wall, 204.46 ms and 771.46 ms respectively. These receipts
+have no per-phase clock for those requests, so the cause of the
+remaining wall time is open. The 128-wide candidate still misses an
+80 ms P95 target and first-page P95 rose. The one matched matrix records
+that regression and the large maxima alongside the query gains.
+
+Actor, condensed Session and engine interface semantic suites passed.
+The full guarded Lean inventory completed 196 jobs. The change leaves
+the original complete mutable-list gate, its failure at 105.93 ms and
+the 100 ms / 90-second limits in place. The complete-list gate was not
+rerun. The all-pass condition for publishing PR 2 remains open.

@@ -214,6 +214,38 @@
                (list #t nonuniform 820)
                (list #t (append chain second-chain) 1640)))))
 
+    (test-case "bound functional runs retain depth order and frozen target identity"
+      (def (chain base length)
+        (map (lambda (i) (list (+ base i) (if (= i (- length 1)) 1000 (+ base i 1))))
+             (iota length)))
+      (let* ((left (chain 0 17)) (right (chain 40 20))
+             (first (append left right)) (second (append (reverse right) (reverse left))))
+        (for-each
+         (lambda (edges)
+           (let (session (open-ordered-actor edges #t))
+             (def (query result columns key)
+               (let (out [])
+                 ((.ref result 'visit-rows) 'reach columns key
+                   (lambda (a b) (set! out (cons (list a b) out))) fields?: #t)
+                 (reverse out)))
+             (def (check-bound result)
+               (let (full ((.ref result 'rows-of) 'reach))
+                 (for-each
+                  (lambda (target)
+                    (check-equal? (query result '(1) (list target))
+                      (filter (lambda (row) (= (cadr row) target)) full)))
+                  '(0 1 16 40 41 59 999 1000 1001))
+                 (check-equal? (query result '(1 1) '(1000 999)) [])))
+             (try
+               (let (initial (gerbil-ascent-session-run session))
+                 (check (not (not (gerbil-ascent-session-open-integer-pages session 'reach 11 1000))) => #t)
+                 (check-bound initial)
+                 (gerbil-ascent-session-replace-source! session 'edge (chain 200 40))
+                 (check-bound (gerbil-ascent-session-run session))
+                 (check-bound initial))
+               (finally (gerbil-ascent-session-close! session)))))
+         (list first second))))
+
     (test-case "mixed and nonadjacent successor ordinals keep the functional fallback"
       (let* ((origins (map (lambda (i) (* i 4)) (iota 20)))
              (first (map (lambda (x) (list x (+ x 1))) origins))

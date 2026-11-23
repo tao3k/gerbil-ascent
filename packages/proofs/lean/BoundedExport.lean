@@ -438,6 +438,50 @@ theorem held_idle_page_gate_keeps_publication {s t : IdlePageGate}
   have quiet := ordered held
   cases step <;> simp_all
 
+/-- A private scratch reservation can outlive the initial gate check.
+The final gate must be acquired again before a prepared page is visible. -/
+def commitIdlePreparedPage (gate : IdlePageGate) (cancelled : Bool) (start : Nat)
+    (observed : Cursor) (before : Cursor × List Row) (staged : Option (List Row × Cursor)) :
+    Cursor × List Row :=
+  if gate.held && !gate.closed && decide (gate.pending = 0) then
+    match gate.published with
+    | some cut => commitPreparedPage cut cancelled start observed before staged
+    | none => before
+  else before
+
+theorem idle_prepared_page_busy_or_closed_preserves_output (gate : IdlePageGate)
+    (cancelled : Bool) (start : Nat) (observed : Cursor) (before : Cursor × List Row)
+    (staged : Option (List Row × Cursor))
+    (refused : gate.pending ≠ 0 ∨ gate.closed = true) :
+    commitIdlePreparedPage gate cancelled start observed before staged = before := by
+  rcases refused with busy | closed <;> simp [commitIdlePreparedPage, *]
+
+theorem idle_prepared_page_changed_publication_preserves_output (gate : IdlePageGate)
+    (cancelled : Bool) (start : Nat) (observed : Cursor) (before : Cursor × List Row)
+    (staged : Option (List Row × Cursor))
+    (stale : gate.published ≠ some before.1.cut) :
+    commitIdlePreparedPage gate cancelled start observed before staged = before := by
+  unfold commitIdlePreparedPage
+  split
+  · cases current : gate.published with
+    | none => rfl
+    | some cut =>
+      have changed : before.1.cut ≠ cut := by
+        intro same
+        exact stale (by simpa [same] using current)
+      exact prepared_page_refusal_preserves_buffer_and_cursor cut cancelled start
+        observed before staged (Or.inr (Or.inl changed))
+  · rfl
+
+theorem idle_prepared_page_ready_refines_owner_commit (gate : IdlePageGate)
+    (cut : CutIdentity) (cancelled : Bool) (start : Nat) (before : Cursor × List Row)
+    (staged : Option (List Row × Cursor))
+    (held : gate.held = true) (live : gate.closed = false)
+    (idle : gate.pending = 0) (current : gate.published = some cut) :
+    commitIdlePreparedPage gate cancelled start before.1 before staged =
+      commitStaged cut cancelled start before staged := by
+  simp [commitIdlePreparedPage, held, live, idle, current, commitPreparedPage]
+
 /-- Pull clocks enclose the two Actor handoffs, staging and the commit
 copy. The independent oracle has disjoint intervals between pulls. -/
 theorem paged_request_phase_bounds
@@ -827,3 +871,6 @@ end Ascent.BoundedExport
 
 #print axioms Ascent.BoundedExport.idle_page_gate_preserves_order
 #print axioms Ascent.BoundedExport.held_idle_page_gate_keeps_publication
+
+#print axioms Ascent.BoundedExport.idle_prepared_page_changed_publication_preserves_output
+#print axioms Ascent.BoundedExport.idle_prepared_page_ready_refines_owner_commit

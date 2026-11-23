@@ -103,3 +103,68 @@ dropped. Store the Scheme prototype, interleaving cases, negative
 control and raw receipts in the cache. The original Session path,
 100 ms and 90-second gates, and the 105.93 ms failed million-row
 receipt remain intact. The production lock scope is still open.
+
+* Short commit section
+
+The second isolated prototype changes only the reservation around a
+page pull. A cursor mutex owns its existing scratch buffer and
+position. The caller captures the current Result under the Session
+mutex, releases the Session mutex, and prepares the page. The final
+Session check requires a live session, zero queued or running
+requests, the captured Result, and the unchanged cursor. The only
+output mutations in that section remain the validated copy and
+position advance. The cursor mutex is released before falling back
+to the mailbox. A queued pull on that same cursor can wait for the
+scratch reservation; this retains the owner mailbox order.
+
+=idle_prepared_page_busy_or_closed_preserves_output= and
+=idle_prepared_page_changed_publication_preserves_output= establish
+refusal at the final check. When the gate grants permission and the
+cursor is current, =idle_prepared_page_ready_refines_owner_commit=
+relates the operation to the same owner commit. These model statements
+assume the concrete locks supply their advertised exclusion.
+
+A test-only probe pauses the caller after staging a real 11-row
+page and before committing. Under the short gate an independent
+publication and, in a separate case, a close each completed while
+the reader was still paused. Resuming the old cursor produced a
+rejection with the sentinel destination intact. The held-gate
+reference blocked the publication until the test released the
+reader. Removing the final Result check from the short variant
+produced 11 stale rows, so the same test rejected the mutation.
+
+Two more cases verified that an earlier admitted mailbox pull of the
+same cursor receives the earlier prefix, and a raising interrupt
+against the paused caller leaves the destination unchanged. The next
+pull after the interrupt receives the original prefix. The separate,
+unmodified interface, Actor and condensed Session suites passed on
+the short candidate. All 196 guarded Lean jobs passed. Test hooks,
+the two native negative controls, and build receipts remain in the
+cache.
+
+** Cost of the shorter gate
+
+Both variants used the public Session API and the same independent
+verifier, heap and buffer limits. Four matched shards produced 100
+requests per width and arm, and all 16 processes completed. The
+test hook was absent from both timed builds.
+
+| Width | Allocation counter median, held -> short | Completion P50 (ms) | Completion P95 (ms) | GC count |
+|-------+-------------------------------------------+---------------------+---------------------+----------|
+| 128 | 2027744 -> 4018688 | 45.936 -> 45.369 | 62.831 -> 62.224 | 4 -> 4 |
+| 512 | 2103088 -> 4092352 | 39.568 -> 39.829 | 46.079 -> 52.486 | 0 -> 0 |
+
+The allocation increase is almost identical across the two shapes.
+Each short pull takes a cursor lock and two Session locks; the held
+one takes one Session lock. A separate native control uses the same
+=with-dynamic-lock= with one or three uncontended locks and the same
+1232 loop iterations. With no collection, its counter increased from
+about 769000 to 2484288. This is compatible with most of the roughly
+two-million-unit increase in the paired run. The micro-control does
+not attribute the entire difference in the Session.
+
+The interleaving gain survives, while the smaller P95 change at width
+128 and larger regression at width 512 do not support a throughput
+or latency promotion. The isolated sources and measurements are
+retained in the cache. This change leaves the earlier full-list
+failure evidence and original 100 ms / 90-second limits intact.

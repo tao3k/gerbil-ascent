@@ -1,0 +1,121 @@
+#+TITLE: SCC deletion publication and exact inverse edits
+
+* Source correspondence
+
+A versioned internal-edge deletion checks membership and copies one
+packed adjacency row. =split-local= sends only the old owner's members
+to =gerbil-ascent-graph-components/packed=. Other vertices are already
+retired in the restricted SCC walk. The ordered row of each selected
+vertex is still read in full. The existing =delete_split_induced_exact=
+proof establishes that old-quotient acyclicity precludes leaving and
+re-entering the old component. =delete_preserves_retained_component=
+allows other memberships to remain intact.
+
+After a split, =repair-local= translates the old quotient mask bits for
+retained destinations. It scans the edges of each split member, and
+also scans each retained component with an arc into the old component
+whose endpoints have been separated. Each destination mask is formed
+from the new owners. =close-edited-quotient= closes reachability and
+rebuilds its incoming masks. Sorted runs and the exact derived/output
+count are then built for the new version. =reused_quotient_destination=
+and =incoming_edited_bit= describe the mask invariants. Witness replay
+uses the concrete ordered adjacency captured by the Result, its source
+identity and its publication version.
+
+In the global fixture, deleting the return bridge exposes 50 dense
+64-vertex components. The packed SCC pass and the quotient scan each
+read 201,649 concrete arcs. The local fixture splits two components:
+8,065 arcs are read by the SCC pass, and 12,098 by quotient repair
+including the immediate predecessor's 4,033 arcs. The number of
+logical answers is not a bound on the edit's work.
+
+* Exact inverse of the latest merging insertion
+
+When a versioned insertion merges SCCs, one private snapshot can hold
+its input partition, ordered runs and quotient masks. The snapshot
+has two ordinal endpoints and no source, adjacency, Result or link
+to an older snapshot. Result witness callbacks capture a header with
+no saved partition, so held Results do not extend its lifetime. The
+snapshot is used only when the next graph mutation
+removes exactly that inserted edge. Other mutations discard it.
+
+=delete_exact_inserted_edge= proves equality of the concrete graph in
+this case. =delete_inserted_head_restores_neighbors= proves equality of
+the ordered adjacency needed for witnesses. Cached arrays and member
+spines are read-only. The deletion still splices the current adjacency,
+checks cancellation, validates the exact fact counts and goes through
+owner publication. =inverse_publication_uses_next_cut= and the existing
+=replayReverseCut= model explain why payload equality does not transfer
+witness authority. The new Result captures the new source identity,
+adjacency and version. The owner can still refuse the candidate.
+
+The metered execution path takes the full traversal so its checkpoint
+charges remain exact. A first deletion from a freshly loaded merged
+graph, a different edge or an edit after another mutation still uses the
+restricted split path. Same-partition insertion has no inverse payload.
+
+* Native comparison
+
+Both arms ran the same optimized =scc-bridge-test.ss= suites on Gerbil
+with Gambit =2df89af=, one VM processor, a 2 GiB heap limit and the
+90-second watchdog. The fixed baseline is =8472d3fb=. Each fixture had
+32 delete/restore pairs, checked right-bound results in public order,
+and replayed witnesses against old and new cuts. The first deletion has
+no saved partition. Subsequent rows below summarize the 31 remaining
+requests, excluding that cold operation.
+
+| Fixture | Cold delete wall (ms) | Repeat delete P95 (ms) | Repeat CPU P95 (ms) | Repeat allocation P95 (bytes) |
+|---------+-----------------------+------------------------+---------------------+-------------------------------|
+| Global, reference | 5.877 | 5.800 | 5.802 | 328944 |
+| Global, candidate | 5.602 | 0.149 | 0.153 | 96112 |
+| Local, reference | 0.806 | 0.817 | 0.808 | 275904 |
+| Local, candidate | 0.782 | 0.166 | 0.168 | 119968 |
+
+With all 32 requests, deletion P95 was 5.813 to 0.179 ms globally and
+0.817 to 0.186 ms locally. Restoration P95 was 0.397 to 0.367 ms
+and 0.466 to 0.441 ms. This comparison does not establish a cold
+speedup. One extra header is allocated for merged Result witnesses,
+and the Session frontier can retain one preceding immutable payload
+bounded by the vertex limit and the pre-merge component count. No predecessor
+adjacency or source journal is kept by that snapshot.
+
+A separately compiled phase probe observed 32 partition and quotient
+walks per reference fixture. It observed one walk of each kind and 31
+inverse hits per candidate fixture. The reference phase wall P95 values
+for partition and quotient were 3.523 and 2.140 ms globally, and 0.148
+and 0.418 ms locally. The candidate's cold probes were 3.456 and 2.080 ms
+globally, and 0.143 and 0.424 ms locally. Quotient time includes rebuilding
+owner and ordered-run metadata. Edited view phase P95 was at most
+0.015 ms in these profiles. The repeat path eliminates dual concrete
+arc scans only for the exact inverse. A general cold optimization would
+need a way to emit the new quotient boundary while partitioning or reuse
+a separately certified boundary. That is a distinct proof obligation.
+
+The first diagnostic build mixed an instrumented view wrapper with a
+previously compiled optimized caller. It terminated with a missing
+entry-point warning. The caller was then compiled against the same
+probe interface for each profile arm. That diagnostic failure did not enter the timing comparison.
+
+* Delivery gates
+
+The earlier 114.77 ms and 115.98 ms projection-list failures remain
+recorded in =ordinal-right-selection.org= and =scc-right-selection.org=.
+The candidate's original projection-list run checked all 1,000 results
+and failed the same 100 ms assertion at 112.41 ms. It recorded 227
+collections and 21.63 seconds of cumulative GC wall time. The exact
+100 ms and 90-second gates were retained. No Gambit change was applied.
+
+The recursive list and the two buffer cases passed with P95 values of
+68.62 ms, 11.89 ms and 10.73 ms. The original SCC edit and independent
+oracle tests passed. The condensed Session suite passed on both arms,
+including budget refusal against a merging version, a later inverse,
+and invalidation after inserting an alternate return edge.
+
+The guarded Lean inventory completed all 196 jobs. The original paging
+matrix finished all 80 independent invocations, including 1,000 fully
+checked requests per width. First-page P95 was 10.76 and 2.44 ms for
+widths 128 and 512. Complete P95 was 123.47 and 117.90 ms, with 40 and
+80 collections, respectively. The previous paging run was faster.
+There is no contemporaneous paging reference for attributing that
+shift. These results are retained alongside the failed list gate, and
+the candidate remains local.

@@ -9,13 +9,18 @@
         gerbil-ascent-remove-condensed-edge
         condensed-closure? condensed-closure-source condensed-closure-size
         gerbil-ascent-condensed-same-partition?
-        gerbil-ascent-condensed-closure-view gerbil-ascent-condensed-witness
+        gerbil-ascent-condensed-closure-view gerbil-ascent-condensed-witness-index
+        gerbil-ascent-condensed-witness
         gerbil-ascent-verify-condensed-witness condensed-witness-vertices)
 
 ;; Construction owns the ordinal map and adjacency, and publishes only after
 ;; every source row is admitted. A delta copies only the changing vectors.
-(defstruct condensed-closure (source size positions labels adjacent members owner direct incoming reach order)
+(defstruct condensed-closure
+  (source size positions labels adjacent members owner direct incoming reach order merge-undo)
   final: #t)
+;; Store only the immutable partition payload. Keeping a predecessor cut
+;; here would also keep its source journal, adjacency and any earlier undo.
+(defstruct condensed-merge-undo (from to members owner direct incoming reach order) final: #t)
 (defstruct condensed-order (labels runs count) final: #t)
 (defstruct condensed-run (group start stop) final: #t)
 
@@ -196,7 +201,8 @@
            (make-condensed-closure source size positions labels
              adjacent members owner direct incoming reach
              (build-condensed-order (or ordered (list-sort < (vector->list labels)))
-               positions owner checkpoint!))))))
+               positions owner checkpoint!)
+             #f)))))
 
 (def (repair-partition (prior :- condensed-closure) source size adjacent checkpoint!)
   (condense-adjacent source size prior.positions prior.labels adjacent
@@ -234,7 +240,8 @@
 
 ;; Keep the member spines for unchanged SCCs. Translate their old mask
 ;; bits; only a destination that split needs concrete target endpoints.
-(def (repair-local (prior :- condensed-closure) source size adjacent affected replacements split? checkpoint!)
+(def (repair-local (prior :- condensed-closure) source size adjacent affected replacements split? checkpoint!
+                   (undo #f))
   (let* ((old-groups (vector-length prior.members))
          (translate (make-vector old-groups #f))
          (unchanged
@@ -299,9 +306,10 @@
       (make-condensed-closure source size prior.positions prior.labels
         adjacent members owner direct incoming reach
         (build-condensed-order (condensed-order-labels prior.order)
-          prior.positions owner checkpoint!)))))
+          prior.positions owner checkpoint!)
+        undo))))
 
-(def (merge-local (prior :- condensed-closure) source size adjacent a b checkpoint!)
+(def (merge-local (prior :- condensed-closure) source size adjacent a b checkpoint! undo)
   (let* ((forward (bitwise-ior (slot-bit b) (vector-ref prior.reach b)))
          (affected
           (fold-members forward
@@ -314,14 +322,14 @@
             (lambda (g out)
               (foldl (lambda (v tail) (checkpoint!) (cons v tail)) out (vector-ref prior.members g)))
             [])))
-    (repair-local prior source size adjacent affected (list vertices) #f checkpoint!)))
+    (repair-local prior source size adjacent affected (list vertices) #f checkpoint! undo)))
 
 (def (split-local (prior :- condensed-closure) source size adjacent group checkpoint!)
   (let (parts (gerbil-ascent-graph-components/packed adjacent checkpoint!
                 (vector-ref prior.members group)))
     (if (null? (cdr parts))
       (make-condensed-closure source size prior.positions prior.labels
-        adjacent prior.members prior.owner prior.direct prior.incoming prior.reach prior.order)
+        adjacent prior.members prior.owner prior.direct prior.incoming prior.reach prior.order #f)
       (repair-local prior source size adjacent (slot-bit group) parts #t checkpoint!))))
 
 (def (gerbil-ascent-condensed-same-partition? (prior :- condensed-closure)
@@ -349,7 +357,7 @@
 ;; instead supplies the next target of this origin to preserve witness order.
 ;; An edge that can merge components must rebuild the quotient.
 (def (gerbil-ascent-extend-condensed-closure (prior :- condensed-closure) source size row checkpoint!
-                                           (packed-edit? #f) (local? #f))
+                                           (packed-edit? #f) (local? #f) (reuse-merge? #f))
   (let* ((left (car row)) (right (cadr row))
          (x (and (fixnum? left) (hash-get prior.positions left)))
          (y (and (fixnum? right) (hash-get prior.positions right))))
@@ -365,7 +373,10 @@
              (vector-set! adjacent x (splice-neighbor edges offset 0 y)))
            (if (and (not (= a b)) (bit-set? a (vector-ref prior.reach b)))
              (if local?
-               (merge-local prior source size adjacent a b checkpoint!)
+               (let (undo (and reuse-merge? (not packed-edit?)
+                                (make-condensed-merge-undo x y prior.members prior.owner
+                                  prior.direct prior.incoming prior.reach prior.order)))
+                 (merge-local prior source size adjacent a b checkpoint! undo))
                (repair-partition prior source size adjacent checkpoint!))
              (let* ((direct (vector-copy prior.direct)) (reach (vector-copy prior.reach))
                     (incoming (if (or (= a b) (bit-set? b (vector-ref direct a)))
@@ -377,7 +388,7 @@
                  (when (or (= g a) (bit-set? a (vector-ref prior.reach g)))
                    (vector-set! reach g (bitwise-ior (vector-ref prior.reach g) suffix))))
                (make-condensed-closure source size prior.positions prior.labels
-                 adjacent prior.members prior.owner direct incoming reach prior.order)))))))
+                 adjacent prior.members prior.owner direct incoming reach prior.order #f)))))))
 
 (def (has-cross-edge? adjacent members owner a b checkpoint!)
   (let/cc found
@@ -410,21 +421,32 @@
     (for (g (in-range (vector-length reach))) (refresh! g))
     reach))
 
+(def (restore-merge-partition (prior :- condensed-closure) (undo :- condensed-merge-undo)
+                               source size adjacent checkpoint!)
+  (checkpoint!)
+  (make-condensed-closure source size prior.positions prior.labels
+    adjacent undo.members undo.owner undo.direct undo.incoming undo.reach undo.order #f))
+
 ;; A non-self edge inside a component may split it, but both endpoints
 ;; remain incident. A cross-edge edit retains both cyclic owner domains.
 (def (gerbil-ascent-remove-condensed-edge (prior :- condensed-closure) source size row checkpoint!
-                                           (local? #f))
+                                           (local? #f) (reuse-merge? #f))
   (let ((x (hash-get prior.positions (car row))) (y (hash-get prior.positions (cadr row))))
     (and x y
          (alet (at (neighbor-offset (vector-ref prior.adjacent x) y checkpoint!))
            (let ((a (vector-ref prior.owner x)) (b (vector-ref prior.owner y)))
              (cond
               ((and (= a b) (not (= x y)))
-               (let (adjacent (vector-copy prior.adjacent))
-                 (vector-set! adjacent x (splice-neighbor (vector-ref adjacent x) at 1 #f))
-                 (if local?
-                   (split-local prior source size adjacent a checkpoint!)
-                   (repair-partition prior source size adjacent checkpoint!))))
+               (let ((adjacent (vector-copy prior.adjacent))
+                     (undo prior.merge-undo))
+                 (vector-set! adjacent x (splice-neighbor (vector-ref prior.adjacent x) at 1 #f))
+                 (cond
+                  ((and local? reuse-merge? undo (fx= at 0)
+                        (fx= x (condensed-merge-undo-from undo))
+                        (fx= y (condensed-merge-undo-to undo)))
+                   (restore-merge-partition prior undo source size adjacent checkpoint!))
+                  (local? (split-local prior source size adjacent a checkpoint!))
+                  (else (repair-partition prior source size adjacent checkpoint!)))))
               ((and local? (= x y))
                (let ((adjacent (vector-copy prior.adjacent))
                      (direct prior.direct)
@@ -435,7 +457,7 @@
                    (vector-set! direct a (bitwise-and (vector-ref direct a) (bitwise-not (slot-bit a))))
                    (set! reach (withdrawal-reach direct reach a checkpoint!)))
                  (make-condensed-closure source size prior.positions prior.labels
-                   adjacent prior.members prior.owner direct prior.incoming reach prior.order)))
+                   adjacent prior.members prior.owner direct prior.incoming reach prior.order #f)))
               ((and (not (= a b))
                     (or local? (and (bit-set? a (vector-ref prior.direct a))
                                     (bit-set? b (vector-ref prior.direct b)))))
@@ -450,7 +472,7 @@
                    (set! incoming (edit-incoming incoming a b #f))
                    (set! reach (withdrawal-reach direct reach a checkpoint!)))
                  (make-condensed-closure source size prior.positions prior.labels
-                   adjacent prior.members prior.owner direct incoming reach prior.order)))
+                   adjacent prior.members prior.owner direct incoming reach prior.order #f)))
              (else #f)))))))
 
 ;; Group masks are exact, including the self bit only for a nonempty path.
@@ -586,6 +608,14 @@
           (lambda (columns key consume) (parts columns key (lambda (_ a b) (consume (list a b)))))
           contains? #f (make-paged-binary-visitors parts parts #f #f
                           (cons (condensed-order-labels order) #f) stage))))))
+
+;; A held Result keeps witness inputs but cannot retain the Session's
+;; preceding partition purely because it published a merging edit.
+(def (gerbil-ascent-condensed-witness-index (index :- condensed-closure))
+  (if index.merge-undo
+    (make-condensed-closure index.source index.size index.positions index.labels
+      index.adjacent index.members index.owner index.direct index.incoming index.reach index.order #f)
+    index))
 
 (defstruct condensed-witness (identity version path) final: #t)
 

@@ -668,6 +668,39 @@ theorem delete_preserves_retained_component {V Group : Type}
   intro u v step
   exact ⟨step.1, .inl (fun equal => other (equal ▸ step.2.1))⟩
 
+/-- An admitted insertion into a simple graph adds one absent edge.
+Deleting that exact edge next restores every concrete edge. -/
+theorem delete_exact_inserted_edge {V : Type} (edge : V → V → Prop) (x y : V)
+    (absent : ¬ edge x y) (a b : V) :
+    DeleteEdge (InsertEdge edge x y) x y a b ↔ edge a b := by
+  constructor
+  · rintro ⟨old | ⟨rfl, rfl⟩, keep⟩
+    · exact old
+    · rcases keep with bad | bad <;> contradiction
+  · intro old
+    refine ⟨Or.inl old, ?_⟩
+    by_cases same : a = x
+    · subst a
+      exact .inr (fun equal => absent (equal ▸ old))
+    · exact .inl same
+
+/-- The versioned insert prepends the missing target within its one
+origin row. Removing that head restores the ordered neighbor spine,
+including all witness tie breaks. -/
+theorem delete_inserted_head_restores_neighbors {V : Type} [DecidableEq V]
+    (adjacent : V → List V) (origin target : V) :
+    (fun v => if v = origin then (target :: adjacent v).drop 1 else adjacent v) = adjacent := by
+  funext v
+  by_cases h : v = origin <;> simp [h]
+
+/-- Reusing a graph-derived payload after an exact inverse does not
+publish the saved identity or version. The Actor supplies the new cut. -/
+theorem inverse_publication_uses_next_cut {Cut Payload : Type}
+    (snapshot : Cut × Payload) (next : Cut) (different : snapshot.1 ≠ next) :
+    let restored := (next, snapshot.2)
+    restored.2 = snapshot.2 ∧ restored.1 ≠ snapshot.1 :=
+  ⟨rfl, Ne.symm different⟩
+
 /-- After adding x -> y with an old return path y -> x, the SCC
 containing y is exactly the intersection of the old forward cone of y
 and the old reverse cone of x, including both endpoints. -/

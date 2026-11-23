@@ -26,6 +26,7 @@
                  gerbil-ascent-condensed-same-partition?
                  gerbil-ascent-remove-condensed-edge
                  condensed-closure-source condensed-closure-size gerbil-ascent-condensed-closure-view
+                 gerbil-ascent-condensed-witness-index
                  gerbil-ascent-condensed-witness gerbil-ascent-verify-condensed-witness)
         (only-in "result.ss" gerbil-ascent-make-published-result gerbil-ascent-result-observation)
         (only-in "update-selection.ss" gerbil-ascent-actor-update-eligible?)
@@ -155,10 +156,12 @@
         (cons index 'rebuilt))))
 
 (def (build-condensed-edit source size previous (edit :- actor-edge-edit) check!)
-  (let (index
-         (if edit.insert?
-           (gerbil-ascent-extend-condensed-closure previous source size edit.row check! #f #t)
-           (gerbil-ascent-remove-condensed-edge previous source size edit.row check! #t)))
+  ;; A supplied work authority observes exact traversal charges.
+  (let* ((reuse-merge? (not (current-ascent-execution-control)))
+         (index
+          (if edit.insert?
+            (gerbil-ascent-extend-condensed-closure previous source size edit.row check! #f #t reuse-merge?)
+            (gerbil-ascent-remove-condensed-edge previous source size edit.row check! #t reuse-merge?))))
     (unless index (error "ASCENT edge edit requires known endpoints and a change in edge membership"))
     (cons index
       (if (gerbil-ascent-condensed-same-partition? previous index)
@@ -253,13 +256,14 @@
                           #t #t))
                     (vector #t
                       (if condensed
-                        (.o (:: @ result)
-                            evaluation-path: 'condensed-closure
-                            closure-update: update-kind
-                            closure-witness: (lambda (from to budget)
-                              (gerbil-ascent-condensed-witness condensed version from to budget))
-                            verify-closure-witness: (lambda (proof)
-                              (gerbil-ascent-verify-condensed-witness condensed version proof)))
+                        (let (witness-index (gerbil-ascent-condensed-witness-index condensed))
+                          (.o (:: @ result)
+                              evaluation-path: 'condensed-closure
+                              closure-update: update-kind
+                              closure-witness: (lambda (from to budget)
+                                (gerbil-ascent-condensed-witness witness-index version from to budget))
+                              verify-closure-witness: (lambda (proof)
+                                (gerbil-ascent-verify-condensed-witness witness-index version proof))))
                         result)
                       #f #t (and (pair? evaluation) (cdr evaluation)) functional-update))))))))
 

@@ -264,6 +264,38 @@
                  (map (lambda (i left right) (if (even? i) (list left right) (list right left)))
                    (iota 20) first second))))))
 
+    (test-case "nonordinal functional merges select the exact predecessors in public order"
+      (let* ((starts (map (lambda (i) (* i 4)) (iota 20)))
+             (enter (map (lambda (i) (list i (+ i 1))) starts))
+             (merge (map (lambda (i) (list (+ i 1) 100)) starts))
+             (edges (append enter merge '((100 101) (101 102))))
+             (session (open-ordered-actor edges #t)))
+        (def (selected result columns key)
+          (let (rows [])
+            ((.ref result 'visit-rows) 'reach columns key
+              (lambda (left right) (set! rows (cons (list left right) rows))) fields?: #t)
+            (reverse rows)))
+        (def (check-targets result)
+          (let (all ((.ref result 'rows-of) 'reach))
+            (for-each
+             (lambda (key)
+               (check-equal? (selected result '(1) (list key))
+                 (filter (lambda (row) (= (cadr row) key)) all)))
+             '(0 1 4 17 100 101 102 103))
+            (check-equal? (selected result '(1 1) '(101 102)) [])))
+        (try
+          (let (retained (gerbil-ascent-session-run session))
+            (check (gerbil-ascent-session-open-integer-pages session 'reach 11 250) => #f)
+            (check-targets retained)
+            (gerbil-ascent-session-replace-source! session 'edge
+              (append (cdr enter) merge '((100 101) (101 102))))
+            (let (current (gerbil-ascent-session-run session))
+              (check-targets current)
+              (check-equal? (length (selected retained '(1) '(102)))
+                            (+ 1 (length (selected current '(1) '(102)))))
+              (check-targets retained)))
+          (finally (gerbil-ascent-session-close! session)))))
+
     (test-case "packed cuts reuse the functional view with fresh page versions"
       (def (chain base)
         (map (lambda (i) (list (+ base i) (+ base i 1))) (reverse (iota 19))))

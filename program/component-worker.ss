@@ -775,6 +775,45 @@
                    (single-run (ordinal-terminal-edge bounds direction run) run)))
                 (else (shared-terminal hits))))))))
 
+(defstruct functional-predecessors (heads siblings terminals) final: #t)
+
+(def (index-functional-predecessors targets next size)
+  (let ((heads (make-s32vector size -1))
+        (siblings (make-s32vector size -1))
+        (terminals (make-hash-table-eqv)))
+    (let index ((edge (fx- size 1)))
+      (if (fx< edge 0) (make-functional-predecessors heads siblings terminals)
+        (let (position (##s32vector-ref next edge))
+          (if (fx>= position 0)
+            (begin
+              (##s32vector-set! siblings edge (##s32vector-ref heads position))
+              (##s32vector-set! heads position edge))
+            (let (label (##u64vector-ref targets edge))
+              (##s32vector-set! siblings edge (or (hash-get terminals label) -1))
+              (hash-put! terminals label edge)))
+          (index (fx- edge 1)))))))
+
+(def (collect-functional-target (index :- functional-predecessors)
+                                origin-ordinal origins target matches?)
+  (def (prepend-incoming head frontier)
+    (let link ((edge head) (rows frontier))
+      (if (fx< edge 0) rows
+        (link (##s32vector-ref index.siblings edge) (cons edge rows)))))
+  (let* ((ordinal (origin-ordinal target))
+         (head (if ordinal (##s32vector-ref index.heads ordinal)
+                 (or (hash-get index.terminals target) -1))))
+    (let layer ((frontier (prepend-incoming head [])) (forward? #t) (output []))
+      (if (null? frontier) output
+        (let visit ((ordered (if (null? (cdr frontier)) frontier
+                               (list-sort (if forward? fx< fx>) frontier)))
+                    (previous []) (output output))
+          (if (null? ordered) (layer previous (not forward?) output)
+            (let* ((edge (car ordered))
+                   (origin (##u64vector-ref origins edge)))
+              (visit (cdr ordered)
+                (prepend-incoming (##s32vector-ref index.heads edge) previous)
+                (if (matches? origin target) (cons (list origin target) output) output)))))))))
+
 (def (make-functional-view origin-ordinal origins targets next size count runs depths terminals)
   ;; Each read advances one edge per live origin. Successor positions compact
   ;; stably in the current direction, then the next delta reverses that order.
@@ -806,6 +845,8 @@
          (let (window-limit (* depths (- (vector-length (cdr runs)) 1)))
            (and (< (+ (* 2 size) (* 3 window-limit)) (* 2 count))
                 (ordinal-affine-steps runs origins targets)))))
+  (def predecessors
+    (and (not depths) (delay-atomic (index-functional-predecessors targets next size))))
   (def export
     (if runs (lambda () (export-ordinal-runs runs origins targets (affine-window-steps)))
       (lambda () (gather left right #t))))
@@ -822,8 +863,11 @@
                 (visit (s32vector-ref next end)
                   (if (matches? selected target) (cons (list selected target) output) output)))
               output))
-          (if (and depths (not column) (fixnum? (car key)))
-            (collect-ordinal-target runs depths origins next origin-ordinal terminals (car key) matches?)
+          (if (and (not column) (fixnum? (car key)))
+            (let (target (car key))
+              (if depths
+                (collect-ordinal-target runs depths origins next origin-ordinal terminals target matches?)
+                (collect-functional-target (force predecessors) origin-ordinal origins target matches?)))
             (gather left right (matches? left right)))))))
   (def (visit-parts columns key consume)
     (if (and depths (null? columns))

@@ -914,6 +914,74 @@ theorem successor_distance_no_repeat (next : Vertex → Option Vertex) (rank : V
   intro equal
   simp [equal] at grows
 
+/-- A query of one target enumerates inverse successor layers. The
+native index has one sibling link per source ordinal and a head for
+each target, including labels with no outgoing edge. -/
+def predecessorLayer (predecessors : Vertex → List Vertex) (target : Vertex) : Nat → List Vertex
+  | 0 => [target]
+  | depth + 1 => (predecessorLayer predecessors target depth).flatMap predecessors
+
+theorem predecessor_layer_exact
+    (next : Vertex → Option Vertex) (predecessors : Vertex → List Vertex)
+    (indexed : ∀ a b, a ∈ predecessors b ↔ next a = some b)
+    (target origin : Vertex) (depth : Nat) :
+    origin ∈ predecessorLayer predecessors target depth ↔
+      successorAt next origin depth = some target := by
+  induction depth generalizing origin with
+  | zero => simp [predecessorLayer, successorAt, eq_comm]
+  | succ d ih =>
+    simp only [predecessorLayer, List.mem_flatMap]
+    rw [show d + 1 = 1 + d by omega, successor_at_add]
+    constructor
+    · rintro ⟨middle, inLayer, incoming⟩
+      have edge := (indexed _ _).mp incoming
+      have rest := (ih middle).mp inLayer
+      simpa [successorAt, edge] using rest
+    · intro path
+      cases edge : next origin with
+      | none => simp [successorAt, edge] at path
+      | some middle =>
+        have rest : successorAt next middle d = some target := by
+          simpa [successorAt, edge] using path
+        exact ⟨middle, (ih middle).mpr rest, (indexed _ _).mpr edge⟩
+
+/-- Expansion from distinct targets cannot encounter the same source in
+two neighbor lists. A successor determines only one destination. -/
+theorem predecessor_layers_have_disjoint_buckets
+    (next : Vertex → Option Vertex) (predecessors : Vertex → List Vertex)
+    (indexed : ∀ a b, a ∈ predecessors b ↔ next a = some b)
+    {source a b : Vertex} (left : source ∈ predecessors a) (right : source ∈ predecessors b) :
+    a = b := Option.some.inj (((indexed source a).mp left).symm.trans ((indexed source b).mp right))
+
+/-- The published layer order is determined by the input ordinals and
+its parity. The indexed layer can therefore be sorted independently. -/
+theorem indexed_layer_has_public_order (expected selected : List Nat)
+    (order : Bool)
+    (contents : ∀ n, n ∈ expected ↔ n ∈ selected)
+    (expectedUnique : expected.Nodup) (selectedUnique : selected.Nodup)
+    (expectedOrder : expected.Pairwise (fun a b => if order then a ≤ b else b ≤ a))
+    (selectedOrder : selected.Pairwise (fun a b => if order then a ≤ b else b ≤ a)) :
+    expected = selected := by
+  have same := (List.perm_ext_iff_of_nodup expectedUnique selectedUnique).2 contents
+  cases order
+  · simp only [Bool.false_eq_true, ite_false] at expectedOrder selectedOrder
+    exact List.Perm.eq_of_pairwise (le := fun a b : Nat => b ≤ a)
+      (fun _ _ _ _ ab ba => Nat.le_antisymm ba ab) expectedOrder selectedOrder same
+  · simp only [ite_true] at expectedOrder selectedOrder
+    exact List.Perm.eq_of_pairwise (le := (· ≤ ·))
+      (fun _ _ _ _ ab ba => Nat.le_antisymm ab ba) expectedOrder selectedOrder same
+
+/-- Adding each origin once to the list of its exact destination is the
+logical content of setting its next-sibling pointer and its target head. -/
+theorem indexed_predecessor_head_fold (target : Int) (rows : List (Nat × Int)) :
+    rows.reverse.foldl (fun acc row => if row.2 = target then row.1 :: acc else acc) [] =
+      rows.filterMap (fun row => if row.2 = target then some row.1 else none) := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    rw [List.reverse_cons, List.foldl_append, ih]
+    by_cases hit : row.2 = target <;> simp [hit]
+
 def successorRows (next : Vertex → Option Vertex) (origins : List Vertex) (depth : Nat) :
     List (Vertex × Vertex) :=
   origins.filterMap (fun origin => (successorAt next origin depth).map (fun endpoint => (origin, endpoint)))
@@ -1744,3 +1812,8 @@ end Ascent.MillionQueryWorkload
 #print axioms Ascent.MillionQueryWorkload.detached_binary_pair_slot
 #print axioms Ascent.MillionQueryWorkload.detached_binary_pair_extent
 #print axioms Ascent.MillionQueryWorkload.compact_terminal_prefix_fits
+
+#print axioms Ascent.MillionQueryWorkload.predecessor_layer_exact
+#print axioms Ascent.MillionQueryWorkload.indexed_layer_has_public_order
+
+#print axioms Ascent.MillionQueryWorkload.indexed_predecessor_head_fold

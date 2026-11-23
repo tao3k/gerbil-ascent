@@ -1,0 +1,121 @@
+#+TITLE: Reverse traversal for nonordinal functional results
+
+* Admission and public order
+
+A functional terminal view admits one unique outgoing edge per source
+label. Every edge increases the integer label, excluding cycles. The
+ordinal specialization is available only when successor slots advance
+by a common signed unit. Otherwise a right-only selection previously
+ran the entire functional frontier and filtered its rows.
+
+Index the transpose of that same immutable successor graph. Each
+internal label uses its existing origin ordinal for the head slot.
+Each terminal label uses an integer-keyed table. An edge ordinal has
+one sibling slot. The constructor processes ordinals right to left,
+setting one head and one sibling for each edge. The index is lazy and
+belongs to the published view that supplied the arrays.
+Rows-of and full visitation keep their original algorithms.
+
+=predecessor_layer_exact= connects a reverse layer to precisely the
+forward paths of the same length. =indexed_predecessor_head_fold=
+accounts for the bucket represented by head and sibling writes.
+=predecessor_layers_have_disjoint_buckets= uses the one-successor
+property within a layer. =successor_distance_no_repeat= excludes
+revisiting a source at another distance. The native traversal sorts
+each reverse layer by source ordinal in the direction that the
+forward round emits, then prepends. =indexed_layer_has_public_order=
+checks that the ordered layer is determined by its set and the
+required direction. Prepending later layers preserves descending
+distance. Neither list delivery nor a page cursor uses the inverse
+index.
+
+The reverse traversal follows the single-sink approach discussed in
+[[https://doi.org/10.4230/LIPIcs.SEA.2020.14][Hanauer, Henzinger, and Schulz]].
+ASCENT's functional admission provides the additional one-successor
+and label-order properties used here. Terminal labels can have
+multiple incoming edges, so every edge is linked exactly once.
+
+* Work and retention
+
+For E source edges and C closure rows, the old selector visits C
+forward candidates on every bound query and allocates two E-slot
+frontier arrays. The first indexed query builds two E-slot s32vectors
+and a table of terminal heads, visiting E edges. A warm query visits
+K predecessor edges for K answers before any redundant-key filter.
+Layers with multiple answers sort their source ordinals. A miss has
+no layer work. The fixed vector payload of the index is 8E bytes
+plus the terminal dictionary. The index is retained only in a view
+whose eligible target search has been used. It uses the existing
+view lifetime and creates no additional cache of versions.
+
+This is a query optimization. For full pagination every field still
+has to be written and independently verified. The preceding native
+phase data place redundant first-page stride validation near 0.26 ms
+on average in its measured fixture. Hoisting that validation has
+lower leverage than removing a closure-sized query walk.
+
+* Native acceptance
+
+Reference =098e1b17= and the candidate used the same staging Gerbil
+with Gambit =2df89af=, the same compiler flags, one VM processor, a
+2 GiB heap and the 90-second watchdog. The query fixture puts all
+even-origin edges before all odd-origin edges. It preserves the
+independent 10,078,720- and 10,072,832-row chain relations and forces
+the nonadjacent successor path. Both arms verified each emitted field
+and its order. The timed first missing query includes any lazy index
+construction. The steady query clock includes callbacks.
+
+The reference processes took 82.547 and 86.656 seconds for 90 timed
+queries each. The experiment kept one complete pair per width and
+stopped the optional reference repetition. The partial attempt remains
+in the cache. The candidate completed all 12 planned shards with 1,080
+timed queries per width, 360 per query kind.
+
+| Width | Query | Reference paired P95 (ms) | Candidate paired P95 (us) | Candidate 12-shard P95 (us) |
+|-------+-------+---------------------------+---------------------------+-----------------------------|
+| 128 | Interior | 1056.713 | 2.041 | 4.041 |
+| 128 | Terminal | 1092.050 | 9.500 | 6.041 |
+| 128 | Miss | 1146.986 | 0.791 | 0.625 |
+| 512 | Interior | 1184.629 | 2.250 | 2.250 |
+| 512 | Terminal | 1031.801 | 31.333 | 43.500 |
+| 512 | Miss | 1019.703 | 1.083 | 1.583 |
+
+The first missing query in the pair took 636.121 -> 2.478 ms and
+880.942 -> 0.225 ms. Across the 12 candidate shards, cold query P95
+was 2.478/0.225 ms. The monotone cold allocation counters were
+1,400,896 and 332,768 accounting units. Those numbers include the
+query and the dictionary and are not measurements of retained bytes.
+The two packed vector payloads account for 1,259,840 and 314,776
+bytes respectively. The reference's 90-query intervals recorded
+329/384 collections. No collection occurred in the corresponding
+cold or timed warm candidate intervals.
+
+Engine interface, Actor and condensed Session semantic suites passed.
+The new interface case verifies merged predecessor layers, terminal
+and internal targets, contradictory bindings, and a retained Result
+after source replacement. The guarded Lean build passed all 196 jobs.
+The model proves the indexed traversal and order under the source
+invariants; the native oracle checks the implementation.
+
+* Ordinal pagination control
+
+One unchanged 25-request shard per width and arm checked all fields
+of the existing ordinal pagination fixture. The reverse index is
+unreachable on that source path because an ordinal view already has
+a positive depth. First-page P95 was 2.209 -> 4.016 ms and
+0.948 -> 1.136 ms. Complete P95 was 59.330 -> 113.087 ms and
+44.518 -> 48.882 ms. This single-shard control does not establish a
+pagination speedup or a stable tail.
+
+The 128 candidate's longest request took 179.974 ms. The whole shard
+recorded one collection with 37.054 ms wall. Both arms used roughly
+the same CPU for the timed interval, 1.182/1.166 s. Those interval
+bounds exclude GC as a complete explanation for the largest request,
+but provide no per-phase attribution. Each of the four original
+40-shard distributions also reached its maximum in shard 34.
+The remaining full-delivery work requires per-request stage,
+handoff, copy and oracle timestamps before changing that path.
+
+The original million-row complete-list receipt remains at 105.93 ms
+with the original 100 ms and 90-second limits. That test was not rerun.
+The candidate and its evidence remain local.

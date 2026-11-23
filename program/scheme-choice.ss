@@ -51,6 +51,8 @@
       (values models
         (let (work (positive-plan-cost-snapshot prefix))
           (list (assq 'partial-matches work) (assq 'prefix-state-replays work)
+              (assq 'single-delta-probes work) (assq 'single-delta-build-rows work)
+              (assq 'single-delta-prefix-visits work) (assq 'single-delta-cut-rechecks work)
               (cons 'new-offers meter.new-offers) (cons 'repeated-offers meter.repeat-offers)
               (cons 'states meter.states) (cons 'rebuilds meter.rebuilds)
               (cons 'extensions meter.extensions)

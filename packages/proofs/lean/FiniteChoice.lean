@@ -1153,4 +1153,42 @@ theorem choice_single_delta_bucket_visit_bound
     (orderedChoiceBucket keyOf key prefixRows).length ≤ prefixRows.length :=
   List.length_filter_le _ _
 
+/-- One lane of the canonical physical builder prepends each matching
+occurrence via hash update and reverses the freshly owned bucket. -/
+theorem choice_native_ordered_bucket
+    {Key Prefix : Type} [DecidableEq Key]
+    (keyOf : Prefix → Key) (key : Key) (rows accumulated : List Prefix) :
+    (rows.foldl (fun bucket row =>
+      if keyOf row = key then row :: bucket else bucket) accumulated).reverse =
+      accumulated.reverse ++ orderedChoiceBucket keyOf key rows := by
+  induction rows generalizing accumulated with
+  | nil => simp [orderedChoiceBucket]
+  | cons head tail ih =>
+    by_cases same : keyOf head = key <;>
+      simp [List.foldl, same, ih, orderedChoiceBucket, List.append_assoc]
+
+/-- A cache hit can borrow the physical bucket of an earlier evaluator
+only when both cuts contain the exact same ordered rows. -/
+theorem choice_ordered_bucket_restore
+    {Key Prefix : Type} [DecidableEq Key]
+    (keyOf : Prefix → Key) (key : Key)
+    (cached current physicalBucket : List Prefix)
+    (bucketCorrect : physicalBucket = orderedChoiceBucket keyOf key cached)
+    (sameCut : current = cached) :
+    physicalBucket = orderedChoiceBucket keyOf key current := by
+  rw [sameCut, bucketCorrect]
+
+/-- The checked runtime uses one admission procedure for both branches.
+Feeding it the same ordered witnesses preserves its rejection boundary. -/
+theorem choice_single_delta_ordered_admission
+    {Key Prefix Fresh Admission : Type} [DecidableEq Key]
+    (prefixKey : Prefix → Key) (freshKey : Fresh → Key)
+    (prefixRows : List Prefix) (fresh : Fresh)
+    (admit : Admission → Prefix × Fresh → Admission) (initial : Admission) :
+    (prefixRows.flatMap fun row =>
+        if prefixKey row = freshKey fresh then [(row, fresh)] else []).foldl admit initial =
+      ((orderedChoiceBucket prefixKey (freshKey fresh) prefixRows).map
+        (fun row => (row, fresh))).foldl admit initial := by
+  rw [choice_single_delta_bucket_exact prefixKey freshKey prefixRows fresh]
+
 end Ascent.FiniteChoice

@@ -7,7 +7,8 @@
         (prefix-in :clan/poo/testing/property/generator generator.)
         (prefix-in :clan/poo/testing/property/replay replay.)
         (only-in :clan/poo/testing/property/test require-passed)
-        (only-in :gerbil-ascent/program/api relational-choice-solve relational-program-query)
+        (only-in :gerbil-ascent/program/api relational-choice-program
+                 relational-choice-solve relational-program-query)
         (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement)
         (only-in "../../benchmarks/dusa-representative-test.ss"
                  representative-program components oracle-models model-rows model-witnesses))
@@ -108,7 +109,9 @@
                (= (cdr (assq 'states work)) (cdr (assq 'states direct-work)))
                (<= (cdr (assq 'peak-parent-units work)) 4096)
                (or (not (ormap (lambda (group) (pair? (cdr group))) groups))
-                   (> (cdr (assq 'parent-restores work)) 0))
+                   (and (> (cdr (assq 'parent-restores work)) 0)
+                        (> (cdr (assq 'single-delta-probes work)) 0)
+                        (> (cdr (assq 'single-delta-prefix-visits work)) 0)))
                (andmap (lambda (model witness) (valid-witness? model witness arcs)) actual witnesses)))))))
 
 (def (graph-labels sample)
@@ -143,6 +146,28 @@
        '(20261123 20261124)))
     (test-case "two independent edges keep their parent constraints isolated"
       (check-equal? (graph-property '(4 ((0 1) (2 3)))) #t))
+    (test-case "two derived delta rows retain both supports on the ordinary join"
+      (let (program
+            (relational-choice-program
+              (relation edge (owner target) '((0 7)))
+              (relation tag (value) '((5) (6)))
+              (relation tagged (owner value))
+              (choice selected (owner value))
+              (choice answer (target value))
+              (rule (closed (selected 0) (1)))
+              (rule (tagged ?owner ?tag) (selected ?owner 1) (tag ?tag))
+              (rule (closed (answer ?target) (0)) (edge ?owner ?target) (tagged ?owner ?tag))
+              (limits 32 32 32)))
+        (def (run) (relational-choice-solve program state-budget: 64))
+        (let*-values (((models work) (call-with-relational-choice-measurement run))
+                      ((direct _) (call-with-relational-choice-measurement run 'direct)))
+          (check-equal? (length models) 1)
+          (check-equal? (relational-program-query (car models) 'answer) '((7 0)))
+          (check-equal? (cdr (assq 'single-delta-probes work)) 0)
+          (let ((witness (relational-program-query (car models) 'answer provenance?: #t))
+                (reference (relational-program-query (car direct) 'answer provenance?: #t)))
+            (check-equal? witness reference)
+            (check-equal? (length (caddr (car witness))) 2)))))
     (test-case "published leaf rows remain detached after all sibling visits"
       (let* ((arcs '((0 1) (2 3)))
              (models (relational-choice-solve (representative-program '(0 1 2 3) arcs) state-budget: 64))

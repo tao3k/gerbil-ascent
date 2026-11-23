@@ -35,7 +35,8 @@
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  make-positive-prefix-state current-positive-prefix-budget
-                 current-static-prefix-cache current-static-prefix-relation? static-prefix-cache-sources
+                 current-static-prefix-cache current-static-prefix-relation?
+                 current-static-prefix-single-delta static-prefix-cache-sources
                  gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?
                  current-positive-plan-cost positive-plan-cost-admit!)
         (only-in :gerbil-ascent/core/dependency-graph gerbil-ascent-graph-close!)
@@ -984,12 +985,18 @@
                 (gerbil-ascent-check-replacement-rows!
                  name rows width (vector-ref field-checkers index))
                 (replay-source! 'replace index rows)))
+            (def (static-prefix-single-delta prefix suffix)
+              (and (zero? (vector-ref delta-size prefix))
+                   (= (vector-ref delta-size suffix) 1)
+                   (let (rows (vector-ref delta suffix))
+                     (and (pair? rows) (null? (cdr rows)) (car rows)))))
             (def (run-session!)
               (if recompute-from-source? last-result
                 (begin
                   (vector-set! published 0 #f)
                   (if static-prefix?
-                    (parameterize ((current-static-prefix-relation? static-prefix?))
+                    (parameterize ((current-static-prefix-relation? static-prefix?)
+                                   (current-static-prefix-single-delta static-prefix-single-delta))
                       (run-retained! published))
                     (run-retained! published)))))
             (def (run-timeout! duration-nanoseconds)

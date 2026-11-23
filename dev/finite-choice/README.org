@@ -464,12 +464,63 @@ bindings in this fixture.
 between scanning the whole prefix and visiting an exact bucket for a
 single fresh key. It keeps repeated row occurrences and pairs each
 with the same fresh supporting row. The accompanying visit bound
-excludes index construction. Applying the theorem to the Scheme
-scheduler still needs an exact physical bucket tied to the same static
-cut, an actual singleton delta check, and a proof of callback and
-budget behavior. A multi-row delta also needs a merge that recovers
-the original prefix order. The visit ratios describe the join work
-available to remove, before any wall-clock measurement of that change.
+excludes index construction. A multi-row delta needs a merge that
+recovers original prefix order and continues through the existing
+general join.
+
+** Singleton delta selection in the positive matcher
+
+The retained choice evaluator supplies a singleton suffix only when the
+actual prefix delta is empty and the actual suffix is an explicit
+one-row delta. The checked static-relation predicate already excludes
+relations reachable from a choice source. The matcher admits a pure
+two-atom rule, two distinct prefix slots, and a suffix that reads one
+of those slots and writes one fresh slot. It uses the canonical
+one-column physical index. The three bound values feed the original
+head admission, in the same order.
+
+The private cache uses the compiled action sequence and its ordered
+prefix root. Cross-engine reuse requires exact ordered row equality
+when the roots differ. The same static-prefix budget charges the
+index before construction. Controlled executions or diagnostic
+traces use the existing traversal, preserving each checkpoint and
+observed candidate. Empty buckets, repeated occurrences, equal-size
+replacement, insufficient retention, and a two-row derived delta
+are exercised by native regression tests.
+
+The Lean model connects the canonical prepend-and-reverse bucket
+builder to stable filtering. The restore theorem assumes exact
+ordered-cut equality, and ordered admission folds the same witness
+list for both paths. The Scheme guards and physical lookup are
+checked by native tests, including POO-generated graph programs and
+the independent model and witness oracles.
+
+With ten solves per arm in the existing four-process pairing, state,
+offer, rebuild, parent-restore, and charged-parent counters matched.
+
+| Graph | Old / new median (ms) | Old / new maximum (ms) | Bucket build rows | Physical prefix visits | Equal-cut rechecks |
+|-------+-----------------------+------------------------+-------------------+------------------------+--------------------|
+| Path | 58.870 / 53.659 | 86.728 / 160.959 | 94 | 4512 | 47 |
+| Clique | 77.952 / 27.549 | 80.899 / 54.494 | 462 | 10164 | 21 |
+| Disconnected | 102.886 / 96.951 | 109.157 / 106.399 | 32 | 5499 | 341 |
+
+The prefix counts above are bucket row visits. A restore can also
+compare the two complete ordered cuts. The slowest candidate path
+sample remains open, with no per-phase receipt in this pairing.
+
+A separate five-solve 128-vertex path enumerated 16,385 states in both
+arms. Complete-solve median and maximum fell from 1142.769 and
+1502.493 ms to 431.555 and 514.277 ms. Prefix visits fell from
+4,161,536 to 32,512 with one 254-row index build and 127 ordered-cut
+rechecks.
+
+An independent ten-pair run without work counters measured median
+wall times of 82.496 to 35.584 ms for the smaller path, 73.087 to
+26.943 ms for the clique, and 100.870 to 95.758 ms for the
+disconnected graph. The candidate path's 141.842 ms maximum used
+43.261 ms CPU and had no GC. The disconnected maximum was
+237.663 ms, with 118.161 ms CPU and at least 52.066 ms of GC inside
+the solve. These receipts leave the rest of the wall delay open.
 
 ** POO graph and index correspondence
 

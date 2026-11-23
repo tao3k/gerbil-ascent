@@ -7,6 +7,9 @@
 (import (only-in "positive-lowering.ss" gerbil-ascent-positive-plan
                  gerbil-ascent-compile-positive-plan gerbil-ascent-positive-plan-with-outputs
                  gerbil-ascent-pure-positive-plan? match-row! match-vector-row! vector-match-width match-parts! term-value)
+        (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
+                 gerbil-ascent-physical-index-single-rows)
+        (only-in :gerbil-ascent/table/provider gerbil-ascent-hash-index-provider)
         (only-in "ordered-call.ss" dispatch-ordered-call)
         (only-in "positive-certificate.ss" gerbil-ascent-positive-certificate?)
         (only-in "execution-policy.ss" gerbil-ascent-old-lane gerbil-ascent-delta-lane)
@@ -26,7 +29,7 @@
         call-with-positive-plan-cost current-positive-plan-cost
         current-retained-positive-plan-cost
         make-bounded-static-prefix-cache static-prefix-cache-sources
-        current-static-prefix-cache current-static-prefix-relation?
+        current-static-prefix-cache current-static-prefix-relation? current-static-prefix-single-delta
         positive-plan-cost-admit! positive-plan-cost-begin! positive-plan-cost-index!)
 
 ;;; Diagnostic ownership is one fresh serial solve over canonical pure Set
@@ -39,7 +42,7 @@
 
 (defstruct native-plan-cost (counts prefixes started? visits) final: #t)
 (def (make-positive-plan-cost (record-prefixes? #t) (record-visits? #f))
-  (make-native-plan-cost (make-vector 32 0)
+  (make-native-plan-cost (make-vector 36 0)
                         (and record-prefixes? (make-hash-table)) #f (and record-visits? [])))
 ;;; Diagnostic values are detached on read; no callback observes a live frame.
 (def (positive-plan-cost-visits cost)
@@ -62,6 +65,10 @@
 (defstruct static-prefix-entry (rows slots records charge) final: #t)
 (def current-static-prefix-cache (make-parameter #f))
 (def current-static-prefix-relation? (make-parameter #f))
+;; The engine supplies a fresh row only when the static prefix has no
+;; delta and the second relation has one explicit delta row.
+(def current-static-prefix-single-delta (make-parameter #f))
+(defstruct static-prefix-bucket (rows index charge) final: #t)
 
 (def (make-bounded-static-prefix-cache sources budget)
   (make-static-prefix-cache sources (make-hash-table-eq) budget))
@@ -106,8 +113,9 @@
          empty-cell-tests empty-key-comparisons empty-cell-hits empty-cell-writes empty-cell-entries
          empty-version-comparisons empty-field-stores
          prefix-state-tests prefix-build-input-rows prefix-slot-stores prefix-state-replays prefix-slot-restores old-tail-hits
-         index-builds)
-       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31)))
+         index-builds single-delta-probes single-delta-build-rows single-delta-prefix-visits
+         single-delta-cut-rechecks)
+       (iota 36)))
 (def (cost-prefix! cost kind index signature rows owner)
   (alet (seen (native-plan-cost-prefixes cost))
     (let* ((key (list kind signature rows))
@@ -226,6 +234,66 @@
   (and state (> (native-prefix-state-budget state) 0)
        (vector-ref (hash-get (native-prefix-state-paths state) plan) depth)))
 
+;; Both routes consume the same stable ordered prefix. The provider's
+;; canonical one-column builder retains each bucket's input order.
+(def (ordered-static-bucket! (cache :- static-prefix-cache) actions rows column cost)
+  (let (saved (hash-get cache.entries actions))
+    (cond
+     ((and saved (eq? rows (static-prefix-bucket-rows saved)))
+      (static-prefix-bucket-index saved))
+     ((and saved (begin (cost-add! cost 35)
+                        (equal? rows (static-prefix-bucket-rows saved))))
+      (static-prefix-bucket-rows-set! saved rows)
+      (static-prefix-bucket-index saved))
+     (else
+      (let* ((count (length rows))
+             ;; Own a row reference, bucket cell and possible key per row.
+             (charge (+ 6 (* 3 count)))
+             (space (+ cache.remaining (if saved (static-prefix-bucket-charge saved) 0))))
+        (and (<= charge space)
+             (let (index (gerbil-ascent-physical-index-build
+                           gerbil-ascent-hash-index-provider rows (list column)))
+               (cost-add! cost 33 count)
+               (hash-put! cache.entries actions (make-static-prefix-bucket rows index charge))
+               (set! cache.remaining (- space charge))
+               index)))))))
+
+;; The physical bucket has the same order as filtering the prefix list.
+;; Restore exactly the slots written by the two original positive atoms.
+(def (emit-static-delta-bucket! cache actions rows column frame left right value fresh heads emit-row! cost)
+  (and (not (relation-view? rows))
+       (alet (index (ordered-static-bucket! cache actions rows column cost))
+         (cost-add! cost 32)
+         (for-each
+          (lambda (row)
+            (cost-add! cost 34)
+            (vector-set! frame left (car row))
+            (vector-set! frame right (cadr row))
+            (vector-set! frame value (cadr fresh))
+            (emit-complete-heads! heads frame emit-row! cost [] [] #f))
+          (gerbil-ascent-physical-index-single-rows index (car fresh)))
+         #t)))
+
+(def (visit-single-static-delta! cache actions frame rows-access heads emit-row! cost)
+  (let ((static? (current-static-prefix-relation?))
+        (single-delta (current-static-prefix-single-delta)))
+    (and static? single-delta
+         (match actions
+           ([first second]
+            (let ((prefix (vector-ref first 0)) (suffix (vector-ref second 0)))
+              (and (vector? prefix) (vector? suffix)
+                   (null? (vector-ref prefix 2))
+                   (static? (vector-ref prefix 0))
+                   (match [(vector-ref first 1) (vector-ref second 1)]
+                     ([[['fresh . left] ['fresh . right]] [['bound . key] ['fresh . value]]]
+                      (and (or (= key left) (= key right))
+                           (alet (fresh (single-delta (vector-ref prefix 0) (vector-ref suffix 0)))
+                             (emit-static-delta-bucket! cache actions
+                               (rows-access prefix frame #f (vector-ref first 2))
+                               (if (= key left) 0 1) frame left right value fresh heads emit-row! cost))))
+                     (else #f)))))
+           (else #f)))))
+
 (def (gerbil-ascent-run-positive-plan! plan frame delta-at rows-access emit-row! (checkpoint! #f) (parts-access #f) (old-rows-access #f) (scope #f) (prefix-state #f))
   (when prefix-state
     (unless (and (native-prefix-state? prefix-state)
@@ -243,17 +311,21 @@
     (error "ASCENT positive plan delta selector outside compiled atom extent"))
   ;; Decode Option<Nat> once for the entire traversal, not at every join
   ;; continuation. Generated policies retain primitive hot loops.
-  (let ((has-pivot? (>= delta-at 0))
-        (cost (or (current-positive-plan-cost) (current-retained-positive-plan-cost))))
+  (let* ((has-pivot? (>= delta-at 0))
+         (cost (or (current-positive-plan-cost) (current-retained-positive-plan-cost)))
+         (trace-owner (and cost (or (native-plan-cost-prefixes cost)
+                                    (native-plan-cost-visits cost)) plan))
+         (cache (and (= delta-at 1) (not checkpoint!) (not trace-owner)
+                     (current-static-prefix-cache))))
     (when (and cost (not (gerbil-ascent-pure-positive-plan? plan)))
       (error "native plan cost requires a pure positive plan"))
-    (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
-                          frame (if has-pivot? delta-at 0) has-pivot?
-                          0 rows-access emit-row! checkpoint! parts-access old-rows-access
-                          cost [] []
-                          (and cost (or (native-plan-cost-prefixes cost)
-                                        (native-plan-cost-visits cost)) plan)
-                          scope prefix-state plan)))
+    (unless (and cache (gerbil-ascent-pure-positive-plan? plan)
+                 (visit-single-static-delta! cache (vector-ref plan 1) frame rows-access
+                   (vector-ref plan 0) emit-row! cost))
+      (visit-positive-atoms! (vector-ref plan 1) (vector-ref plan 0)
+                            frame (if has-pivot? delta-at 0) has-pivot?
+                            0 rows-access emit-row! checkpoint! parts-access old-rows-access
+                            cost [] [] trace-owner scope prefix-state plan))))
 
 (def (emit-complete-heads! heads frame emit-row! cost signature witness trace-owner)
   (when trace-owner (cost-prefix! cost 'complete 11 signature witness trace-owner))

@@ -796,6 +796,77 @@ time criterion. The implementation, proofs, and raw receipts are kept
 in the local experiment cache. The new native case also runs against
 the existing production implementation.
 
+** Witness projection and delivery phases
+
+Separate timestamps in a single solve split delivery into public row
+reads, benchmark-only oracle sorting, and public provenance construction.
+The initial baseline diagnostic measured these phase medians at
+1.238, 0.428, and 3.547 ms on the 48-vertex path. At 128 vertices the
+medians were 4.023, 3.588, and 22.483 ms. One 128-vertex witness phase
+took 159.796 ms and recorded 125.038 ms of GC wall time. These
+diagnostics are separate from the earlier delivery failure receipt.
+
+In =program/scheme-choice.ss=, each support's captured row contains
+the binding prefix followed by attribute key and offered values.
+The lowering records each premise occurrence as a literal or an
+ordinal below that prefix width. The candidate reads narrow bindings
+directly, with at most three tail steps per occurrence. Wider bindings
+fill their vector in one pass. This removes the temporary =take= list,
+and narrow supports also no longer allocate a binding vector. Existing
+step, support, and premise checkpoints are kept in their original order.
+Source origin and externally mutable witness lists are still detached.
+
+The Lean binding lemmas connect the admitted row and the wide-vector
+projection to the copied prefix. The native wide-rule case checks
+repeated binding occurrences, ordered premises, a caller-mutated
+witness, and the exact query checkpoint charges.
+
+The binding-only comparison removed 473,088 bytes from delivery of
+2,304 supports on the 48-vertex path and 3,391,488 bytes from
+16,384 supports at 128 vertices, taking medians from collector-free
+witness intervals. Witness P95 fell from 38.203 to 20.080 ms and
+from 97.417 to 78.991 ms. Full delivery in the instrumented 48-vertex
+cohort still regressed from 85.291 to 189.598 ms at P95. That exact
+candidate sample recorded 49.003 ms of CPU and no collection.
+
+The combined candidate captures each validated source origin from
+its compiled rule once. A private reader retains that copy and
+constructs a fresh public origin for every support, including both
+reader location layouts, filename strings, and symbolic filenames.
+The original public rule getter retains validation. The new native
+case mutates the locations, the filename string and the symbolic
+filename in one returned witness, then reads the original values
+from a second witness. =choice_witness_origin_admitted= connects
+reuse of validated offer slots to the per-visit validation predicate.
+
+The second paired diagnostic times public rows and witnesses before
+running benchmark-only oracle sorting. The original benchmark and
+its sorted complete delivery checks ran separately with their original
+timing boundary. Working sets, output and witnesses were checked
+in both comparisons.
+
+| Path vertices | Supports | Witness CPU median without GC (ms) | Allocated bytes without GC | Complete delivery P50 / P95 (ms) |
+|---------------+----------+------------------------------------+----------------------------+----------------------------------|
+| 48            | 2304     | 4.225 / 1.893                      | 9213824 / 8261504          | 97.263 / 417.197 to 105.534 / 403.449 |
+| 128           | 16384    | 27.508 / 8.619                     | 65526144 / 58726784        | 1009.524 / 1781.661 to 1552.832 / 1887.118 |
+
+CPU and bytes use medians of witness intervals without a collection.
+The 48- and 128-vertex phase runs used 30 and 10 samples per arm.
+The 128-vertex candidate P95 sample spent 1,782.934 ms in the solve,
+5.650 ms reading rows, and 98.534 ms generating witnesses. Its solve
+recorded 668.363 ms CPU and 552.364 ms of collector wall time.
+The remaining delay has no scheduler-level attribution.
+
+The ordinary sorted delivery checks also regressed. For the
+disconnected graph, P95 moved from 435.926 to 556.156 ms. The
+full combined candidate property suite reached the original
+90-second cap before completing the first generated-graph case.
+The exact baseline passed in 87.06 seconds. The result does not
+attribute the candidate timeout. The combined candidate passed
+the other 139 native cases and the Lean Guard's 196 build jobs.
+Both implementation candidates and their receipts are retained
+in the local cache. Production keeps the prior witness projection.
+
 ** POO graph and index correspondence
 
 The current =table/provider.ss= already uses sealed POO prototypes and

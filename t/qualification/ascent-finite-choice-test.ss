@@ -12,7 +12,9 @@
                  make-relational-program-solution)
         (only-in :gerbil-ascent/program/result gerbil-ascent-materialize-result)
         (only-in :gerbil-ascent/core/execution-control current-ascent-execution-control)
-        (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement)
+        (only-in :gerbil-ascent/program/scheme-choice call-with-relational-choice-measurement
+                 make-relational-choice-head lower-relational-choice-program)
+        (only-in :gerbil-ascent/program/func gerbil-ascent-atom gerbil-ascent-literal)
         (only-in "../../dev/finite-choice/oracle.ss" finite-choice-solutions))
 
 (export ascent-finite-choice-test)
@@ -350,6 +352,56 @@
                       (map (lambda (support) (if (= (car support) 0) '((left 0 7)) '((right 0 8))))
                            (caddr (car (read-proof)))))
         (check-equal? (relational-program-query model 'color) '((0 1) (1 1)))))
+    (test-case "wide witness bindings preserve occurrence order and checkpoint charges"
+      (let* ((program
+              (relational-choice-program
+                (relation seed (a b c d e f) '((1 2 3 4 5 6)))
+                (relation tie (a b) '((6 1)))
+                (choice color (node value))
+                (rule (closed (color ?f) (?a))
+                  (seed ?a ?b ?c ?d ?e ?f) (tie ?f ?a))
+                (limits 16 16 16)))
+             (model (car (relational-choice-solve program state-budget: 2)))
+             (events [])
+             (read (lambda () (relational-program-query model 'color provenance?: #t)))
+             (receipt
+              (parameterize ((current-ascent-execution-control
+                              (lambda (work facts) (set! events (cons (cons work facts) events)))))
+                (read)))
+             (support (car (caddr (car receipt)))))
+        (check-equal? (relational-program-query model 'color) '((6 1)))
+        (check-equal? events '((1 . 0) (1 . 0) (1 . 0) (1 . 0)))
+        (check-equal? (cadddr support) '((seed 1 2 3 4 5 6) (tie 6 1)))
+        (check-equal? (list-ref support 4) '(1))
+        (set-car! (cdr (car (cadddr support))) 100)
+        (check-equal? (cadddr (car (caddr (car (read))))) '((seed 1 2 3 4 5 6) (tie 6 1)))))
+    (test-case "each witness query detaches nested reader locations"
+      (let* ((base
+              (relational-program
+                (relation input (value) '((5)))
+                (relation color (node value))
+                (limits 16 16 16)))
+             (head (vector (string-copy "choice-source.ss") 11 19))
+             (premise (vector (list 'input-source) 25))
+             (program
+              (lower-relational-choice-program base '(color)
+                (list (make-relational-choice-head 'closed 'color
+                        (list (gerbil-ascent-literal 0))
+                        (list (gerbil-ascent-literal 1))
+                        (list (gerbil-ascent-atom 'input (list (gerbil-ascent-literal 5))))
+                        (vector head (list premise))))))
+             (model (car (relational-choice-solve program state-budget: 2)))
+             (read-origin
+              (lambda ()
+                (caddr (car (caddr (car (relational-program-query model 'color provenance?: #t))))))))
+        (let* ((origin (read-origin))
+               (head (vector-ref origin 0))
+               (body (car (vector-ref origin 1))))
+          (string-set! (vector-ref head 0) 0 #\X)
+          (set-car! (vector-ref body 0) 'modified)
+          (vector-set! head 1 -1)
+          (vector-set! body 1 -2)
+          (check-equal? (read-origin) '#(#("choice-source.ss" 11 19) (#((input-source) 25)))))))
     (test-case "each sibling keeps its own grounding support after replacement"
       (let* ((models (check-chain '((0 1) (1 2))))
              (proofs (map (lambda (model) (relational-program-query model 'color provenance?: #t)) models)))

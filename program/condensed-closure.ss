@@ -14,7 +14,8 @@
 
 ;; Construction owns the ordinal map and adjacency, and publishes only after
 ;; every source row is admitted. A delta copies only the changing vectors.
-(defstruct condensed-closure (source size positions labels adjacent members owner direct reach order) final: #t)
+(defstruct condensed-closure (source size positions labels adjacent members owner direct incoming reach order)
+  final: #t)
 (defstruct condensed-order (labels runs count) final: #t)
 (defstruct condensed-run (group start stop) final: #t)
 
@@ -29,6 +30,31 @@
       (let* ((other (bitwise-and remaining (- remaining 1)))
              (i (- (integer-length (bitwise-xor other remaining)) 1)))
         (loop other (consume i acc))))))
+
+;; Incoming masks exclude self arcs. The direct diagonal still records
+;; the existence of a nonempty internal path.
+(def (record-incoming! incoming target source-bit)
+  (vector-set! incoming target (bitwise-ior (vector-ref incoming target) source-bit)))
+
+(def (edit-incoming incoming source target insert?)
+  (let ((next (vector-copy incoming)) (bit (slot-bit source)))
+    (if insert?
+      (record-incoming! next target bit)
+      (vector-set! next target (bitwise-and (vector-ref next target) (bitwise-not bit))))
+    next))
+
+(def (reverse-quotient-mask incoming direct target)
+  (let (root (slot-bit target))
+    (let walk ((pending root) (settled 0))
+      (if (zero? pending)
+        (if (bit-set? target (vector-ref direct target)) settled (bitwise-xor settled root))
+        (let* ((remaining (bitwise-and pending (- pending 1)))
+               (bit (bitwise-xor pending remaining))
+               (group (- (integer-length bit) 1))
+               (done (bitwise-ior settled bit)))
+          (walk (bitwise-and (bitwise-ior remaining (vector-ref incoming group))
+                             (bitwise-not done))
+                done))))))
 
 (def (build-condensed-order ordered positions owner checkpoint!)
   ;; Run boundaries share the immutable ordered label spine.
@@ -154,20 +180,21 @@
                                 (else (bitwise-ior (slot-bit h) mask)))))
                     (walk (fx+ offset 1) next)))))))))
     (and cyclic?
-         (let (reach (vector-copy direct))
+         (let ((reach (vector-copy direct)) (incoming (make-vector groups 0)))
            (let close ((g (- groups 1)))
              (when (>= g 0)
                (checkpoint!)
-               (let (mask (vector-ref direct g))
+               (let ((mask (vector-ref direct g)) (bit (slot-bit g)))
                  (vector-set! reach g
                    (fold-members mask
                      (lambda (h out)
                        (checkpoint!)
+                       (unless (= g h) (record-incoming! incoming h bit))
                        (bitwise-ior out (vector-ref reach h)))
                      mask)))
                (close (- g 1))))
            (make-condensed-closure source size positions labels
-             adjacent members owner direct reach
+             adjacent members owner direct incoming reach
              (build-condensed-order (or ordered (list-sort < (vector->list labels)))
                positions owner checkpoint!))))))
 
@@ -178,7 +205,7 @@
 
 ;; Local partitions may assign dense ordinals in a different order.
 ;; Traverse the quotient dependencies before closing each mask.
-(def (close-edited-quotient direct checkpoint!)
+(def (close-edited-quotient direct incoming checkpoint!)
   (let* ((groups (vector-length direct))
          (reach (make-vector groups 0))
          (status (make-vector groups #f)))
@@ -189,12 +216,16 @@
         ((active) (error "ASCENT edited quotient has a cycle"))
         (else
          (vector-set! status g 'active)
-         (let* ((mask (vector-ref direct g))
+         (let* ((mask (vector-ref direct g)) (bit (slot-bit g))
                 (closed
                  (fold-members mask
                    (lambda (h out)
                      (checkpoint!)
-                     (if (= g h) out (bitwise-ior out (close! h)))) mask)))
+                     (if (= g h) out
+                       (begin
+                         (record-incoming! incoming h bit)
+                         (bitwise-ior out (close! h)))))
+                   mask)))
            (vector-set! reach g closed)
            (vector-set! status g 'done)
            closed))))
@@ -263,9 +294,10 @@
       ;; The newly added edge is internal. It supplies a self bit even
       ;; when none of the merged groups previously had a self bit.
       (vector-set! direct fresh-at (fold-members affected remap (slot-bit fresh-at))))
-    (let (reach (close-edited-quotient direct checkpoint!))
+    (let* ((incoming (make-vector groups 0))
+           (reach (close-edited-quotient direct incoming checkpoint!)))
       (make-condensed-closure source size prior.positions prior.labels
-        adjacent members owner direct reach
+        adjacent members owner direct incoming reach
         (build-condensed-order (condensed-order-labels prior.order)
           prior.positions owner checkpoint!)))))
 
@@ -289,7 +321,7 @@
                 (vector-ref prior.members group)))
     (if (null? (cdr parts))
       (make-condensed-closure source size prior.positions prior.labels
-        adjacent prior.members prior.owner prior.direct prior.reach prior.order)
+        adjacent prior.members prior.owner prior.direct prior.incoming prior.reach prior.order)
       (repair-local prior source size adjacent (slot-bit group) parts #t checkpoint!))))
 
 (def (gerbil-ascent-condensed-same-partition? (prior :- condensed-closure)
@@ -336,6 +368,8 @@
                (merge-local prior source size adjacent a b checkpoint!)
                (repair-partition prior source size adjacent checkpoint!))
              (let* ((direct (vector-copy prior.direct)) (reach (vector-copy prior.reach))
+                    (incoming (if (or (= a b) (bit-set? b (vector-ref direct a)))
+                                prior.incoming (edit-incoming prior.incoming a b #t)))
                     (suffix (bitwise-ior (slot-bit b) (vector-ref reach b))))
                (vector-set! direct a (bitwise-ior (slot-bit b) (vector-ref direct a)))
                (for (g (in-range (vector-length reach)))
@@ -343,7 +377,7 @@
                  (when (or (= g a) (bit-set? a (vector-ref prior.reach g)))
                    (vector-set! reach g (bitwise-ior (vector-ref prior.reach g) suffix))))
                (make-condensed-closure source size prior.positions prior.labels
-                 adjacent prior.members prior.owner direct reach prior.order)))))))
+                 adjacent prior.members prior.owner direct incoming reach prior.order)))))))
 
 (def (has-cross-edge? adjacent members owner a b checkpoint!)
   (let/cc found
@@ -401,20 +435,22 @@
                    (vector-set! direct a (bitwise-and (vector-ref direct a) (bitwise-not (slot-bit a))))
                    (set! reach (withdrawal-reach direct reach a checkpoint!)))
                  (make-condensed-closure source size prior.positions prior.labels
-                   adjacent prior.members prior.owner direct reach prior.order)))
+                   adjacent prior.members prior.owner direct prior.incoming reach prior.order)))
               ((and (not (= a b))
                     (or local? (and (bit-set? a (vector-ref prior.direct a))
                                     (bit-set? b (vector-ref prior.direct b)))))
                (let ((adjacent (vector-copy prior.adjacent))
                      (direct prior.direct)
-                     (reach prior.reach))
+                     (reach prior.reach)
+                     (incoming prior.incoming))
                  (vector-set! adjacent x (splice-neighbor (vector-ref adjacent x) at 1 #f))
                  (unless (has-cross-edge? adjacent prior.members prior.owner a b checkpoint!)
                    (set! direct (vector-copy direct))
                    (vector-set! direct a (bitwise-and (vector-ref direct a) (bitwise-not (slot-bit b))))
+                   (set! incoming (edit-incoming incoming a b #f))
                    (set! reach (withdrawal-reach direct reach a checkpoint!)))
                  (make-condensed-closure source size prior.positions prior.labels
-                   adjacent prior.members prior.owner direct reach prior.order)))
+                   adjacent prior.members prior.owner direct incoming reach prior.order)))
              (else #f)))))))
 
 ;; Group masks are exact, including the self bit only for a nonempty path.
@@ -423,7 +459,7 @@
   (let/cc decline
     (let* ((labels index.labels) (positions index.positions) (owner index.owner)
            (members index.members) (reach index.reach) (groups (vector-length members))
-           (order index.order)
+           (order index.order) (incoming index.incoming) (direct index.direct)
            (sizes (vector-map length members)) (target-counts (make-vector groups 0))
            (common (and count-by-size? (> groups 0) (vector-ref sizes 0)))
            (deviations []) (deviation-count 0) (count 0))
@@ -490,6 +526,26 @@
               (if origin (visit (list-ref key (- (length columns) (length origin)))
                                 #f (null? (cdr columns)))
                 (for-each visit (condensed-order-labels order)))))
+          (def (visit-target right)
+            (alet (vertex (hash-get positions right))
+              (let (mask (reverse-quotient-mask incoming direct (vector-ref owner vertex)))
+                (let/cc finish
+                  (for-each
+                    (lambda ((run :- condensed-run))
+                      (when (bit-set? run.group mask)
+                        (let walk ((rest run.start))
+                          (unless (eq? rest run.stop)
+                            (let (left (car rest))
+                              (consume [] left right)
+                              ;; An observable binding change resumes the original
+                              ;; scan at the next row in the same ordered suffix.
+                              (unless (and (eq? (car columns) 1) (null? (cdr columns))
+                                           (eq? (car key) right) (null? (cdr key)))
+                                (visit left right)
+                                (for-each visit (cdr rest))
+                                (finish (void))))
+                            (walk (cdr rest))))))
+                    (condensed-order-runs order))))))
           (def (visit-pair left right order first second)
             (when (reachable? left right)
               (consume [] left right)
@@ -508,6 +564,9 @@
             ([1 0] (match key
                      ([right left] (visit-pair left right '(1 0) right left))
                      (else (scan))))
+            ([1] (match key
+                   ([right] (if (fixnum? right) (visit-target right) (scan)))
+                   (else (scan))))
             (else (scan))))
         (def (stage destination state length)
           (let (end (fx* 2 length))

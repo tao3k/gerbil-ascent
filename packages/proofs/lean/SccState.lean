@@ -224,6 +224,143 @@ theorem refused_repair_retains_prior {Cut : Type} (prior candidate : Cut)
 
 end BorrowedAdjacency
 
+section ReverseQuotient
+
+/-- The incoming masks transpose the cross-component bits. Diagonal bits
+remain in the forward masks, where they witness a nonempty internal path. -/
+def incoming (direct : Nat → Nat → Prop) (target source : Nat) : Prop :=
+  source ≠ target ∧ direct source target
+
+def editBit (direct : Nat → Nat → Prop) (source target : Nat) (present : Prop)
+    (src to : Nat) : Prop :=
+  if src = source ∧ to = target then present else direct src to
+
+theorem incoming_edited_bit (direct : Nat → Nat → Prop) (source target : Nat)
+    (present : Prop) (src to : Nat) :
+    incoming (editBit direct source target present) to src ↔
+      (if src = source ∧ to = target then src ≠ to ∧ present else incoming direct to src) := by
+  by_cases h : src = source ∧ to = target <;> simp [incoming, editBit, h]
+
+inductive Ancestor (direct : Nat → Nat → Prop) (target : Nat) : Nat → Prop where
+  | root : Ancestor direct target target
+  | previous : incoming direct to src → Ancestor direct target to → Ancestor direct target src
+
+/-- The reverse walk describes the same forward cross-component paths. -/
+theorem ancestor_forward_path {direct : Nat → Nat → Prop} {target g : Nat} :
+    Ancestor direct target g ↔ Path (fun a b => incoming direct b a) g target := by
+  constructor
+  · intro h
+    induction h with
+    | root => exact .empty _
+    | previous arc _ ih => exact .next arc ih
+  · intro h
+    have extend {a b : Nat} (path : Path (fun a b => incoming direct b a) a b)
+        (suffix : Ancestor direct target b) : Ancestor direct target a := by
+      induction path with
+      | empty => exact suffix
+      | next arc _ ih => exact .previous arc (ih suffix)
+    exact extend h .root
+
+/-- `pending` and `settled` are disjoint masks. Moving one bit to settled
+and OR-ing its incoming bits into pending preserves reachability soundness
+and records that all incoming arcs of each settled bit have been seen. -/
+def ReverseInvariant (direct : Nat → Nat → Prop) (target : Nat)
+    (pending settled : Nat → Prop) : Prop :=
+  (pending target ∨ settled target) ∧
+  (∀ g, pending g ∨ settled g → Ancestor direct target g) ∧
+  (∀ g, settled g → ¬ pending g) ∧
+  (∀ g h, settled g → incoming direct g h → pending h ∨ settled h)
+
+theorem reverse_seed (direct : Nat → Nat → Prop) (target : Nat) :
+    ReverseInvariant direct target (· = target) (fun _ => False) := by
+  refine ⟨Or.inl rfl, ?_, ?_, ?_⟩
+  · intro g h
+    rcases h with rfl | h
+    · exact .root
+    · contradiction
+  · simp
+  · simp
+
+theorem reverse_step {direct : Nat → Nat → Prop} {target g : Nat}
+    {pending settled : Nat → Prop} (inv : ReverseInvariant direct target pending settled)
+    (take : pending g) :
+    ReverseInvariant direct target
+      (fun h => (pending h ∨ incoming direct g h) ∧ ¬ (settled h ∨ h = g))
+      (fun h => settled h ∨ h = g) := by
+  obtain ⟨root, sound, _, closed⟩ := inv
+  have keep : ∀ h, pending h ∨ settled h →
+      ((pending h ∨ incoming direct g h) ∧ ¬ (settled h ∨ h = g)) ∨ settled h ∨ h = g := by
+    intro h old
+    by_cases done : settled h ∨ h = g
+    · exact Or.inr done
+    · exact Or.inl ⟨Or.inl (old.resolve_right (fun cleared => done (Or.inl cleared))), done⟩
+  refine ⟨keep target root, ?_, ?_, ?_⟩
+  · intro h current
+    rcases current with ⟨old | edge, _⟩ | old | equal
+    · exact sound h (Or.inl old)
+    · exact .previous edge (sound g (Or.inl take))
+    · exact sound h (Or.inr old)
+    · subst h; exact sound g (Or.inl take)
+  · intro h done waiting
+    exact waiting.2 done
+  · intro h v done edge
+    rcases done with old | rfl
+    · exact keep v (closed h v old edge)
+    · by_cases done : settled v ∨ v = h
+      · exact Or.inr done
+      · exact Or.inl ⟨Or.inr edge, done⟩
+
+theorem reverse_exhausted_exact {direct : Nat → Nat → Prop} {target : Nat}
+    {settled : Nat → Prop}
+    (inv : ReverseInvariant direct target (fun _ => False) settled) (g : Nat) :
+    settled g ↔ Ancestor direct target g := by
+  obtain ⟨root, sound, _, closed⟩ := inv
+  refine ⟨fun done => sound g (Or.inr done), ?_⟩
+  intro reachable
+  induction reachable with
+  | root => exact root.resolve_left id
+  | previous arc _ ih => exact (closed _ _ ih arc).resolve_left id
+
+/-- Inter-component reversal permits a zero-edge path at the target;
+regular selection keeps that bit only if the forward self bit is present. -/
+def nonemptyPredecessor (direct : Nat → Nat → Prop) (target source : Nat) : Prop :=
+  Ancestor direct target source ∧ (source ≠ target ∨ direct target target)
+
+theorem reverse_selection_exact {direct : Nat → Nat → Prop} {target : Nat}
+    {settled : Nat → Prop}
+    (inv : ReverseInvariant direct target (fun _ => False) settled) (g : Nat) :
+    (settled g ∧ (g ≠ target ∨ direct target target)) ↔ nonemptyPredecessor direct target g := by
+  unfold nonemptyPredecessor
+  rw [reverse_exhausted_exact inv]
+
+/-- The selected groups filter the original label spine. Group IDs never
+participate in the public ordering, including interleaved group members. -/
+theorem reverse_selection_order {Label : Type} (ordered : List Label)
+    (target : Label) (selection full : Label → Bool)
+    (same : ∀ label, selection label = full label) :
+    (ordered.filter selection).map (fun label => (label, target)) =
+      (ordered.filter full).map (fun label => (label, target)) := by
+  rw [funext same]
+
+/-- Witness replay reads the retained concrete adjacency and its version.
+Selection adds a derived index without changing any of those inputs. -/
+def replayReverseCut (cut : Nat × Nat) (row : Nat → List Nat)
+    (witnessCut : Nat × Nat) (edges : List (Nat × Nat)) : Bool :=
+  cut == witnessCut && edges.all (fun (a, b) => (row a).contains b)
+
+theorem reverse_selection_retains_witness
+    (cut : Nat × Nat) (row : Nat → List Nat) (witnessCut : Nat × Nat)
+    (edges : List (Nat × Nat)) (prior next : Nat → Nat → Prop) :
+    (fun (_ : Nat → Nat → Prop) => replayReverseCut cut row witnessCut edges) prior =
+      (fun (_ : Nat → Nat → Prop) => replayReverseCut cut row witnessCut edges) next := rfl
+
+theorem reverse_selection_rejects_other_cut
+    (cut witnessCut : Nat × Nat) (row : Nat → List Nat) (edges : List (Nat × Nat))
+    (different : cut ≠ witnessCut) : replayReverseCut cut row witnessCut edges = false := by
+  simp [replayReverseCut, different]
+
+end ReverseQuotient
+
 def emit : Code → String
   | .enter => "unseen"
   | .stay => "completed"
@@ -237,3 +374,7 @@ def source : String :=
 end Ascent.SccState
 
 #print axioms Ascent.SccState.ranked_components_are_singletons
+
+#print axioms Ascent.SccState.reverse_exhausted_exact
+#print axioms Ascent.SccState.reverse_selection_order
+#print axioms Ascent.SccState.reverse_selection_rejects_other_cut

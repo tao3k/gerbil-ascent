@@ -13,7 +13,8 @@
                  gerbil-ascent-session-close! gerbil-ascent-session-edit-edge!))
 (export scc-bound-query-test scc-first-origin-test scc-split-merge-test
         scc-ten-million-split-merge-test scc-ten-million-local-split-merge-test
-        scc-ten-million-global-edge-edit-test scc-ten-million-local-edge-edit-test)
+        scc-ten-million-global-edge-edit-test scc-ten-million-local-edge-edit-test
+        scc-ten-million-global-right-selection-test scc-ten-million-local-right-selection-test)
 
 (def vertices 1664)
 (def group-width 64)
@@ -188,9 +189,11 @@
                    (* 1000. (/ (car sample) ticks-per-sec)) (cdr sample)))
           (newline))
         (reverse samples)))
-    (if (null? replacement) '(publish first-origin) '(replace publish update first-origin))
     (if (null? replacement)
-      (list publication query)
+      (if (null? query) '(publish) '(publish first-origin))
+      '(replace publish update first-origin))
+    (if (null? replacement)
+      (if (null? query) (list publication) (list publication query))
       (list replacement publication
         (map (lambda (before after) (map + before after)) replacement publication)
         query))))
@@ -297,3 +300,81 @@
   (test-suite "Versioned return bridge between two SCCs of a ten-million-row logical closure"
     (test-case "Edit one edge without capturing a whole source replacement"
       (measure-split-merge (* 71 group-width) (* 69 group-width) #t))))
+
+
+(def (measure-right-selection groups return-target)
+  (check (##current-vm-processor-count) => 1)
+  (let* ((size (* groups group-width))
+         (source (inputs #f #t size return-target))
+         (suffix (- groups (quotient return-target group-width)))
+         (split-rows (* group-width group-width (quotient (* groups (+ groups 1)) 2)))
+         (restored-rows (+ split-rows
+                          (* group-width group-width (quotient (* suffix (- suffix 1)) 2))))
+         (session (gerbil-ascent-open-condensed-actor-session (program source restored-rows)))
+         (last (- size 1))
+         (bytes (make-f64vector 2 0.))
+         (split-publish []) (restore-publish [])
+         (split-first []) (restore-first []) (split-broad []) (restore-broad []))
+    (def (edit result insert?)
+      (observe-edit bytes
+        (lambda () (gerbil-ascent-session-edit-edge! session result 'edge
+                     (if insert? 'insert 'delete) last return-target))))
+    (def (query result right expected)
+      (let* ((next 0) (visit (.ref result 'visit-rows)) (key (list right))
+             (start (tick)))
+        (visit 'reach '(1) key
+          (lambda (left target)
+            (unless (and (= left next) (< next expected) (= target right))
+              (error "incorrect ordered right selection" left target next right))
+            (set! next (+ next 1)))
+          fields?: #t)
+        (let (elapsed (- (tick) start))
+          (check next => expected)
+          elapsed)))
+    (try
+      (let* ((original (gerbil-ascent-session-run session))
+             (witness ((.ref original 'closure-witness) last return-target 128)))
+        (check ((.ref original 'verify-closure-witness) witness) => #t)
+        (let loop ((round 0) (prior original))
+          (unless (= round 32)
+            (let-values (((split publication) (edit prior #f)))
+              (set! split-publish (cons publication split-publish))
+              (set! split-first (cons (query split return-target (+ return-target group-width)) split-first))
+              (set! split-broad (cons (query split last size) split-broad))
+              (check (.ref split 'closure-update) => 'split-local)
+              (check (cdr (assq 'reach ((.ref split 'relation-sizes)))) => split-rows)
+              (check ((.ref split 'verify-closure-witness) witness) => #f)
+              (check ((.ref split 'closure-witness) last return-target 128) => #f)
+              (let-values (((restored publication) (edit split #t)))
+                (set! restore-publish (cons publication restore-publish))
+                (set! restore-first (cons (query restored return-target size) restore-first))
+                (set! restore-broad (cons (query restored last size) restore-broad))
+                (check (.ref restored 'closure-update) => 'merged-local)
+                (check (cdr (assq 'reach ((.ref restored 'relation-sizes)))) => restored-rows)
+                (check ((.ref restored 'verify-closure-witness) witness) => #f)
+                (let (fresh ((.ref restored 'closure-witness) last return-target 128))
+                  (check ((.ref restored 'verify-closure-witness) fresh) => #t))
+                (loop (+ round 1) restored)))))
+        (check ((.ref original 'verify-closure-witness) witness) => #t)
+        (query original return-target size)
+        (query original -1 0)
+        (write (list 'WORKLOAD 'right-selection 'vertices size 'split-rows split-rows
+                     'restored-rows restored-rows 'return-target return-target))
+        (newline)
+        (report 'split-right-first split-first)
+        (report 'restored-right-first restore-first)
+        (report 'split-right-broad split-broad)
+        (report 'restored-right-broad restore-broad)
+        (report-edit 'split [] split-publish [])
+        (report-edit 'merge [] restore-publish []))
+      (finally (gerbil-ascent-session-close! session)))))
+
+(def scc-ten-million-global-right-selection-test
+  (test-suite "Target selection around a global return bridge"
+    (test-case "First and broad right-bound requests on each version"
+      (measure-right-selection 50 0))))
+
+(def scc-ten-million-local-right-selection-test
+  (test-suite "Target selection around a local return bridge"
+    (test-case "First and broad right-bound requests on each version"
+      (measure-right-selection 71 (* 69 group-width)))))

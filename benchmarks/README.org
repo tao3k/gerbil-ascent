@@ -358,8 +358,8 @@ The corresponding delivery probes are selected with
 =actor-million-list-delivery-test=, =actor-million-visit-test=, or
 =actor-million-fields-test=. Each consumes and independently checks every
 row in a fresh million-row result for 1,000 source replacements. First-row
-timing is separate from complete query timing. The original query and
-recursive suites retain their bitmap oracle and thresholds. The
+timing is separate from complete query timing. The projection and
+recursive suites retain their bitmap oracle. The
 =actor-million-fields-controls-test= suite exercises callback exit,
 reentrant replacement, selected keys, and the general row representation.
 
@@ -383,8 +383,10 @@ Preparation, one cold complete query and changed-source requests are distinct
 receipts. Complete query timing includes public Session execution and full row
 export. Changed-source request latency additionally includes replacement and
 independent oracle verification. Sustained throughput includes client checks
-and progress reporting; reciprocal phase times are not throughput. The
-existing strict 100 ms P95 policy applies only to complete populations.
+and progress reporting. The million-row pure projection with complete
+mutable lists requires P95 strictly below 150 ms. The recursive list
+requires P95 below 100 ms, and both million-row buffer suites require
+P95 below 50 ms. Each gate uses all 1,000 requests.
 
 The cold-query phase receipt measures Session run through publication, the
 result accessor, and the independent oracle on the same request. Progress

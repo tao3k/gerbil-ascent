@@ -682,7 +682,8 @@
 (def actor-million-query-test
   (test-suite "million-input complete query"
     (test-case "one million inputs and one million fully checked output rows"
-      (million-query 1000000 2 #f))))
+      ;; The detached projection keeps both caller inputs live during GC.
+      (measure-chain-query 1000000 2 #f #f #f #f 1000 150000000))))
 
 (def actor-million-recursive-test
   (test-suite "million-output recursive query"

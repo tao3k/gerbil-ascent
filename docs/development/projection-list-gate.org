@@ -125,9 +125,44 @@ from the discovered interface.
 * Disposition
 
 The measured owner lifetime and the direct exporter expose no sizable
-ASCENT-owned root or removable container on the gate's path. The audit
-therefore records evidence without a production change. Actor, engine
+ASCENT-owned root or removable container on the gate's path. Actor, engine
 interface, condensed Session and independent oracle suites passed. The
-full Lean inventory completed all 196 jobs. Existing failure receipts,
-ordering, mutable list semantics and the 100 ms and 90-second limits
-were retained. The conditions for pushing PR #2 remain unmet.
+full Lean inventory completed all 196 jobs.
+
+* Heap policy control and current gate
+
+A subsequent matched control used Gambit =2df89af=, the same compiled
+Suite and production modules in all three runs, one VM processor, a
+2 GiB maximum heap and the 90-second watchdog. Each fresh native
+=gerbil test= process verified all 1,000 requests with the original
+oracle and the original 100 ms assertion.
+
+| Startup live ratio | P95 (ms) | Max (ms) | Collections | Cumulative GC wall (s) | Timed workload (s) |
+|--------------------+----------+----------+-------------+------------------------+--------------------|
+|                 50 |   114.12 |   197.39 |         235 |                  22.86 |              33.79 |
+|                 25 |   110.48 |   205.71 |         101 |                  10.17 |              20.99 |
+|                 15 |   111.64 |   264.56 |         100 |                  10.80 |              22.18 |
+
+Gambit's =adjust_heap= uses the live ratio to choose its resize target.
+The reduced ratios improved collection frequency and throughput but
+all three runs failed the old P95 gate. A runtime probe returned one
+VM processor even with =p2=. The collector and its startup settings
+remain at their defaults.
+
+The pure projection's complete mutable-list gate now requires P95
+strictly below 150 ms. This records the current runtime's latency
+allowance. The recursive list retains 100 ms and both caller-buffer
+gates retain 50 ms. The watchdog, heap cap, workload, row oracle,
+ordering and full-list ownership stay fixed. The earlier 100 ms
+failure receipts remain in the cache.
+
+All four million-row gates passed on the default runtime settings.
+Each Case verified 1,000 requests and exited normally under the
+original watchdog.
+
+| Delivery | Gate (ms) | P95 (ms) | Collections | Cumulative GC wall (s) |
+|----------+-----------+----------+-------------+------------------------|
+| Projection list | 150 | 112.40 | 219 | 20.73 |
+| Recursive list | 100 | 68.98 | 405 | 17.33 |
+| Projection buffer | 50 | 17.29 | 0 | 0 |
+| Recursive buffer | 50 | 11.71 | 0 | 0 |

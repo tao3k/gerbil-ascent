@@ -5,7 +5,7 @@
         (only-in :clan/poo/object .o .cc .ref .ref/cached object-revision)
         (only-in :clan/poo/type define-type element? validate Type. Any)
         (only-in :clan/poo/type Record)
-        (only-in :clan/poo/object-contract ObjectContract.)
+        (only-in :clan/poo/types/object-contract ObjectContract.)
         (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract. YuanxuContract.
                  yuanxu-predicate-contract)

@@ -10,7 +10,7 @@
         (only-in :gerbil-ascent/table/storage gerbil-ascent-set-storage-provider)
         (only-in :gerbil-ascent/program/func gerbil-ascent-variable gerbil-ascent-atom gerbil-ascent-relation gerbil-ascent-rule gerbil-ascent-program gerbil-ascent-guard
                  gerbil-ascent-construct-inert-program)
-        (only-in :clan/poo/slot-observation call-with-slot-read-observer)
+        (only-in :clan/poo/object/slot-observation call-with-slot-read-observer)
         (only-in :gerbil-ascent/program/types canonical-value-check-current? GerbilAscentTermContract GerbilAscentAtomContract GerbilAscentRuleContract GerbilAscentGuardContract
                  GerbilAscentSessionContract gerbil-ascent-make-session-value
                  GerbilAscentRelationContract GerbilAscentProgramContract gerbil-ascent-make-relation-value gerbil-ascent-make-rule-value gerbil-ascent-make-atom-value))

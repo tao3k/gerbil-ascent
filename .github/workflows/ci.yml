@@ -101,7 +101,8 @@ jobs:
       - name: Verify declared Gerbil interfaces
         run: gerbil env gerbil interactive -e '(begin (import :asp-gerbil-scheme/building-api :asp-gerbil-scheme/benchmark-api) (displayln "ascent-dependencies-ready"))'
       - name: Restore content-bound compiled artifacts
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        id: compiled-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ${{ steps.capacity.outputs.cache_sources }}
@@ -109,7 +110,7 @@ jobs:
             .gerbil/lib/gerbil-ascent
             .gerbil/lib/static/gerbil-ascent__*
             .gerbil/bin/libascent*
-          key: ascent-compiled-v3-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
+          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
       - name: Admit restored compiler inputs
         env:
           EXPECTED_SOURCE_BYTES: ${{ steps.capacity.outputs.source_bytes }}
@@ -117,6 +118,9 @@ jobs:
         run: |
           test "$EXPECTED_SOURCE_BYTES" = "$RESTORED_SOURCE_BYTES"
           git diff --exit-code HEAD -- '*.ss' bindings/c gerbil.pkg justfile ':(exclude)manifest.ss'
+          if [ "${{ matrix.lane }}" = "semantics" ] && [ -d .gerbil/lib/gerbil-ascent/t/qualification ]; then
+            test -z "$(find .gerbil/lib/gerbil-ascent/t/qualification -maxdepth 1 -name '*-test.ssi')"
+          fi
       - name: Build Scheme package
         run: |
           just check-production-build
@@ -145,9 +149,37 @@ jobs:
           name: performance-transcript-${{ github.sha }}-${{ github.run_attempt }}
           path: /tmp/ascent-compiled-qualification.out
           retention-days: 30
+      - name: Save content-bound compiled performance artifacts
+        if: ${{ matrix.lane == 'performance' && steps.compiled-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ steps.capacity.outputs.cache_sources }}
+            .cache/ascent/compiled-library
+            .gerbil/lib/gerbil-ascent
+            .gerbil/lib/static/gerbil-ascent__*
+            .gerbil/bin/libascent*
+          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
       - name: Prepare complete source-semantic dependencies
         if: ${{ matrix.lane == 'semantics' }}
         run: just prepare-semantic-library
+      - name: Verify semantic cache phase boundary before save
+        if: ${{ matrix.lane == 'semantics' }}
+        run: |
+          if [ -d .gerbil/lib/gerbil-ascent/t/qualification ]; then
+            test -z "$(find .gerbil/lib/gerbil-ascent/t/qualification -maxdepth 1 -name '*-test.ssi')"
+          fi
+      - name: Save content-bound compiled semantic artifacts
+        if: ${{ matrix.lane == 'semantics' && steps.compiled-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ steps.capacity.outputs.cache_sources }}
+            .cache/ascent/compiled-library
+            .gerbil/lib/gerbil-ascent
+            .gerbil/lib/static/gerbil-ascent__*
+            .gerbil/bin/libascent*
+          key: ascent-compiled-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ matrix.lane }}-${{ steps.capacity.outputs.toolchain }}-${{ steps.capacity.outputs.source_inputs }}-${{ steps.capacity.outputs.source_bytes }}
       - name: Qualify native Yuanxu Library queries and evidence reuse
         if: ${{ matrix.lane == 'semantics' }}
         run: ASCENT_GXTEST_TIMEOUT=180s timeout 180s just test-file t/yanxu/Library/candidate/library-module-test.ss 2G

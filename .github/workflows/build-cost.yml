@@ -254,7 +254,7 @@ jobs:
   macos-dependencies:
     if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.baseline == '' && !inputs.process_throughput) }}
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
     steps:

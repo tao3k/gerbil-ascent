@@ -70,9 +70,9 @@
 (defstruct reasoning-receipt
   (status snapshot-identity snapshot-generation snapshot-digest
           candidate-digest query rows diagnostics evidence proof
-          nonmembership stratified))
-(defstruct reasoning-evidence (kind support reachable))
-(defstruct reasoning-stratified-evidence (status finite proof work-budget))
+          nonmembership stratified) final: #t)
+(defstruct reasoning-evidence (kind support reachable) final: #t)
+(defstruct reasoning-stratified-evidence (status finite proof work-budget) final: #t)
 
 (def (copy-row row arity)
   (and (list? row) (= (length row) arity)
@@ -316,7 +316,7 @@
          (candidate-copy-pairs (reasoning-evidence-reachable evidence))))
    proof nonmembership stratified))
 
-(defstruct captured-stage (ok? value))
+(defstruct captured-stage (ok? value) final: #t)
 (def (capture thunk)
   (with-catch
    (lambda (failure) (make-captured-stage #f failure))
@@ -437,7 +437,7 @@
 ;;     %
 ;;; Boundary: Structural diagnostics use candidate clause indexes, not
 ;;; Scheme syntax locations; planner failures retain their own messages.
-(defstruct attempt-observation (rows evidence))
+(defstruct attempt-observation (rows evidence) final: #t)
 
 ;;; Each stage owns its failure classification. Proof failures are diagnostics
 ;;; on a complete native answer; inspection/planning/solve failures are not.

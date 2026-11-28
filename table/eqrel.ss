@@ -8,9 +8,9 @@
         gerbil-ascent-eqrel-state? gerbil-ascent-eqrel-insert!
         gerbil-ascent-eqrel-freeze gerbil-ascent-eqrel-publish! gerbil-ascent-eqrel-observation
         gerbil-ascent-eqrel-replay-insert!)
-(defstruct eqrel-component (members size))
-(defstruct eqrel-cut (count view))
-(defstruct eqrel-state (components count published origin))
+(defstruct eqrel-component (members size) final: #t)
+(defstruct eqrel-cut (count view) final: #t)
+(defstruct eqrel-state (components count published origin) final: #t)
 (def gerbil-ascent-eqrel-state? eqrel-state?)
 (def (empty-cut)
   (make-eqrel-cut 0 (gerbil-ascent-explicit-view [] 0)))

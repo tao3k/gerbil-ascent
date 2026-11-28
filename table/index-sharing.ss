@@ -202,10 +202,10 @@
       (error "index sharing chains omit a requirement"))
     layout))
 
-(defstruct shared-index (columns root ordinal views projection key-plans))
+(defstruct shared-index (columns root ordinal views projection key-plans) final: #t)
 ;;; Immutable column facts and one mutable scratch frame belong to one index.
 ;;; Neither metadata nor frame is a result row or a published bucket spine.
-(defstruct column-projection (columns writes frame))
+(defstruct column-projection (columns writes frame) final: #t)
 ;;; A lookup plan owns only detached column facts and cleared private scratch.
 (defstruct key-projection (physical writes frame) final: #t)
 

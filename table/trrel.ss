@@ -14,7 +14,7 @@
 ;;; The public constructor returns an opaque provider state. Its private
 ;;; record names the membership and directional indexes; each run owns all
 ;;; three tables and extension functions alone update their contents.
-(defstruct trrel-state (known predecessors successors))
+(defstruct trrel-state (known predecessors successors) final: #t)
 
 ;; : (-> TransitiveClosureState)
 (def (gerbil-ascent-trrel-state)

@@ -21,15 +21,15 @@
         relational-choice-solve RelationalChoiceLimit?
         call-with-relational-choice-measurement)
 
-(defstruct relational-choice-head (kind relation keys values body origin))
-(defstruct relational-choice-offer (relation kind attribute bindings width ordinal rule premises))
+(defstruct relational-choice-head (kind relation keys values body origin) final: #t)
+(defstruct relational-choice-offer (relation kind attribute bindings width ordinal rule premises) final: #t)
 ;; Frozen buckets. Tree headers fork in constant time and each write replaces
 ;; a bucket, so a saved parent never observes a child's edits.
 (defstruct choice-constraint (rank first-closed closed open closed-support) final: #t)
 (defstruct choice-entry (key parent addition trace) final: #t)
 (defstruct choice-step (assignment kind support) final: #t)
 (defstruct choice-parent (cut constraints units remaining) final: #t)
-(defstruct relational-choice-program (grounding offers choice-names))
+(defstruct relational-choice-program (grounding offers choice-names) final: #t)
 (deferror-class RelationalChoiceLimit ())
 
 (defstruct choice-measurement

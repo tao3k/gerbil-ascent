@@ -40,8 +40,8 @@
   select-neighbors
   ordered-neighbors)
 
-(defstruct uf-node (parent members size reach predecessors order))
-(defstruct uf-group (nodes roots next-order indexed? population registry))
+(defstruct uf-node (parent members size reach predecessors order) final: #t)
+(defstruct uf-group (nodes roots next-order indexed? population registry) final: #t)
 (defstruct uf-insertion (group-key group row left-node right-node a b) final: #t)
 (defstruct frozen-members (rows count) final: #t)
 ;; Primitive accesses below are confined to private allocated buffers; reads

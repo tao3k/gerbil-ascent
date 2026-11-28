@@ -10,8 +10,8 @@
         relational-op? relational-op-arity relational-op-kind relational-op-inputs relational-op-data
         relational-transform? relational-transform-parameter relational-transform-body
         relational-transform-input-arity relational-transform-output-arity require-op valid-column?)
-(defstruct relational-op (kind arity inputs data))
-(defstruct relational-transform (parameter body input-arity output-arity))
+(defstruct relational-op (kind arity inputs data) final: #t)
+(defstruct relational-transform (parameter body input-arity output-arity) final: #t)
 (def (require-op value)
   (unless (relational-op? value)
     (error "expected a relational operator descriptor" value))

@@ -17,7 +17,7 @@
 
 ;;; Finite recursive equations, with exact completed lower-stratum observations.
 ;;; This represents all grounded alternatives, rather than one founded tree.
-(defstruct stratified-provenance (status stamp nodes edges roots))
+(defstruct stratified-provenance (status stamp nodes edges roots) final: #t)
 ;;; Boundary: bind graph identity to the complete source and candidate input.
 ;; : (forall (s p d) (-> s p d Digest))
 ;; : (-> ReasoningSnapshot CandidateSpec Digest Digest)

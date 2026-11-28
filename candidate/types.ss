@@ -40,10 +40,10 @@
   +max-derived-facts+
   +max-output-facts+)
 
-(defstruct reasoning-snapshot (identity generation digest relations))
-(defstruct reasoning-diagnostic (code path detail))
-(defstruct reasoning-candidate (relations facts rules query limits))
-(defstruct candidate-rejection (diagnostic))
+(defstruct reasoning-snapshot (identity generation digest relations) final: #t)
+(defstruct reasoning-diagnostic (code path detail) final: #t)
+(defstruct reasoning-candidate (relations facts rules query limits) final: #t)
+(defstruct candidate-rejection (diagnostic) final: #t)
 
 (def +max-relations+ 64)
 

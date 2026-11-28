@@ -25,8 +25,8 @@
         relational-program-append-source! relational-program-replace-source!
         relational-program-transaction! relational-program-session-run)
 
-(defstruct relational-session (engine source-arities))
-(defstruct relational-program-session (engine source-arities))
+(defstruct relational-session (engine source-arities) final: #t)
+(defstruct relational-program-session (engine source-arities) final: #t)
 
 ;;; Retained sessions accept replacements only through exported source
 ;;; handles. The old session owns rollback after an update or solve fails.

@@ -25,7 +25,7 @@
 (defstruct edge-journal (base hidden offsets appended next) final: #t)
 (defstruct source-change (position rows count affine) final: #t)
 (defstruct affine-source (count left right left-stride right-stride) final: #t)
-(defstruct source-cut (slots count packed-source recursive-source? alternate))
+(defstruct source-cut (slots count packed-source recursive-source? alternate) final: #t)
 
 ;;; Newest-first is the evaluator's initial lane. Appends allocate one
 ;;; detached outer pair per admitted occurrence and borrow the old suffix.

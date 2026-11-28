@@ -36,7 +36,7 @@
 
 (defstruct finite-evidence
   (status snapshot-identity snapshot-generation snapshot-digest
-          candidate-digest program query work-budget closure))
+          candidate-digest program query work-budget closure) final: #t)
 
 ;;; Replay owns the row copies, reversed accumulator, membership index and
 ;;; published frontier. Published spines are never mutated: a rule can retain

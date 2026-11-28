@@ -16,7 +16,7 @@
 (def +max-certificate-row-arity+ 1024)
 
 ;; Private invocation-owned state; refusal leaves both counters unchanged.
-(defstruct certificate-material (rows cells))
+(defstruct certificate-material (rows cells) final: #t)
 (def (make-certificate-material-budget)
   (make-certificate-material 0 0))
 ;; : (-> MaterialBudget Row Boolean)

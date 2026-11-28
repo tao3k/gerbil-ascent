@@ -8,11 +8,11 @@
         (only-in :gerbil-ascent/temporal/graph temporal-cut-cyclic?))
 (export project-temporal-cut temporal-cut-projection-edges
         temporal-cut-projection-frontier temporal-cut-projection-rejection)
-(defstruct temporal-cut-projection (edges frontier rejection))
+(defstruct temporal-cut-projection (edges frontier rejection) final: #t)
 
 ;;; Facts belong to one detached projection. Canonical lists still own
 ;;; iteration order; these records never escape into a value or receipt.
-(defstruct projection-node (data member? eligible? outgoing discovery window))
+(defstruct projection-node (data member? eligible? outgoing discovery window) final: #t)
 
 (def (projection-index events members)
   (let (table (make-hash-table-eq size: (length events)))

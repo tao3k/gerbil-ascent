@@ -4,8 +4,8 @@
 ;;; Invocation-local ordered export. Packed flags replace a second UF graph;
 ;;; no replay matrix, emitted tuple or cursor is retained by the frozen cut.
 (export gerbil-ascent-small-journal-export)
-(defstruct replay-node (parent members size inbound? outbound?))
-(defstruct replay-group (nodes roots values used width bits))
+(defstruct replay-node (parent members size inbound? outbound?) final: #t)
+(defstruct replay-group (nodes roots values used width bits) final: #t)
 (def (root n) (if (replay-node-parent n) (root (replay-node-parent n)) n))
 (def (position group a b) (##fx+ (##fx* a (replay-group-width group)) b))
 (def (reaches? group a b)

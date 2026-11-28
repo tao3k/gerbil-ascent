@@ -31,7 +31,7 @@
 ;;; Complete finite grounded derivation graph. A fact node may have several
 ;;; alternatives and rule alternatives may refer back to that same node.
 ;;; Cycles represent recursive equations, not an infinite list of proof trees.
-(defstruct positive-provenance (status witness alternatives))
+(defstruct positive-provenance (status witness alternatives) final: #t)
 
 ;; candidate-positive-provenance
 ;;   : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows Nat Nat PositiveProvenance)

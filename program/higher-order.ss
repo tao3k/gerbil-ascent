@@ -28,14 +28,14 @@
 ;; Relation fields hold arity/domain; arrow fields hold input/output types.
 ;; : (forall (a b) (-> Symbol a b (Type (Variant a b))))
 ;; : (-> TypeKind TypeLeft TypeRight FiniteType)
-(defstruct relational-type (kind left right))
+(defstruct relational-type (kind left right) final: #t)
 ;; : (forall (a c d) (-> (Type a) Symbol [(Term c)] d (Term a)))
 ;; : (-> FiniteType TermKind Children TermData TypedTerm)
-(defstruct relational-typed-term (type kind inputs data))
+(defstruct relational-typed-term (type kind inputs data) final: #t)
 ;; Lexical bindings use descriptor identity, never source-name equality.
 ;; : (forall (a b c d) (-> (Term a) (Term b) [(Pair (Term c) d)] (Closure a b)))
 ;; : (-> ParameterTerm BodyTerm LexicalEnvironment ReifiedClosure)
-(defstruct typed-closure (parameter body environment))
+(defstruct typed-closure (parameter body environment) final: #t)
 
 ;; Own the domain spine; its scalar elements have stable equality and hashing.
 ;; : (forall (a) (-> Integer [a] (Type [a])))

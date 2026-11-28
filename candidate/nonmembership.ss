@@ -43,7 +43,7 @@
 
 (defstruct positive-nonmembership
   (status snapshot-identity snapshot-generation snapshot-digest
-          candidate-digest program-fingerprint query work-budget closure))
+          candidate-digest program-fingerprint query work-budget closure) final: #t)
 
 ;; : (forall (row) (-> (Closure row) Boolean))
 ;; : (-> Datum Boolean)

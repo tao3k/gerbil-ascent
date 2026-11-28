@@ -15,7 +15,7 @@
         candidate-provenance-preview-withdraw candidate-provenance-compact
         provenance-maintenance-size candidate-provenance-heights
         provenance-maintenance-alternatives)
-(defstruct provenance-maintenance (rows-table roots edges sources alive removed))
+(defstruct provenance-maintenance (rows-table roots edges sources alive removed) final: #t)
 
 ;;; Every phase reads the membership it owns, including tentative withdrawal
 ;;; and fresh height labels. A shared selector never borrows published state.

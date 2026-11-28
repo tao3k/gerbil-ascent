@@ -128,7 +128,7 @@
 
 ;;; One inspection owns name resolution and source/derived write authority.
 ;;; Public candidate records stay inert; these indexes never escape inspection.
-(defstruct candidate-declaration (arity source?))
+(defstruct candidate-declaration (arity source?) final: #t)
 (def (candidate-schema source derived)
   (let (schema (make-hash-table-eq))
     (for-each

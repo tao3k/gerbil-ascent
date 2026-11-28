@@ -15,7 +15,7 @@
 (export make-component-snapshot gerbil-ascent-component-snapshot gerbil-ascent-run-positive-component!
         gerbil-ascent-functional-result-view gerbil-ascent-branching-result-view
         gerbil-ascent-replay-branching-frontier)
-(defstruct component-snapshot (rows sizes))
+(defstruct component-snapshot (rows sizes) final: #t)
 (defstruct component-layout (slots members rules originals) final: #t)
 (defstruct compact-component-snapshot (rows sizes layout) final: #t)
 

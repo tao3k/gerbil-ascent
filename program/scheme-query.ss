@@ -12,9 +12,9 @@
         make-relational-solution make-relational-program-solution
         relational-program-solution-with-provenance relational-program-solution-result)
 
-(defstruct relational-solution (result))
+(defstruct relational-solution (result) final: #t)
 (defstruct relational-program-solution (result))
-(defstruct (choice-program-solution relational-program-solution) (provenance))
+(defstruct (choice-program-solution relational-program-solution) (provenance) final: #t)
 
 (def (relational-program-solution-with-provenance solution provenance)
   (make-choice-program-solution

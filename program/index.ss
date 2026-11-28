@@ -79,8 +79,8 @@
 ;;; Traversal is bounded by admitted arity, including improper/cyclic rows.
 ;;; One value-keyed admission per equal row class; transient packet counts
 ;;; use this version-owned member identity instead of rehashing wide rows.
-(defstruct provider-row-member (ordinal key occurrences))
-(defstruct provider-row-witness (members counts single-column packed-width))
+(defstruct provider-row-member (ordinal key occurrences) final: #t)
+(defstruct provider-row-witness (members counts single-column packed-width) final: #t)
 
 (def (checked-provider-rows rows terms witness key packed-consumer?)
   ;; Shape admission and spine detachment share one bounded traversal. The
@@ -249,7 +249,7 @@
 (defstruct physical-index-entry (version lookup shared? witness))
 (defstruct (source-index-entry physical-index-entry) (prior-keys) final: #t)
 (defstruct (empty-bucket-entry physical-index-entry) (empty-version empty-key) final: #t)
-(defstruct atom-index-view (entry permutation))
+(defstruct atom-index-view (entry permutation) final: #t)
 (defstruct old-tail-cut (all-version delta-version rows) final: #t)
 
 ;; gerbil-ascent-make-row-indexes

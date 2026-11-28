@@ -36,7 +36,7 @@
 ;;     ;; => an internal capsule after completed-result admission
 ;;     ```
 ;;   %
-(defstruct session-reuse (result affected reader publication source-only parent?))
+(defstruct session-reuse (result affected reader publication source-only parent?) final: #t)
 
 ;;; A relation with no rule head can contain only admitted source occurrences.
 ;;; Keep every written relation conservative, including inactive/self rules.
@@ -142,7 +142,7 @@
 ;; closure-seed-state
 ;; : (forall (r m k) (-> (Vector [r]) (Vector m) (Vector [r]) Vector Vector (Vector k) (ClosureSeedState r m k)))
 ;; : (-> AllRows Membership DeltaRows AllSizes DeltaSizes LatticeRows ClosureSeedState)
-(defstruct closure-seed-state (all seen delta all-size delta-size lattice-rows))
+(defstruct closure-seed-state (all seen delta all-size delta-size lattice-rows) final: #t)
 
 (def (seed-base-membership schema index base seen check join)
   (cond

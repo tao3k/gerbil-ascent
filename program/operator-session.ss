@@ -23,7 +23,7 @@
         relational-op-retained-replace-sources!)
 
 (defstruct relational-op-retained
-  (session fragment input-label output-label read-output replace-input replace-sources latest))
+  (session fragment input-label output-label read-output replace-input replace-sources latest) final: #t)
 
 (def (row-difference left right)
   (filter (lambda (row) (not (member row right))) left))

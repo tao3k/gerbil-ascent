@@ -36,12 +36,12 @@
 
 (defstruct positive-proof
   (status snapshot-identity snapshot-generation snapshot-digest
-          candidate-digest query work-budget nodes roots))
-(defstruct proof-node (id kind relation row label inputs))
+          candidate-digest query work-budget nodes roots) final: #t)
+(defstruct proof-node (id kind relation row label inputs) final: #t)
 ;;; One replay owns these queue spines and row indexes. Only proof nodes are
 ;;; published; a queue is extended only between completed grounding rounds.
 ;; : (-> ProofNodes (Maybe Pair) RowIndex ProofRelation)
-(defstruct proof-relation (nodes tail members))
+(defstruct proof-relation (nodes tail members) final: #t)
 (def (positive-atom? atom)
   (and (pair? atom) (symbol? (car atom))
        (not (memq (car atom) '(not where compute reduce)))))

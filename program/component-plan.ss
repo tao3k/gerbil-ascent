@@ -12,7 +12,7 @@
 (export gerbil-ascent-positive-components gerbil-ascent-compile-positive-components
         gerbil-ascent-component-mode? positive-component-id
         positive-component-members positive-component-rules positive-component-predecessors positive-component-successors)
-(defstruct positive-component (id members rules predecessors successors))
+(defstruct positive-component (id members rules predecessors successors) final: #t)
 
 ;;; Publication owns the rule wrapper; full survivors retain admitted identity.
 (def (publish-component-rule! component plan pivots)

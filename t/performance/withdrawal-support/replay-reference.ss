@@ -5,8 +5,9 @@
 ;;; Frozen algorithm baseline from f1bd5ef. Per-cut full graph replay is
 ;;; intentional. Shared current native Session isolates support-plan costs.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop define-type validate .defgeneric)
-        (only-in :tao3k/yuanxu/object-types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type define-type validate)
+        (only-in :tao3k/yuanxu/types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
         (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs reasoning-bounded-data?)
         (only-in :gerbil-ascent/candidate/types reasoning-snapshot-valid? reasoning-snapshot-relations
                  reasoning-snapshot-identity reasoning-snapshot-generation

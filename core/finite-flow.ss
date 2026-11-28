@@ -7,7 +7,7 @@
 (import :gerbil/runtime/gambit
         (only-in "relation-view.ss" make-relation-view))
 (export gerbil-ascent-finite-flow gerbil-ascent-freeze-finite-masks)
-(defstruct flow-domain (values ordinals bytes))
+(defstruct flow-domain (values ordinals bytes) final: #t)
 ;; : (forall (a) (-> (List a) FlowDomain))
 (def (admit-domain values)
   (unless (list? values) (error "ASCENT finite flow domain must be a proper list"))

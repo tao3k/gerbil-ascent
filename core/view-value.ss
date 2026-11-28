@@ -5,6 +5,11 @@
 (export
   (struct-out relation-view)
   (struct-out part-visitors)
+  make-ordered-binary-visitors
+  make-packed-binary-visitors make-paged-binary-visitors
+  gerbil-ascent-ordered-binary-pages
+  gerbil-ascent-ordered-binary-row-parts?
+  gerbil-ascent-ordered-binary-copy! gerbil-ascent-binary-destination-end
   (struct-out rectangle-visitors)
   (struct-out row-stream)
   (struct-out rectangle)
@@ -27,13 +32,19 @@
   materialize-rows
   gerbil-ascent-view-rows)
 
-(defstruct relation-view (identity generation revision lane count units visit contains export parts))
+(defstruct relation-view (identity generation revision lane count units visit contains export parts) final: #t)
 (defstruct part-visitors (checked admitted))
+;; Only the owner of an exact integer field stream certifies its full export.
+(defstruct (ordered-binary-visitors part-visitors) (exporter))
+;; The copier reads a frozen view and writes into an exclusively held buffer.
+(defstruct (packed-binary-visitors ordered-binary-visitors) (copy))
+;; Seed and stage describe the same order as the captured exporter.
+(defstruct (paged-binary-visitors packed-binary-visitors) (seed stage) final: #t)
 ;; Built-in products additionally own a direct selected-result collector.
 ;; Custom visitors keep their existing callback and ordering protocol.
 (defstruct (rectangle-visitors part-visitors) (materialize) final: #t)
-(defstruct row-stream (view columns key))
-(defstruct rectangle (prefix left right))
+(defstruct row-stream (view columns key) final: #t)
+(defstruct rectangle (prefix left right) final: #t)
 (defstruct rectangle-bucket (members blocks count plain) final: #t)
 ;; Query-local owner lookup. Each coordinate uses its first fixed constraint;
 ;; no cache or traversal state escapes into the immutable captured view.
@@ -42,41 +53,82 @@
 (defstruct rectangle-selection (ordinal block members) final: #t)
 ;; : (-> FrozenView Symbol SourceGeneration Natural Symbol FrozenView)
 (def (gerbil-ascent-view-bind view identity generation revision lane)
-  (make-relation-view identity generation revision lane (relation-view-count view)
-    (relation-view-units view) (relation-view-visit view) (relation-view-contains view) (relation-view-export view) (relation-view-parts view)))
+  (let (count (relation-view-count view))
+    (using (view :- relation-view)
+      (make-relation-view identity generation revision lane count
+        view.units view.visit view.contains view.export view.parts))))
 ;; Private ordered export can replay a frozen injection cut without a tuple cache.
 (def (gerbil-ascent-view-with-export view export)
-  (make-relation-view (relation-view-identity view) (relation-view-generation view)
-    (relation-view-revision view) (relation-view-lane view) (relation-view-count view)
-    (relation-view-units view) (relation-view-visit view) (relation-view-contains view) export (relation-view-parts view)))
+  (let (identity (relation-view-identity view))
+    (using (view :- relation-view)
+      (make-relation-view identity view.generation
+        view.revision view.lane view.count
+        view.units view.visit view.contains export view.parts))))
 ;; : (-> RowVisitor (Or Rows FrozenView RowStream) Void)
 (def (gerbil-ascent-for-each-row consume rows)
-  (cond ((relation-view? rows) ((relation-view-visit rows) [] [] consume))
-        ((row-stream? rows) ((relation-view-visit (row-stream-view rows))
-                            (row-stream-columns rows) (row-stream-key rows) consume))
+  (cond ((relation-view? rows)
+         (let (visit (using (rows :- relation-view) rows.visit))
+           (visit [] [] consume)))
+        ((row-stream? rows)
+         (using (rows :- row-stream)
+           (let (visit (relation-view-visit rows.view))
+             (visit rows.columns rows.key consume))))
         (else (for-each consume rows))))
 ;; : (-> RowPredicate (Or Rows FrozenView RowStream) Boolean)
-(def (gerbil-ascent-any-row? predicate rows)
-  (call/cc (lambda (done)
-    (gerbil-ascent-for-each-row (lambda (row) (when (predicate row) (done #t))) rows) #f)))
+(def (gerbil-ascent-any-row? predicate rows) => :boolean
+  (if (call/cc (lambda (done)
+        (gerbil-ascent-for-each-row (lambda (row) (when (predicate row) (done #t))) rows) #f))
+    #t #f))
 ;; : (-> (Or Rows FrozenView) Natural)
 (def (gerbil-ascent-row-count rows)
-  (if (relation-view? rows) (relation-view-count rows) (length rows)))
+  (if (relation-view? rows) (using (rows :- relation-view) rows.count) (length rows)))
 ;; : (-> FrozenView Columns Key (Or FrozenView RowStream))
 (def (gerbil-ascent-view-select view columns key)
   (if (and (null? columns) (null? key)) view
     (make-row-stream view columns key)))
 ;; Compiled consumers bind fields directly; no temporary Cartesian row is built.
 ;; : (-> RowSource Boolean)
-(def (gerbil-ascent-row-parts? rows)
-  (and (cond ((relation-view? rows) (relation-view-parts rows))
-             ((row-stream? rows) (relation-view-parts (row-stream-view rows))) (else #f)) #t))
+(def (gerbil-ascent-row-parts? rows) => :boolean
+  (and (cond ((relation-view? rows) (using (rows :- relation-view) rows.parts))
+             ((row-stream? rows) (relation-view-parts (using (rows :- row-stream) rows.view)))
+             (else #f)) #t))
 ;; Checked custom visitors do not establish exact canonical key selection.
 ;; A mixed union retains that distinction through arbitrarily nested cuts.
-(def (gerbil-ascent-admitted-row-parts? view)
+(def (gerbil-ascent-admitted-row-parts? view) => :boolean
   (and (relation-view? view)
-       (let (parts (relation-view-parts view))
+       (let (parts (using (view :- relation-view) view.parts))
          (and (part-visitors? parts) (part-visitors-admitted parts) #t))))
+;; Replacing the list exporter can change delivery order independently of
+;; the field traversal. Bind the certificate to the original procedure.
+(def (gerbil-ascent-ordered-binary-row-parts? view) => :boolean
+  (and (relation-view? view)
+       (using (view :- relation-view)
+         (let ((parts view.parts)
+               (export view.export))
+           (and (ordered-binary-visitors? parts)
+                (procedure? export)
+                (eq? (ordered-binary-visitors-exporter parts) export))))))
+(def (gerbil-ascent-ordered-binary-pages view receive)
+  (and (relation-view? view)
+       (using (view :- relation-view)
+         (let (parts view.parts)
+           (and (paged-binary-visitors? parts)
+                (eq? (ordered-binary-visitors-exporter parts) view.export)
+                (using (parts :- paged-binary-visitors)
+                  (receive view.count parts.seed parts.stage)))))))
+;; Only a copier with the current export order may commit to a destination.
+(def (gerbil-ascent-ordered-binary-copy! view)
+  (and (gerbil-ascent-ordered-binary-row-parts? view)
+       (let (parts (relation-view-parts view))
+         (and (packed-binary-visitors? parts) (packed-binary-visitors-copy parts)))))
+(def (gerbil-ascent-binary-destination-end destination start count)
+  (unless (and (s64vector? destination) (fixnum? start) (fx>= start 0))
+    (error "ASCENT invalid integer reply destination" start))
+  (let (end (+ start (* 2 count)))
+    (unless (<= end (s64vector-length destination))
+      (error "ASCENT integer reply exceeds buffer capacity"))
+    end))
+
 ;; : (-> PartVisitor RowSource Void)
 (def (gerbil-ascent-for-each-row-parts consume rows)
   (if (relation-view? rows) (gerbil-ascent-visit-view-parts! rows [] [] consume)

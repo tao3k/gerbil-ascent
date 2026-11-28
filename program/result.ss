@@ -7,9 +7,12 @@
 ;;; unchanged roots share a promise without retaining membership or index state.
 ;;; Slot zero carries the invocation deadline and is never captured by results.
 (import :gerbil-ascent/core/relation-view
-        (only-in :std/iter for in-range)
+        (only-in :gerbil-ascent/core/view-value gerbil-ascent-ordered-binary-row-parts?
+                 gerbil-ascent-ordered-binary-copy! gerbil-ascent-ordered-binary-pages)
+        (only-in :std/iter for for/fold in-range)
         (only-in :std/list/list-builder with-list-builder)
-        (only-in :clan/poo/object .o))
+        (only-in :gerbil-ascent/core/execution-control ascent-execution-checkpoint!)
+        (only-in :clan/poo/object .o .ref))
 (export gerbil-ascent-publication-cache gerbil-ascent-publish-rows
         gerbil-ascent-snapshot-rows gerbil-ascent-snapshot-sizes
         gerbil-ascent-result-observation gerbil-ascent-public-snapshot-rows
@@ -17,6 +20,44 @@
 ;; Internal handoff only: public Result methods continue to detach row spines.
 (export gerbil-ascent-make-owned-result gerbil-ascent-publication-reader gerbil-ascent-publication-size)
 (defstruct owned-publication (result snapshots sizes position-of) final: #t)
+
+(export gerbil-ascent-result-complete? gerbil-ascent-materialize-result
+        gerbil-ascent-result-row-units)
+;; A private choice token identifies one completed cut. Its promise retains
+;; detached metadata and persistent row roots, never the live evaluator.
+(defstruct deferred-result (sizes materialize) final: #t)
+
+(def (gerbil-ascent-result-complete? result)
+  (or (deferred-result? result) (.ref result 'finished)))
+
+(def (gerbil-ascent-materialize-result result)
+  (if (deferred-result? result) (force (deferred-result-materialize result)) result))
+
+(def (gerbil-ascent-result-row-units result)
+  (if (deferred-result? result)
+    (let (sizes (deferred-result-sizes result))
+      (for/fold (units 0) (index (in-range (vector-length sizes)))
+        (+ units 1 (vector-ref sizes index))))
+    (foldl (lambda (entry units) (+ units 1 (cdr entry))) 0
+           ((.ref result 'relation-sizes)))))
+
+;; Private cut identity. Only detached row copies leave this module.
+(export make-ordered-row-cut ordered-row-cut-delta)
+(defstruct ordered-row-cut (root size) final: #t)
+
+;; Return the old size and the new chronological rows, or #f if this
+;; publication does not extend the previous one by an exact shared suffix.
+(def (ordered-row-cut-delta current (previous #f))
+  (let ((before (if previous (ordered-row-cut-size previous) 0))
+        (tail (if previous (ordered-row-cut-root previous) [])))
+    (let scan ((remaining (- (ordered-row-cut-size current) before))
+               (rows (ordered-row-cut-root current)) (added []))
+      (cond
+       ((zero? remaining) (and (eq? rows tail) (cons before added)))
+       ((and (> remaining 0) (pair? rows))
+        (ascent-execution-checkpoint!)
+        (scan (- remaining 1) (cdr rows) (cons (map identity (car rows)) added)))
+       (else #f)))))
 
 ;; : (forall (r p) (-> (Maybe p) r Symbol (Maybe Natural)))
 ;; : (-> (Maybe OwnedPublication) EvaluationResult Symbol (Maybe Natural))
@@ -36,13 +77,18 @@
                 (gerbil-ascent-snapshot-rows
                  (vector-ref publication.snapshots (publication.position-of name))))))))
 
-;; : (forall (n a r s o p e) (-> n a r s o o p Boolean Boolean (Values e (Maybe (OwnedPublication e r)))))
+;; : (forall (n a r s o p e) (-> n a r s o o p Boolean Boolean (Or Boolean (Vector Boolean)) (Values e (Maybe (OwnedPublication e r)))))
 ;; : (-> Names Arities SnapshotVector Sizes Representations Observation
-;;        NameResolver Boolean Boolean (Values EvaluationResult (Maybe OwnedPublication)))
+;;        NameResolver Boolean Boolean (Or Boolean (Vector Boolean)) Boolean
+;;        (Values EvaluationResult (Maybe OwnedPublication)))
 (def (gerbil-ascent-make-owned-result names arity snapshots sizes representations observation
-                                    position-of complete? session?)
-  (let (result (gerbil-ascent-make-published-result names arity snapshots sizes
-                 representations observation position-of complete? session?))
+                                    position-of complete? session? (detach session?) (defer? #f))
+  (def (materialize)
+    (gerbil-ascent-make-published-result names arity snapshots sizes
+      representations observation position-of complete? detach))
+  (let (result (if (and defer? session? complete?)
+                 (make-deferred-result sizes (delay (materialize)))
+                 (materialize)))
     (values result (and session? (make-owned-publication result snapshots sizes position-of)))))
 
 ;; gerbil-ascent-publication-cache
@@ -99,11 +145,11 @@
   (cond ((relation-view? rows) (gerbil-ascent-view-rows rows))
         ((promise? rows) (force rows)) (else rows)))
 
-;; Session results can seed later replacements. Public list and row spines
-;; must not alias those retained roots; immutable scalar values remain shared.
-(def (gerbil-ascent-public-snapshot-rows snapshot session?)
+;; Retained engine and Actor source-cut roots are read-only. Public snapshots
+;; detach the row and list spines when their ownership requires it.
+(def (gerbil-ascent-public-snapshot-rows snapshot detach?)
   (let (stored (gerbil-ascent-snapshot-rows snapshot))
-    (if (and session? (not (relation-view? snapshot)))
+    (if (and detach? (not (relation-view? snapshot)))
       (map (lambda (row) (map identity row)) stored) stored)))
 
 ;; gerbil-ascent-snapshot-sizes
@@ -155,16 +201,30 @@
 ;; spines keep callback mutation separate from retained roots. Frozen Providers
 ;; retain their indexed selection instead of forcing complete ordered export.
 ;; : (-> RowSnapshot Natural Columns Key RowVisitor Void)
-(def (gerbil-ascent-visit-snapshot! snapshot width columns key consume)
+(def (gerbil-ascent-visit-snapshot! snapshot width columns key consume
+                                    (fields? #f))
   (unless (and (list? columns) (list? key) (= (length columns) (length key))
                (andmap (lambda (column)
                          (and (exact-integer? column) (<= 0 column) (< column width))) columns))
     (error "ASCENT result selection requires in-range columns and matching keys"))
-  (if (relation-view? snapshot)
-    (gerbil-ascent-for-each-row consume (gerbil-ascent-view-select snapshot columns key))
-    (for-each (lambda (row)
-      (when (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key)
-        (consume (map identity row)))) (gerbil-ascent-snapshot-rows snapshot))))
+  (unless (boolean? fields?)
+    (error "ASCENT result fields? must be a boolean" fields?))
+  (cond
+    ((and fields? (= width 2) (gerbil-ascent-admitted-row-parts? snapshot))
+     (gerbil-ascent-visit-view-parts! snapshot columns key
+       (lambda (prefix left right)
+         (if (null? prefix)
+           (consume left right)
+           (apply consume (append prefix (list left right)))))))
+    ((relation-view? snapshot)
+     (gerbil-ascent-for-each-row
+       (if fields? (lambda (row) (apply consume row)) consume)
+       (gerbil-ascent-view-select snapshot columns key)))
+    (else
+     (for-each (lambda (row)
+       (when (andmap (lambda (column value) (equal? (list-ref row column) value)) columns key)
+         (if fields? (apply consume row) (consume (map identity row)))))
+       (gerbil-ascent-snapshot-rows snapshot)))))
 
 ;; Result accessors close over one published cut, never an engine's mutable
 ;; relation buffers. Name resolution and immutable scalar contracts are supplied
@@ -173,7 +233,7 @@
 ;;        NameResolver Boolean Boolean EvaluationResult)
 (def (gerbil-ascent-make-published-result names arity snapshots sizes
                                          representations observation position-of
-                                         complete? session?)
+                                         complete? detach)
   (.o (relation-names (vector->list names))
       (finished complete?)
       (evaluation-path (vector-ref observation 0))
@@ -187,10 +247,30 @@
          (with-list-builder (collect!)
            (for (index (in-range (vector-length names)))
              (collect! (cons (vector-ref names index) (vector-ref sizes index)))))))
-      (visit-rows (lambda (name columns key consume)
+      (visit-rows (lambda (name columns key consume fields?: (fields? #f))
         (let (index (position-of name))
           (gerbil-ascent-visit-snapshot! (vector-ref snapshots index)
-            (vector-ref arity index) columns key consume))))
+            (vector-ref arity index) columns key consume fields?))))
+      (with-ordered-binary-fields
+       (lambda (name receive (copy? #f))
+         (and complete?
+              (let* ((index (position-of name)) (view (vector-ref snapshots index)))
+                (and (= (vector-ref arity index) 2)
+                     (gerbil-ascent-ordered-binary-row-parts? view)
+                     (let ((count (relation-view-count view))
+                           (visit (lambda (consume)
+                                    (gerbil-ascent-visit-admitted-view-parts! view [] []
+                                      (lambda (_prefix left right) (consume left right))))))
+                       (if copy?
+                         (receive count visit (gerbil-ascent-ordered-binary-copy! view))
+                         (receive count visit))))))))
+      (with-ordered-binary-pages
+       (lambda (name receive)
+         (and complete?
+              (let (index (position-of name))
+                (and (= (vector-ref arity index) 2)
+                     (gerbil-ascent-ordered-binary-pages (vector-ref snapshots index) receive))))))
       (rows-of (lambda (name)
-        (gerbil-ascent-public-snapshot-rows
-         (vector-ref snapshots (position-of name)) session?)))))
+        (let (index (position-of name))
+          (gerbil-ascent-public-snapshot-rows (vector-ref snapshots index)
+            (if (vector? detach) (vector-ref detach index) detach)))))))

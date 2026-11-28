@@ -5,8 +5,9 @@
 ;;; One serialized positive owner publishes maintained rows, source generation
 ;;; and grounded support together. Native evaluation qualifies the initial cut.
 (import (only-in :clan/poo/object .o .ref object? .slot?)
-        (only-in :clan/poo/mop define-type validate .defgeneric)
-        (only-in :tao3k/yuanxu/object-types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type define-type validate)
+        (only-in :tao3k/yuanxu/types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
         (only-in "datum.ss" candidate-copy-pairs reasoning-bounded-data?)
         (only-in "types.ss" reasoning-snapshot-valid? reasoning-snapshot-relations
                  reasoning-snapshot-identity reasoning-snapshot-generation

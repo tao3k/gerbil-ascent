@@ -8,6 +8,33 @@ they cannot be added as if nested imports owned disjoint allocation intervals.
 The SDK compiler/allocator and the observer/decoder remain outside this proof. -/
 namespace Ascent.PreparationWork
 
+-- These Suites intentionally edit process-wide public descriptor protocols.
+-- Restoring a method does not roll back the descriptor's revision history.
+def globalProtocolMutationEntries : List String :=
+  ["ascent-aggregate-admission-test.", "ascent-delta-admission-test.",
+   "ascent-operator-publication-test.", "ascent-value-membership-test.",
+   "scheme-closure-contract-test."]
+
+-- Source build projections intentionally construct another Module graph.
+-- They must not replace the compiled runtime namespace of unrelated Suites.
+def sourceBuildEntries : List String :=
+  ["static-link-inputs-test.", "yuanxu-library-test."]
+
+def darwinSourceEntryLimit : Nat := 8
+
+def sourceLiveRatio (darwin parallelSource : Bool) : Nat :=
+  if darwin && parallelSource then 90 else 50
+
+def isolatedSourceEntries : List String :=
+  ["ascent-semi-naive-test.", "ascent-candidate-flow-test."] ++
+    globalProtocolMutationEntries ++ sourceBuildEntries
+
+theorem isolated_source_entries_distinct : isolatedSourceEntries.Nodup := by decide
+
+theorem protocol_mutations_are_isolated :
+    globalProtocolMutationEntries.all (fun entry => isolatedSourceEntries.contains entry) = true := by decide
+
+
 -- The production entry owns package/ABI declaration work. The native consumer
 -- directly requests init's standard specification without executing that entry.
 -- This classification does not assert zero init, source-admission or lowering
@@ -22,35 +49,13 @@ def inventoryPackageDeclarations : InventorySource → Nat
   | .buildEntry => 1
 
 def inventoryImportSchemeSource : String :=
-  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options\n                 gerbil-ascent-library-spec gerbil-ascent-library-modules)\n"
+  "        (only-in \"../../build.ss\" gerbil-ascent-compiler-options\n                 gerbil-ascent-build-projection gerbil-ascent-library-modules\n                 gerbil-ascent-compiler-target)\n"
 
 theorem module_data_avoids_package_declaration :
     inventoryPackageDeclarations .moduleData = 0 ∧
     inventoryPackageDeclarations .buildEntry = 1 := by decide
 
-abbrev Dependency := List String × List String
-def requested (tests : List String) (entry : Dependency) : Bool :=
-  entry.1.any tests.contains
-def selected (tests : List String) (entries : List Dependency) : List String :=
-  (entries.filter (requested tests)).flatMap Prod.snd
-
--- A declared dependency has no cost effect in a lane that does not request it.
--- Ordinary source Suites are absent from prepare-test-library's
--- performance consumers. Deleting its bridge entry cannot explain that lane.
-theorem inactive_dependency_no_work (tests : List String)
-    (before after : List Dependency) (entry : Dependency)
-    (inactive : requested tests entry = false) :
-    selected tests (before ++ entry :: after) = selected tests (before ++ after) := by
-  simp [selected, List.filter_append, inactive]
-
-def selectionSchemeSource : String :=
-  ";; Generated from PreparationWork.lean; formal CI compares this region.\n" ++
-  "(def (preparation-selected-dependencies tests entries)\n" ++
-  "  (apply append\n" ++
-  "    (map cdr\n" ++
-  "      (filter (lambda (entry) (ormap (cut member <> tests) (car entry))) entries))))\n"
-
--- The native ASP/Gerbil graph supplies dependencies; this policy decides only
+-- The Yuanxu/Gerbil import graph supplies dependencies; this policy decides only
 -- which carriers are compiled. It never removes a source Suite from discovery.
 def retainedSource (sourceSuites : Bool) (sourceConsumers : List String) (path : String) : Bool :=
   !sourceConsumers.contains path && (!sourceSuites || !path.endsWith "-test.ss")
@@ -200,8 +205,21 @@ def interfacesQuintSource : String :=
   "    if (k0 == key) v0 else if (k1 == key) v1 else -1\n" ++
   "  pure def batch_width(entries: int, workers: int): int =\n" ++
   "    if (entries == 0) 0 else (entries - 1) / workers + 1\n" ++
+  "  pure def native_source_workers(entries: int, cores: int): int =\n" ++
+  "    if (entries < cores) entries else cores\n" ++
+  "  pure def source_batch_width(darwin: bool, entries: int, workers: int): int =\n" ++
+  "    if (darwin) {\n" ++
+  "      val width = batch_width(entries, workers)\n" ++
+  "      if (width < " ++ toString darwinSourceEntryLimit ++ ") width else " ++
+    toString darwinSourceEntryLimit ++ "\n" ++
+  "    } else batch_width(entries, workers)\n" ++
+  "  pure def source_live_ratio(darwin: bool, parallel_source: bool): int =\n" ++
+  "    if (darwin and parallel_source) " ++ toString (sourceLiveRatio true true) ++
+  " else " ++ toString (sourceLiveRatio false true) ++ "\n" ++
   "  pure val complete_packed_starts =\n" ++
-  "    2 + 4 * batch_width(15, 2) + 8 * batch_width(14, 2)\n" ++
+  "    " ++ toString isolatedSourceEntries.length ++ " + 12\n" ++
+  "  pure val complete_darwin_starts =\n" ++
+  "    " ++ toString isolatedSourceEntries.length ++ " + 2 * 12\n" ++
   "}\n"
 
 def interfacesSchemeSource : String :=
@@ -338,24 +356,59 @@ def groupingArgument : SourceGrouping → String
 def sourceGrouping : SourceGrouping := .batched
 
 def runnerRecipeSource : String :=
-  "        runner=({{ gxi_command }} {{ gerbil_test_runtime_options }} t/harness/test.ss " ++
+  "        runner=({{ gxi_command }} \"${source_runtime_options[@]}\" t/harness/test.ss " ++
   groupingArgument sourceGrouping ++ " \"{{ heap }}\")\n"
 
 -- The SDK eagerly prepares every module in one GxTest batch. Native
 -- groups retain SDK compatibility; bounded consecutive chunks fill the existing cap.
+def sourceInterfaceSchemeSource : String :=
+  "(def (source-test-interface mode heap)\n" ++
+  "  (let (isolated\n" ++
+  "         (foldl\n" ++
+  "           (lambda (name testing)\n" ++
+  "             (testing-interface-map-profile testing\n" ++
+  "               (testing-test-selector 'contains name)\n" ++
+  "               +testing-process-isolation-profile+))\n" ++
+  "           (testing-interface\n" ++
+  "             profiles:\n" ++
+  "             (append (if (string=? heap \"auto\") []\n" ++
+  "                       (list (.cc +testing-memory-profile+ maxHeapMiB: (heap-mib heap))))\n" ++
+  "               (if (string=? mode \"isolated\") (list +testing-process-isolation-profile+) [])))\n" ++
+  "           '(" ++
+  String.intercalate "\n             " (isolatedSourceEntries.map (fun name => "\"" ++ name ++ "\"")) ++
+  ")))\n" ++
+  "    (foldl\n" ++
+  "      (lambda (name testing)\n" ++
+  "        (testing-interface-map-profile testing\n" ++
+  "          (testing-test-selector 'contains name)\n" ++
+  "          +testing-serial-resource-profile+))\n" ++
+  "      isolated\n" ++
+  "      '(" ++
+  String.intercalate "\n        " (sourceBuildEntries.map (fun name => "\"" ++ name ++ "\"")) ++
+  "))))\n"
+
 def groupsSchemeSource : String :=
-  "(def (preparation-refined-batches profiled compatible)\n" ++
+  sourceInterfaceSchemeSource ++
+  "(def (preparation-compatible-batches profiled compatible darwin?)\n" ++
   "  (if (null? compatible) []\n" ++
-  "    (let* ((workers (testing-interface-worker-count (length compatible)))\n" ++
-  "           (width (preparation-batch-width (preparation-batch-width (length compatible) workers) workers)))\n" ++
-  "      (apply append\n" ++
-  "        (map (cut group-n-consecutive width <>)\n" ++
-  "          (testing-interface-test-file-batches profiled\n" ++
-  "            (striped-module-files compatible workers)))))))\n" ++
-  "(def (preparation-batch-width entries workers)\n" ++
-  "  (if (zero? entries) 0 (+ 1 (quotient (- entries 1) workers))))\n" ++
-  "(def (preparation-batches-bounded? batches entries workers)\n" ++
-  "  (let (bound (preparation-batch-width (preparation-batch-width entries workers) workers))\n" ++
+  "    (let (native\n" ++
+  "           (testing-interface-test-file-batches profiled\n" ++
+  "             (striped-module-files compatible\n" ++
+  "               (testing-interface-worker-count (length compatible)))))\n" ++
+  "      (if darwin?\n" ++
+  "        (apply append (map (cut " ++
+  "group-n-consecutive " ++
+  toString darwinSourceEntryLimit ++
+  " <>) native))\n" ++
+  "        native))))\n" ++
+  "(def (preparation-batch-width entries workers (darwin? (cond-expand (darwin #t) (else #f))))\n" ++
+  "  (let (width (if (zero? entries) 0 (+ 1 (quotient (- entries 1) workers))))\n" ++
+  "    (if darwin? (" ++
+  "min " ++
+  toString darwinSourceEntryLimit ++
+  " width) width)))\n" ++
+  "(def (preparation-batches-bounded? batches entries workers (darwin? (cond-expand (darwin #t) (else #f))))\n" ++
+  "  (let (bound (preparation-batch-width entries workers darwin?))\n" ++
   "    (andmap (lambda (batch) (<= (length batch) bound)) batches)))\n" ++
   "(def (single-thread-vm-command command (live-ratio #f))\n" ++
   "  (let wrap ((arguments command))\n" ++
@@ -373,29 +426,38 @@ def groupsSchemeSource : String :=
   "           (cadr arguments))\n" ++
   "         (cddr arguments))))\n" ++
   "      (else (cons (car arguments) (wrap (cdr arguments)))))))\n" ++
-  "(def (source-test-batches profiled files mode\n" ++
-  "                          (defer? (cond-expand (darwin #t) (else #f))))\n" ++
+  "(def (source-test-batches profiled files mode (darwin? (cond-expand (darwin #t) (else #f))))\n" ++
   "  (let (batches\n" ++
-  "    (if (string=? mode \"batched\")\n" ++
-  "      (let-values (((isolated compatible)\n" ++
-  "                    (partition (lambda (file) (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
-  "        (let* ((ordinary (preparation-refined-batches profiled compatible))\n" ++
-  "               (prefix-count (max 0 (- (length ordinary) (testing-interface-worker-count (length files))))))\n" ++
-  "          (if defer? (append (take ordinary prefix-count) (map list isolated) (drop ordinary prefix-count))\n" ++
-  "                     (append (map list isolated) ordinary))))\n" ++
-  "      (testing-interface-test-file-batches profiled files)))\n" ++
+  "         (if (string=? mode \"batched\")\n" ++
+  "           (let-values (((isolated compatible)\n" ++
+  "                         (partition (lambda (file)\n" ++
+  "                                      (testing-interface-test-file-isolated? profiled file)) files)))\n" ++
+  "             (append (map list isolated)\n" ++
+  "                     (preparation-compatible-batches profiled compatible darwin?)))\n" ++
+  "           (testing-interface-test-file-batches profiled files)))\n" ++
   "    (unless (or (null? files)\n" ++
   "                (preparation-batches-bounded? batches (length files)\n" ++
-  "                  (testing-interface-worker-count (length files))))\n" ++
+  "                  (testing-interface-worker-count (length files)) darwin?))\n" ++
   "      (error \"source batch retains too many entry modules\"))\n" ++
   "    batches))\n" ++
-  ";;; Use the SDK's soft GC target only for memory-sensitive ordinary Darwin\n" ++
-  ";;; batches. Isolated exhaustive declaration work keeps the default target.\n" ++
-  "(def (source-live-ratio profiled file (darwin? (cond-expand (darwin #t) (else #f))))\n" ++
-  "  (if (and darwin? (not (testing-interface-test-file-isolated? profiled file))) 80 50))\n" ++
+  ";;; Parallel source expansion shares the host memory. Serial build projections\n" ++
+  ";;; and compiled isolated profiles keep the released collector's default target.\n" ++
+  "(def (source-live-ratio (darwin? (cond-expand (darwin #t) (else #f)))\n" ++
+  "                        parallel-source?: (parallel-source? #t))\n" ++
+  "  (if (and darwin? parallel-source?) " ++
+  toString (sourceLiveRatio true true) ++
+  " " ++
+  toString (sourceLiveRatio false true) ++
+  "))\n" ++
   "(def (source-vm-command command (live-ratio #f))\n" ++
   "  ;; Keep upstream GxTest, argv, heap options and its original explicit exit.\n" ++
-  "  (unless (or (not live-ratio) (memv live-ratio '(50 80)))\n" ++
+  "  (unless (or (not live-ratio) (memv live-ratio " ++
+  "'(" ++
+  toString (sourceLiveRatio false true) ++
+  " " ++
+  toString (sourceLiveRatio true true) ++
+  ")" ++
+  "))\n" ++
   "    (error \"unsupported source VM live ratio\" live-ratio))\n" ++
   "  (when (and live-ratio\n" ++
   "             (not (ormap (cut string-prefix? \"-:max-heap=\" <>) command)))\n" ++
@@ -412,73 +474,20 @@ def groupsSchemeSource : String :=
   "    command))\n" ++
   "\n"
 
--- The source-bound change only orders the same ordinary and isolated batches.
--- These are coverage/work bounds, not a proof of native scheduler/GC latency.
-def stagedBatches (warmup : Nat) (ordinary : List (List String))
-    (isolated : List String) : List (List String) :=
-  ordinary.take warmup ++ isolated.map (fun entry => [entry]) ++ ordinary.drop warmup
 
-theorem staged_batch_permutation (warmup : Nat) (ordinary : List (List String))
-    (isolated : List String) :
-    (stagedBatches warmup ordinary isolated).Perm
-      (isolated.map (fun entry => [entry]) ++ ordinary) := by
-  unfold stagedBatches
-  have h : (ordinary.take warmup ++ isolated.map (fun entry => [entry])).Perm
-      (isolated.map (fun entry => [entry]) ++ ordinary.take warmup) := List.perm_append_comm
-  have h' := h.append_right (ordinary.drop warmup)
-  simpa only [List.append_assoc, List.take_append_drop] using h'
 
-theorem staged_batch_count (warmup : Nat) (ordinary : List (List String))
-    (isolated : List String) :
-    (stagedBatches warmup ordinary isolated).length = ordinary.length + isolated.length := by
-  have h := (staged_batch_permutation warmup ordinary isolated).length_eq
-  simpa [Nat.add_comm] using h
+def queueAdmissionSchemeSource : String :=
+  "        (lambda (batch log index)\n" ++
+  "          (let (work (lambda () (run-batch! batch log index)))\n" ++
+  "            (if (testing-interface-test-file-serial? profiled (car batch))\n" ++
+  "              (set! serial-work (cons work serial-work))\n" ++
+  "              (wg-add! group work))))\n"
 
-theorem staged_batch_membership (warmup : Nat) (ordinary : List (List String))
-    (isolated : List String) (batch : List String) :
-    batch ∈ stagedBatches warmup ordinary isolated ↔
-      batch ∈ isolated.map (fun entry => [entry]) ++ ordinary :=
-  (staged_batch_permutation warmup ordinary isolated).mem_iff
-
-theorem staged_source_work (warmup : Nat) (weight : String → Nat)
-    (ordinary : List (List String)) (isolated : List String) :
-    sourceWork weight (stagedBatches warmup ordinary isolated).flatten =
-      sourceWork weight (isolated.map (fun entry => [entry]) ++ ordinary).flatten := by
-  have split := sourceWork_append weight (ordinary.take warmup).flatten (ordinary.drop warmup).flatten
-  rw [← List.flatten_append, List.take_append_drop] at split
-  simp only [stagedBatches, List.flatten_append, sourceWork_append]
-  omega
-
--- Overlap only the final ordinary worker-width tail, without a barrier or new cap.
-def tailOverlapPrefix (entries workers : Nat) : Nat := entries - workers
-
-theorem tail_overlap_prefix_bounded (entries workers : Nat) :
-    tailOverlapPrefix entries workers ≤ entries := Nat.sub_le _ _
-
-theorem tail_overlap_remaining_bounded (entries workers : Nat) :
-    entries - tailOverlapPrefix entries workers ≤ workers := by
-  unfold tailOverlapPrefix
-  omega
-
-def orderedBatches (defer : Bool) (workers : Nat) (ordinary : List (List String))
-    (isolated : List String) : List (List String) :=
-  if defer then stagedBatches (tailOverlapPrefix ordinary.length workers) ordinary isolated
-  else isolated.map (fun entry => [entry]) ++ ordinary
-
-theorem host_policy_batch_count (defer : Bool) (workers : Nat)
-    (ordinary : List (List String)) (isolated : List String) :
-    (orderedBatches defer workers ordinary isolated).length = ordinary.length + isolated.length := by
-  cases defer
-  · simp [orderedBatches, Nat.add_comm]
-  · exact staged_batch_count _ ordinary isolated
-
-theorem host_policy_source_work (defer : Bool) (workers : Nat) (weight : String → Nat)
-    (ordinary : List (List String)) (isolated : List String) :
-    sourceWork weight (orderedBatches defer workers ordinary isolated).flatten =
-      sourceWork weight (isolated.map (fun entry => [entry]) ++ ordinary).flatten := by
-  cases defer
-  · rfl
-  · exact staged_source_work _ weight ordinary isolated
+def phaseBarrierSchemeSource : String :=
+  "        (begin\n" ++
+  "          (wg-wait! group)\n" ++
+  "          (emit \"TEST-SERIAL-BARRIER pending=\" (length serial-work))\n" ++
+  "          (for-each (lambda (work) (work)) (reverse serial-work)))\n"
 
 def refineBatches (split : List String → List (List String))
     (groups : List (List String)) : List (List String) := groups.flatMap split
@@ -517,9 +526,46 @@ theorem second_partition_never_fewer_starts
 def nativeBatchWidth (entries workers : Nat) : Nat :=
   if entries = 0 then 0 else (entries - 1) / workers + 1
 
+def sourceBatchWidth (darwin : Bool) (entries workers : Nat) : Nat :=
+  if darwin then min darwinSourceEntryLimit (nativeBatchWidth entries workers)
+  else nativeBatchWidth entries workers
+
+-- CPU discovery is an OS/runtime boundary, not proved by these arithmetic laws.
+-- ASP receives the discovered capacity and owns the native workgroup.
+def nativeSourceWorkers (entries cores : Nat) : Nat := min entries cores
+
+theorem native_source_workers_fit_host (entries cores : Nat) :
+    nativeSourceWorkers entries cores ≤ cores := Nat.min_le_right _ _
+
+theorem native_source_workers_fill_host (entries cores : Nat) (enough : cores ≤ entries) :
+    nativeSourceWorkers entries cores = cores := Nat.min_eq_right enough
+
+def sourceHeapOverride (automatic : Bool) (limit : Nat) : Option Nat :=
+  if automatic then none else some limit
+
+theorem automatic_source_has_no_heap_override (limit : Nat) :
+    sourceHeapOverride true limit = none := rfl
+
+theorem source_width_le_native (darwin : Bool) (entries workers : Nat) :
+    sourceBatchWidth darwin entries workers ≤ nativeBatchWidth entries workers := by
+  cases darwin
+  · exact Nat.le_refl _
+  · exact Nat.min_le_right _ _
+
+theorem darwin_source_width_bounded (entries workers : Nat) :
+    sourceBatchWidth true entries workers ≤ 8 := Nat.min_le_left _ _
+
 def batchWidthPythonSource : String :=
   "def source_batch_width(entries, workers):\n" ++
-  "    return 0 if entries == 0 else (entries - 1) // workers + 1\n"
+  "    width = 0 if entries == 0 else (entries - 1) // workers + 1\n" ++
+  "    return min(" ++ toString darwinSourceEntryLimit ++
+  ", width) if sys.platform == 'darwin' else width\n" ++
+  "\n\ndef source_serial_suites():\n" ++
+  "    return {" ++ String.intercalate ", " (sourceBuildEntries.map
+    (fun name => "\"t/qualification/" ++ name ++ "ss\"")) ++ "}\n" ++
+  "\n\ndef source_live_ratio(darwin, parallel_source):\n" ++
+  "    return " ++ toString (sourceLiveRatio true true) ++
+  " if darwin and parallel_source else " ++ toString (sourceLiveRatio false true) ++ "\n"
 
 theorem native_batch_width_le_entries (entries workers : Nat) :
     nativeBatchWidth entries workers ≤ entries := by
@@ -534,11 +580,11 @@ theorem native_refinement_retained_width (entries workers : Nat) :
       nativeBatchWidth entries workers := native_batch_width_le_entries _ _
 
 def batchesBounded (groups : List (List String)) (entries workers : Nat) : Bool :=
-  groups.all (fun group => group.length ≤ nativeBatchWidth (nativeBatchWidth entries workers) workers)
+  groups.all (fun group => group.length ≤ nativeBatchWidth entries workers)
 
 theorem oversized_batch_refused (groups : List (List String)) (entries workers : Nat)
     (group : List String) (present : group ∈ groups)
-    (oversized : nativeBatchWidth (nativeBatchWidth entries workers) workers < group.length) :
+    (oversized : nativeBatchWidth entries workers < group.length) :
     batchesBounded groups entries workers = false := by
   cases h : batchesBounded groups entries workers with
   | false => rfl
@@ -547,17 +593,47 @@ theorem oversized_batch_refused (groups : List (List String)) (entries workers :
     simp only [decide_eq_true_eq] at bound
     omega
 
-theorem complete_source_batch_width : nativeBatchWidth (nativeBatchWidth 174 12) 12 = 2 := by decide
+theorem complete_source_batch_width : nativeBatchWidth 184 12 = 16 := by decide
 
--- Full-selection shape: 172 compatible entries in four groups of fifteen and
--- eight of fourteen, plus two independent exhaustive corpora. This is a startup
--- count, not elapsed time or cumulative allocation; SDK balance is a premise.
-def completePackedStarts : Nat :=
-  2 + 4 * nativeBatchWidth 15 2 + 8 * nativeBatchWidth 14 2
+-- Nine isolated corpora leave 175 compatible entries in seven groups of
+-- fifteen and five of fourteen. Native balance remains an SDK premise,
+-- checked against actual batches before admission.
+def completePackedStarts : Nat := isolatedSourceEntries.length + 12
 
-theorem complete_packing_start_count : completePackedStarts = 90 := by decide
+def secondPartitionStarts : Nat :=
+  2 + 2 * nativeBatchWidth 16 2 + 10 * nativeBatchWidth 15 2
 
-theorem complete_packing_fewer_starts : completePackedStarts < 146 := by decide
+def completeDarwinStarts : Nat := isolatedSourceEntries.length + 2 * 12
+
+theorem complete_darwin_start_count : completeDarwinStarts = 33 := by decide
+
+theorem darwin_packing_fewer_starts : completeDarwinStarts < secondPartitionStarts := by decide
+
+theorem complete_packing_start_count : completePackedStarts = 21 := by decide
+
+theorem complete_packing_fewer_starts :
+    completePackedStarts < secondPartitionStarts ∧ secondPartitionStarts = 98 := by decide
+
+-- A work accounting identity, not a hardware latency or heap-byte theorem.
+-- Per-case work is fixed. Each fresh process pays the same nonnegative
+-- initialization/termination units; removing a split cannot increase that work.
+def sourceLifecycleWork (caseWork lifecycleUnits : Nat) (groups : List (List String)) : Nat :=
+  caseWork + batchStartupUnits groups * lifecycleUnits
+
+theorem native_lifecycle_work_le_refined
+    (caseWork lifecycleUnits : Nat)
+    (split : List String → List (List String)) (groups : List (List String))
+    (nonempty : ∀ group ∈ groups, 1 ≤ (split group).length) :
+    sourceLifecycleWork caseWork lifecycleUnits groups ≤
+      sourceLifecycleWork caseWork lifecycleUnits (refineBatches split groups) := by
+  exact Nat.add_le_add_left
+    (Nat.mul_le_mul_right lifecycleUnits (second_partition_never_fewer_starts split groups nonempty)) caseWork
+
+theorem complete_lifecycle_work_saved (caseWork lifecycleUnits : Nat) :
+    caseWork + secondPartitionStarts * lifecycleUnits =
+      caseWork + completePackedStarts * lifecycleUnits + 77 * lifecycleUnits := by
+  change caseWork + 98 * lifecycleUnits = caseWork + 21 * lifecycleUnits + 77 * lifecycleUnits
+  omega
 
 def isolatedEntryPeak (weight : String → Nat) : List String → Nat
   | [] => 0
@@ -783,26 +859,27 @@ theorem resized_sections_preserve_maximum (target lower upper : Nat) :
 -- The existing SDK heap target is tightened without changing its maximum.
 -- This is the SDK arithmetic model, not a claim about RSS or collection cost.
 theorem source_gc_target_le_default (live minimum : Nat) :
-    adjustedHeapWords live minimum 80 ≤ adjustedHeapWords live minimum 50 := by
+    adjustedHeapWords live minimum 90 ≤ adjustedHeapWords live minimum 50 := by
   unfold adjustedHeapWords
   omega
 
 -- Workload-specific SDK targets; this model does not change the hard maximum.
-def sourceLiveRatio (darwin isolated : Bool) : Nat :=
-  if darwin && !isolated then 80 else 50
-theorem isolated_live_ratio (darwin : Bool) : sourceLiveRatio darwin true = 50 := by
+theorem darwin_source_live_ratio : sourceLiveRatio true true = 90 := rfl
+theorem serial_source_live_ratio (darwin : Bool) : sourceLiveRatio darwin false = 50 := by
   cases darwin <;> rfl
-theorem source_live_ratio_valid (darwin isolated : Bool) :
-    sourceLiveRatio darwin isolated = 50 ∨ sourceLiveRatio darwin isolated = 80 := by
-  cases darwin <;> cases isolated <;> decide
-theorem source_gc_target_preserves_bound (darwin isolated : Bool) (live minimum : Nat) :
-    adjustedHeapWords live minimum (sourceLiveRatio darwin isolated) ≤
+theorem linux_source_live_ratio (parallelSource : Bool) : sourceLiveRatio false parallelSource = 50 := by
+  cases parallelSource <;> rfl
+theorem source_live_ratio_valid (darwin parallelSource : Bool) :
+    sourceLiveRatio darwin parallelSource = 50 ∨ sourceLiveRatio darwin parallelSource = 90 := by
+  cases darwin <;> cases parallelSource <;> decide
+theorem source_gc_target_preserves_bound (darwin parallelSource : Bool) (live minimum : Nat) :
+    adjustedHeapWords live minimum (sourceLiveRatio darwin parallelSource) ≤
       adjustedHeapWords live minimum 50 := by
-  cases darwin <;> cases isolated
+  cases darwin <;> cases parallelSource
+  · exact Nat.le_refl _
   · exact Nat.le_refl _
   · exact Nat.le_refl _
   · exact source_gc_target_le_default live minimum
-  · exact Nat.le_refl _
 
 theorem preparation_heap_policy_is_bounded :
     preparationHeapGiB = 3 ∧ 0 < preparationLiveRatio ∧ preparationLiveRatio ≤ 100 := by
@@ -905,7 +982,6 @@ theorem work_reduction_does_not_bound_wait (work saved wait : Nat)
 #print axioms missing_receipt_requires_work
 #print axioms bundle_requires_current_inputs
 #print axioms module_data_avoids_package_declaration
-#print axioms inactive_dependency_no_work
 #print axioms removed_two_observations
 #print axioms ordered_allocation_snapshots
 #print axioms nested_inclusive_double_counts
@@ -954,3 +1030,14 @@ end Ascent.PreparationWork
 #print axioms Ascent.PreparationWork.complete_packing_fewer_starts
 
 #print axioms Ascent.PreparationWork.source_gc_target_le_default
+
+#print axioms Ascent.PreparationWork.native_lifecycle_work_le_refined
+#print axioms Ascent.PreparationWork.complete_lifecycle_work_saved
+
+#print axioms Ascent.PreparationWork.isolated_source_entries_distinct
+#print axioms Ascent.PreparationWork.protocol_mutations_are_isolated
+
+theorem Ascent.PreparationWork.source_builds_are_isolated :
+    Ascent.PreparationWork.sourceBuildEntries.all
+      (fun entry => Ascent.PreparationWork.isolatedSourceEntries.contains entry) = true := by decide
+#print axioms Ascent.PreparationWork.source_builds_are_isolated

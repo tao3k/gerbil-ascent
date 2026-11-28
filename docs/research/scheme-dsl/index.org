@@ -42,6 +42,7 @@ snapshot and program; source completeness remains a caller obligation.
 #+NAME: source-ledger
 | Feature | Source and durable link | Local note | Main design constraint |
 |-----+-------------------------+------------+------------------------|
+| finite-choice evaluation ideas | [[https://arxiv.org/html/2405.19040v3][Finite-Choice Logic Programming, POPL 2025]] | [[file:finite-choice-planning.org][DSL design transfer audit]] | Native matching costs, finite-choice semantics and prefix reuse |
 | rule planning | [[https://thomas.gilray.org/pdf/seamless-deductive.pdf][Ascent paper]] | [[file:rule-planning.org][Ascent]] | Preserve rule and planner information |
 | Provider concretization | [[https://kmicinski.com/assets/byods.pdf][BYODS paper]] | [[file:provider-concretization.org][BYODS]] | Preserve concrete and delta meaning when a Provider adds facts |
 | monotone containers | [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ECOOP.2025.33][Mono Types, ECOOP 2025]] | [[file:monotone-containers.org][mono types]] | First-class containers need monotone, order-independent reads and a distinct termination bound |
@@ -53,7 +54,6 @@ snapshot and program; source completeness remains a caller obligation.
 | deletion rederivation | [[https://ojs.aaai.org/index.php/AAAI/article/view/11554/11413][DRedc paper]] / [[https://doi.org/10.1609/aaai.v32i1.11554][DOI]] | [[file:deletion-rederivation.org][Deletion deletion rederivation]] | Count supports separately before maintaining recursive deletions |
 | program lifecycle | [[https://plg.uwaterloo.ca/~olhotak/pubs/oopsla25b.pdf][Flix design paper]] / [[https://doi.org/10.1145/3763126][DOI]] | [[file:program-lifecycle.org][Flix program lifecycle]] | Program values, private names and solve/query boundary |
 | recursive physical planning | [[https://www.vldb.org/pvldb/vol19/p361-zhao.pdf][FlowLog, PVLDB 2025 / VLDB 2026]] | [[file:recursive-physical-planning.org][FlowLog]] | Separate logical rule plans from physical recursive execution |
-| finite-choice evaluation ideas | [[https://arxiv.org/html/2405.19040v3][Finite-Choice Logic Programming, POPL 2025]] | [[file:finite-choice-planning.org][DSL design transfer audit]] | Prioritize native cost semantics and pure prefix reuse; keep choice semantics separate |
 | first-class facts | [[https://www.vldb.org/pvldb/vol18/p651-micinski.pdf][Datalog with First-Class Facts, PVLDB 2024 / VLDB 2025]] | [[file:../agent-inference/2026-logic-ai-screen.org][core screen]] | Nested fact identity and termination need a distinct language contract |
 
 * Cross-paper synthesis

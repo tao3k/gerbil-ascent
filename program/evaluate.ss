@@ -4,9 +4,10 @@
 
 ;;; Generic stratified semi-naive evaluator. Mutable row buffers belong to one
 ;;; session; public declarations and returned snapshots are POO values.
-(import (only-in "engine-state.ss" make-engine-state engine-state-public engine-state-run)
+(import (only-in "engine-state.ss" make-engine-state engine-state-public engine-state-run
+                 gerbil-ascent-admit-engine)
         (only-in "round-workspace.ss" make-round-layout round-layout-source! make-round-work
-                 round-work-write! round-work-reset! round-work-commit-indices round-work-complete!
+                 round-work-write! round-reset-deltas! round-work-commit-indices round-work-complete!
                  round-layout-view-staging? round-layout-lattice-staging?)
         (only-in "execution-publication.ss" make-execution-publication gerbil-ascent-publish-execution!)
         :gerbil-ascent/core/relation-view
@@ -17,33 +18,35 @@
         (only-in "positive-components.ss" gerbil-ascent-run-positive-components! gerbil-ascent-component-mode?)
         (only-in "actor-round.ss" gerbil-ascent-run-actor-round! gerbil-ascent-actor-round-eligible?)
         (only-in "source-snapshot.ss" source-snapshot-program)
+        (only-in "source-cut.ss" gerbil-ascent-source-cut-scalar? gerbil-ascent-source-cut-export-mask)
         (only-in "source-state.ss" gerbil-ascent-source-state
                  source-state-originals source-state-additions source-state-overrides
                  gerbil-ascent-source-state-rows gerbil-ascent-prepare-source-replacement
                  gerbil-ascent-commit-source-replacement!)
-        (only-in :clan/poo/object .o .ref object?)
+        (only-in :clan/poo/object .ref)
         (only-in :std/iter for iter Iterator &Iterator-next!)
         (only-in "initialization.ss" make-initial-source-state gerbil-ascent-initialize-sources!)
         (only-in "lattice-frontier.ss" make-lattice-frontier lattice-frontier-ref
                  lattice-frontier-stage! lattice-frontier-rows lattice-frontier-clear!)
         (only-in "admission.ss" gerbil-ascent-admit-source-row!
                  gerbil-ascent-check-replacement-rows! gerbil-ascent-prepare-storage-batch)
-        (only-in "result.ss" gerbil-ascent-publication-cache
-                 gerbil-ascent-result-observation)
+        (only-in "result.ss" gerbil-ascent-result-complete? gerbil-ascent-publication-cache
+                 gerbil-ascent-result-observation make-ordered-row-cut)
         (only-in "planning.ss" gerbil-ascent-prepare-program)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-run-positive-plan!
                  make-positive-prefix-state current-positive-prefix-budget
+                 current-static-prefix-cache current-static-prefix-relation?
+                 current-static-prefix-single-delta static-prefix-cache-sources
                  gerbil-ascent-emit-heads! gerbil-ascent-pure-positive-plan?
-                 current-positive-plan-cost positive-plan-cost-admit! positive-plan-cost-begin!)
-        (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
-        (only-in "scheme-checked.ss" relational-scalar?)
-        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut)
-        (only-in "types.ss" gerbil-ascent-fact-limit?)
+                 current-positive-plan-cost positive-plan-cost-admit!)
+        (only-in "activation.ss" gerbil-ascent-annotate-scalar-pivots!)
+        (only-in "index.ss" gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-prefix-cut row-indexes-publish-old-tail!)
         (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse
                  gerbil-ascent-activate-rules gerbil-ascent-activate-selected-rules
-                 gerbil-ascent-seed-session-reuse! make-closure-seed-state session-reuse-affected)
-        (only-in "analysis.ss" gerbil-ascent-program-analysis
-                 gerbil-ascent-program-schema)
+                 gerbil-ascent-seed-session-reuse! gerbil-ascent-ensure-reuse-membership! make-closure-seed-state session-reuse-affected)
+        (only-in "analysis.ss" gerbil-ascent-program-analysis gerbil-ascent-program-schema
+                 gerbil-ascent-stable-scalar-schema? gerbil-ascent-scalar-set-plans?
+                 gerbil-ascent-positive-rule-plans? gerbil-ascent-static-prefix-affected)
         (only-in :gerbil-ascent/core/rule-semantics gerbil-ascent-lattice-feeds-relation?
                  gerbil-ascent-lattice-key
                  gerbil-ascent-lattice-value
@@ -71,6 +74,12 @@
            analysis schema measure-rule-times? (source-cut #f) (publication #f))
   (gerbil-ascent-make-engine-state candidate analysis schema measure-rule-times? #f
     (gerbil-ascent-prepare-session-reuse previous candidate completed analysis source-cut publication)))
+
+;; Only the private Choice Session consumes deferred cuts. Keep the ordinary
+;; entry points available to already compiled Session and Actor callers.
+(export gerbil-ascent-make-choice-engine-state)
+(def (gerbil-ascent-make-choice-engine-state program analysis schema (reuse #f))
+  (%make-engine program #t analysis schema #f #f reuse defer-result?: #t))
 
 
 ;;; One engine owns all mutable row buffers and indexes. Reused immutable
@@ -115,9 +124,13 @@
 (def (gerbil-ascent-make-engine program session? (analysis-override #f)
                                 (schema-override #f) (measure-rule-times? #f)
                                 (plan-error #f) (reuse #f)
-                                (workers 1) (canceled? #f) (empty-bucket-reuse? #f))
+                                (workers 1) (canceled? #f) (empty-bucket-reuse? #f)
+                                (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f)
+                                (retain-actor-output? #f))
   (let (state (%make-engine program session? analysis-override schema-override
-                            measure-rule-times? plan-error reuse workers canceled? empty-bucket-reuse?))
+                            measure-rule-times? plan-error reuse workers canceled?
+                            empty-bucket-reuse? actor-sources owned-actor-inputs? retained-source-indexes
+                            retain-actor-output?))
     (if session? (engine-state-public state) state)))
 
 ;;; Boundary: this closure owns one engine's mutable rows, indexes and counters.
@@ -125,36 +138,12 @@
 ;;; Failed publication requires source replay; no partial result becomes success.
 (def (%make-engine program session? (analysis-override #f)
                    (schema-override #f) (measure-rule-times? #f)
-                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f) (empty-bucket-reuse? #f))
-  (unless (boolean? empty-bucket-reuse?) (error "invalid empty bucket reuse option"))
-  (when (and empty-bucket-reuse? (or session? reuse (not (= workers 1)) canceled?))
-    (error "empty bucket reuse requires a fresh serial scalar Set engine"))
-  (when (and (current-positive-plan-cost)
-             (or session? reuse (not (= workers 1)) canceled?))
-    (error "native plan cost supports one fresh serial solve only"))
-  (positive-plan-cost-begin! (current-positive-plan-cost))
-  (unless (or (not canceled?) (procedure? canceled?))
-    (error "invalid ASCENT cancellation predicate" canceled?))
-  (when (and canceled? (or session? reuse measure-rule-times?))
-    (error "ASCENT cancellation requires a fresh untimed evaluator"))
-  (unless (and (exact-integer? workers) (> workers 0)
-               (or (= workers 1) (and (not session?) (not reuse) (not measure-rule-times?))))
-    (error "invalid ASCENT parallel evaluation option" workers))
-  ;; The declaration constructor validates the full Core contract.
-  ;; Evaluation checks mutable rows and clause bindings for this snapshot.
-  (unless (object? program)
-    (error "invalid ASCENT program" program))
-  (let* ((relations (.ref program 'relations))
-         (rules (.ref program 'rules))
-         (input-limit (.ref program 'max-input-facts))
-         (derived-limit (.ref program 'max-derived-facts))
-         (output-limit (.ref program 'max-output-facts)))
-    (unless (and (list? relations) (list? rules)
-                 (gerbil-ascent-fact-limit? input-limit)
-                 (gerbil-ascent-fact-limit? derived-limit)
-                 (gerbil-ascent-fact-limit? output-limit)
-                 (boolean? measure-rule-times?))
-      (error "invalid ASCENT program bounds"))
+                   (plan-error #f) (reuse #f) (workers 1) (canceled? #f)
+                   (empty-bucket-reuse? #f) (actor-sources #f) (owned-actor-inputs? #f) (retained-source-indexes #f)
+                   (retain-actor-output? #f) defer-result?: (defer-result? #f))
+  (let-values (((relations rules input-limit derived-limit output-limit)
+                (gerbil-ascent-admit-engine program session? measure-rule-times? reuse workers canceled?
+                  empty-bucket-reuse? actor-sources owned-actor-inputs? retain-actor-output?)))
     (let* ((count (length relations))
            (schema (or schema-override
                        (gerbil-ascent-program-schema program relations)))
@@ -199,6 +188,8 @@
       (def indexed-rows (row-indexes-rows indexes))
       (def (callback-rows atom environment use-delta? slot-terms)
         (indexed-rows atom environment use-delta? slot-terms #t))
+      (def (compiled-provider-rows atom environment use-delta? slot-terms)
+        (indexed-rows atom environment use-delta? slot-terms #t #t))
       (def (view-relation? index)
         (gerbil-ascent-view-relation? (vector-ref storage-providers index)
                                      (vector-ref index-providers index)))
@@ -222,7 +213,8 @@
          (gerbil-ascent-initialize-sources! relations schema
            (make-initial-source-state all delta all-size delta-size
                                       storage-states seen lattice-rows)
-           input-limit output-limit storage-readiness))
+           input-limit output-limit storage-readiness
+           (and owned-actor-inputs? actor-sources) analysis-override))
        (lambda (inputs materialized)
          (set! source-count inputs)
          (set! source-materialized-count materialized)))
@@ -249,33 +241,15 @@
                      (gerbil-ascent-prepare-program
                       relations rules schema plan-error)))))
              (rule-plans (vector-ref analysis 2))
-             ;; Only trusted scalar field predicates certify stable equality
-             ;; without scanning unchecked source values or invoking user code.
-             (stable-scalar-schema?
-              (andmap
-               (lambda (relation)
-                 (let (predicates (.ref relation 'field-predicates))
-                   (and (or (zero? (.ref relation 'arity)) (pair? predicates))
-                        (andmap (lambda (predicate)
-                          (or (eq? predicate relational-scalar?) (eq? predicate exact-integer?))) predicates))))
-               relations))
+             (stable-scalar-schema? (gerbil-ascent-stable-scalar-schema? relations))
              (checked-scalar-fields?
               (and (not session?) (not reuse) (= workers 1) (not canceled?) stable-scalar-schema?))
              (prefix-scalar-fields?
               (and (> (current-positive-prefix-budget) 0) (= workers 1) (not canceled?) stable-scalar-schema?))
              (scalar-set-plans?
               (and (or checked-scalar-fields? prefix-scalar-fields? (current-positive-plan-cost))
-                   (gerbil-ascent-update-eligible? program)
-                   (andmap (lambda (plans)
-                             (andmap (lambda (rule)
-                                       (gerbil-ascent-pure-positive-plan?
-                                        (vector-ref rule 5))) plans))
-                           (vector->list (vector-ref analysis 5)))
-                   (andmap gerbil-ascent-canonical-set-storage-provider?
-                           (vector->list storage-providers))
-                   (andmap gerbil-ascent-canonical-hash-index-provider?
-                           (vector->list index-providers))
-                   (andmap not (vector->list lattice-joins))))
+                   (gerbil-ascent-scalar-set-plans? program analysis storage-providers
+                     index-providers lattice-joins)))
              (_cost-admission
               (when (current-positive-plan-cost)
                 (unless scalar-set-plans?
@@ -289,20 +263,9 @@
                               (make-vector (length rules) 0)))
              (strata (vector-ref analysis 3))
              (all-active (gerbil-ascent-activate-rules analysis))
-             ;; An empty selected delta makes a pure scalar body impossible.
-             ;; Skip before rebuilding any earlier bound/indexed prefix. Only
-             ;; the fresh engine's activation is changed, never cached analysis.
              (_scalar-pivot-pruning
               (when (and checked-scalar-fields? scalar-set-plans?)
-                (for-each
-                 (lambda (rules)
-                   (for-each
-                    (lambda (rule)
-                      (vector-set! rule 4
-                        (list->vector
-                         (map (lambda (clause) (vector-ref (vector-ref clause 1) 0))
-                              (vector-ref rule 1))))) rules))
-                 (vector->list all-active))))
+                (gerbil-ascent-annotate-scalar-pivots! all-active)))
              ;; A later callback may observe rows injected by an earlier pure
              ;; rule. Preserve ordered traversal across the entire program.
              (ordered-execution?
@@ -348,14 +311,7 @@
               (and session?
                    (gerbil-ascent-lattice-feeds-relation?
                     rule-plans kinds)))
-             (positive-rules?
-              (and session?
-                   (andmap
-                    (lambda (rule)
-                      (andmap (lambda (clause)
-                                (eq? (vector-ref clause 0) 'atom))
-                              (vector-ref rule 1)))
-                    rule-plans)))
+             (positive-rules? (and session? (gerbil-ascent-positive-rule-plans? rule-plans)))
              (single-set-source?
               (and positive-rules? (= count 1)
                    (not (vector-ref lattice-joins 0))
@@ -387,7 +343,7 @@
                                   (gerbil-ascent-set-batch-admit!
                                    (vector-ref source-additions index)
                                    staged-count
-                                   (vector-ref seen index)
+                                   (gerbil-ascent-ensure-reuse-membership! all seen index)
                                    (and (null? (vector-ref all index))
                                         (null? (vector-ref source-originals
                                                            index))))))
@@ -425,6 +381,21 @@
                         (not materialized-dirty?)
                         (not accepted-any?))
                (set! dirty? #f)))))
+        (def (publish-result! complete? deadline)
+          (let ((observation
+                  (gerbil-ascent-result-observation
+                   (and reuse (session-reuse-affected reuse)) names active-by-stratum rule-ticks)))
+            (let-values (((result publication)
+                          (gerbil-ascent-publish-execution! execution-publication
+                            names arity all all-size deadline observation position-of complete? session?
+                            (or retain-actor-output? session?
+                                (and actor-sources (gerbil-ascent-source-cut-export-mask actor-sources)))
+                            defer-result?)))
+              (set! owned-publication publication)
+              (set! last-result result))))
+        (def (deadline-jiffy duration)
+          (+ (current-jiffy)
+             (quotient (* duration (jiffies-per-second)) 1000000000)))
         (def (run-retained! (deadline #f))
          (ascent-execution-checkpoint!)
          (gerbil-ascent-storage-check-readiness! storage-readiness)
@@ -433,29 +404,40 @@
          (when dirty? (flush-staged-set-rows!))
          ;; One invocation owns the complete round workspace. Clearing slots
          ;; after commit releases pending state while delta keeps its row spine.
-         (let (complete? #t)
+         (let ((complete? #t) (clean? (not dirty?)))
          (when dirty?
          ;; Completed selected updates instantiate full frames only for later
          ;; dirty work. Clean calls and duplicate-only appends keep cached results;
          ;; partial timeout resumes retain their original selected frames.
          (unless active-by-stratum
            (set! active-by-stratum (gerbil-ascent-activate-rules analysis)))
-         (let ((pending (make-vector count []))
-               (pending-seen (make-vector count #f))
-               (pending-injections (and (round-layout-view-staging? round-layout) (make-vector count [])))
-               (pending-lattices (and (round-layout-lattice-staging? round-layout) (make-vector count #f)))
-               (round-work (make-round-work round-layout))
-               (pending-count 0)
-               (component-mode? (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
+         (let* ((pending (make-vector count []))
+                (pending-seen (make-vector count #f))
+                (pending-injections (and (round-layout-view-staging? round-layout) (make-vector count [])))
+                (pending-lattices (and (round-layout-lattice-staging? round-layout) (make-vector count #f)))
+                (round-work (make-round-work round-layout))
+                (pending-count 0)
+                ;; Whole-component closure has no intermediate delta barrier.
+                ;; Keep a suspended evaluator in round mode even on untimed resume.
+                (component-mode? (and (not deadline) (not resume-stratum)
+                                      (gerbil-ascent-component-mode? session? workers canceled? analysis schema)))
+                (scalar-actor-cut? (and component-mode? actor-sources (= workers 1)
+                                        (gerbil-ascent-source-cut-scalar? actor-sources)))
+                (use-scalar-source-indexes? (and scalar-actor-cut?
+                                                 (not (current-ascent-execution-control))))
+                (use-worker-membership? (and scalar-actor-cut? retain-actor-output?)))
             (def (admit-stored! index pending-table stored)
               (unless (and (list? stored)
                            (= (length stored) (vector-ref arity index)))
                 (error "invalid ASCENT storage provider row" stored))
               (let (check (vector-ref field-checkers index))
                 (when check (check stored)))
-              (unless (or (hash-get (vector-ref seen index) stored)
-                          (hash-get pending-table stored))
-                (hash-put! pending-table stored #t)
+              ;; Only the credited immutable Actor path supplies no table.
+              ;; Its sole SCC worker already checked the same seen and pending rows.
+              (unless (and pending-table
+                           (or (hash-get (vector-ref seen index) stored)
+                               (hash-get pending-table stored)))
+                (when pending-table (hash-put! pending-table stored #t))
                 ;; Counts admission into this round, not completed publication.
                 ;; A refused run keeps its partial counters and no success claim.
                 (positive-plan-cost-admit! (current-positive-plan-cost))
@@ -468,12 +450,16 @@
               (ascent-execution-checkpoint! 1 0)
               (let* ((index (vector-ref atom 0))
                      (pending-table
-                      (and (not (vector-ref lattice-joins index))
+                      (and (not use-worker-membership?)
+                           (not (vector-ref lattice-joins index))
                            (not (view-relation? index))
-                      (or (vector-ref pending-seen index)
-                          (let (fresh (make-hash-table))
-                            (vector-set! pending-seen index fresh)
-                          fresh)))))
+                           (or (vector-ref pending-seen index)
+                               (let (fresh (make-hash-table))
+                                 ;; From this point to round commit all row
+                                 ;; membership probes use the same table.
+                                 (gerbil-ascent-ensure-reuse-membership! all seen index)
+                                 (vector-set! pending-seen index fresh)
+                                 fresh)))))
                 (let (check (vector-ref field-checkers index))
                   (when check (check row)))
                 (cond
@@ -543,6 +529,11 @@
             (let ((active-rules (vector-ref active-by-stratum stratum))
                   (active? #t) (round (if resume-stratum resume-round 0)))
             (def (commit! index)
+                (def old-tail
+                  (and checked-scalar-fields? scalar-set-plans?
+                       (not (current-ascent-execution-control))
+                       (pair? (vector-ref pending index))
+                       (vector-ref all index)))
                 (ascent-execution-checkpoint!)
                 (if (view-relation? index)
                   (let (frontier (vector-ref pending index))
@@ -615,38 +606,19 @@
                   (vector-set! delta index (vector-ref pending index))
                   (vector-set! delta-size index batch-size)
                   (vector-set! delta-version index
-                    (+ 1 (vector-ref delta-version index))))
+                    (+ 1 (vector-ref delta-version index)))
+                  (when old-tail ((row-indexes-publish-old-tail! indexes) index old-tail)))
                 (when (pair? (vector-ref pending index))
                   (vector-set! pending index [])
                   (if (vector-ref lattice-joins index)
                     (lattice-frontier-clear! (vector-ref pending-lattices index))
-                    (hash-clear! (vector-ref pending-seen index))))
+                    (let (table (vector-ref pending-seen index))
+                      (when table (hash-clear! table)))))
                 ))
                 )
-                (def (reset-delta! index)
-                  (vector-set! delta index
-                    (if (= (vector-ref strata index) stratum)
-                      (if (or first-run? (> stratum 0))
-                        (vector-ref all index)
-                        (vector-ref delta index))
-                      []))
-                  (vector-set! delta-size index
-                    (if (not round-work)
-                      (gerbil-ascent-row-count (vector-ref delta index))
-                      (if (= (vector-ref strata index) stratum)
-                        (if (or first-run? (> stratum 0))
-                          (vector-ref all-size index)
-                          (vector-ref delta-size index))
-                        0)))
-                  (vector-set! delta-version index (+ 1 (vector-ref delta-version index))))
-              (unless resume-stratum
-                (if round-work
-                  (round-work-reset! round-work stratum (or first-run? (> stratum 0))
-                                     all-size delta-size reset-delta!)
-                  (let reset ((index 0))
-                    (when (fx< index (vector-length delta))
-                      (reset-delta! index)
-                      (reset (fx+ index 1))))))
+            (unless resume-stratum
+              (round-reset-deltas! round-work stratum (or first-run? (> stratum 0))
+                strata all all-size delta delta-size delta-version))
           (until (not active?)
           (set! round (+ round 1))
           (set! pending-count 0)
@@ -654,7 +626,9 @@
             ;; Custom index/storage and lattice semantics remain on the serial path.
             (if component-mode?
               (gerbil-ascent-run-positive-components! analysis schema all workers emit-row!
-                                                       (or canceled? (lambda () #f)))
+                                                       (or canceled? (lambda () #f))
+                                                       use-scalar-source-indexes? retained-source-indexes
+                                                       use-worker-membership?)
             (if (and (or (> workers 1) canceled?)
                      (not ordered-execution?)
                      (gerbil-ascent-actor-round-eligible? active-rules storage-providers
@@ -716,7 +690,13 @@
                      (positive-plan (vector-ref rule 5))
                      (frame (vector-ref rule 6))
 )
-                 (let ((rows-access (if ordered-execution? callback-rows indexed-rows))
+                 (let ((rows-access (cond
+                                      ((not ordered-execution?) indexed-rows)
+                                      ((and (not session?) (not reuse) (= workers 1)
+                                            (not canceled?)
+                                            (gerbil-ascent-pure-positive-plan? positive-plan))
+                                       compiled-provider-rows)
+                                      (else callback-rows)))
                        (parts-access (and (not ordered-execution?) (row-indexes-visit-parts indexes)))
                        (old-access (and disjoint-sets? (row-indexes-old-rows indexes))))
                    ;; One inline dispatch preserves the callback path and its
@@ -777,24 +757,30 @@
            (set! first-run? #f)
            (set! dirty? #f)
            (set! materialized-dirty? #f))
-         (let ((observation
-                 (gerbil-ascent-result-observation
-                  (and reuse (session-reuse-affected reuse)) names active-by-stratum rule-ticks)))
-           (let-values (((result publication)
-                         (gerbil-ascent-publish-execution! execution-publication
-                           names arity all all-size deadline observation position-of complete? session?)))
-             (set! owned-publication publication)
-             (set! last-result result))))
+         (publish-result! complete? deadline))
+         ;; A retained Actor closure must not return a caller-editable Result.
+         ;; Clean ordinary Sessions keep their established result identity.
+         (when (and retain-actor-output? clean?) (publish-result! #t deadline))
          (when (and reuse complete?)
            (set! active-by-stratum #f)
            (set! reuse #f))
          last-result))
-        (def (run!)
+        (def (run! (duration #f))
           (if recompute-from-source?
             last-result
-            (run-retained!)))
+            (run-retained! (and duration (deadline-jiffy duration)))))
         (if session?
-          (let (published (gerbil-ascent-publication-cache count))
+          (let* ((published (gerbil-ascent-publication-cache count))
+                 (cache (current-static-prefix-cache))
+                 (static-prefix?
+                  (and cache stable-scalar-schema? positive-rules?
+                       (andmap gerbil-ascent-canonical-set-storage-provider?
+                               (vector->list storage-providers))
+                       (andmap gerbil-ascent-canonical-hash-index-provider?
+                               (vector->list index-providers))
+                       (let (affected (gerbil-ascent-static-prefix-affected analysis count
+                                        position-of (static-prefix-cache-sources cache)))
+                         (lambda (index) (and (not first-run?) (not (vector-ref affected index))))))))
             (def (replay-source! mode index rows)
               ;; Both eager update forms prepare and solve before adoption.
               ;; Replacement recounts the complete prospective sources: failed
@@ -831,7 +817,7 @@
                 (flush-staged-set-rows!))
               (when (and (>= (+ source-materialized-count derived-count)
                              output-limit)
-                         (not (hash-get (vector-ref seen index) row)))
+                         (not (hash-get (gerbil-ascent-ensure-reuse-membership! all seen index) row)))
                 (error "ASCENT session output fact budget exceeded"))
               (set! source-count (+ source-count 1))
               (vector-set! source-additions index
@@ -963,9 +949,20 @@
                 (gerbil-ascent-check-replacement-rows!
                  name rows width (vector-ref field-checkers index))
                 (replay-source! 'replace index rows)))
+            (def (static-prefix-single-delta prefix suffix)
+              (and (zero? (vector-ref delta-size prefix))
+                   (= (vector-ref delta-size suffix) 1)
+                   (let (rows (vector-ref delta suffix))
+                     (and (pair? rows) (null? (cdr rows)) (car rows)))))
             (def (run-session!)
               (if recompute-from-source? last-result
-                (begin (vector-set! published 0 #f) (run-retained! published))))
+                (begin
+                  (vector-set! published 0 #f)
+                  (if static-prefix?
+                    (parameterize ((current-static-prefix-relation? static-prefix?)
+                                   (current-static-prefix-single-delta static-prefix-single-delta))
+                      (run-retained! published))
+                    (run-retained! published)))))
             (def (run-timeout! duration-nanoseconds)
               (unless (and (exact-integer? duration-nanoseconds)
                            (>= duration-nanoseconds 0))
@@ -974,15 +971,19 @@
               (if recompute-from-source?
                 last-result
                 (begin
-                  (vector-set! published 0
-                    (+ (current-jiffy)
-                       (quotient (* duration-nanoseconds (jiffies-per-second))
-                                 1000000000)))
+                  (vector-set! published 0 (deadline-jiffy duration-nanoseconds))
                   (run-retained! published))))
+            (def (publication (completed #f) (name #f))
+              (if completed
+                (and (eq? completed last-result) (gerbil-ascent-result-complete? completed)
+                     (let* ((index (position-of name)) (rows (vector-ref all index)))
+                       (and (not (relation-view? rows))
+                            (make-ordered-row-cut rows (vector-ref all-size index)))))
+                owned-publication))
           (make-engine-state
            (if single-set-source? append-single-set-source! append-source!)
            replace-source! run-session! run-timeout! analysis schema
-           (lambda () owned-publication) (lambda () recompute-from-source?)
+           publication (lambda () recompute-from-source?)
            source-additions source-overrides))
           run!)))))
 

@@ -1,0 +1,204 @@
+#+TITLE: Concurrent admission for an idle page pull
+
+* Protocol in the isolated candidate
+
+An Actor Session owns publication, close, and its cursor mutations.
+The candidate gives each normal mailbox request one admission credit.
+The sender records the credit under the existing lifecycle mutex
+after a successful send. The owner retires it after posting the
+reply, including replies to an abandoned caller and replies produced
+while draining a close. Worker completion cannot publish without
+the credit of its original run. The specialized state request does
+not use a credit or modify a Result or cursor.
+
+An ordinary pull executes on its caller only under the lifecycle
+mutex, on a single VM processor, with a live Session and zero admitted
+requests. An external execution-control callback, foreign runtime,
+or larger page takes the existing mailbox path. The candidate caps
+the direct page at 8192 rows, keeping its maximum copy span within
+the existing bounded delivery geometry. That span limit does not
+bound work inside the stage closure.
+
+Both paths call the same function for owner identity, latest Result,
+destination extent, row budget, and the two checkpoints. Stage
+writes only private scratch. The commit still moves exactly the
+written scratch extent before advancing the cursor. In candidate
+generated C the validated =##subs64vector-move!= call resolves to
+the pinned Gambit primitive that calls =memmove= and returns. The
+generated continuation writes the position with no interrupt poll
+in between. This supports the copy-and-advance boundary on this
+particular SDK.
+
+=idle_page_gate_preserves_order= proves that in the state model a
+held direct gate implies zero credits and a live session.
+=held_idle_page_gate_keeps_publication= rules out an intervening
+publication or close while the gate is held. The runtime
+correspondence requires one credit per admitted request and one
+owner retirement, plus the primitive boundary described above.
+This is the linearization condition for the page operation.
+See [[https://www.cs.cmu.edu/~wing/publications/HerlihyWing90.pdf][Herlihy and Wing]].
+
+* Native interleaving controls
+
+Run the same interface, Actor Session and condensed Session tests on
+the reference and the isolated candidate using =gerbil test=. Both
+arms passed. Two added interface cases release two callers onto the
+same cursor, then compare the union against two disjoint prefixes,
+and pause an admitted replacement while a reader tries to use the
+older cursor. The latter also covers a close enqueued ahead of that
+reader. The rejected reader leaves the sentinel destination untouched.
+The existing second-checkpoint cancellation test also passed.
+
+Removing the zero-credit guard from the candidate changed the queued
+reader's result from rejection to 11 committed rows of the old cut.
+The native suite rejected that mutation with exit 42. The test
+therefore exercises the handoff ordering, including a real older
+publication, rather than simply comparing sequential results.
+The guarded Lean inventory passed all 196 jobs.
+
+* Remaining lock scope
+
+The lifecycle mutex is still held during preparation in this
+candidate. In =program/component-worker.ss= the first ordinal page
+may certify affine strides by scanning the index. In
+=program/condensed-closure.ss= stage can force the target list of a
+component before producing the next row. The small destination span
+does not cap either operation. Blocking unrelated admission over
+those operations is a production liability.
+
+A separate cursor reservation would protect scratch while staging
+outside the lifecycle mutex. A short final lock would check liveness,
+published Result identity, unchanged cursor and mailbox ordering.
+A refusal must release the scratch reservation before falling back
+to a queued pull, so an already queued reader cannot block the
+owner while the caller waits for it. This protocol also needs direct
+tests for an interrupt or abandonment before commit. The current
+gate proof and tests do not verify those interleavings.
+
+* Ten-million-row comparison
+
+Both arms invoke the public Session pagination API. The caller-side
+frozen reader from the earlier control is disabled. The same compiled
+benchmark module, source cuts, per-field oracle, 256 KiB buffer
+geometry, 2 GiB heap, and 90-second watchdog apply. Both widths and
+both arms verified 100 requests in four matched shards. All 16
+processes ended naturally, with a maximum process time of 15.659 s.
+
+| Width | Alloc counter median | Complete P50 (ms) | Complete P95 (ms) | GC count | First-page P95 (ms) | CPU (s) |
+|-------+----------------------+-------------------+-------------------+----------+---------------------+---------|
+| 128 | 7209104 -> 2027744 | 51.177 -> 49.011 | 259.371 -> 271.491 | 4 -> 4 | 19.657 -> 25.357 | 5.538 -> 5.443 |
+| 512 | 7280272 -> 2103088 | 54.391 -> 42.692 | 173.841 -> 184.322 | 4 -> 0 | 4.861 -> 4.459 | 5.017 -> 4.456 |
+
+The controlled counter deltas fell 71.9 and 71.1 percent. The counter
+includes stack accounting and uses monotone samples within one epoch.
+The earlier single-reader experiment reached roughly 0.3 million units.
+The real admission protocol retains additional work. There is no
+measurement assigning that residual to an individual construct.
+
+The prototype missed the wall objective in both full paired
+distributions, despite the reduced working cost. The 512-wide
+candidate had no collections but still reached a 255.032 ms
+maximum. The 128-wide first-page P95 also rose. No samples were
+dropped. Store the Scheme prototype, interleaving cases, negative
+control and raw receipts in the cache. The original Session path,
+100 ms and 90-second gates, and the 105.93 ms failed million-row
+receipt remain intact. The production lock scope is still open.
+
+* Short commit section
+
+The second isolated prototype changes only the reservation around a
+page pull. A cursor mutex owns its existing scratch buffer and
+position. The caller captures the current Result under the Session
+mutex, releases the Session mutex, and prepares the page. The final
+Session check requires a live session, zero queued or running
+requests, the captured Result, and the unchanged cursor. The only
+output mutations in that section remain the validated copy and
+position advance. The cursor mutex is released before falling back
+to the mailbox. A queued pull on that same cursor can wait for the
+scratch reservation; this retains the owner mailbox order.
+
+=idle_prepared_page_busy_or_closed_preserves_output= and
+=idle_prepared_page_changed_publication_preserves_output= establish
+refusal at the final check. When the gate grants permission and the
+cursor is current, =idle_prepared_page_ready_refines_owner_commit=
+relates the operation to the same owner commit. These model statements
+assume the concrete locks supply their advertised exclusion.
+
+A test-only probe pauses the caller after staging a real 11-row
+page and before committing. Under the short gate an independent
+publication and, in a separate case, a close each completed while
+the reader was still paused. Resuming the old cursor produced a
+rejection with the sentinel destination intact. The held-gate
+reference blocked the publication until the test released the
+reader. Removing the final Result check from the short variant
+produced 11 stale rows, so the same test rejected the mutation.
+
+Two more cases verified that an earlier admitted mailbox pull of the
+same cursor receives the earlier prefix, and a raising interrupt
+against the paused caller leaves the destination unchanged. The next
+pull after the interrupt receives the original prefix. The separate,
+unmodified interface, Actor and condensed Session suites passed on
+the short candidate. All 196 guarded Lean jobs passed. Test hooks,
+the two native negative controls, and build receipts remain in the
+cache.
+
+** Cost of the shorter gate
+
+Both variants used the public Session API and the same independent
+verifier, heap and buffer limits. Four matched shards produced 100
+requests per width and arm, and all 16 processes completed. The
+test hook was absent from both timed builds.
+
+| Width | Allocation counter median, held -> short | Completion P50 (ms) | Completion P95 (ms) | GC count |
+|-------+-------------------------------------------+---------------------+---------------------+----------|
+| 128 | 2027744 -> 4018688 | 45.936 -> 45.369 | 62.831 -> 62.224 | 4 -> 4 |
+| 512 | 2103088 -> 4092352 | 39.568 -> 39.829 | 46.079 -> 52.486 | 0 -> 0 |
+
+The allocation increase is almost identical across the two shapes.
+Each short pull takes a cursor lock and two Session locks; the held
+one takes one Session lock. A separate native control uses the same
+=with-dynamic-lock= with one or three uncontended locks and the same
+1232 loop iterations. With no collection, its counter increased from
+about 769000 to 2484288. This is compatible with most of the roughly
+two-million-unit increase in the paired run. The micro-control does
+not attribute the entire difference in the Session.
+
+The interleaving gain survives, while the smaller P95 change at width
+128 and larger regression at width 512 do not support a throughput
+or latency promotion. The isolated sources and measurements are
+retained in the cache. This change leaves the earlier full-list
+failure evidence and original 100 ms / 90-second limits intact.
+
+** Reusing the lock entry and exit closures
+
+This experiment changes only the two short lifecycle sections.
+The runtime's =with-dynamic-lock= uses =dynamic-wind= with thunks
+that lock and unlock the mutex. The candidate shares both thunks
+within one Session while retaining =dynamic-wind= at each entry.
+The cursor reservation and final checks are unchanged.
+
+In the native micro-control, 1232 iterations with the same cursor
+scope reduced the allocation counter from 2484224 to 2247680.
+Neither arm collected. The original and shared-thunk variants both
+released the lock on a nonlocal exit and reacquired it on reentry.
+The lower-allocation =with-lock= variant left the mutex owned when
+the continuation escaped. This is a difference in unwinding
+semantics, so the candidate retains =dynamic-wind=.
+
+One paired native shard per width compared the two short-gate
+variants through the same public API. Both arms verified 25
+complete requests per width, with the same fields, order, and
+limits. The saved-thunk variant passed the three interleaving
+cases for publish and close, a queued reader, and caller interrupt.
+
+| Width | Allocation counter median | Complete P95 (ms) |
+|-------+---------------------------+-------------------|
+| 128 | 4018688 -> 3821504 | 62.123 -> 192.969 |
+| 512 | 4092352 -> 3895328 | 144.797 -> 124.645 |
+
+The reduction is close to 160 accounting units per pull in both
+cases, about five percent of the short-gate totals. The single-shard
+P95 changed in opposite directions. This result supports the
+allocation effect and supplies no stable wall benefit. The
+prototype stays in the cache. The production Session, 100 ms /
+90-second gates and 105.93 ms failure receipt are unchanged.

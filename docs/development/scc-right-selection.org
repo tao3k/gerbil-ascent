@@ -1,0 +1,110 @@
+#+TITLE: Target-bound selection on condensed SCC graphs
+
+* Source and model
+
+A published condensed closure stores direct and transitive component
+masks. The diagonal in the direct mask means a nonempty path within the
+component. The existing right-only selector visits each origin's sorted
+reachable target stream and keeps rows matching the requested label.
+The replacement transposes only cross-component bits and walks incoming
+quotient arcs from the component that owns the fixed target. It seeds
+that component for traversal and emits it only when its direct self bit
+is present. A missing integer label yields no rows.
+
+In =SccState.lean=, =incoming_edited_bit= describes the dense bit
+transpose and the single affected destination column. The cold closure
+and local partition repair can populate these masks during the existing
+walk of direct edges, retaining its cancellation and work checkpoints.
+A same-partition edit borrows the previous column vector when its
+quotient is unchanged, or copies the header and updates one bit when a
+cross arc is inserted or its last concrete representative disappears.
+No tentative mutation reaches the previous published cut.
+
+=reverse_seed=, =reverse_step= and =reverse_exhausted_exact= describe
+initialization, removing the lowest pending bit and adding unseen
+predecessors, and completion. Each step settles one new component and
+visits that component's incoming mask once. =ancestor_forward_path=
+connects exhaustion to forward paths on the quotient, and
+=reverse_selection_exact= adds the nonempty-path test for the root.
+With =g= components and =e= incoming arcs incident to the visited
+components, the walk has at most =g= steps and processes masks containing those =e=
+arc bits. Each step uses a bounded number of mask operations over at
+most 8,192 bits. There is no visit to the concrete input edges.
+
+The published sorted label spine and its runs supply the public order.
+The existing =ordered_runs_select_exact= in =ComponentClosure.lean=
+relates traversal of homogeneous ordered runs to filtering that spine. =reverse_selection_order= identifies
+that filter's result with filtering the full rows. The visitor checks that the two singleton binding lists
+still describe the same selection after a callback. If a callback edits
+either list, the old scan resumes at the unvisited targets of the
+current origin and through the untouched suffix of the ordered origins.
+
+The view and witness callbacks capture the same immutable graph and
+version. The transpose uses only the quotient. Witness construction and
+replay use the concrete ordered adjacency, the cut identity and the
+version, so the added index leaves their inputs unchanged.
+=reverse_selection_retains_witness= and
+=reverse_selection_rejects_other_cut= model this dependency and rejection.
+The Scheme-to-Lean correspondence is at the mask and publication
+interfaces. Native tests exercise construction, editing and callback
+behavior against an independent closure oracle.
+
+* Native paired comparison
+
+The reference is =ed77c288=. Both arms use the original global and local
+bridge fixtures in =benchmarks/scc-bridge-test.ss=, the same Gerbil build
+on Gambit =2df89af=, the production compiler flags, a 2 GiB heap limit
+and the original 90-second watchdog. Each arm runs 32 delete/restore
+cycles per fixture and independently checks every returned field and
+its position. The reference scans the forward closure rows. The
+candidate reads cross-component arc bits from incoming masks. Neither
+query reads the concrete source edges. The separate counting build
+records one cycle per fixture and does not contribute to timings.
+
+| Fixture and request | Scan P95 (ms) | Reverse P95 (us) | Scan rows | Reverse rows | Reverse SCCs | Reverse arc bits |
+|---------------------+---------------+------------------+-----------+--------------+--------------+------------------|
+| Global, deleted, bridge target | 75.295 | 9.333 | 5,222,400 | 64 | 1 | 0 |
+| Global, deleted, last target | 64.644 | 48.375 | 5,222,400 | 3,200 | 50 | 49 |
+| Global, restored, bridge target | 130.619 | 40.458 | 10,240,000 | 3,200 | 1 | 0 |
+| Global, restored, last target | 128.291 | 36.208 | 10,240,000 | 3,200 | 1 | 0 |
+| Local, deleted, bridge target | 169.387 | 77.458 | 10,469,376 | 4,480 | 70 | 69 |
+| Local, deleted, last target | 113.041 | 70.167 | 10,469,376 | 4,544 | 71 | 70 |
+| Local, restored, bridge target | 130.458 | 74.375 | 10,473,472 | 4,544 | 70 | 69 |
+| Local, restored, last target | 112.914 | 64.333 | 10,473,472 | 4,544 | 70 | 69 |
+
+The bridge target is the first query on each published version. The
+last target is queried second. An absent label visits zero candidates
+and zero arc bits with the reverse selector. The reference visits
+10,240,000 or 10,473,472 closure rows for those absent labels.
+
+| Publication P95 (ms) | Reference | Candidate |
+|----------------------+-----------+-----------|
+| Global delete | 9.473 | 7.610 |
+| Global restore | 0.727 | 0.545 |
+| Local delete | 1.048 | 1.002 |
+| Local restore | 0.670 | 0.626 |
+
+Allocation P95 during deletion increased by 864 bytes on the
+global fixture and 2,992 bytes on the local fixture. The publication
+figures are observed wall time, without attributing the decrease to
+the added index. The native semantic suite checks redundant bridges,
+singleton self paths, interleaved order, callback binding mutation,
+resource refusal, cancellation and old witness validity across repairs.
+
+* Delivery gates
+
+The million-row source and existing limits are identical to the
+reference. The original 114.77 ms projection-list failure remains in
+=ordinal-right-selection.org=. The candidate's native run checked all
+1,000 projection-list results and failed the same 100 ms assertion at
+115.98 ms, with 218 collections and 21.31 seconds of cumulative GC wall
+time. The recursive list and both buffers passed at 81.24 ms, 15.27 ms
+and 12.27 ms P95. The 90-second watchdog stayed in force. The candidate
+has not met the conditions for publishing to PR #2.
+
+Both original ten-million-row paging widths passed all 40 shards and
+1,000 independently verified requests per width. Width 128 measured
+2.88 ms first-page and 77.27 ms complete P95. Width 512 measured 1.17 ms
+first-page and 53.68 ms complete P95. The respective verified rates were
+210 million and 242 million rows per second. The unchanged SCC edit
+and independent oracle suites and the complete guarded Lean build passed.

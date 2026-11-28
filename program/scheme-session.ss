@@ -8,14 +8,16 @@
         (only-in "scheme-query.ss" relational-export
                  make-relational-solution make-relational-program-solution)
         (only-in "scheme-checked.ss" relational-copy-row relational-copy-rows)
-        (only-in "session.ss" gerbil-ascent-open-session
+        (only-in "session.ss" gerbil-ascent-open-session gerbil-ascent-open-session/choice
                  gerbil-ascent-session-append-source! gerbil-ascent-session-replace-source!
                  gerbil-ascent-session-replace-sources! gerbil-ascent-session-run)
         (only-in "types.ss" GerbilAscentFragmentContract)
+        (only-in "result.ss" gerbil-ascent-result-complete?)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :std/list/list find))
 (export relational-open-session relational-open-program-session
+        relational-open-program-session/choice
         relational-session-append-source! relational-session-replace-source!
         relational-session-replace-sources! relational-session-transaction!
         relational-session-prepare-transaction relational-session-prepare-replacements
@@ -23,8 +25,8 @@
         relational-program-append-source! relational-program-replace-source!
         relational-program-transaction! relational-program-session-run)
 
-(defstruct relational-session (engine source-arities))
-(defstruct relational-program-session (engine source-arities))
+(defstruct relational-session (engine source-arities) final: #t)
+(defstruct relational-program-session (engine source-arities) final: #t)
 
 ;;; Retained sessions accept replacements only through exported source
 ;;; handles. The old session owns rollback after an update or solve fails.
@@ -48,13 +50,21 @@
      arities)))
 
 (def (relational-open-program-session program)
+  (open-program-session program #f #f))
+
+(def (relational-open-program-session/choice program receive (defer-result? #f))
+  (open-program-session program receive defer-result?))
+
+(def (open-program-session program receive-choice-operations defer-result?)
   (let* ((snapshot (relational-snapshot-program program))
          (arities (relational-source-arities snapshot)))
     ;; Compiled programs may contain derived relations. Their query handles
     ;; are not update authority: every checked mutation uses this immutable
     ;; source-only arity list, shared with fragment Sessions below.
     (make-relational-program-session
-     (gerbil-ascent-open-session snapshot)
+     (if receive-choice-operations
+       (gerbil-ascent-open-session/choice snapshot receive-choice-operations defer-result?)
+       (gerbil-ascent-open-session snapshot))
      arities)))
 
 (def (relational-replace-source/checked! engine arities name rows)
@@ -289,7 +299,7 @@
 
 (def (relational-session-result engine)
   (let (result (gerbil-ascent-session-run engine))
-    (unless (.ref result 'finished)
+    (unless (gerbil-ascent-result-complete? result)
       (error "relational session did not complete"))
     result))
 

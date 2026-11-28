@@ -1,0 +1,1002 @@
+#+title: Single-VM resident Actor runtime and performance acceptance
+
+* Decision
+
+The primary target is one resident Gerbil VM serving multiple concurrent
+Actors. The VM is the ownership boundary for Scheme values and continuations.
+Gerbil schedules green threads and mailbox waits, and can run another ready
+Actor while one waits for asynchronous I/O. Processor count is a separate
+property of the runtime configuration. A one-processor benchmark still runs
+multiple green threads in the same VM.
+
+ASCENT coordinator Actors own ready SCCs, delta rounds, Session cuts and
+completed publication. The Session owner is an Actor, and evaluation and
+monitoring run in separate Gerbil green threads. Evaluator worker capacity is
+separate from the number of Actors or callers. Rayon executes only pure work
+over Rust-owned data. Scheme roots, continuations and mutable indexes stay
+within their VM. Multiple VMs remain a separate isolation and scale-out
+experiment.
+
+This supersedes the historical test-carrier direction in
+[[file:../scheme-actor-runtime-design.org][the Actor protocol history]]. Its ownership, cancellation and publication
+obligations remain. Do not add another evaluator, loader, runner or scheduler
+for Scheme threads. Keep the Scheme package manifest independent of the Rust
+bridge's package namespace.
+
+* Separate acceptance boundaries
+
+| Boundary | Observation | Admission |
+|----------+-------------+-----------|
+| Build/cold load | Compilation, expansion, dynamic loading, exit | Existing progress supervision and finite CI job budget |
+| Isolated Suite aggregate | All ten modules, every Case, natural exit | Existing startup/inactivity supervisor and 2 GiB per child |
+| Resident runtime | Production requests and verified completed work | Scenario-specific distributions, CPU, memory and semantics |
+
+The old aggregate 120-second wall limit included dynamic loading. It did not
+bound an individual Contract or relation query. The aggregate now uses the
+existing 120-second startup and idle supervisor; CI's job budget still bounds
+the complete invocation. No output is synthesized. Inactive, failed and
+incomplete Suites still fail. Existing sample counts, scenario comparisons and
+thresholds are unchanged. Old exit-124 receipts remain failed observations.
+
+** Oracle dependency resolution
+
+The differential adapter in =rust/ascent-oracle/tests/integration/common.rs=
+places the selected prefix's =lib= before the repository source directory in
+=GERBIL_LOADPATH=. The fixture remains an explicit source entry. Gerbil's own
+resolver selects prepared production interfaces; no additional loader or
+interface cache is introduced. Native package construction and the existing
+source-view and compiled-artifact checks remain prerequisites.
+
+This preserves the preparation model's distinction between source test
+carriers and compiled production dependencies. It removes repeated dependency
+expansion from differential children, not relation evaluation work. Resolver
+observations and differential tests establish this call path; they do not
+prove equivalence of the entire Scheme implementation and its Lean models.
+
+** Earlier compiled closure observations
+
+The compiled DSL closure of PR head =bebd1ba0= has a separate 120-second
+wall gate. The Linux job completed the standard source suites in 234.12
+seconds, above the prior 180-second target. The compiled run was still
+executing at its deadline, with 30 of the 64 operator graphs checked.
+Before that Case, the source deletion suite had taken 50.5 seconds and
+the provenance graph suite 31.2 seconds. Their largest Cases were the
+stratified source-cut oracle at 33.55 seconds and the complete provenance
+and withdrawal corpus at 22.51 seconds. These hosted timestamps locate
+the remaining cost within executing suites. The compiled gate remains open.
+
+Focused native Gerbil profiles retained all assertions in the selected
+Cases. The phase probes report process CPU on macOS. They do not estimate
+the hosted Linux wall time.
+
+| Case | Boundary | Calls | CPU s |
+|------+----------+-------+-------|
+| Stratified source cut | Base DSL declaration | 64 | 1.523 |
+| Stratified source cut | Fresh DSL declaration | 64 | 1.467 |
+| Stratified source cut | Open Session | 64 | 0.028 |
+| Stratified source cut | Solve initial Session | 64 | 0.005 |
+| Stratified source cut | Replace sources | 64 | 0.015 |
+| Stratified source cut | Fresh solve after declaration | 64 | 0.018 |
+| Provenance graph and withdrawal | DSL declaration before native closure | 256 | 0.793 |
+| Provenance graph and withdrawal | Checked admission | 256 | 1.443 |
+| Provenance graph and withdrawal | Native solve | 256 | 0.024 |
+| Provenance graph and withdrawal | Generate provenance | 64 | 0.005 |
+| Provenance graph and withdrawal | Withdraw | 192 | 0.006 |
+
+The original constructor sequence selected its private construction extent
+only for positive atom rules. The checked stratified selector recognizes
+declared atoms, closed negations, fixed operators and reducers with their
+declared arities. The rule-only construction extent requires the original
+Contract protocols, with a second check before retaining the constructed
+rules. Explicit rule captures use the ordinary sequence. Source expressions
+run first. Limits, source-handle reads and the complete Program root remain
+outside the private extent. Lean's
+=closed_rule_constructor_preserves_receiver= states the result with
+successful, pure intermediate checks as a hypothesis. The formal inventory
+compares the executable selector, signatures, protocol guard and extent.
+
+All 64 source-cut comparisons passed in each arm of a counterbalanced
+native test. Two original declaration samples used 2.691 and 2.738 s CPU.
+The rule-only candidate used 1.317 and 1.378 s. Source replacement in all
+four arms used 0.012 to 0.014 s CPU. The compiled pre-change baseline also
+passed locally with all 15 modules and 232 Cases. Its output spanned 107.7 s
+inside the original 120-second invocation. Hosted Linux qualification
+remains an independent gate.
+
+The native revision probe confirmed that restoring the original Term
+classifier procedure after a supported edit leaves the old protocol guard
+revoked. The compiled harness starts with a suite that performs this edit.
+The matched constructor measurements used fresh processes with the original
+protocol. Whole-harness timing includes the resulting ordinary construction
+paths and requires its own receipt.
+
+The backward allocation reading remains retained and upstream-owned. An
+unavailable observation is not zero, a passed allocation gate, or evidence of
+a leak. No Gambit patch is installed and the Gerbil release stays fixed.
+
+On the PR-aligned build, all ten isolated performance modules reached a
+terminal result under the existing startup and inactivity supervision.
+Nine passed. The lifecycle suite failed the nonnegative cumulative
+allocation check in =scheme-library-contract-fixture.ss= with exit 70.
+The original test receipt establishes the negative delta without recording
+its magnitude. The entire command, including preparation, took 224.61 s.
+
+The candidate rebuilt on PR head =90af6adc= reached all ten modules
+in 91.95 s after 87.66 s of separate test preparation. It reported
+27 passing Cases. The lifecycle allocation assertion was the only
+failure. The fixture records the raw before and after readings, the
+signed delta and the pair and mode on a backward reading. It verifies
+the application result before applying the original nonnegative
+allocation requirement. A backward reading still fails the gate.
+
+On the same built image the instrumented fixture recorded pair 0,
+retained mode, before =-160458544=, after =-507714776=, and raw
+delta =-347256232=. It reached the existing allocation assertion
+after checking the application result. The reading remains invalid
+as an allocation measurement. The uninstrumented aggregate receipt
+remains the gate result.
+
+The independent 12-worker native source semantics run completed all 183
+modules in 363.87 s under the existing 600 s wall gate and 2 GiB heap
+limit. Its preparation command took 55.40 s, with 6.28 s in make and no
+production modules rebuilt.
+
+* Source map and open implementation obligations
+
+| Source | Existing responsibility | Remaining work |
+|--------+-------------------------+----------------|
+| =program/actor-session.ss= | Session mailbox, cuts, cancellation, drain | Resident concurrency and fair control delivery |
+| =program/actor-round.ss= | Workers, credits, merge, round barrier | Safe worker reuse without stale replies or old cuts |
+| =core/actor-envelope.ss= | Exact native envelope | Preserve generated Lean correspondence |
+| =rust/ascent-scheme/src/service.rs= | Typed transport and owner lifecycle | Current foreign request/reply loop is serialized |
+| =rust/ascent-scheme/src/application.rs= | Native VM and rooted C ABI | Keep roots and continuations on their owner |
+
+An ingress queue alone is not a resident service. Accepted Scheme work must
+receive native execution opportunities while Rust input, output or clients
+wait. Native readiness, host recovery and client consumption are separate
+events. Cancellation must remain admissible under full data credits. Close
+joins accepted work before releasing roots. Only complete current cuts publish.
+
+* Resident terminal evaluator
+
+The Session coordinator admits at most one run. It hands a certified
+terminal computation to one lazily started Gerbil worker through the
+worker's native mailbox. That worker remains on the existing VM. A single
+monitor joins the worker at retirement. Calls with an execution authority,
+deadline, rule-cost observer or conditional acceptance use the ordinary
+per-run worker and monitor.
+
+The resident worker can return a complete terminal result, decline the
+optimized path, or report failure. Only the coordinator may publish. It
+checks the original epoch and worker identity and calls the existing
+publication admission. A current decline starts ordinary evaluation with
+the same admitted cut, token and epoch. Cancellation fences off both
+publication and a late decline. Retirement discards the worker and rejects
+its active run. Close drains the active job and joins the idle worker
+before replying to the closing callers. The worker receives the existing
+resource and cancellation token. It does not take ownership of provenance
+or modify the certified planner's result.
+
+=ActorStateCost.lean= checks the disposition of stale generations, retired
+workers and current declines. =ActorResidentWorker.qnt= checks admission,
+fallback, worker loss and close, and includes mutations of each of those
+boundaries. The original dispatcher and result admission remain the
+source authority for requests routed to ordinary evaluation.
+
+* Measurement contract
+
+Record enqueue, native entry, computation completion and caller-visible
+completion on one monotonic clock. Queue, execution and publication spans sum
+to end-to-end latency. Full-export timing includes materialization/conversion;
+a lazy run result does not establish full export. Report preparation and first
+call separately. Do not add inclusive GC or CPU spans twice.
+
+Reuse =benchmarks/*-test.ss= with native =gerbil test= and existing Justfile
+entries. Source Suites require no preliminary build. Keep independent oracles,
+fixed workloads, complete counts, at least 1,000 distribution samples, elapsed
+and CPU costs, GC observations, P50/P95/P99/max and resource limits. Smaller
+diagnostics remain diagnostic. Keep the current 100 ms Session request gate
+and the tighter relation gates. Count verified completions for throughput;
+report rejection, failure and cancellation separately.
+
+Mailbox messages, Session state requests, runs, updates and full exports have
+different units. A mailbox throughput result cannot qualify a query SLO.
+
+* Formal and implementation order
+
+1. State phase and measurement policy in Lean/Quint. Reuse ActorSession,
+   ActorRound, ActorRoundCredits and SessionPublication for ownership/drain.
+2. Audit the pinned bridge APIs against the actual single-owner entry.
+3. Implement resident ingress, execution and recovery on existing owners;
+   bind changed transitions to source and rejecting controls.
+4. Run native semantics, independent relation oracles and existing runtime
+   gates before optional scale-out. No model pass replaces a failed native run.
+5. Publish qualified owned changes to existing PR 2 and verify exact-head CI.
+
+The measurement model does not prove achieved speed, macro expansion, mutable
+indexes or OS scheduling. Report those source-refinement boundaries explicitly.
+The production Session Suite uses the runtime monotonic counter and its
+reported frequency. It converts differences to nanoseconds after the operation
+and rejects negative samples. These public call brackets leave per-request
+queue, evaluator and publication tracing open. Host service spans cover the
+ABI extent, including conversion and delivery to the bridge.
+
+* Revision cohort
+
+The candidate runtime/build bridge is PR 18 commit
+=7c4dd3d8e3b6321113d1a752599ee7f40045c48a=, whose upstream CI passed when selected.
+The prior accepted local cohort used =838af1ab=; its observations stay attached
+to that revision. Resolution is not consumer qualification. The retired
+build-only IR generator remains pinned until its actual consumer is replaced.
+
+The integration snapshot retains the ASCENT PR 2 head's Yuanxu pin
+=9a81ef14ba09c946e0ea9f9fb44c71a6df289d41= and Yuanxu's POO pin
+=d7d438e53a5becf5c17bf781dc166ae54e8409ee=. The isolated native dependency
+installation completed with Gerbil =1cfb032= and Gambit =ea114fc=. The
+first attempt reported unresolved =_free= and =_realpath$DARWIN_EXTSN= for
+Yuanxu's generated static-input module. The same generated module linked
+under the Justfile's established Darwin compiler environment, which also
+completed the dependency installation.
+
+The development policy rejected the evaluator owner at 1,024 lines. Engine
+admission now lives in =program/engine-state.ss= and returns the two declaration
+lists and three bounds before the evaluator allocates its mutable state.
+The predicate and accessor expressions retain their original order, including
+the diagnostic collector start and the five POO field reads. The evaluator is
+994 lines. The unchanged policy reports 17 warnings and zero errors.
+The production entry completed in 182.83 s and reported
+=PRODUCTION-BUILD-NO-ASP=. The semantic preparation command completed in
+77.73 s. Its internal 54.02 s interval included 31.59 s of dependency
+projection and 21.28 s in make, with =production-rebuilt=0=.
+The post-extraction native semantics command completed all 183 modules in
+98 batches with 12 workers, the 2 GiB child limit and the 600 s deadline.
+It exited normally in 151.04 s wall time with 834.01 s user CPU and
+98.29 s system CPU. The earlier source run used a different set of compiled
+inputs and is recorded separately.
+
+The rebuilt DSL closure is bound as
+=28e25059d4f1798a640635b8c8c25d6ab75da22f4e0f7efcd4e36028314e70ec=.
+Preparation took 150.84 s. The gate completed all 15 modules and 233 Cases
+with a normal exit in 113.51 s wall time and 105.55 s user CPU. The original
+120 s execution deadline passed.
+
+The post-extraction run completed every Scheme performance command in the
+CI inventory. Preparation took 42.50 s and reported =production-rebuilt=0=.
+All nine commands outside the aggregate passed. The 10-module contract
+aggregate took 42.35 s, with nine passing modules and one failure. The
+lifecycle module reached the same nonnegative Gambit allocation assertion
+and exited with code 70. The scenario command retained semantic equality
+and measured table expression P95 at 5.263 ms against the fixed 9.642 ms
+reference. The reachability closure P95 was 0.467 ms.
+
+The PR-aligned compiled DSL run used the bound image
+=b70b14f219756111387c417cb32ce12b21aeb7cad3ac166ecc4bfa77e5d19584=.
+All 15 modules and 233 Cases completed, including the stratified constructor
+callback test. The native command exited normally in 108.98 s wall time
+with 104.65 s user CPU and 1.18 s system CPU under the existing 120 s gate.
+Library preparation was a separate 119.46 s, including 100.35 s in make.
+
+The hosted macOS source job for =bebd1ba0= ended with exit 124 at the
+600 s limit. The job log reported 61 of 98 batch starts and 53 final
+=OK= markers by that point. Six of the eight started batches without a
+final marker last reported an active Case, including the finite-flow
+oracle, candidate-flow enumeration and provider frontier checks. The
+log provides separate evidence of work remaining before final teardown.
+
+The full guarded formal run completed 602 Quint obligations and the Lean
+source comparisons. The integration snapshot contains the same Lean/Quint
+sources, lockfiles, formal driver and emitted-source targets as the checked
+worktree. The compiled Scheme and performance receipts are separate inputs
+to acceptance.
+
+The final staged source snapshot passed =ALL-FORMAL-CHECK-OK= in 486.54 s.
+It checked 602 Quint obligations and 98 generated-source comparisons with
+the locked LeanPoo Guard. Repository policy admitted 2,210 tracked paths.
+The repository, preparation and source-semantic CI tests passed 35 checks.
+
+The release build including the optional macOS instance profile completed
+in 4 min 34 s. The optional profile still failed its unchanged readiness
+deadline in the PyO3 shared-package test and the native instance-control
+tests. Those control tests failed at =InstancePool::new= before their
+non-yielding call or deadline checks. In a native sample of the running
+control suite, callers waited in =instances::lifecycle::bind= and Gerbil
+owner threads entered =___dynamic_load= through =dlopen=. The sample showed
+dyld lock waits and =fcntl= during segment mapping. The resident process
+qualification uses its own production-worker and transaction receipts.
+
+The release Rust run with the optional instance profile enabled completed
+with 48 failures across the PyO3 instance package, instance control,
+instance resources and instance semantics targets. The default integration
+target passed 43 tests, the process runtime target passed four, and the
+row materialization target passed one in the same run. These results keep
+the optional macOS prototype's readiness failure visible while independently
+exercising the production process path.
+
+** Integrated production worker
+
+The candidate based on PR head =bebd1ba0= completed 1,000 verified
+transactions for each of the three workloads with one persistent VM per
+cohort. The worker SHA-256 was
+=6ca11c9e71077850ce47f6428dba06579450d7c04d685a089fb90d9f69a2a5dc=.
+Each transaction replaced the source, queried and exported the relation,
+verified all returned rows against the independent oracle, and released the
+result. All three invocations exited normally under their existing 120 s
+limit. No compiler was active during the cohorts. The optional instance
+test executable was active in the background during all three.
+
+| Workload | Verified/s | Cycle P50 ms | Cycle P95 ms | Cycle P99 ms | Max ms | Preparation s |
+|----------+------------+--------------+--------------+--------------+--------+---------------|
+| Two-hop, 4,096 input | 114.800 | 7.107 | 7.998 | 37.806 | 40.469 | 1.218 |
+| Two-hop, 16,384 input | 28.294 | 28.444 | 63.761 | 67.907 | 126.100 | 1.266 |
+| Recursive, 30,720 output | 18.851 | 43.927 | 80.290 | 85.293 | 119.231 | 1.403 |
+
+| Workload | Replace P95 ms | Export P95 ms | Traced VM CPU s | Collections | GC wall s | Peak RSS MiB |
+|----------+----------------+---------------+-----------------+-------------+-----------+--------------|
+| Two-hop, 4,096 input | 6.253 | 1.355 | 7.233 | 46 | 1.384 | 499.42 |
+| Two-hop, 16,384 input | 58.723 | 6.088 | 29.175 | 166 | 5.715 | 566.64 |
+| Recursive, 30,720 output | 71.290 | 12.194 | 46.212 | 225 | 7.742 | 563.28 |
+
+The VM trace totals cover source replacement, query and result release.
+Peak RSS is the operating system high-water mark. Cumulative allocation
+still has the upstream counter failure described above. Replacement is the
+largest measured phase in both large workloads. The three worker cleanup
+intervals were 445, 477 and 449 ms respectively. The parent's successful
+wait followed each cleanup marker by about 5 ms. These intervals measure
+complete VM cleanup; they do not attribute time to macOS dynamic unload.
+
+Joining the 1,000 client samples per workload to the three VM receipts by
+request control identity separates collection-heavy tails from time outside
+the VM. The slowest 50 cycles are selected by full client latency.
+
+| Workload | Slow cycles with GC | Slow cycles with replace GC | Slow median GC wall ms | Slow median outside VM ms | GC-free cycles | GC-free cycle P95 ms |
+|----------+--------------------+----------------------------+------------------------+---------------------------+----------------+----------------------|
+| Two-hop, 4,096 input | 46 | 35 | 29.865 | 1.342 | 954 | 7.522 |
+| Two-hop, 16,384 input | 46 | 44 | 35.253 | 5.525 | 834 | 31.467 |
+| Recursive, 30,720 output | 47 | 41 | 36.009 | 6.261 | 775 | 47.119 |
+
+The outside interval includes the caller's row construction and verification,
+transport and scheduling. The GC-free percentiles describe a subset of the
+same run. Allocation and collection causality require separate controls.
+
+The installed macOS Scheme profile wheel used the released Gerbil toolchain
+and runtime bridge =7c4dd3d8=. The wheel SHA-256 was
+=61dcd08e337863e31cf95c8e9efb6ca4164d0f598db1230842ee3099ea2b0474=.
+The existing installed-wheel qualification passed through the explicitly
+selected Rust worker in 17.06 s and the default PyO3 worker in 17.58 s.
+Each entry verified three work distribution modes on 12 Rayon threads,
+120 calls and 120 closure applications on 12 single-processor owners,
+and reaped all 12 children without shutdown or checkpoint diagnostics.
+This installed-wheel test exercises scale-out separately from the
+one-VM production latency measurements above.
+
+The scoped production Rust and PyO3 release test profile passed all 87
+nextest cases with 12 test threads and zero retries. Execution took 51.50 s.
+The complete command took 184.64 s including build and artifact-lock wait.
+The test output contained no leaked worker, forced stop, shutdown error or
+checkpoint transport error marker.
+
+After the engine admission extraction and archive diagnostic repair, the
+same scoped profile passed all 87 cases again. Execution took 63.92 s and
+the complete command took 216.61 s. The strict all-target Clippy command
+also completed without findings for that profile.
+
+The updated installed wheel SHA-256 was
+=a24da5df68e49847c503c6565e504db6d3bc1cd50092dc0f7c4de0edd0c15cd6=.
+The explicit and default entries passed in 21.42 s and 20.53 s respectively.
+Both exercised the same 12 owners, 120 calls and 120 closure applications,
+the three Rayon distribution modes and complete child reaping.
+
+An additional Cargo workspace invocation selected the build helper as a
+target package alongside the production runtime. It failed to compile
+=ascent-build= because the runtime's =external-program= feature excludes
+=GerbilRuntime= package-build methods. The preceding PR pin uses the
+same feature condition. The hosted jobs select the tool and production
+runtime targets separately.
+
+The on-demand process build requested the retired =archive_build= test
+target. Cargo rejected that target selection before compilation. The
+native archive ownership change in =e75797ef= retired the old shared
+cache and its lease test.
+
+The mean/provenance benchmark now starts its archive load from the archive
+emitted for the same Cargo build. Twelve independent writers make eight
+private copies each and verify the bytes and SHA-256 of every copy. The
+archive process must still be live at the release marker and be reaped under
+the original 180 s limit. The proof workload retains twelve clients, sixteen
+rounds per client, the stale-authority rejection, independent proof checks
+and the 600 s diagnostic deadline. Archive copies now read an immutable
+production artifact with private destinations. This load measures proof
+execution alongside archive copy I/O. The earlier shared lease test remains
+historical evidence.
+
+The repaired on-demand targets built in 176.86 s on the local macOS host.
+The independent-process diagnostic exited normally in 51.39 s. All twelve
+VM owners reported one processor, verified 384 proofs and exited cleanly.
+The archive job was live when the proof clients were released. It completed
+all 96 verified copies of the 92,339,560-byte production archive with SHA-256
+=4290e2bde1f0a9942db30a42bf017274edfdb705a24cb96c8fc3e8504ab84784=.
+This is a diagnostic receipt for the local host. The hosted three-core run
+and the optional shared-process owner mode remain separate qualifications.
+
+The rebuilt worker SHA-256 was
+=131698612ea96545d992c75ad542374b9c5ef934c2025c279f7304bbb6c15c76=.
+All three one-VM workloads again completed 1,000 verified transactions
+under the original 120 s per invocation. Process captures recorded other
+compilers around each run. These samples establish successful execution
+and show tails under concurrent activity. They leave the controlled
+latency qualification open.
+
+| Workload | Verified/s | Cycle P50 ms | Cycle P95 ms | Cycle P99 ms | Max ms | Preparation s |
+|----------+------------+--------------+--------------+--------------+--------+---------------|
+| Two-hop, 4,096 input | 68.846 | 8.905 | 43.309 | 78.720 | 143.643 | 2.705 |
+| Two-hop, 16,384 input | 18.889 | 33.073 | 126.700 | 200.400 | 307.142 | 2.417 |
+| Recursive, 30,720 output | 15.087 | 52.894 | 112.763 | 169.208 | 231.416 | 1.406 |
+
+| Workload | Replace P95 ms | Export P95 ms | Traced VM CPU s | Collections | GC wall s | Peak RSS MiB |
+|----------+----------------+---------------+-----------------+-------------+-----------+--------------|
+| Two-hop, 4,096 input | 26.147 | 9.022 | 9.550 | 47 | 1.806 | 498.47 |
+| Two-hop, 16,384 input | 93.669 | 19.206 | 35.911 | 167 | 8.204 | 558.97 |
+| Recursive, 30,720 output | 89.722 | 43.640 | 53.208 | 224 | 8.965 | 558.50 |
+
+The larger two workloads exceed 100 ms at P95 in this run. For the
+16,384-row workload, P95 in the first two 250-transaction groups was
+147.852 and 159.072 ms. The last two groups measured 69.020 and 71.872 ms.
+The host capture showed active compilers at entry and none at completion.
+The recursive capture showed no compiler at entry and ten Clang processes
+at completion. Its slowest 50 cycles had a 48.496 ms median outside the VM,
+up from 6.261 ms in the preceding image's observations. This comparison
+combines different host conditions.
+
+The same client and worker bytes then ran the three workloads once with
+one-second compiler-process observations. The two larger series recorded
+zero compiler observations in 41 and 59 samples respectively. The 4,096-row
+series recorded 2 in 14. Every series verified the 1,000 transactions and
+exited normally. The aggregate isolation check retained the 4,096-row
+overlap as a failed condition.
+
+| Workload | Verified/s | Cycle P50 ms | Cycle P95 ms | Cycle P99 ms | Max ms | Preparation s |
+|----------+------------+--------------+--------------+--------------+--------+---------------|
+| Two-hop, 4,096 input | 99.974 | 7.463 | 38.183 | 42.085 | 93.015 | 2.716 |
+| Two-hop, 16,384 input | 25.767 | 30.204 | 67.585 | 120.986 | 190.162 | 1.284 |
+| Recursive, 30,720 output | 17.233 | 46.984 | 86.096 | 126.742 | 175.444 | 1.329 |
+
+| Workload | Replace P95 ms | Export P95 ms | Traced VM CPU s | Collections | GC wall s | Peak RSS MiB |
+|----------+----------------+---------------+-----------------+-------------+-----------+--------------|
+| Two-hop, 4,096 input | 13.851 | 2.391 | 7.685 | 47 | 1.497 | 496.62 |
+| Two-hop, 16,384 input | 62.166 | 6.755 | 30.956 | 165 | 6.216 | 556.41 |
+| Recursive, 30,720 output | 75.749 | 21.061 | 49.118 | 224 | 8.237 | 560.98 |
+
+A separate 4,096-row preflight observed active compilers throughout its
+60 s acquisition interval. It left the isolated observation pending and
+did not start another timed cohort. The completed 4,096-row samples above
+remain attached to their observed host conditions.
+
+* Completed-engine ownership candidate
+
+A fresh Actor run currently rebuilds membership, indexes and the fixed point
+for an unchanged source cut. The proposed reuse retains the private run closure,
+not a public Result or a validation receipt. It applies only to one worker,
+current canonical declaration trees, immutable scalar source cuts and the existing
+=gerbil-ascent-update-eligible?= rule/literal/provider predicate. Mutable nested
+keys, foreign getters, changed POO contracts and source updates keep fresh
+construction. Program fact ceilings remain the same immutable declarations.
+
+Every request still installs its own execution authority. The retained engine's
+cancellation probe reads the current run token through an owner-private cell;
+the old token is never reused. Only an authorized, epoch-current completion can
+retain the candidate. Failure and cancellation discard it and restore the
+committed cut. A changed source cut retires it before new computation.
+An admission checker running on the coordinator cannot synchronously request
+that coordinator's own mailbox. Such reentry fails before allocating a reply
+Actor; final acceptance then follows the ordinary failure/rollback path.
+
+Retained derived row pairs must remain private. The evaluator therefore creates
+a fresh public Result and detaches every exported row spine for this mode.
+Reusing a caller-editable Result or borrowing derived rows would be incorrect.
+The native controls compare unchanged work counts, mutated exported spines,
+mutable keys, source changes, refusal and cancellation. Lean states the
+same-cut/elegibility/publication obligations; Quint explores their violations.
+Neither alone proves the Scheme heap or the eligibility predicates.
+
+The source cost partition is eligibility plus seeding, index construction,
+rule traversal and publication. Reuse removes the middle three terms, while
+eligibility and fresh outward spines remain. The unchanged-run work counter
+control checks that no new traversal is charged; source changes still traverse.
+This algebra does not bound scheduler pauses, GC or wall-clock tails.
+
+* Scalar component merge
+
+The single-worker Actor path can reuse worker novelty when the unchanged-cut
+retention predicate has admitted immutable scalar operands and a canonical
+positive program. =program/component-plan.ss= groups every head by the SCC
+that owns its relation. =program/component-worker.ss= seeds output membership
+from the admitted snapshot and admits a candidate once before emitting it.
+The coordinator's same-slot seed therefore agrees with the assigned worker.
+Only the coordinator calls the evaluator merge, charges fact budgets and
+applies completion credits. Worker novelty replaces one coordinator
+membership table for the eligible path. Other paths keep that table.
+
+=ScalarComponentMerge.unique_worker_merge= in =ActorEnvelope.lean= proves
+ordered merge equality from worker novelty. =ActorRoundCredits.qnt= retains
+its delivery, credit, and drain obligations. The Lean premise still needs
+source evidence for each worker's membership keys and the ordered envelopes.
+
+The evaluator's pending membership is also redundant for this same cut. The
+novelty premise covers the union of already completed and staged rows, while
+the existing evaluator still validates row shape, admits each staged row and
+checks derived and output limits before commit. =unique_worker_staging= proves
+the same ordered pending rows under this premise. The negative control
+=original_staging_drops_repeats= retains the earlier semantics for inputs
+outside the worker guarantee. Keep the scheduler admission and drain
+invariants in =ActorRoundCredits.qnt=.
+
+The hosted Actor path attaches authority to each call. The membership change
+preserves the row stream entering =emit-row!= and its leading work
+checkpoint. =unique_worker_charge_prefix= proves that every prefix of this
+stream charges the same pending facts, including the first rejection.
+=run-task= still issues worker checkpoints and waits for merge credit. The
+owner's publication check still receives the current request authority.
+This permits removing redundant membership under host authority, while the
+separate cached source-index path keeps its existing authority guard.
+
+The typed wire Session preserves separate replacement and query
+transactions, generation updates, result lifetime and proof lookup. Its
+batch replacement evaluates eagerly and publishes only a complete cut.
+A query can return and resume an incomplete result at a committed round
+boundary. =interface/engine-api.ss= selects the Actor for supported,
+owned scalar programs. The resident module and =Value.apply= entry can
+also call an Actor Session directly.
+
+* Deadline and partial Actor delivery
+
+The local query duration starts when the evaluator is ready to compute.
+The host's separate deadline and cancellation authority continue to cover
+admission, service and delivery. =program/evaluate.ss= checks the query
+duration at complete delta-round boundaries. A complete SCC solve can
+bypass those boundaries, so a timed or suspended run uses the standard
+round executor. A later untimed request must resume those same rounds.
+
+In =program/actor-session.ss= the worker hands the owner one joined outcome.
+The owner checks the epoch and the current request before returning any rows.
+An incomplete outcome leaves the committed cut and last completed Result
+intact. Its private workspace may be resumed on the same owned scalar cut
+with a fresh request authority. Source edits retire that workspace. A stale
+or denied outcome restores the committed cut and discards the workspace.
+The result handle and provenance of an incomplete query remain distinct
+from committed publication when the typed Session is wired to this path.
+
+=TimedSession= in =ActorEnvelope.lean= checks partial delivery, commitment
+and resume eligibility. =ActorSession.qnt= explores suspension, cancellation,
+source edits and closure with both stale-delivery and early-publication
+mutations. The native differential test checks the evaluator's round
+boundary and final closure against the ordinary Session.
+
+* Eager source transactions
+
+The existing Session replacement acceptance procedure requests an eager
+batch. The Actor owns the same operation through =.source-replacements=.
+The coordinator prepares a prospective cut, keeps it private while the
+worker is assigned, and calls the supplied acceptance procedure on the
+complete candidate before its own publication checkpoint. A failed
+procedure, canceled worker, or denied publication leaves the previous
+committed and pending roots in place. The current run's cut is the only
+source for successful adoption. The ordinary staged replacement call
+continues to use the same owner's pending-cut update.
+
+=replacement_publishes_atomically= in Lean states the two-root
+transition. The Quint =ReplacementPrivate= invariant checks the live
+transaction's pending and committed roots and rejects the eager-pending
+mutation. The Scheme test uses the existing acceptance callback to
+observe derived rows and deliberately refuses a prospective result.
+
+* Typed Session result scope
+
+The typed source adapter keeps its current handle registry in
+=interface/engine-api.ss=. A positive program with detached scalar data and
+the existing Actor admission policy can use a resident Actor. The adapter
+keeps the public query, replacement, owned-result and close operations.
+An eagerly completed cut can reuse its private completed Result on
+subsequent queries. A partial run still returns its current-version row
+handle. =owned-result-lookup= checks the exact source generation and the
+=proof-scope= action also checks completion and the exported relation.
+Only an accepted batch advances the source generation and retires all
+handles for its predecessor. A failed batch leaves the previous proofs
+readable. Close joins the Actor before retiring its handle.
+
+=WireScope= in Lean states the generation and completeness guards.
+=EvidenceLifecycle.qnt= explores ordinary handle and proof lifetimes and
+rejects a mutation that grants proof scope to a partial result. A native
+test must exercise both proof refusal and resumed acceptance through the
+typed adapter.
+
+* Empty delta in a positive SCC
+
+The compact assignment in =program/component-worker.ss= maps each selected
+pivot to the private relation slot of that body occurrence. The pure plan
+certificate covers every atom in the projected body. Each committed round
+sets that slot's delta count from its exact pending list. Borrowed predecessor
+slots have empty delta throughout the assignment. The first traversal still
+reads the complete input snapshot.
+
+A subsequent pivot with a zero delta count admits no witness. The worker may
+omit that traversal before looking up its prefix. Nonempty pivots keep their
+order, row checks and credit protocol. A skipped traversal produces no facts
+or proof support. The coordinator still checks cancellation before it accepts
+the assignment's completion or publishes its cut.
+
+=empty_delta_pivot_no_derivation= checks the selected occurrence against an
+exact count in =IndexedPositiveTraversal.lean=. =DeltaClosure.qnt= checks
+the frozen round with empty delta and rejects pruning a live frontier.
+
+* Cost of the directed-chain closure
+
+The workload seeds =reach(X,Y)= from =edge(X,Y)= and extends it with
+=reach(X,Y), edge(Y,Z)=. Each disjoint chain with =n= edges contributes
+frontier sizes =n, n-1, ..., 1=. Each frontier row probes the unchanged
+=edge= index once, and the last prefix in each chain has no successor.
+=LinearClosureCost= in =IndexedPositiveTraversal.lean= connects these
+cardinalities to the Scheme counters in =core/positive-plan.ss= and to the
+matched-row and witness observations in =rust/ascent/src/execution/kernels.rs=.
+The Rust delta test loads the same rules and independently enumerates every
+ordered pair joined by a path. The arithmetic depends on the chain shape.
+Branching or repeated body occurrences have their own frontier counts.
+
+The isolated empty-pivot comparison recorded 348,160 candidate visits before
+the guard and 61,440 after it, with the same 30,720 witnesses. In 16 samples
+per mode, worker-only wall P50 moved from 123.305 to 24.867 ms. The
+credit-controlled worker moved from 131.603 to 31.313 ms. The earlier
+190.9 and 132.0 ms Session measurements belong to separate revision cohorts.
+
+The single-worker Rust rule kernel uses dense interned value codes for its
+canonical one-column index. It decodes and orders the result inside the solve.
+Scheme visits the same number of matched rows in this workload and performs
+structural membership checks on projected list rows. The Scheme comparison
+adds order verification outside the solve, so its list sort belongs in a
+separate phase from the SCC traversal.
+
+** Recursive execution cost by call boundary
+
+The frozen workload uses one SCC, 256 disjoint chains, 3,840 input rows and
+30,720 output rows. Each of 80 alternating samples per boundary compares
+every output row with the independently enumerated chain closure. This is
+a single-VM diagnostic with compiled library modules.
+
+| Boundary | Wall P50 (ms) | Wall P95 (ms) |
+|----------+---------------+---------------|
+| Component worker, inline merge | 19.084 | 52.549 |
+| Same worker and merge, through Actor round credits | 20.269 | 56.530 |
+| Full SCC coordinator, diagnostic merge | 20.615 | 56.268 |
+| Actor Session, solve and publish Result | 26.738 | 62.152 |
+| Read all rows from the completed Result | 0.365 | 0.475 |
+| Order rows for the benchmark oracle | 34.440 | 73.712 |
+
+The clock brackets around the Session include evaluation and publication.
+The bracket for =rows-of= ends before =list-sort= starts. All rows are
+still checked after sorting. These boundaries are diagnostic controls
+rather than additive estimates of production overhead. The Session recorded a
+collection in 16 of 80 solve brackets, with a 34.655 ms median collector
+duration among those samples. Separate Rust single-thread phase tracing measured a 5.231 ms
+median rule kernel for this workload, 0.926 ms for ingestion and
+2.843 ms for decoding and ordering in the solve. The two phase studies
+were recorded separately.
+
+=LinearClosureCost= proves the triangular frontier count for a chain.
+The measured Scheme traversal has 61,440 live candidates, 30,720
+index probes and 30,720 witnesses. The Rust kernel visits the same 61,440
+matched rows. =core/positive-plan.ss= calls =match-row!= on the ordinary
+list-row branch. For these two-field rules that means 122,880 action-tag
+dispatches, even after pruning the empty pivot. The two layouts are
+fresh/fresh in the seed or recursive prefix, and bound/fresh in the
+indexed suffix. =BinaryListMatch.full_match= preserves the complete
+slot frame and decision for these layouts, including an unchanged frame
+on bound mismatch. A specialization can hoist action dispatch while
+retaining the suffix equality check, candidate checkpoints, novelty
+and publication order. This proof covers exact binary rows, while
+allocation, compiler output and performance require native evidence.
+
+An isolated native comparison compiled the current list matcher and a
+binary specialization with matching compiler options. Both cohorts passed
+all output comparisons. Session wall P50 was 32.288 versus 29.944 ms, and
+Session CPU P50 was 30.811 versus 29.886 ms. Within the candidate process the
+median no-GC CPU moved from 30.126 ms in the first half to 26.422 ms in the
+second. The experiment leaves the production matcher unchanged. The
+residual gap motivates an end-to-end compact scalar relation experiment
+across index lookup, head construction and novelty, with ordered
+publication and proof support checked at the same boundaries.
+
+** Exact integer transport
+
+The owner-local typed decoder in =rust/ascent-scheme/src/values.rs= reads an
+already rooted result. =ExactIntegerTransfer= and =IntegerRowTransfer= in
+=WeightedExportCapacity.lean= state two applicable laws. Given the admitted
+native scalar tag, a fixnum projects to the same integer as the general
+signed magnitude codec. The pinned bridge's unsupported scalar observation
+for bignums selects that codec. Other errors retain their original outcome.
+No word layout, width or sign convention is specified by ASCENT.
+
+A nested collection element already has a kind observation on its live
+snapshot slot. Root promotion retains the same object, so the owned
+decoder can dispatch on that kind. The source still validates the kind,
+nesting bound and table keys, and releases all promoted roots on exit.
+The Lean statement assumes stability through promotion. The native tests
+exercise that premise, including nested maps and positive and negative
+integer edges.
+
+The producer-side workload replaces the source cut, asks for the complete
+result and releases its handle through the real process owner. An eager
+budget-refusal control proves that replacement ran through an Actor before
+any throughput observation. Input generation and end-to-end verification
+are timed separately from the worker's C ABI extent. The bridge diagnostics
+report CPU, GC and resident memory. The upstream negative cumulative
+allocation observation retains its own failure receipt.
+
+*** Production typed-transport baseline
+
+One resident worker, one VM processor and one client alternate two disjoint
+source cuts. Each of 1,000 transactions per size requires a completed query,
+matches every tuple against the independent two-hop oracle and releases its
+result lease. Startup and the budget-refusal control precede both sample
+windows. Throughput counts successfully verified transactions.
+
+| Input rows | Verified/s | P50 ms | P95 ms | P99 ms | Max ms | Startup s |
+|------------+------------+--------+--------+--------+--------+-----------|
+| 4,096      |     28.376 | 25.726 | 70.969 | 91.187 | 183.505 |     1.616 |
+| 16,384     |      7.273 | 142.436 | 174.336 | 199.027 | 304.959 |     2.958 |
+
+| Input rows | Phase | P50 ms | P95 ms | VM CPU s | Collections | GC wall s |
+|------------+-------+--------+--------+----------+-------------+-----------|
+| 4,096 | Replace | 15.186 | 56.746 | 17.636 | 76 | 3.341 |
+| 4,096 | Query and export | 9.662 | 52.198 | 13.862 | 117 | 5.136 |
+| 16,384 | Replace | 63.167 | 120.757 | 72.075 | 291 | 14.686 |
+| 16,384 | Query and export | 42.700 | 96.479 | 53.981 | 390 | 18.613 |
+
+Peak worker RSS was 503.84 and 569.17 MiB respectively. Per-transaction
+queue time averaged 0.128 and 0.151 ms. The 16,384-row transaction misses
+the 100 ms target. Its phases include both the host bridge and the Scheme
+business operation, so finer stage timing is required to apportion that
+cost. The same workload can drive the codec and scalar-projection candidates
+through the executable boundary.
+
+The matched-archive decoder comparison uses the same release profile, native
+archive SHA-256, source cuts and caller. Each of four cohorts verifies 160
+complete results. The signed exact-integer control also round-trips eight
+values across the fixnum boundary and beyond the host word.
+
+| Input rows | Query/export P50 before → after (ms) | Cycle P95 before → after (ms) | Verified/s before → after |
+|------------+-------------------------------------+------------------------------+---------------------------|
+| 4,096 | 8.978 → 6.779 | 63.425 → 60.201 | 30.900 → 35.352 |
+| 16,384 | 37.464 → 27.306 | 144.064 → 137.465 | 8.080 → 8.974 |
+
+For 16,384 input rows, query/export VM CPU fell from 8.212 to 6.424 s
+across the cohort. Cycle P99 increased from 165.562 to 243.093 ms.
+The earlier thousand-sample cross-build experiment used different native
+archive identities and remains separate from this diagnosis.
+
+** Typed result scalar projection
+
+The typed Actor's =source-run= projects every exported cell before publication.
+The same visit determines whether its scalar projection is complete. The
+wire conversion distinguishes an interned symbol, a directly represented
+scalar and an opaque reference. =SourceProjection.projected_support_exact=
+and =serialization_preserves_classification= in =WeightedExportCapacity.lean=
+justify this classification. Actor admission excludes custom index, storage
+and field callbacks, and its published snapshot belongs to one fixed cut.
+General source Sessions retain their existing export and classification
+requests. The Actor still creates fresh wire rows and publishes its original
+result handle under the same authority checkpoint.
+
+The image combining the Rust decoder and Scheme answer projection was run
+through the same process owner on both two-hop inputs and the 256-chain
+recursive closure. Every cohort completed and verified 1,000 transactions.
+The recursive closure has 3,840 input edges and 30,720 exported rows.
+
+| Workload | Verified/s | Cycle P50 ms | Cycle P95 ms | Cycle P99 ms | Max ms | Startup s |
+|----------+------------+--------------+--------------+--------------+--------+-----------|
+| Two-hop, 4,096 input | 22.890 | 31.757 | 95.509 | 147.918 | 294.607 | 4.631 |
+| Two-hop, 16,384 input | 6.165 | 146.117 | 287.462 | 431.209 | 692.148 | 2.623 |
+| Recursive closure | 6.141 | 146.453 | 239.403 | 314.234 | 516.083 | 1.784 |
+
+| Workload | Replace P50 ms | Export P50 ms | Replace and export VM CPU s | Collections | GC wall s | Peak RSS MiB |
+|----------+----------------+---------------+-----------------------------+-------------+-----------+--------------|
+| Two-hop, 4,096 input | 19.447 | 9.411 | 31.522 | 167 | 8.995 | 502.83 |
+| Two-hop, 16,384 input | 83.613 | 45.647 | 128.733 | 584 | 36.328 | 560.38 |
+| Recursive closure | 56.714 | 93.046 | 144.358 | 841 | 44.195 | 579.31 |
+
+The 16,384-row and recursive workloads exceed the 100 ms transaction target.
+The 16,384-row image has higher latency than the earlier baseline for both
+replacement and export. The source projection affects export. These runs
+leave the cause of the replacement increase and the isolated export gain
+unresolved. Peak RSS is the worker high-water mark; the native receipt
+does not establish cumulative allocation.
+
+Join cycle ordinals to the three VM trace receipts by control identity.
+Among the slowest 50 combined 16,384-row cycles, 39 recorded GC. The
+median GC wall time in those 50 cycles was 81.3 ms and the median time
+outside all three VM brackets was 67.0 ms. The outside interval includes
+caller work, serialization, transport, scheduling and verification.
+The no-GC cycle median was still 113.9 ms in the larger two-hop cohort
+and 105.0 ms in the recursive cohort. Reducing collector pauses alone
+would leave a substantial non-collector cost.
+
+** Owner timing
+
+The existing =ASCENT_PROCESS_TRACE= receipt brackets input rooting, the
+native application call and response conversion with the release of temporary
+roots. These observation points in =rust/ascent-scheme/src/application.rs=
+belong to the request's owning thread. Failed stages leave later boundaries
+unavailable. The request controller and result leases never consult these
+measurements. Normal worker retirement uses the process control clock for
+the child's cleanup-begin and cleanup-end events and the parent's successful
+wait. These observations keep dyld unload and final process exit outside the
+request windows. A worker retired in a host process has a different
+lifetime from the dedicated exec child.
+
+Sixty-four verified transactions per shape captured these VM boundary
+medians. The no-GC column uses requests with zero collections in that
+operation. It conditions on the trace, rather than subtracting collector
+time from a percentile.
+
+| Workload and phase | Encoding ms | VM call ms | Decode and release ms | Decode and release, no GC ms |
+|--------------------+-------------+------------+-----------------------+------------------------------|
+| 16,384-row replace | 25.355 | 28.163 | 0.029 | 0.027 |
+| 16,384-row export | 0.022 | 0.521 | 23.921 | 23.411 |
+| Recursive replace | 6.311 | 40.774 | 0.030 | 0.028 |
+| Recursive 30,720-row export | 0.023 | 1.012 | 86.659 | 43.656 |
+
+The two dedicated workers spent 460.9 and 465.3 ms between cleanup
+markers, then 6.7 and 6.1 ms before the parent's successful wait. This
+receipt times whole VM cleanup; it has no dyld-specific attribution.
+
+The production process owner uses the pinned bridge's homogeneous integer
+copy. It requests signed row packets through a private
+rooted request vector. The ordinary Scheme dispatcher and the instance
+host receive their usual request map. The packed path applies to a completed
+Actor export before its existing publication checkpoint. It checks that
+each row has the same positive width and each field fits the exact signed
+64-bit range from =IntegerRowTransfer=. The owner copies the vector through
+the pinned bridge and checks the positive row count, width and exact product
+before reconstructing the ordered owned rows. A nonrectangular, empty or
+mixed result follows the ordinary transfer, as does a row with an integer
+outside the signed range. Source definitions, leases, provenance and
+evaluation remain Scheme-owned. =IntegerRowTransfer.unpack_flatten= proves
+round-trip equality for rectangular rows. =unpack_has_exact_size= proves
+that an accepted packet needs exactly the declared payload. Guarded Lean
+rendering compares the Scheme packer and rooted C ABI handoff byte for byte.
+
+The packed image completed 1,000 verified production transactions per
+shape. Startup is separate from the transaction window.
+
+| Workload | Verified/s | Cycle P50 ms | Cycle P95 ms | Cycle P99 ms | Max ms | Startup s |
+|----------+------------+--------------+--------------+--------------+--------+-----------|
+| Two-hop, 4,096 input | 43.399 | 16.899 | 58.208 | 85.050 | 240.887 | 2.929 |
+| Two-hop, 16,384 input | 11.172 | 73.899 | 136.121 | 190.945 | 369.855 | 1.875 |
+| Recursive, 30,720 output | 13.623 | 59.752 | 120.973 | 170.332 | 312.048 | 1.573 |
+
+| Workload | Replace P95 ms | Export P50 ms | Export P95 ms | Replace and export VM CPU s | Collections | GC wall s | Peak RSS MiB |
+|----------+----------------+---------------+---------------+-----------------------------+-------------+-----------+--------------|
+| Two-hop, 4,096 input | 53.505 | 1.443 | 8.115 | 18.490 | 81 | 3.354 | 505.58 |
+| Two-hop, 16,384 input | 122.683 | 6.327 | 23.762 | 75.760 | 286 | 14.249 | 542.16 |
+| Recursive, 30,720 output | 96.877 | 8.158 | 33.260 | 61.198 | 253 | 10.064 | 597.58 |
+
+Export decoding without collections had a 0.314 ms median on the
+larger two-hop workload and 0.514 ms on the recursive workload.
+Both larger transactions still exceed 100 ms at P95. The larger two-hop
+replacement has 28.308 ms median VM input encoding and 31.604 ms
+median Scheme call time. Its replacement P95 exceeds the full transaction
+target on its own, isolating the next boundary to address.
+
+A transport control reused the same Scheme archive for both workers. The
+ordinary worker disabled the private reply opt-in at the Rust call site.
+Each worker completed 160 verified transactions per shape. The two-hop
+cohorts ran ordinary then packed. The recursive cohorts reversed that order.
+The full sequence checked relation rows, source generations, result release,
+and normal exit.
+
+| Workload | Reply transfer | Verified/s | Cycle P95 ms | Replace P95 ms | Export P50 ms | Export P95 ms | Export VM CPU s | Export collections |
+|----------+----------------+------------+--------------+----------------+---------------+---------------+-----------------+--------------------|
+| Two-hop, 16,384 input | Ordinary | 8.774 | 145.806 | 110.692 | 28.546 | 76.098 | 6.149 | 52 |
+| Two-hop, 16,384 input | Packed | 11.499 | 141.420 | 117.388 | 5.806 | 49.918 | 0.584 | 4 |
+| Recursive, 30,720 output | Ordinary | 6.889 | 172.358 | 95.604 | 93.775 | 118.251 | 12.228 | 108 |
+| Recursive, 30,720 output | Packed | 13.448 | 113.113 | 94.196 | 8.975 | 35.133 | 0.778 | 2 |
+
+For source replacement, the ordinary encoder roots each input integer and
+builds a Scheme list for each row. =source-rows= then rebuilds the list while
+classifying columns and checking arity. The private =source-replace= encoder
+can now copy a rectangular signed integer payload through the pinned rooted
+vector API. The decoder applies the program's input fact bound to the
+replacement before checking declared arity and exact payload length, then builds
+rows. Reading from the end fills both list spines in the original order.
+=IntegerRowTransfer.source_packet_preserves_admission= covers the integer
+and scalar column checks. =unpackFromEnd_flatten= proves row and cell order
+under the packet's rectangularity premise. Byte-for-byte rendering binds the
+Scheme decoder, while native tests exercise header errors and preservation of
+the old result scope. Compound or wide-integer inputs follow the ordinary
+encoder. Packed rows for other column kinds still enter the general validator
+before reaching the same Session update. Input transfer and source
+installation are separately timed.
+
+With both directions packed, all three 1,000-transaction cohorts verified
+the complete result against the independent graph oracle. The archive was
+=dcef804b9c17cdeeaab55a16cd9c660c60af37c2362125d4fc3acd2c151fff70=.
+
+| Workload | Verified/s | Cycle P50 ms | Cycle P95 ms | Cycle P99 ms | Max ms | Startup s |
+|----------+------------+--------------+--------------+--------------+--------+-----------|
+| Two-hop, 4,096 input | 107.762 | 7.141 | 36.261 | 39.374 | 80.197 | 1.352 |
+| Two-hop, 16,384 input | 27.115 | 28.254 | 64.768 | 95.799 | 176.973 | 1.405 |
+| Recursive, 30,720 output | 18.283 | 45.343 | 82.667 | 89.799 | 133.828 | 1.313 |
+
+| Workload | Replace P95 ms | Export P95 ms | Replace and export VM CPU s | Collections | GC wall s | Peak RSS MiB |
+|----------+----------------+---------------+-----------------------------+-------------+-----------+--------------|
+| Two-hop, 4,096 input | 13.117 | 1.610 | 7.266 | 46 | 1.401 | 506.55 |
+| Two-hop, 16,384 input | 59.431 | 8.639 | 29.307 | 166 | 5.845 | 565.62 |
+| Recursive, 30,720 output | 73.543 | 18.724 | 47.728 | 224 | 7.966 | 574.11 |
+
+The 16,384-row source encoding had a 0.114 ms median, followed by a
+21.232 ms median Scheme call. The preceding archive had measured 28.308 ms
+and 31.604 ms at those boundaries. The images differ, so the preceding
+1,000-sample series and this series are separate production observations.
+The same-archive control below held packed replies fixed and toggled only
+input packing in Rust. Each row represents 160 verified transactions.
+
+| Workload | Input transfer | Verified/s | Cycle P95 ms | Replace VM CPU s | Replace collections |
+|----------+----------------+------------+--------------+------------------+---------------------|
+| Two-hop, 4,096 input | Ordinary | 50.075 | 53.707 | 2.571 | 11 |
+| Two-hop, 4,096 input | Packed | 104.530 | 19.964 | 1.140 | 8 |
+| Two-hop, 16,384 input | Ordinary | 12.324 | 144.994 | 10.293 | 45 |
+| Two-hop, 16,384 input | Packed | 25.630 | 67.937 | 4.607 | 26 |
+| Recursive, 30,720 output | Ordinary | 15.060 | 94.727 | 8.610 | 39 |
+| Recursive, 30,720 output | Packed | 17.343 | 85.756 | 7.109 | 29 |
+
+Peak RSS and collection receipts are available. The upstream backward
+cumulative counter remains unqualified. The wider semantic and performance
+inventory remains open.
+
+The worker-local scalar membership table can record the existing membership
+bit inside one Gerbil =hash-update!=. The update can replace an equal key's
+representative, so eligibility follows the coordinator's existing scalar
+worker-novelty condition. =scalar_update_emits_the_same_rows= in
+=ActorEnvelope.lean= compares the ordered emission streams with the separate
+lookup and insert operations. The callback records the old bit before the
+worker emits anything. The coordinator receives the same rows and retains
+work checkpoints, merge credits and publication authority.
+
+* Process transport and native scheduler progress
+
+The original exec worker blocked on =Connection.receive= before entering
+=Runtime.call=. Its PID and one active
+VM processor can be correct while a runnable Scheme thread still gets no
+execution opportunity. A production API probe starts a Scheme thread through
+=Module.call= and waits for an external marker without entering the VM again.
+The thread writes the marker only after the next call rejoins it. A native
+Gerbil control uses =device-wait-input!= from =:std/os/device= on an empty pipe.
+In that control the scheduled Actor processes its mailbox and makes the
+descriptor readable. Closing the writer independently wakes the reader at EOF.
+The pipe wait also succeeds inside a real =Module.call=. Native scheduling
+through the C ABI is therefore available when the VM stays entered.
+
+The process worker sets its socket to nonblocking once. Its request reader
+and outer reply writer use the same connection in
+=rust/ascent-scheme/src/process_wire.rs=. The
+existing Rust codec owns source bytes, partial offsets and errors. When a
+syscall would block, the Rust connection borrow ends before the owner calls
+the Gerbil wait procedure. =interface/hybrid.ss= gives that procedure one
+close-on-exec duplicate descriptor and closes it before VM retirement. The
+device wakes on readiness or EOF while the Rust connection reads and writes
+the bytes. A native pipe control confirms that the duplicate preserves the
+original file status flags and lifetime.
+
+In =rust/ascent-scheme/src/process_worker.rs= the request lease starts after
+the =Entered= frame and ends before writing =Reply=. A resumed Actor can use
+its own scheduling state while this transport waits. The active execution
+checkpoint waits in Rust's =poll= and exchanges its decision under the
+caller's existing authority.
+=ResidentTransport= in =ActorEnvelope.lean= proves byte and terminal-error
+preservation across retry traces. =CheckpointTransport.qnt= checks the
+scope and cursor rules and rejects entering the scheduler with an active
+transport lease or advancing the cursor on a readiness signal.
+
+The process test releases an Actor through a file created after =Module.call=
+returns. The Actor's external marker must appear before the next VM call.
+The Rust wire tests cover fragmented headers and bodies, buffered subsequent
+frames, EOF in a partial frame and writes under backpressure. Progress during
+an active publication checkpoint requires its own source and runtime evidence.

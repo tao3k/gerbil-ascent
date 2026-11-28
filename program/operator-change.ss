@@ -18,9 +18,10 @@
                  relational-op-source relational-transform-output-arity)
         (only-in "types.ss" canonical-value-check-current?)
         (only-in :clan/poo/object .o .cc .ref)
-        (only-in :clan/poo/mop .defgeneric define-type validate element? Type. Any)
-        (only-in :clan/poo/object-contract ObjectContract.)
-        (only-in :tao3k/yuanxu/object-types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type define-type validate element? Type. Any)
+        (only-in :clan/poo/types/object-contract ObjectContract.)
+        (only-in :tao3k/yuanxu/types/contracts YuanxuObjectContract. yuanxu-predicate-contract)
         (only-in :std/list/list append-map delete-duplicates/hash take)
         (only-in :std/list/list-builder with-list-builder))
 

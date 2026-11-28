@@ -2,7 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-suite test-case)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :gerbil-ascent/program/types GerbilAscentProgramContract)
         (only-in :gerbil-ascent/candidate/program candidate-program candidate-inspect)
         :gerbil-ascent/candidate/feedback

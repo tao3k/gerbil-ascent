@@ -1,0 +1,129 @@
+#+TITLE: Cold SCC split latency by request
+
+* Source correspondence
+
+A fresh bridge deletion sends an edit to the Session owner. The owner
+checks the current Result and limits, splices the source journal and
+sends a job to the resident worker. The worker splices the packed
+adjacency, calls the restricted partitioner and updates the quotient.
+It then completes ordered metadata and constructs the Result. The owner
+checks the worker, epoch and authority, commits the cut, and posts the
+one-shot reply. Existing witness, cancellation and publication checks
+are part of these intervals.
+
+The first and last marks enclose one successful request. Intermediate
+marks are the owner dispatch, worker send and receive, entry and exit of
+=split-local='s packed partition, the end of =close-edited-quotient=,
+worker send to owner, entry to =finish!= and the reply post. These yield
+separate caller, worker and owner handoffs. Ordered metadata and view
+construction form the interval after quotient closure and before the
+worker's result message. =ActorReply.edit_phase_wall_exact= proves
+that the consecutive intervals sum to that single request's wall time.
+This accounting says nothing about how the host scheduled an interval.
+
+The diagnostic build records wall, native thread CPU and identity,
+process GC and Darwin task runnable time at the same boundaries. The
+[[https://github.com/apple/darwin-xnu/blob/main/bsd/sys/resource.h][Darwin task counter]] is recorded alongside CPU, GC and the direct
+Actor handoff intervals.
+The production timing comparison uses uninstrumented binaries.
+
+* Packed envelope writes
+
+The partition trace isolates the packed SCC walk as the largest CPU
+phase. The walk updates a source vertex's envelope each time it sees
+an unresolved target. It can retain the current envelope while the
+source vertex is unchanged. Before visiting a different source it
+spills that row's min/max or overflow marker and loads the next row.
+The final spill precedes the quotient projection. The row switch does
+not select a DFS root, change a neighbor cursor or move a checkpoint.
+=observed_envelope_exact= and =flush_envelope_exact= show that the
+quotient sees the same per-source envelope, including after switching
+back from a child. The captured concrete edges, selected ordinal extent
+and fallback rules remain those of the preceding verified route.
+
+* Paired trace before the optimization
+
+The reference =a9d62dd6= and candidate =3cb521ed= each ran 32 fresh
+cold deletions on the same 50-clique fixture, in alternating groups of
+eight. The two measurements used matching diagnostic builds, Gerbil on
+Gambit =2df89af=, one VM processor, 2 GiB, and the existing 90-second
+process watchdog. Each request had one matching native thread ID at
+all boundaries. The table describes the one request at each arm's wall
+P95, with every phase sampled from that same request.
+
+| Same-request phase (wall ms) | a9d62dd6 | 3cb521ed |
+|------------------------------+----------+----------|
+| Entire caller request | 4.781 | 5.023 |
+| Four Actor handoffs combined | 0.022 | 0.018 |
+| Owner and worker preparation | 0.166 | 0.160 |
+| Packed repartitioning | 4.277 | 4.537 |
+| Quotient repair and closure | 0.154 | 0.152 |
+| Ordered metadata and Result construction | 0.159 | 0.154 |
+| Owner publication | 0.003 | 0.003 |
+
+The largest handoff sum among all samples was 0.032 ms. The candidate's
+P95 request spent 4.191 ms of native-thread CPU in repartitioning and
+had no collection. The original 23.14 ms tail did not recur in this
+paired trace. The historical receipt contains aggregate request CPU
+and GC but no interior marks, so its extra wall time remains unassigned.
+The traced candidate's median partition CPU was 4.088 ms, which is the
+source-controlled work targeted by the envelope change.
+
+* Uninstrumented optimization comparison
+
+The reference is =3cb521ed=. Both arms opened a fresh merged Session
+for each measured delete on the existing 50- and 71-clique fixtures.
+Four alternating batches of eight requests gave 32 samples per arm and
+fixture. The benchmark checked the original ordering and both cut
+versions' witnesses with the same 2 GiB heap and 90-second watchdog.
+
+| Cold deletion metric | Reference | Candidate |
+|----------------------+-----------+-----------|
+| Global wall P95 (ms) | 5.067 | 4.502 |
+| Global process CPU P95 (ms) | 4.929 | 4.497 |
+| Global allocation P95 (bytes) | 352864 | 353008 |
+| Local wall P95 (ms) | 0.689 | 0.667 |
+| Local process CPU P95 (ms) | 0.696 | 0.686 |
+| Local allocation P95 (bytes) | 276272 | 276416 |
+
+The candidate adds 144 bytes per measured deletion. Local allocation
+remains 57,264 bytes below the =a9d62dd6= wider scratch comparison.
+The boundary representation and predecessor bucket are shared with
+=3cb521ed= across this comparison.
+
+* Trace of the optimized packed walk
+
+The same markers were used for a second paired trace of =3cb521ed=
+and the cached-envelope candidate. Native thread CPU P50 for partitioning
+went from 4.189 to 3.970 ms, and P95 went from 4.475 to 4.127 ms.
+The candidate's longest request was 9.230 ms. Its partition interval
+was 8.249 ms wall and 6.610 ms native thread CPU, with zero collections.
+That request spent 0.229 ms in quotient repair and 0.009 ms in owner
+publication. Across the full candidate trace the maximum four-handoff
+sum was 0.050 ms. These are direct boundary measurements.
+
+The historical 23.138 ms P95 request had 7.859 ms of process CPU and
+zero collections. Its old receipt cannot identify the remaining time
+at the phase level. The new traces locate the slow requests observed
+now and quantify the CPU improvement in the controllable stage.
+
+* Recursive buffer control
+
+The unchanged native suite verified all 1,040,384 rows on every one
+of 1,000 requests per arm. Contemporary reference and candidate P95
+were 11.04 and 11.13 ms, respectively, both inside the original 50 ms
+assertion. The historical 83.29 ms failure and its receipts are retained.
+
+* Acceptance
+
+The condensed Session, regular Actor, engine interface, SCC execution,
+SCC summary and independent oracle suites passed. The guarded Lean
+inventory passed all 196 jobs. The recursive list and projection buffer
+passed at 67.82 and 13.76 ms P95, respectively.
+
+The complete projection list verified all 1,000 requests and failed its
+original 100 ms assertion at 107.56 ms. The run recorded 227 collections
+and 20.99 seconds of cumulative GC wall time. All preceding failure
+receipts are retained. The existing resource limits and 90-second
+watchdog were used. This candidate remains local because the PR #2
+publication conditions are unmet.

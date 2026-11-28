@@ -7,7 +7,7 @@
 ;;; neither sorting nor expanding whole vectors is valid at this boundary.
 (import (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode)
-        (only-in :gerbil-ascent/candidate/types
+        (only-in "types.ss"
                  reasoning-candidate-relations reasoning-candidate-facts
                  reasoning-candidate-rules reasoning-candidate-query
                  reasoning-candidate-limits))

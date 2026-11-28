@@ -20,6 +20,15 @@ from ascent_workbench.supervision import signal_group
 COMPILERS = {"cargo", "rustc", "gxi", "gsc", "cc1", "cc1plus", "clang", "clang++", "gcc", "gcc-16", "lean", "lake"}
 
 
+def available_cpus():
+    """Use process availability, including affinity, rather than a fixed host size."""
+    if hasattr(os, "process_cpu_count"):
+        return max(1, os.process_cpu_count() or 1)
+    if hasattr(os, "sched_getaffinity"):
+        return max(1, len(os.sched_getaffinity(0)))
+    return max(1, os.cpu_count() or 1)
+
+
 def process_snapshot():
     result = subprocess.run(["ps", "-A", "-o", "pid=,ppid=,rss=,comm="],
                             check=True, text=True, capture_output=True)
@@ -172,6 +181,10 @@ def run_case(args, case, configuration, work_distribution, diagnostic=False):
         launch_command = ["/usr/bin/time", "-o", str(resource_path), "-f",
                           "%e real %U user %S sys\n%M maximum resident set size", *command]
     environment = dict(os.environ)
+    clients = getattr(args, "clients", None) or available_cpus()
+    dsl = getattr(args, "dsl", "ascent")
+    environment["ASCENT_BENCH_CLIENTS"] = str(clients)
+    environment["ASCENT_BENCH_DSL"] = dsl
     if diagnostic:
         environment["ASCENT_PROCESS_TRACE"] = "1"
     traced = "ASCENT_PROCESS_TRACE" in environment
@@ -223,7 +236,7 @@ def run_case(args, case, configuration, work_distribution, diagnostic=False):
     soak_valid = (len(soaks) == 1 and soaks[0]["mode"] == mode
                   and soaks[0]["vms"] == str(owners)
                   and soaks[0]["rust_threads"] == str(threads)
-                  and soaks[0]["clients"] == "12"
+                  and soaks[0]["clients"] == str(clients)
                   and int(soaks[0]["requested_ns"]) == 30_000_000_000
                   and int(soaks[0]["wall_ns"]) >= 30_000_000_000
                   and int(soaks[0]["completed_requests"]) > 0
@@ -252,7 +265,7 @@ def run_case(args, case, configuration, work_distribution, diagnostic=False):
         errors.append(f"invalid checkpoint observations: {error}")
     try:
         phases = request_phases(stdout, tasks, 5)
-        longest = longest_request(slowest, soaks, 5 * tasks + 12)
+        longest = longest_request(slowest, soaks, 5 * tasks + clients)
     except (ValueError, TypeError, KeyError) as error:
         phases, longest = {}, None
         errors.append(str(error))
@@ -260,10 +273,11 @@ def run_case(args, case, configuration, work_distribution, diagnostic=False):
         errors.append("missing owned-process thread observations")
     valid = (not traced and status == 0 and soak_valid and checkpoint_valid and len(samples) == 5
              and len(ready) == 1 and ready[0].get("work_distribution") == work_distribution
+             and ready[0].get("dsl") == dsl
              and {value["sample"] for value in samples} == {str(i) for i in range(5)}
              and all(value["mode"] == mode and value["vms"] == str(owners)
                      and value["rust_threads"] == str(threads) and value["tasks"] == str(tasks)
-                     and value["clients"] == "12" for value in samples)
+                     and value["clients"] == str(clients) and value.get("dsl") == dsl for value in samples)
              and "ASCENT-PROCESS-FORCED-STOP" not in stderr
              and "ASCENT-PROCESS-SHUTDOWN-ERROR" not in stderr
              and "ASCENT-CHECKPOINT-TRANSPORT-ERROR" not in stderr
@@ -278,6 +292,7 @@ def run_case(args, case, configuration, work_distribution, diagnostic=False):
         errors.append(str(error))
         valid = False
     row = {"key": key, "workload": name, "mode": mode, "vms": owners, "rust_threads": threads,
+           "clients": clients, "dsl": dsl,
            "tasks": tasks, "groups": groups, "width": width,
            "input_edges_per_request": groups * (width - 1),
            "expected_rows_per_request": groups * width * (width - 1) // 2,
@@ -313,7 +328,8 @@ def diagnose_failed_vm_cases(args, rows, work_distribution):
     for original in failed:
         output = root / original["key"]
         output.mkdir()
-        scoped = argparse.Namespace(output=output, benchmark=args.benchmark, worker=args.worker)
+        scoped = argparse.Namespace(output=output, benchmark=args.benchmark, worker=args.worker,
+                                    clients=original.get("clients"), dsl=original.get("dsl", "ascent"))
         try:
             observation = run_case(scoped,
                 (original["workload"], original["tasks"], original["groups"], original["width"]),
@@ -325,13 +341,17 @@ def diagnose_failed_vm_cases(args, rows, work_distribution):
         (root / "result.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
 
-def configurations(include_instances):
-    # The Rust coordinator is shared across all twelve callers. VM processor
-    # receipts remain one; these are separate from idle Rust pool workers.
-    modes = [("vm", owners, 12) for owners in (1, 3, 12)]
+def configurations(include_instances, capacity=None):
+    capacity = available_cpus() if capacity is None else capacity
+    if capacity < 1:
+        raise ValueError("machine capacity must be positive")
+    # One VM is a control, not a runtime limit. All populations fit this host.
+    populations = sorted({1, min(3, capacity), capacity})
+    modes = [("vm", owners, capacity) for owners in populations]
     if include_instances:
-        modes += [("instances", owners, 12) for owners in (1, 3, 12)]
-    return modes + [("rayon", 1, threads) for threads in (1, 3, 6, 8, 12)]
+        modes += [("instances", owners, capacity) for owners in populations]
+    return modes + [("rayon", 1, threads) for threads in
+                    sorted({1, min(3, capacity), min(6, capacity), min(8, capacity), capacity})]
 
 
 def main():
@@ -340,13 +360,21 @@ def main():
     parser.add_argument("--worker", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--expected-cpus", type=int)
+    parser.add_argument("--clients", type=int, help="explicit requester population; default: available CPUs")
+    parser.add_argument("--dsl", choices=("ascent", "typed"), default="ascent",
+                        help="Actor-capable production DSL or typed ordinary-Session control")
     parser.add_argument("--include-instances", action="store_true",
                         help="compare macOS independent single-thread VMs in one process")
     args = parser.parse_args()
+    capacity = available_cpus()
+    if args.clients is not None and args.clients < 1:
+        parser.error("--clients must be positive")
+    args.clients = args.clients or capacity
     if args.include_instances and platform.system() != "Darwin":
         raise SystemExit("the upstream instance image path is macOS-only")
     args.output.mkdir(parents=True, exist_ok=False)
-    receipt = {"schema": "ascent.production-process-throughput.v3", "host": platform.platform(),
+    receipt = {"schema": "ascent.production-process-throughput.v4", "host": platform.platform(),
+               "available_cpus": capacity, "clients": args.clients, "dsl": args.dsl,
                "logical_cpus": os.cpu_count(), "source_head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
                "harness_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                "benchmark_sha256": hashlib.sha256(args.benchmark.read_bytes()).hexdigest(),
@@ -364,9 +392,13 @@ def main():
     receipt["source_clean"] = tracked_clean and not untracked
     if not receipt["source_clean"]:
         raise SystemExit("runtime sources differ from the recorded head; no measurements admitted")
-    cases = [("small", 240, 4, 8), ("closure", 120, 16, 12),
-             ("parallel-closure", 24, 256, 16)]
-    modes = configurations(args.include_instances)
+    # Keep each row's total work identical across the compared configurations,
+    # including hosts whose requester population exceeds the old task count.
+    # Five fixed-work windows provide at least 1,000 complete request samples.
+    # The separate 30-second saturation window cannot substitute for them.
+    cases = [(name, max(200, tasks, args.clients, capacity), groups, width) for name, tasks, groups, width in
+             [("small", 240, 4, 8), ("closure", 120, 16, 12), ("parallel-closure", 24, 256, 16)]]
+    modes = configurations(args.include_instances, capacity)
     for case in cases:
         for configuration in modes:
             receipt["runs"].append(run_case(args, case, configuration, receipt["work_distribution"]))

@@ -19,7 +19,7 @@
         make-view-routing-state gerbil-ascent-initialize-view-cuts! gerbil-ascent-route-view-sources!)
 ;; Checked eqrel injections retain only a private quota witness until publication.
 ;; Their concrete delta comes from the owner's component cut, not a tuple cache.
-(defstruct staged-frontier-count (count))
+(defstruct staged-frontier-count (count) final: #t)
 (def (gerbil-ascent-frontier-count frontier)
   (if (staged-frontier-count? frontier) (staged-frontier-count-count frontier)
       (gerbil-ascent-row-count frontier)))
@@ -27,7 +27,7 @@
 
 ;; Evaluation-local buffers are shared only with their engine. Frozen cuts and
 ;; their source generation retain no mutable routing state after publication.
-(defstruct view-routing-state (storage all delta versions names generation journals routing))
+(defstruct view-routing-state (storage all delta versions names generation journals routing) final: #t)
 (def (initial-delta view name generation revision)
   (gerbil-ascent-view-with-export
     (gerbil-ascent-view-bind view name generation revision 'delta)
@@ -118,7 +118,7 @@
         (vector-set! all-version index revision)
         (vector-set! delta-version index (+ 1 (vector-ref delta-version index)))))))
 
-(defstruct view-event (kind rows eqrel?))
+(defstruct view-event (kind rows eqrel?) final: #t)
 ;; Injection spines are detached; source recovery uses its separate source log.
 (def (gerbil-ascent-view-journal-event kind rows (eqrel? #f))
   (make-view-event kind (map (lambda (row) (map values row)) rows) eqrel?))

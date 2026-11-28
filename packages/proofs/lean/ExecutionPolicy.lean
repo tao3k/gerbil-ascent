@@ -9,6 +9,10 @@ import LookupCost
 import ClosedDslLowering
 import FiniteOperators
 import DslDeclarations
+import FiniteChoice
+import WeightedExportCapacity
+import SourceUpdateFrame
+import ProjectionRowTransfer
 
 /-! Executable control definitions shared by Scheme and Rust. The checked-in
 renderings are regenerated and compared during formal CI. This removes the
@@ -601,6 +605,7 @@ def renderedSource (name : String) : IO String := do
   | "ranked-row-rust" => pure Ascent.LookupCost.rankedRowRustSource
   | "archive-quint" => pure Ascent.ArchivePolicy.quintSource
   | "scheme" => pure Ascent.ExecutionPolicy.schemeSource
+  | "choice-branch" => pure Ascent.FiniteChoice.branchSource
   | "declaration-role-scheme" => pure Ascent.DslDeclarations.schemeSource
   | "rust" => pure Ascent.ExecutionPolicy.rustSource
   | "capacity-rust" => pure Ascent.ExecutionPolicy.capacityRustSource
@@ -618,7 +623,6 @@ def renderedSource (name : String) : IO String := do
   | "quint" => pure Ascent.ExecutionPolicy.quintSource
   | "preparation-python" => pure Ascent.PreparationPolicy.pythonSource
   | "preparation-quint" => pure Ascent.PreparationPolicy.quintSource
-  | "preparation-selection" => pure Ascent.PreparationWork.selectionSchemeSource
   | "preparation-interface-quint" => pure Ascent.PreparationWork.interfacesQuintSource
   | "preparation-interfaces" => pure Ascent.PreparationWork.interfacesSchemeSource
   | "proof-authority-rust" => pure Ascent.LookupCost.proofAuthorityRustSource
@@ -629,7 +633,6 @@ def renderedSource (name : String) : IO String := do
   | "lookup-admission" => pure Ascent.LookupCost.admissionSchemeSource
   | "lookup-study-profile" => pure Ascent.LookupCost.studyProfileSchemeSource
   | "preparation-cc-observed" => pure Ascent.CompilerCost.ccObservedPythonSource
-  | "preparation-compiler" => pure Ascent.CompilerCost.compilerSchemeSource
   | "preparation-options" => pure Ascent.CompilerCost.optionsSchemeSource
   | "compiler-quint" => pure Ascent.CompilerCost.quintSource
   | "preparation-stale" => pure Ascent.CompilerCost.staleSchemeSource
@@ -639,7 +642,6 @@ def renderedSource (name : String) : IO String := do
   | "preparation-ggc" => pure Ascent.CompilerCost.ggcPythonSource
   | "preparation-restore-inputs" => pure Ascent.CompilerCost.restoreInputsYamlSource
   | "preparation-cache-admission" => pure Ascent.CompilerCost.cacheAdmissionYamlSource
-  | "preparation-cache-inputs" => pure Ascent.CompilerCost.cacheInputsYamlSource
   | "preparation-producer" => pure Ascent.CompilerCost.producerPythonSource
   | "capture-mapping-indexes" => pure Ascent.OperatorCapture.mappingIndexesSchemeSource
   | "capture-row-transport" => pure Ascent.OperatorCapture.rowTransportSchemeSource
@@ -650,6 +652,13 @@ def renderedSource (name : String) : IO String := do
   | "instance-package-resource" => pure Ascent.OwnerAdmission.packageRustSource
   | "instance-package-lifecycle" => pure Ascent.OwnerAdmission.packageLifecycleRustSource
   | "owner-hybrid-scheme" => pure Ascent.OwnerAdmission.ownerHybridSchemeSource
+  | "actor-integer-rows" => pure Ascent.WeightedCapacity.IntegerRowTransfer.actorSchemeSource
+  | "source-row-packet-quint" => pure Ascent.WeightedCapacity.IntegerRowTransfer.sourceRowSelectionQuintSource
+  | "source-row-selection" => pure Ascent.WeightedCapacity.IntegerRowTransfer.sourceRowSelectionCallSource
+  | "projection-row-shapes" => pure Ascent.ProjectionRowTransfer.rustSource
+  | "projection-rows" => pure Ascent.ProjectionRowTransfer.schemeSource
+  | "projection-row-shapes-quint" => pure Ascent.ProjectionRowTransfer.quintSource
+  | "integer-source-packet" => pure Ascent.WeightedCapacity.IntegerRowTransfer.sourcePacketSchemeSource
   | "owner-source-scheme" => pure Ascent.OwnerAdmission.ownerSourceSchemeSource
   | "owner-control-rust" => pure Ascent.OwnerAdmission.controlRustSource
   | "projection-object-reuse" => pure Ascent.OwnerAdmission.projectionSchemeSource
@@ -681,11 +690,17 @@ def renderedSource (name : String) : IO String := do
   | "dsl-select" => pure Ascent.ClosedDslLowering.selectorSchemeSource
   | "dsl-root" => pure Ascent.ClosedDslLowering.rootSchemeSource
   | "dsl-owned" => pure Ascent.ClosedDslLowering.ownedMacroSchemeSource
+  | "dsl-closed-rules" => pure Ascent.ClosedDslLowering.closedRulesMacroSchemeSource
+  | "dsl-rule-extent" => pure Ascent.ClosedDslLowering.ruleExtentSchemeSource
+  | "dsl-rule-protocol" => pure Ascent.ClosedDslLowering.ruleProtocolSchemeSource
   | "dsl-workload" => pure Ascent.ClosedDslLowering.workloadSchemeSource
   | "preparation-groups" => pure Ascent.PreparationWork.groupsSchemeSource
+  | "source-queue-admission" => pure Ascent.PreparationWork.queueAdmissionSchemeSource
+  | "source-phase-barrier" => pure Ascent.PreparationWork.phaseBarrierSchemeSource
+  | "scalar-materialization" => pure Ascent.SourceUpdateFrame.ScalarMemo.schemeSource
   | "preparation-heap" => pure Ascent.PreparationWork.heapRecipeSource
   | "preparation-runner" => pure Ascent.PreparationWork.runnerRecipeSource
-  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-selection, preparation-import, preparation-source or preparation-runner")
+  | _ => throw (IO.userError "expected scheme, rust, quint, preparation-python, preparation-quint, preparation-import, preparation-source or preparation-runner")
 
 
 def main (args : List String) : IO Unit := do

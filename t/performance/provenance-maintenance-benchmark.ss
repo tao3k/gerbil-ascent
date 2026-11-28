@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import :gerbil/expander
+        (only-in "provenance-maintenance/work-accounting.ss" expected-work)
         (only-in :gerbil-ascent/candidate/types make-reasoning-candidate)
         (only-in :gerbil-ascent/candidate/checked-program reasoning-source-snapshot)
         (only-in :gerbil-ascent/candidate/provenance-graph candidate-positive-provenance
@@ -45,6 +46,7 @@
          (current (candidate-positive-provenance snapshot spec 'program 'complete initial 100000 4096))
          (selectors (map (lambda (i) (list 's (+ i 1))) (iota (if (or small? duplicates?) count 128))))
          (truth (cond (read? initial) ((or small? duplicates?) []) (else (map list (iota 128 128)))))
+         (expected (if read? 0 (expected-work current selectors)))
          (ac []) (bc []) (ab []) (bb []) (wins 0) (work #f))
     (def (prepare old?)
       ((if old? old-open candidate-open-provenance-maintenance)
@@ -71,8 +73,8 @@
                                       ((a x u) (measure (lambda () (invoke #t old))))) (values a x u b y v)))))
            (check a) (check b)
            (unless (equal? (car a) (car b)) (error "ordered rows differ" scenario i))
-           (unless (if read? (= (cadr a) (cadr b)) (> (cadr b) (cadr a)))
-             (error "complete work accounting did not include premises and roots" scenario i))
+           (unless (= (cadr b) expected)
+             (error "withdrawal work differs from independent source ledger" scenario i expected (cadr b)))
            (set! work (cadr b))
            (set! ac (cons x ac)) (set! bc (cons y bc)) (set! ab (cons u ab)) (set! bb (cons v bb))
            (when (< y x) (set! wins (+ wins 1))))

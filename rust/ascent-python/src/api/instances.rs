@@ -37,12 +37,15 @@ pub(super) struct InstancePool(ascent_scheme::InstancePool);
 #[pymethods]
 impl InstancePool {
     #[new]
-    #[pyo3(signature=(owners=12, *, package=None))]
+    #[pyo3(signature=(owners=None, *, package=None))]
     fn new(
         py: Python<'_>,
-        owners: usize,
+        owners: Option<usize>,
         package: Option<PyRef<'_, InstancePackage>>,
     ) -> PyResult<Self> {
+        let owners = owners.unwrap_or_else(|| {
+            std::thread::available_parallelism().map_or(1, std::num::NonZero::get)
+        });
         if let Some(package) = package {
             let snapshot = package.0.clone();
             py.detach(|| ascent_scheme::InstancePool::from_snapshot(owners, &snapshot))

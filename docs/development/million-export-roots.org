@@ -1,0 +1,531 @@
+#+title: Live roots during million-row Actor export
+
+* Independent complete-row oracle
+
+The native request timer includes source replacement, evaluation, detached
+export and verification. The separate oracle phase starts after the
+export. The verifier reads the detached list, with no access to the
+Session, its indexes or its source view. It checks the exact two-field
+shape, integer range and cut offset, forward ordering, same-chain
+membership, successor-only projection, duplicate freedom and final
+cardinality. =complete_oracle= derives coverage from membership,
+uniqueness and cardinality.
+
+=oracle_offset_bounds= moves the range check before subtraction. The
+absolute cut bounds make the normalized subtraction fit in a fixnum.
+=projection_successor_group= replaces two chain quotients with one
+remainder for a successor-only result. Such a row is determined by its
+left ordinal (=projection_slot_exact=). In width two each origin is
+even, so the slot is its chain ordinal (=width_two_projection_slot=).
+For recursion, =recursive_target_bound= replaces per-row division
+with an immutable one-past-chain bound shared by the two input cuts.
+=recursive_gap_slot_exact= checks the =left * width + (right - left)=
+slot. =oracle_bitmap_reset= models clearing the fixture-owned bitmap
+before checking each output. This work remains inside the request timer. Reordered
+rows are still accepted, with the same membership and cardinality
+conditions. Larger arithmetic uses the exact-integer verifier.
+
+The original =for-each= invokes a Scheme callback for each row, with
+generic arithmetic, two chain divisions and a dense bitmap sized for
+recursive reachability even in projection. The packed fixnum loop
+moves extent arithmetic out of the traversal and retains one occupancy test
+and mark for each accepted row. Acceptance includes the entire 1,000
+requests, through natural process exit, under the original watchdog.
+The compiled test module is produced by the official =gerbil compile -O=
+command and loaded as an SSI by =gerbil test=, following the caller
+compilation control in [[file:../../benchmarks/README.org][the benchmark guide]].
+The Scheme source entry remains available for oracle refusal controls.
+
+* Recursive export
+
+The original 81.51 ms and 109.60 ms runs verified the same 1,000
+answers, each with 1,040,384 rows. The GC count changed from 447 to
+493 and cumulative GC elapsed time changed from 20.38 to 30.30
+seconds. At the earlier mean pause, the 46 additional collections
+account for about 2.1 seconds. The remaining 7.8 seconds reflect a
+higher mean pause. The old aggregate receipts do not record the live
+prefix length at those collection boundaries.
+
+The phase probe records 455 collections inside export and two during
+the independent oracle across 1,000 requests. Its 19.86 seconds of
+export GC elapsed include 19.44 seconds of GC CPU. Source replacement
+and evaluation record no collections. This is a diagnostic cohort.
+
+The held-root control closes the Session, then selectively retains the
+published view, the two caller inputs and the suffix which matches the
+exporter's backward accumulator. It verifies the complete output before
+extracting the suffix and retains each selected root through a separate
+cohort of 16 collections. The controls isolate costs of these roots in
+the same loaded benchmark. They do not reconstruct the exact heap of
+either earlier natural run.
+
+| Held roots | Accounted live MiB | Median GC CPU ms |
+|------------+--------------------+------------------|
+| Loaded modules and test roots | 144.72 | 30.58 |
+| Two inputs, published view | 150.27 | 32.03 |
+| Half output | 216.43 | 45.37 |
+| Half output, published view | 217.51 | 46.15 |
+| Half output, two inputs | 220.92 | 47.34 |
+| Half output, two inputs, published view | 221.99 | 48.83 |
+| Full output, two inputs, published view | 293.71 | 62.76 |
+
+=recursive_root_probe_pair_words= models 292,608 pair words for the
+caller cuts and 4,681,728 for the half output. Scheme inputs remain
+caller-owned. The export accumulator remains reachable until delivery
+of the fresh mutable result. The native loader owns the module roots.
+The published view contributes about 1.07 MiB in the matched half-output
+control, mostly in the collector's still-object category. This figure
+includes the compact source view and the arrays of the functional result.
+
+A separate native diagnostic registered a post-collection hook through
+the SDK's existing =##add-gc-interrupt-job!=. The cached worker copied
+the current completed prefix length and active run width as integers.
+The widest active run in the observed windows had 121 rows.
+The hook tracks only counters and keeps no additional result rows. All
+rows of 64 alternating complete requests passed the independent oracle.
+There were 23 observations during natural collections in the exporter.
+The observed prefix range was about 100,000 to 1,035,000 rows. A fit of
+the runtime's accounted live-byte counter to the prefix midpoint gave
+144.56 bytes per row, with correlation above 0.99999, while the still
+byte counter stayed constant. The 18 observations under 250,000 rows
+had 36.32 ms median GC CPU, and the three at or above 500,000 rows had
+63.90 ms. The slope uses the runtime's live counter convention; it is
+not a count of bytes physically copied or scanned. The trace confirms
+that the variable live extent is the reachable result prefix in this
+cohort. Older aggregate clocks cannot recover their exact prefix mix.
+
+* Published functional origin index
+
+=gerbil-ascent-functional-result-view= builds the origin-to-ordinal map
+to check uniqueness and link successors. =make-functional-view= then
+only requires the map for the first lookup of a bound origin. A compact
+interval of nonnegative labels can retain an =s32vector= whose entries
+are the same ordinals. Unassigned entries use -1, and out-of-bounds
+keys return absence. Sparse labels still require the general hash map.
+=functional_origin_slot= and =dense_origin_lookup_exact= check the
+slot and lookup equations. =functional_origin_replacement= checks that
+the identical starting ordinal yields the same successor walk.
+
+The dense lane is snapshot-owned. It is built with cancellation checks
+before linking successors and captures only the immutable lane and its
+label bounds. Its capacity is at most two slots per input row. By choosing
+it before constructing the public closures, the
+temporary table and its pointer-bearing backing stores can die with
+the constructor. The existing row exporter, source representations,
+retained witness paths and terminal admission limits stay in place.
+
+With the same two inputs and half-output suffix, retaining the view adds
+1.074 MiB in the reference and 0.636 MiB after compaction. The view's
+incremental accounted live extent falls by 0.438 MiB. Median GC CPU
+increases by 1.49 ms when the old view is held and 1.03 ms when the new
+view is held. These are effects in the held-root controls. They cannot
+explain an eleven-second difference between natural GC totals on their
+own.
+
+* Complete export with serial upstream Rust Ascent
+
+The native Scheme gates run with Gerbil =1cfb032= on Gambit =ea114fc=,
+the locked PR #2 dependencies, a 2 GiB heap cap and a 90-second external
+deadline. The separate serial Rust executable depends on upstream Ascent
+0.8.1 as a dev-dependency. Both verify all rows in each of 1,000 alternating
+requests per case. The Rust executable runs the two upstream Ascent rule
+declarations directly.
+
+| Phase mean ms per request | Scheme recursive | Rust recursive | Scheme projection | Rust projection |
+|---------------------------+------------------+----------------+-------------------+-----------------|
+| Replace | 0.21 | 0.01 | 2.30 | 0.37 |
+| Evaluate and publish | 4.13 | 110.31 | 0.20 | 44.46 |
+| Detached output | 33.45 | 1.18 | 25.89 | 1.10 |
+| Independent oracle | 12.85 | 1.80 | 11.86 | 2.34 |
+| Explicit release | - | 1.10 | - | 0.002 |
+| Complete request P95 ms | 93.91 | 159.20 | 128.04 | 56.04 |
+
+The labels compare the same observable work within each phase. Scheme
+constructs a detached mutable list; Rust clones a typed tuple vector.
+The Scheme GC time is included where incurred. Rust releases its detached
+output and evaluator explicitly within each measured request. The
+candidate recursive gate passed at 93.91 ms with 18.95 seconds of GC.
+The prior release evidence includes both 81.51 and 109.60 ms P95, so the
+latest gate pass cannot be assigned to the smaller view alone. Pure
+projection has no functional origin map. Its unchanged export missed
+the 100 ms gate at 128.04 ms with 23.23 seconds of GC across 1,000 requests.
+PR #2 publication remains blocked.
+
+The independent SCC bridge guard still passed. Removal and restoration
+publication took 1.155 ms and 1.213 ms at P95; the corresponding first
+origin reads took 16.83 us and 24.08 us. The separate condensed Session
+suite preserved order, versioned witnesses, cancellation and limits.
+The full native Scheme qualification passed 185 modules and 1,575 cases.
+The guarded Lean proof library and its tests built successfully (195 jobs).
+
+Raw observations and separate native process receipts are held in
+=.cache/ascent/million-export-roots/=. The first Scheme launcher attempt
+failed before fixture execution because the compiled caller's library was
+absent from =GERBIL_LOADPATH=. Those receipts are retained. The timed
+native gates above each executed once after fixing the load path.
+
+* Release a packed source buffer when entering the affine representation
+
+=gerbil-ascent-source-cut-update= chooses the new source slot only after
+shape, duplicate-replacement and input-budget checks. An affine slot
+contains numeric descriptors and promises, without a packed backing
+vector. Its published =relation-view= holds no detached rows. A previously
+published packed view can still own its backing through its own result.
+
+The previous transition remembered a packed backing as =alternate= when
+the next affine slot became current. On another affine replacement both
+slots had =cells = #f=. Their equality carried the stale alternate
+forward. The root probe loaded the fixed native source-cut code, registered
+the packed backing as a weak key and kept only the second affine source
+cut. Two collections left the key live. The retained buffer contained
+two million signed 64-bit cells and added 16,000,256 accounted live bytes
+relative to the all-affine arm. The all-affine arm had no alternate on
+either transition.
+
+The revised cut retains a packed alternate only while the new slot itself
+uses a packed vector. Entering the affine representation drops the cache
+edge. A later packed replacement still verifies the entire occurrence
+stream and can recapture its private backing. =affine_drops_packed_alternate=
+proves equality of the resulting cells with and without the cached
+backing. The theorem applies to optional reuse after validation. Existing
+committed cuts, held results, cancellation and admission boundaries
+continue to have their own ownership. Packed-to-packed reuse retains the
+same cap and matching rules.
+
+The matched candidate cleared the weak key. Its mixed arm used
+148,316,152 accounted live bytes versus 164,314,856 in the prior mixed
+arm. The candidate all-affine control used 148,315,768 bytes. The
+semantic regression retains a packed result across two affine commits,
+then re-admits the original packed rows and checks both exports after
+mutating the new detached list.
+
+An independent native Actor Session probe registered the initial backing
+as a weak key inside the source-cut constructor. It held the Session open
+through two complete affine publications and two explicit collections.
+The reference retained one packed key and the candidate retained zero.
+Both Sessions continued to publish the same relation sizes.
+
+The original pure projection fixture starts affine and alternates two
+affine source cuts. Source replacement already releases cached fallback
+relations, and a successful publication overwrites the previous result.
+The affine result captures numeric fields; detached exports keep only
+their invocation-local accumulated list. The caller independently keeps
+both million-row inputs. The packed-root savings apply to mixed source
+histories. The gate uses affine descriptors on both versions.
+The fixed native gate again checked 1,000 complete results in each case.
+Recursive P95 was 80.65 ms. Pure projection P95 was 124.48 ms, with
+21.92 seconds of GC, and failed the unchanged 100 ms bound. The lower
+projection P95 than the previous 128.04 ms is an observation on the
+unchanged affine path.
+
+The native Scheme qualification passed 185 modules and 1,576 cases.
+The guarded Lean proof library and its tests built successfully (195 jobs).
+The SCC control first recorded a restore publication P95 of 6.736 ms.
+The isolated reference/candidate comparison varied only the source-cut
+module with the same compiled benchmark. Reference restore P95 values
+were 1.763 and 1.133 ms; candidate values were 1.418 and 2.033 ms. All
+arms passed the local-edit assertions. The candidate deletion P95 values
+were 1.326 and 1.153 ms. First-origin P95 values in the production run
+were 15.08 us after deletion and 25.79 us after restoration.
+The pure projection failure blocks promotion to PR #2.
+
+* Live roots on an all-affine cut
+
+=actor-terminal-result= in =program/actor-session.ss= uses the same
+admitted source view for both the source and the nonrecursive target
+when the target starts empty. =make-affine-source-slot= in
+=program/source-cut.ss= captures five numeric fields. Its newest-first
+and chronological lists are promises for the fallback evaluator. The
+terminal publication uses the view and leaves both promises unforced.
+=affine_views_leave_fallback_unforced= counts zero row pair words for
+those promises. For fallback, forcing the chronological promise first
+forces the newest-first lane and then allocates a reversed outer spine
+that shares each row (=affine_ordered_fallback_shares_row_cells=).
+
+The owner retains its original declarations for fallback. The timed
+fixture holds both caller cuts independently and alternates them for
+all requests. Dropping the owner's alias to the original declaration
+rows would therefore release none of those pairs
+(=redundant_projection_root_no_reachable_saving=). Pending and committed
+cuts share their admitted slots after publication. The detached result
+from =rows-of= is produced afresh by the view exporter. Its in-flight
+suffix stays reachable until the callback returns the complete list
+(=projection_accumulator_order=). These ownership statements concern
+row pairs. They leave object headers, VM metadata and the private
+oracle bitmap as separate heap contributions.
+
+For the collector diagnostic, record accounted live and movable bytes
+at actual export collections and identify the accumulator's current row
+interval. Hold the same caller cuts and a fixed suffix across an
+independent Session-liveness control. Measure loaded fixture metadata
+separately. The capacity counters account for live objects in Gambit's
+units. They give neither an object-by-object scan trace nor the number
+of bytes physically copied. The native acceptance run uses the release
+runtime and exporter with the diagnostic hooks absent.
+
+* Fifty-millisecond feasibility for the detached list
+
+The two standard list Suites call =rows-of= on the published capture.
+The affine exporter in =program/source-cut.ss= prepends one complete
+two-field row per ordinal. The recursive fixture uses
+=export-ordinal-runs= in =program/component-worker.ss=, with one
+32-bit active-run entry per chain and one complete two-field row per
+reachability pair. Neither exporter builds a second full row table
+before delivery. The affine pending and committed views retain numeric
+descriptors. The recursive active-run storage contains 128 entries
+for the 128-chain fixture.
+
+Each fresh result owns its outer pair and both inner pairs per row.
+Mutating one returned row must leave every other row, captured input
+and future result intact. With the measured 64-bit, three-word pair
+layout, =detached_million_list_footprints= gives 9,000,000 object words
+for projection and 9,363,456 for recursion. The recursive run cursor
+adds 512 payload bytes. These counts describe the object layout.
+Allocation counters, live-byte accounting, and physical collector
+scans are separate measurements.
+
+For each complete request, separate export-collector wall time from
+the remainder of the request. The strict 50 ms nearest-rank P95 for
+1,000 samples requires at least 950 individual requests below 50 ms.
+=thousand_list_requests_gc_bound= applies the existing phase bound:
+if fewer than 950 measured collection intervals qualify, even zero
+non-collector time would miss the target with those same intervals.
+This conclusion is conditional on the observed collection schedule.
+A different allocation path can change collection placement and
+duration, so the diagnostic is kept separate from the original native
+acceptance run and its 100 ms / 90-second limits.
+
+* Upstream Ascent with Rayon on the same two workloads
+
+The upstream =ascent_par!= variant selects the default Rayon pool and
+reports 12 threads on this machine. It uses the upstream concurrent
+relation container. The benchmark exports it to a detached tuple vector
+and checks the same bitmap oracle as the serial =ascent!= variant. There
+are 1,000 independently verified replacements per case. This measures
+the upstream parallel evaluator and its representation together.
+
+| Case | Evaluator | Replace mean ms | Solve mean ms | Export mean ms | Oracle mean ms | Release mean ms | Request P95 ms |
+|------+-----------+-----------------+---------------+----------------+----------------+-----------------+----------------|
+| Recursive | Scheme | 0.198 | 3.829 | 29.172 | 11.385 | - | 80.653 |
+| Recursive | Upstream serial | 0.008 | 110.147 | 1.117 | 1.808 | 0.956 | 127.851 |
+| Recursive | Upstream Rayon | 0.083 | 253.875 | 1.819 | 1.813 | 1.332 | 361.785 |
+| Projection | Scheme | 2.224 | 0.210 | 24.299 | 11.810 | - | 124.482 |
+| Projection | Upstream serial | 0.375 | 47.366 | 1.119 | 2.430 | 0.002 | 61.998 |
+| Projection | Upstream Rayon | 4.548 | 247.667 | 1.886 | 1.728 | 0.034 | 290.331 |
+
+In this run the parallel path was 2.83 times slower at recursive request
+P95 and 4.68 times slower at projection request P95 than upstream serial.
+The evaluation phase accounts for most of the increase. The timing
+combines scheduling and relation-container costs for the default
+12-worker pool on this workload. All raw receipts are under
+=.cache/ascent/projection-owned-roots/=.
+
+* Whole-list tail and bounded delivery
+
+The million-row projection has only single-edge paths. Lean proves
+that SCC condensation leaves its rows unchanged. In the direct trace,
+64 of 1,000 requests spent at least 100 ms in delivery GC alone. The
+ordinary mutable output still owns three fresh pairs per row.
+[[https://doi.org/10.1137/0201010][Tarjan]]
+[[https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf][Ascent, section 4]]
+
+On Gambit =ea114fc3=, =##gc= runs the full collector and
+=##still-copy= still traces its child fields. Native probes showed a
+stationary still pair with a forwarded child and a mutated interior
+=rows-of= alias surviving after its weak outer head was reclaimed.
+Changing =min-heap= mapped no sections until collection. The counts
+were 295 before the hint, 295 after it, 873 after GC, and 873 after
+restoration. The setter changes a process hint. The section selector
+has no ownership or size argument. See [[file:graph-index-export/collector-and-allocation.org][collector and allocation]]
+for the locked source mapping and resize-history controls. The native
+probe source and receipts are under =.cache/ascent/commit-yuanxu/gambit-list-capacity/=.
+
+The Actor Session cursor reads bounded ordinal pages from the completed
+publication into a reusable =s64vector=. Functional views resume the
+existing depth and window order. Condensed views visit origins and
+reachable targets in public label order, even when SCC members
+interleave. The owner checks the row budget and stages the page before
+its final cancellation check. A successful commit copies into the
+exclusive destination and advances the cursor. A later publication
+invalidates the old cursor. =BoundedExport.lean= covers order, buffer
+bounds, and rejected commits. The 8,192-row probe uses 128 KiB each
+for the caller buffer and the Session's reusable private staging buffer.
+[[https://openproceedings.org/2012/conf/icdt/OlteanuZ12.pdf][Factorised results]]
+[[https://ir.cwi.nl/pub/16497][MonetDB/X100]]
+
+The original 100 ms mutable-list gate and the 50 ms recursive-buffer
+gate remain separate. The page benchmark verifies every field in both
+original ten-million-row chain geometries.
+
+| Chain width | First page P95 | Complete P95 | Rows per second | Natural GC wall |
+|-------------+----------------+--------------+-----------------+-----------------|
+|         128 |       27.40 ms |    199.52 ms |      61,092,393 |  80 / 3.372 s   |
+|         512 |       10.36 ms |    182.85 ms |      63,810,115 |  80 / 2.717 s   |
+
+Each width completed 1,000 checked requests. First-page timing starts
+before source replacement. Complete timing includes the ordered oracle.
+
+Paired probes clock handoff, staging, commit copy and oracle directly.
+For width 128/512, clipping each window and reusing the affine writer
+reduced mean staging from 111.92/112.39 to 14.88/10.78 ms over 100
+matched requests per width. Commit copy stayed near 3 ms and the oracle
+near 26 ms. The per-cursor stride certificate is computed on the first
+page. The two delivery buffers still total 256 KiB.
+
+Without probes, complete P95 fell to 102.42/80.94 ms and throughput rose
+to 138.86/196.41 million rows per second. First-page P95 rose to 34.69 ms
+at width 128 and fell to 8.74 ms at width 512. Both widths again passed
+1,000 requests with every field checked.
+
+** First-page timing
+
+=ten-million-paged-query= starts the clock before source replacement.
+Time replacement, run/publication and cursor creation separately. On
+the first pull, bracket the stride check and page writes in =stage=,
+the send and receive in the Actor, and the destination copy at commit.
+=first_page_phase_bounds= checks that these intervals do not overlap.
+
+The functional linker already reads every successor before publication.
+=ordinal_link_stream_matches_saved_scan= checks that folding direction
+over those successors agrees with scanning the saved vector. The same
+terminal positions delimit the windows in both directions.
+
+For width 128, 200 matched requests show a 1.54 ms median first-page
+increase and 1.61 ms of new median stride validation. The longest
+pauses coincided with GC during replacement or publication. Across
+100 matched requests, classifying links during construction and using
+direct vector accesses reduced mean run/publication from 19.14 to
+12.46 ms and mean stride validation from 1.60 to 0.26 ms. First-pull
+Actor handoff averaged about 2 us.
+
+Without probes, 1,000 verified requests per width gave first-page P95
+of 15.70/4.66 ms and complete P95 of 94.46/77.70 ms. Throughput reached
+165.94/210.68 million rows per second for widths 128/512.
+
+** Individual requests at the mutable-list gate
+
+=query= in =benchmarks/actor-million-test.ss= reads the completed
+snapshot through =rows-of= before invoking the independent oracle.
+Capture replacement, publication, delivery and oracle clocks on the
+same request. Count delivery GC inside the delivery interval.
+=whole_list_phase_bounds= checks the endpoint accounting and
+=observed_allocation_valid= accepts only monotone allocation deltas
+without a collection. The release gate reported 108.89 ms P95 and
+219 collections across 1,000 requests.
+
+The diagnostic verified all 1,000 outputs. Its P95 request took
+110.49 ms, including 102.44 ms in delivery. Delivery GC took 100.42 ms,
+and the oracle took 6.03 ms. With delivery GC and oracle durations held
+fixed, only 872 requests could meet 100 ms even if all other work were
+free. =whole_list_preserved_phases_limit= checks this bound.
+
+All 782 collection-free deliveries counted 144,002,400 allocation
+units. The three fresh pairs per row account for 144,000,000 in the
+release counter's doubled units, leaving 2,400 for the envelope and
+probes. The production view already constructs the detached list
+directly from affine descriptors. The fixed-layout evidence supports
+keeping that path. The uninstrumented replay verified all 1,000 outputs
+and missed the original gate at 109.01 ms P95.
+
+** Ordered chain inputs across SDKs
+
+The native two-chain control traced the divergence to the fixture's
+=std/list/list= import. Gerbil =1cfb032= uses =foldl cons= inside
+=append-map= and reverses each mapped chain. The staging Gerbil SDK
+with Gambit =2df89af= uses =foldl append= and preserves each mapped
+chain. The admitted successor direction changed from +1 to -1.
+With identical inputs, both SDKs produced the same =rows-of= and page
+sequences for each tested direction.
+
+=prepend_chain_groups_matches_release= checks the release input order.
+Visit groups from highest to lowest and prepend each group's ascending
+edges. The resulting cut has ascending groups and descending edges
+within each group. Use that explicit order in the fixture so the input
+and the independent output oracle agree across SDKs.
+
+Staging verified every row across all 80 shards. First-page P95 was
+45.90/8.80 ms for widths 128/512, and complete P95 was 133.72/137.17 ms.
+The original million-row projection list gate failed at 110.20 ms.
+The preceding 104.05 ms staging failure remains separate evidence.
+
+** Staging page request costs
+
+The request starts before source replacement. Clock replacement, the
+Session run through publication and cursor creation independently. Each
+pull encloses send to dispatch, private staging, commit copy and reply
+to resumption. The ordered oracle runs between pulls. Use the same
+request's collection clock as an enclosed interval.
+=paged_request_phase_bounds= checks the disjoint wall-time accounting.
+
+In 100 paired staging requests per width, publication averaged
+11.25/3.15 ms, private staging 14.62/10.48 ms, commit copy 2.80/2.42 ms,
+Actor handoff 0.86/0.94 ms, and the oracle 25.77/25.86 ms. GC accounted
+for 1.47/1.23 ms on average within those requests. The two SDKs had
+similar phase medians in this cohort, where both full P95 values stayed
+below the historical staging tails.
+
+Reuse the packed backing only after matching every supplied field in
+order. The backing carries its original ordering certificate and the
+functional view from an accepted publication. The current and
+alternate backings bound retention. Keep the new run's output budget
+check and its own Result and page cursors.
+=packed_functional_cache_exact= and
+=rejected_run_preserves_functional_cache= check these boundaries.
+
+The paired median publication savings were 10.83/2.75 ms.
+The complete request medians fell by 10.66/3.14 ms. Each arm
+collected in four requests per width. All eight cached requests
+with handoffs above 5 ms coincided with GC.
+
+The uninstrumented paired matrix verified 1,000 requests per width
+per arm. The reference first-page and complete P95 were 19.18/4.42
+and 94.40/58.96 ms. The candidate initially used the SDK's default C
+host limit and measured 2.38/1.39 and 51.34/54.38 ms.
+
+With the repository's production C host limit restored, the candidate
+verified all 80 shards. First-page P95 was 4.47/1.63 ms and complete
+P95 was 74.44/74.33 ms. The 512 complete P95 exceeded the reference
+in these runs, and its measured collections rose from 40 to 80.
+The million-row mutable-list failure remains on record.
+
+** Packed view roots and collection timing
+
+=source-cut-alternate= retains one packed backing. Its functional view
+retains two integer field vectors, the successor vector, dense origin
+slots and run bounds. The current backing and Result independently
+retain their views. =dense_functional_payload_bound= counts the dense
+array payload in the 64-bit layout. =exclusive_alternate_roots= isolates
+the edge whose removal can release the alternate's view. The unordered
+chain fixture also retains the alternate's 16-byte-per-edge packed
+source, introduced when exact unordered captures became reusable.
+The retaining edge is in [[file:../../program/source-cut.ss][source-cut.ss]],
+the publication installs the view in [[file:../../program/actor-session.ss][actor-session.ss]],
+and [[file:../../program/component-worker.ss][component-worker.ss]] allocates the dense lanes.
+
+Sample the collection counter across replacement, publication, cursor
+creation and delivery. A post-collection hook records the phase where
+the hook runs, the last collection duration and live accounting.
+=paged_collection_phase_counts= checks the outer counter partition.
+
+At width 512 the alternate backing and dense view carry 1,574,808
+payload bytes (=width_512_alternate_payload=). The natural collection
+probe recorded 1,574,432 additional still-accounting bytes. Each
+production-flag arm collected four times over 100 verified requests.
+All collections fell within delivery, with the hook observed in the
+send-to-dispatch interval. The reference collected at zero-based
+request 8 in each shard, and the cache arm at request 10. The median
+pauses were 28.09 and 27.37 ms, respectively.
+
+Pair =7e25fd26= with =0c607ca7= using the same staging Gerbil, production
+C flags, fixture, and native test. Alternate the run order by shard.
+Each width and arm verifies 1,000 requests against the unchanged oracle.
+
+| Width | First-page P95 (ms) | Complete P95 (ms) | Timed collections | GC wall (s) |
+|-------+---------------------+-------------------+-------------------+-------------|
+|   128 | 16.584 -> 2.196     | 63.599 -> 50.331  | 40 -> 0           | 1.378 -> 0 |
+|   512 | 4.160 -> 0.976      | 57.145 -> 46.233  | 40 -> 40          | 1.138 -> 1.179 |
+
+All 160 shards exited within 6.29 s. The earlier 512 regression and
+collection increase did not recur in this matched comparison. The
+earlier runs lack per-request collection timing under matched module
+builds, so the cause of that increase remains undetermined.

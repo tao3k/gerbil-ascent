@@ -35,7 +35,9 @@ module DeltaClosure {
     val witnesses = Witnesses(s.q)
     val left = witnesses.filter(t => Lane(0,0,(t._1,t._2)) and Lane(1,0,(t._2,t._3)))
     val right = witnesses.filter(t => Lane(0,1,(t._1,t._2)) and Lane(1,1,(t._2,t._3)))
-    val selected = if (s.first or Mutation == "allold") witnesses else left.union(right)
+    val selected = if (s.first or Mutation == "allold") witnesses
+      else if (s.dq == Set() or Mutation == "prune-live") Set()
+      else left.union(right)
     val outputs = if (task == 0) s.edges else if (task == 1) selected.map(t => (t._1,t._3)) else s.p
     all {not(s.complete), not(s.failed), s.active.contains(task),
       s' = {...s, active:s.active.exclude(Set(task)), finished:s.finished.union(Set(task)),

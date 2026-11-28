@@ -1,0 +1,1276 @@
+-- SPDX-FileCopyrightText: 2026 tao3k team and Contributors
+-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import FiniteHeight
+import IndexedIteration
+import PhysicalBuckets
+
+/-! Ground fact-set semantics from Finite-Choice Logic Programming, §2.1.
+Attributes and ground values use natural-number identities. The database is a
+partial function, so each attribute has at most one value by construction. -/
+namespace Ascent.FiniteChoice
+
+abbrev Database := Nat → Option Nat
+abbrev Fact := Nat × Nat
+
+inductive Head where
+  | closed (keyId : Nat) (values : List Nat)
+  | openOffer (keyId value : Nat)
+
+structure Rule where
+  body : List Fact
+  head : Head
+
+def enabled (database : Database) (rule : Rule) : Prop :=
+  ∀ fact ∈ rule.body, database fact.1 = some fact.2
+
+def assign (database : Database) (keyId value : Nat) : Database :=
+  fun key => if key = keyId then some value else database key
+
+def choose (database : Database) (keyId value : Nat) : List Database :=
+  match database keyId with
+  | none => [assign database keyId value]
+  | some prior => if prior = value then [database] else []
+
+def evolve (database : Database) (head : Head) : List Database :=
+  match head with
+  | .closed keyId values => values.flatMap (choose database keyId)
+  | .openOffer keyId value => database :: choose database keyId value
+
+/-- Rule successors are interpreted as a set. Duplicate offers may repeat a
+successor in the representation without changing saturation. -/
+def saturatesHead (database : Database) (head : Head) : Prop :=
+  database ∈ evolve database head ∧
+    ∀ successor ∈ evolve database head, successor = database
+
+def saturated (rules : List Rule) (database : Database) : Prop :=
+  ∀ rule ∈ rules, enabled database rule → saturatesHead database rule.head
+
+inductive Reachable (rules : List Rule) : Database → Prop where
+  | empty : Reachable rules (fun _ => none)
+  | step {database successor : Database} {rule : Rule} :
+      Reachable rules database → rule ∈ rules → enabled database rule →
+      successor ∈ evolve database rule.head → Reachable rules successor
+
+def solution (rules : List Rule) (database : Database) : Prop :=
+  Reachable rules database ∧ saturated rules database
+
+theorem assigned_distinct (database : Database) (keyId value : Nat)
+    (unset : database keyId = none) :
+    assign database keyId value ≠ database := by
+  intro h
+  have atKey := congrFun h keyId
+  simp [assign, unset] at atKey
+
+theorem open_saturated_iff (database : Database) (keyId value : Nat) :
+    saturatesHead database (.openOffer keyId value) ↔
+      database keyId ≠ none := by
+  cases h : database keyId with
+  | none =>
+    have differs := assigned_distinct database keyId value h
+    simp [saturatesHead, evolve, choose, h, differs]
+  | some prior =>
+    by_cases same : prior = value <;> simp [saturatesHead, evolve, choose, h, same]
+
+theorem closed_saturated_iff (database : Database) (keyId : Nat) (values : List Nat) :
+    saturatesHead database (.closed keyId values) ↔
+      ∃ prior ∈ values, database keyId = some prior := by
+  cases h : database keyId with
+  | none =>
+    have differs (value : Nat) := assigned_distinct database keyId value h
+    have absent : database ∉ values.flatMap (choose database keyId) := by
+      simp only [List.mem_flatMap, choose, h, List.mem_singleton, not_exists, not_and]
+      intro value _ equal
+      exact differs value equal.symm
+    simp [saturatesHead, evolve, absent]
+  | some prior =>
+    have member (candidate : Database) :
+        candidate ∈ values.flatMap (choose database keyId) ↔
+          prior ∈ values ∧ candidate = database := by
+      simp only [List.mem_flatMap, choose, h]
+      constructor
+      · rintro ⟨value, inValues, inside⟩
+        split at inside
+        · rename_i same
+          subst value
+          exact ⟨inValues, List.mem_singleton.mp inside⟩
+        · simp at inside
+      · rintro ⟨inValues, rfl⟩
+        exact ⟨prior, inValues, by simp⟩
+    simp [saturatesHead, evolve, member]
+
+/-- A fact-set step preserves every assigned value. In particular, siblings
+cannot overwrite a value already present in their common parent. -/
+theorem step_preserves_assignment (database successor : Database)
+    (head : Head) (key value : Nat) (present : database key = some value)
+    (step : successor ∈ evolve database head) : successor key = some value := by
+  have preserves (keyId offer : Nat) (inside : successor ∈ choose database keyId offer) :
+      successor key = some value := by
+    cases h : database keyId with
+    | none =>
+      have distinct : key ≠ keyId := by
+        intro same
+        subst key
+        simp [h] at present
+      have equal : successor = assign database keyId offer := by
+        simpa [choose, h] using inside
+      simpa [equal, assign, distinct] using present
+    | some prior =>
+      by_cases same : prior = offer
+      · have equal : successor = database := by simpa [choose, h, same] using inside
+        simpa [equal] using present
+      · simp [choose, h, same] at inside
+  cases head with
+  | closed keyId values =>
+    obtain ⟨offer, _, inside⟩ := List.mem_flatMap.mp step
+    exact preserves keyId offer inside
+  | openOffer keyId offer =>
+    rcases List.mem_cons.mp step with equal | inside
+    · simpa [equal] using present
+    · exact preserves keyId offer inside
+
+/-- This is the branch decision in Scheme's offer scan, expressed in
+terms of the assigned value and the grounded alternatives. -/
+def acceptsHead (database : Database) : Head → Prop
+  | .openOffer keyId _ => database keyId ≠ none
+  | .closed keyId values => ∃ prior ∈ values, database keyId = some prior
+
+theorem accepts_head_exact (database : Database) (head : Head) :
+    acceptsHead database head ↔ saturatesHead database head := by
+  cases head with
+  | closed keyId values => exact (closed_saturated_iff database keyId values).symm
+  | openOffer keyId value => exact (open_saturated_iff database keyId value).symm
+
+/-- The Scheme scan can only introduce values for an unset key. Accepted
+self steps are already represented by the current state. -/
+def offersExtension (database successor : Database) : Head → Prop
+  | .openOffer keyId value =>
+      database keyId = none ∧ successor = assign database keyId value
+  | .closed keyId values =>
+      database keyId = none ∧ ∃ offer ∈ values, successor = assign database keyId offer
+
+theorem offers_extension_exact (database successor : Database) (head : Head) :
+    offersExtension database successor head ↔
+      successor ≠ database ∧ successor ∈ evolve database head := by
+  cases head with
+  | openOffer keyId value =>
+    cases h : database keyId with
+    | none =>
+      have differs := assigned_distinct database keyId value h
+      simp [offersExtension, evolve, choose, h, and_or_left, and_comm]
+      exact fun same => same ▸ differs
+    | some prior =>
+      by_cases own : prior = value <;> simp [offersExtension, evolve, choose, h, own]
+  | closed keyId values =>
+    cases h : database keyId with
+    | none =>
+      simp only [offersExtension, evolve, List.mem_flatMap, choose, h, List.mem_singleton,
+        true_and]
+      constructor
+      · rintro ⟨offer, allowed, rfl⟩
+        exact ⟨assigned_distinct database keyId offer h, offer, allowed, rfl⟩
+      · exact And.right
+    | some prior =>
+      simp only [offersExtension, evolve, h, reduceCtorEq, false_and, List.mem_flatMap,
+        choose]
+      refine ⟨False.elim, ?_⟩
+      rintro ⟨different, offer, _, chosen⟩
+      split at chosen
+      · exact different (List.mem_singleton.mp chosen)
+      · simp at chosen
+
+/-- Strict successors omit self steps before scheduling. -/
+def StrictStep (rules : List Rule) (before after : Database) : Prop :=
+  before ≠ after ∧ ∃ rule ∈ rules, enabled before rule ∧ after ∈ evolve before rule.head
+
+/-- Closing the worklist establishes completeness. The initial empty database
+was scheduled, each discovered database was processed, and each processed
+database registered every strict successor. -/
+theorem exhausted_worklist_complete (rules : List Rule) (processed : Database → Prop)
+    (initial : processed (fun _ => none))
+    (closed : ∀ before after, processed before → StrictStep rules before after → processed after)
+    {database : Database} (reached : Reachable rules database) : processed database := by
+  induction reached with
+  | empty => exact initial
+  | @step before successor rule _ hRule hEnabled hNext ih =>
+    by_cases same : before = successor
+    · simpa [← same] using ih
+    · exact closed before successor ih ⟨same, rule, hRule, hEnabled, hNext⟩
+
+theorem exhausted_answers_exact (rules : List Rule)
+    (processed accepted : Database → Prop)
+    (initial : processed (fun _ => none))
+    (closed : ∀ before after, processed before → StrictStep rules before after → processed after)
+    (sound : ∀ database, processed database → Reachable rules database)
+    (publish : ∀ database, accepted database ↔ processed database ∧ saturated rules database)
+    (database : Database) : accepted database ↔ solution rules database := by
+  rw [publish]
+  exact ⟨fun h => ⟨sound database h.1, h.2⟩,
+         fun h => ⟨exhausted_worklist_complete rules processed initial closed h.1, h.2⟩⟩
+
+/-- The Scheme state budget charges a distinct discovery, including the
+empty database. The processed and pending keys together form seen. An
+unseen successor cannot exhaust a budget that covers the finite universe. -/
+theorem fresh_discovery_fits_budget {State : Type} [DecidableEq State]
+    (states seen : List State) (budget : Nat) (next : State)
+    (covered : states.length ≤ budget) (distinct : seen.Nodup)
+    (inside : seen ⊆ states) (legal : next ∈ states) (fresh : next ∉ seen) :
+    seen.length < budget := by
+  have sub : next :: seen ⊆ states := by
+    intro value member
+    rcases List.mem_cons.mp member with rfl | previous
+    · exact legal
+    · exact inside previous
+  have length := List.Nodup.length_le_of_subset (List.nodup_cons.mpr ⟨fresh, distinct⟩) sub
+  exact Nat.lt_of_succ_le (Nat.le_trans length covered)
+
+/-- The Scheme worklist marks a state as seen before putting it on the
+pending list. After popping the active state, every outgoing strict edge
+is covered either by an earlier discovery or by an entry added now. -/
+theorem register_successors_closes_cut {State : Type}
+    (seen discoveries : State → Prop) (edge : State → State → Prop) (active : State)
+    (recorded : ∀ next, edge active next → ¬ seen next → discoveries next) :
+    ∀ next, edge active next → seen next ∨ discoveries next := by
+  intro next reachable
+  by_cases known : seen next
+  · exact Or.inl known
+  · exact Or.inr (recorded next reachable known)
+
+theorem worklist_drain_covers_discovery {State : Type}
+    (seen queued processed : State → Prop)
+    (partition : ∀ state, seen state ↔ queued state ∨ processed state)
+    (done : ∀ state, ¬ queued state) :
+    ∀ state, seen state ↔ processed state := by
+  intro state
+  rw [partition]
+  exact ⟨fun h => h.resolve_left (done state), Or.inr⟩
+
+/-- Each coordinate is unset or one of the admitted values. -/
+def finiteDatabases (attributes values : Nat) :
+    List (Fin attributes → Fin (values + 1)) :=
+  Ascent.enumerateTables (List.finRange (values + 1)) attributes
+
+theorem finite_databases_count (attributes values : Nat) :
+    (finiteDatabases attributes values).length = (values + 1) ^ attributes := by
+  simp [finiteDatabases, Ascent.enumerate_tables_length]
+
+theorem finite_databases_complete (attributes values : Nat)
+    (database : Fin attributes → Fin (values + 1)) :
+    database ∈ finiteDatabases attributes values :=
+  Ascent.enumerate_tables_complete _ List.mem_finRange _ database
+
+/-- Abstract a single Scheme search iteration as removing the active
+entry and appending previously unseen strict successors. Seen includes
+both processed and pending entries. -/
+structure Worklist where
+  seen : Nat
+  pending : Nat
+  processed : Nat
+
+def Worklist.counts (state : Worklist) : Prop :=
+  state.seen = state.pending + state.processed
+
+def Worklist.advance (state : Worklist) (discoveries : Nat) : Worklist :=
+  ⟨state.seen + discoveries, state.pending - 1 + discoveries, state.processed + 1⟩
+
+theorem worklist_counts_preserved (state : Worklist) (discoveries : Nat)
+    (counts : state.counts) (pending : 0 < state.pending) :
+    (state.advance discoveries).counts := by
+  simp only [Worklist.counts, Worklist.advance] at *
+  omega
+
+/-- Processing increases the count exactly once even if it adds many
+successors. Together with the finite discovery bound this excludes an
+infinite loop of successful iterations. -/
+theorem worklist_budget_decreases (state : Worklist) (discoveries budget : Nat)
+    (counts : state.counts) (pending : 0 < state.pending)
+    (covered : state.seen ≤ budget) :
+    budget - (state.advance discoveries).processed < budget - state.processed := by
+  simp only [Worklist.counts, Worklist.advance] at *
+  omega
+
+/-- A private relation identifies the rule, and its leading columns carry
+every named binding (including occurrence-local wildcard bindings). -/
+def groundingRow {Value : Type} (bindings keys offers : List Value) : List Value :=
+  bindings ++ keys ++ offers
+
+theorem grounding_bindings_preserved {Value : Type} (bindings keys offers : List Value) :
+    (groundingRow bindings keys offers).take bindings.length = bindings := by
+  simp [groundingRow]
+
+theorem grounding_distinguishes_instances {Value : Type}
+    (left right leftKeys rightKeys leftOffers rightOffers : List Value)
+    (width : left.length = right.length)
+    (same : groundingRow left leftKeys leftOffers = groundingRow right rightKeys rightOffers) :
+    left = right := by
+  calc
+    left = (groundingRow left leftKeys leftOffers).take left.length :=
+      (grounding_bindings_preserved _ _ _).symm
+    _ = (groundingRow right rightKeys rightOffers).take left.length :=
+      congrArg (List.take left.length) same
+    _ = right := by rw [width, grounding_bindings_preserved]
+
+/-- Specialize the compiled indexed and pivot paths to relational grounding
+rows. Membership combines the previously published cut with the delta run. -/
+theorem grounding_delta_exact {Key Value : Type} [DecidableEq Value]
+    (rule : IndexedIteration.Rule Key Value (List Value))
+    (rows : IndexedIteration.Rows Key Value (List Value))
+    (domain : Key → List Value → Prop)
+    (valid : IndexedIteration.Valid domain rule)
+    (covered : IndexedIteration.RowsAdmitted domain rows)
+    (old next : SemiNaive.Database (List Value))
+    (grows : ∀ item, old item → next item)
+    (monotone : IndexedIteration.RowsMonotone rows)
+    (priorSound : ∀ item, IndexedIteration.consequence rule rows old item →
+      IndexedIteration.consequence rule rows next item)
+    (item : List Value) :
+    (item ∈ IndexedIteration.fullRun rule rows old ∨
+      item ∈ IndexedIteration.pivotRun rule rows old next) ↔
+      IndexedIteration.consequence rule rows next item := by
+  constructor
+  · rintro (prior | fresh)
+    · exact priorSound item ((IndexedIteration.full_run_exact rule rows domain valid covered old item).mp prior)
+    · exact IndexedIteration.pivot_run_sound rule rows domain valid covered old next grows monotone item fresh
+  · intro consequence
+    by_cases prior : IndexedIteration.consequence rule rows old item
+    · exact Or.inl ((IndexedIteration.full_run_exact rule rows domain valid covered old item).mpr prior)
+    · exact Or.inr (IndexedIteration.pivot_run_complete rule rows domain valid covered old next grows monotone item consequence prior)
+
+/-- The choice macro feeds the ordinary admitted atom grammar. Named
+identities and anonymous body positions occupy disjoint identity spaces. -/
+def captureTerm {Value : Type} (position : Nat) : AtomicBinding.Term Value → AtomicBinding.Term Value
+  | .literal value => .literal value
+  | .variable name => .variable (2 * name)
+  | .wildcard => .variable (2 * position + 1)
+
+def captureTerms {Value : Type} (position : Nat) : List (AtomicBinding.Term Value) →
+    List (AtomicBinding.Term Value)
+  | [] => []
+  | term :: rest => captureTerm position term :: captureTerms (position + 1) rest
+
+def matchesOccurrence {Value : Type} (named anonymous : Nat → Option Value) (position : Nat) :
+    List (AtomicBinding.Term Value) → List Value → Prop
+  | [], [] => True
+  | .literal expected :: terms, value :: row =>
+      expected = value ∧ matchesOccurrence named anonymous (position + 1) terms row
+  | .variable name :: terms, value :: row =>
+      named name = some value ∧ matchesOccurrence named anonymous (position + 1) terms row
+  | .wildcard :: terms, value :: row =>
+      anonymous position = some value ∧ matchesOccurrence named anonymous (position + 1) terms row
+  | _, _ => False
+
+theorem capture_terms_exact {Value : Type} (position : Nat)
+    (terms : List (AtomicBinding.Term Value)) (row : List Value) (env : AtomicBinding.Env Value) :
+    AtomicBinding.Matches (captureTerms position terms) row env ↔
+      matchesOccurrence (fun name => AtomicBinding.lookup (2 * name) env)
+        (fun slot => AtomicBinding.lookup (2 * slot + 1) env) position terms row := by
+  induction terms generalizing row position with
+  | nil => cases row <;> rfl
+  | cons term rest ih =>
+    cases term <;> cases row <;>
+      simp [captureTerms, captureTerm, AtomicBinding.Matches, matchesOccurrence, ih]
+
+theorem wildcard_fresh (position name other : Nat) (different : position ≠ other) :
+    2 * position + 1 ≠ 2 * name ∧ 2 * position + 1 ≠ 2 * other + 1 := by omega
+
+/-- A completed row representation recovers the exact values of every named
+and anonymous occurrence, including repeated variables and literals. -/
+theorem captured_occurrences_determine_row {Value : Type} (position : Nat)
+    (terms : List (AtomicBinding.Term Value)) (left right : List Value)
+    (env : AtomicBinding.Env Value)
+    (a : AtomicBinding.Matches (captureTerms position terms) left env)
+    (b : AtomicBinding.Matches (captureTerms position terms) right env) : left = right := by
+  induction terms generalizing position left right with
+  | nil => cases left <;> cases right <;> simp_all [captureTerms, AtomicBinding.Matches]
+  | cons term rest ih =>
+    cases left with
+    | nil => cases term <;> simp [captureTerms, captureTerm, AtomicBinding.Matches] at a
+    | cons leftHead leftTail =>
+      cases right with
+      | nil => cases term <;> simp [captureTerms, captureTerm, AtomicBinding.Matches] at b
+      | cons rightHead rightTail =>
+        cases term <;> simp only [captureTerms, captureTerm, AtomicBinding.Matches] at a b
+        all_goals
+          have head : leftHead = rightHead := by
+            first | exact a.1.symm.trans b.1 | exact Option.some.inj (a.1.symm.trans b.1)
+          rw [head, ih (position + 1) leftTail rightTail a.2 b.2]
+
+/-- Once the named and fresh slots of each premise have been captured,
+serializing their shared environment keeps matching and decoding in agreement. -/
+def groundTerms {Value : Type} (env : AtomicBinding.Env Value) :
+    List (AtomicBinding.Term Value) → Option (List Value)
+  | [] => some []
+  | .literal value :: rest => (groundTerms env rest).map (value :: ·)
+  | .variable name :: rest => do
+      let value ← AtomicBinding.lookup name env
+      (groundTerms env rest).map (value :: ·)
+  | .wildcard :: _ => none
+
+theorem ground_captured_terms_exact {Value : Type} (position : Nat)
+    (terms : List (AtomicBinding.Term Value)) (row : List Value) (env : AtomicBinding.Env Value) :
+    groundTerms env (captureTerms position terms) = some row ↔
+      AtomicBinding.Matches (captureTerms position terms) row env := by
+  induction terms generalizing row position with
+  | nil => cases row <;> simp [captureTerms, groundTerms, AtomicBinding.Matches]
+  | cons term rest ih =>
+    have tailExact : ∀ tail, groundTerms env (captureTerms (position + 1) rest) = some tail ↔
+        AtomicBinding.Matches (captureTerms (position + 1) rest) tail env := ih (position + 1)
+    cases tail : groundTerms env (captureTerms (position + 1) rest) with
+    | none =>
+      simp only [tail, reduceCtorEq, false_iff] at tailExact
+      cases term with
+      | literal value =>
+        cases row <;> simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, tailExact]
+      | «variable» name =>
+        cases found : AtomicBinding.lookup (2 * name) env <;> cases row <;>
+          simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, tailExact, found]
+      | wildcard =>
+        cases found : AtomicBinding.lookup (2 * position + 1) env <;> cases row <;>
+          simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, tailExact, found]
+    | some values =>
+      simp only [tail, Option.some.injEq] at tailExact
+      cases term with
+      | literal value =>
+        cases row <;> simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, ← tailExact]
+      | «variable» name =>
+        cases found : AtomicBinding.lookup (2 * name) env <;> cases row <;>
+          simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, ← tailExact, found]
+      | wildcard =>
+        cases found : AtomicBinding.lookup (2 * position + 1) env <;> cases row <;>
+          simp [captureTerms, captureTerm, groundTerms, AtomicBinding.Matches, tail, ← tailExact, found]
+
+/-- Membership at the current version. The version test precedes the cache
+read in the Scheme owner. Extension invalidates every cached query view. -/
+def visibleBucket {Key Row : Type} (version : Nat) (key : Key)
+    (cache : Option (Nat × (Key → List Row))) (physical : Key → List Row) : List Row :=
+  match cache with
+  | some (saved, buckets) => if saved = version then buckets key else physical key
+  | none => physical key
+
+theorem visible_bucket_exact {Key Row : Type} (keyOf : Row → Key) [DecidableEq Key]
+    (version : Nat) (key : Key) (rows : List Row) (prior : PhysicalBuckets.Buckets Key Row)
+    (history : List Row) (cache : Option (Nat × (Key → List Row)))
+    (exactPrior : ∀ query, prior query = rows.filter (fun row => decide (query = keyOf row)))
+    (validCache : ∀ saved buckets, cache = some (saved, buckets) → saved = version →
+      ∀ query, buckets query = PhysicalBuckets.extend (PhysicalBuckets.prepend keyOf) prior history query)
+    (row : Row) :
+    row ∈ visibleBucket version key cache (PhysicalBuckets.extend (PhysicalBuckets.prepend keyOf) prior history) ↔
+      (row ∈ rows ∨ row ∈ history) ∧ key = keyOf row := by
+  have direct := PhysicalBuckets.extension_coverage keyOf history prior key row
+  rw [exactPrior key] at direct
+  have selected : row ∈ PhysicalBuckets.extend (PhysicalBuckets.prepend keyOf) prior history key ↔
+      (row ∈ rows ∨ row ∈ history) ∧ key = keyOf row := by
+    rw [List.mem_filter] at direct
+    simpa only [decide_eq_true_eq, ← or_and_right, or_comm] using direct
+  cases found : cache with
+  | none => simpa [visibleBucket] using selected
+  | some pair =>
+    obtain ⟨saved, buckets⟩ := pair
+    by_cases current : saved = version
+    · simpa [visibleBucket, current, validCache saved buckets found current key] using selected
+    · simpa [visibleBucket, current] using selected
+
+/-- A cache miss records precisely the current lookup. A nonempty insert
+batch invalidates both positive and empty views, while an empty batch does
+not change the store. -/
+structure BucketCache (Key Row : Type) where
+  physical : Key → List Row
+  views : Key → Option (List Row)
+
+def BucketCache.coherent (cache : BucketCache Key Row) : Prop :=
+  ∀ key rows, cache.views key = some rows → rows = cache.physical key
+
+def BucketCache.query [DecidableEq Key] (cache : BucketCache Key Row) (key : Key) :
+    List Row × BucketCache Key Row :=
+  match cache.views key with
+  | some rows => (rows, cache)
+  | none => (cache.physical key,
+      {cache with views := fun other => if other = key then some (cache.physical key) else cache.views other})
+
+def BucketCache.extend [DecidableEq Key] (cache : BucketCache Key Row) (keyOf : Row → Key)
+    (batch : List Row) : BucketCache Key Row :=
+  match batch with
+  | [] => cache
+  | _ :: _ => ⟨PhysicalBuckets.extend (PhysicalBuckets.prepend keyOf) cache.physical batch, fun _ => none⟩
+
+theorem bucket_cache_query_exact [DecidableEq Key] (cache : BucketCache Key Row) (key : Key)
+    (coherent : cache.coherent) : (cache.query key).1 = cache.physical key ∧ (cache.query key).2.coherent := by
+  cases found : cache.views key with
+  | some rows => simpa [BucketCache.query, found] using And.intro (coherent key rows found) coherent
+  | none =>
+    simp only [BucketCache.query, found, true_and, BucketCache.coherent]
+    intro other rows stored
+    by_cases hit : other = key
+    · subst other
+      simpa using stored.symm
+    · exact coherent other rows (by simpa [hit] using stored)
+
+theorem bucket_cache_extension_exact [DecidableEq Key] (cache : BucketCache Key Row)
+    (keyOf : Row → Key) (batch : List Row) (key : Key) (row : Row)
+    (coherent : cache.coherent) :
+    (cache.extend keyOf batch).coherent ∧
+      (row ∈ ((cache.extend keyOf batch).query key).1 ↔
+        (row ∈ batch ∧ key = keyOf row) ∨ row ∈ cache.physical key) := by
+  have valid : (cache.extend keyOf batch).coherent := by
+    cases batch with
+    | nil => exact coherent
+    | cons head tail => simp [BucketCache.extend, BucketCache.coherent]
+  refine ⟨valid, ?_⟩
+  rw [(bucket_cache_query_exact (cache.extend keyOf batch) key valid).1]
+  cases batch with
+  | nil => simp [BucketCache.extend]
+  | cons head tail => exact PhysicalBuckets.extension_coverage keyOf (head :: tail) cache.physical key row
+
+/-- Branch Session messages are determined by the current cut and the parent
+of the pending entry. Source vectors model the complete choice relation set. -/
+inductive GroundingMessage (Key Row : Type) where
+  | run
+  | append (key : Key) (row : Row)
+  | replace (rows : Key → List Row)
+
+def applyGroundingMessage {Key Row : Type} [DecidableEq Key] (current : Key → List Row) :
+    GroundingMessage Key Row → Key → List Row
+  | .run => current
+  | .append key row => fun source => if source = key then current source ++ [row] else current source
+  | .replace rows => rows
+
+theorem replace_removes_sibling {Key Row : Type} [DecidableEq Key]
+    (old next : Key → List Row) (key : Key) (row : Row) :
+    row ∈ applyGroundingMessage old (.replace next) key ↔ row ∈ next key := Iff.rfl
+
+/-- The branch choice is driven by two identity tests on the immutable
+worklist entries. The renderer feeds this same tree to the Scheme expander. -/
+inductive BranchAction where
+  | run
+  | append
+  | replace
+  deriving DecidableEq
+
+def branchAction (sameCut directChild : Bool) : BranchAction :=
+  if sameCut then .run else if directChild then .append else .replace
+
+def branchLeaf (action : BranchAction) : String :=
+  match action with
+  | .run => "current-expr"
+  | .append => "append-expr"
+  | .replace => "replace-expr"
+
+def branchSource : String :=
+  "  (defrule (install-choice-cut current? child? current-expr append-expr replace-expr)\n" ++
+  "    (if current? " ++ branchLeaf (branchAction true false) ++ "\n" ++
+  "      (if child? " ++ branchLeaf (branchAction false true) ++ " " ++
+  branchLeaf (branchAction false false) ++ ")))\n"
+
+def groundingMessage {State Key Row : Type} [DecidableEq State]
+    (current state parent : State) (key : Key) (row : Row) (rows : Key → List Row) :
+    GroundingMessage Key Row :=
+  match branchAction (decide (state = current)) (decide (parent = current)) with
+  | .run => .run
+  | .append => .append key row
+  | .replace => .replace rows
+
+theorem branch_message_installs_exact_cut {State Key Row : Type} [DecidableEq State] [DecidableEq Key]
+    (view : State → Key → List Row) (current state parent : State) (key : Key) (row : Row)
+    (appendCut : parent = current → state ≠ current →
+      view state = applyGroundingMessage (view current) (.append key row)) :
+    applyGroundingMessage (view current) (groundingMessage current state parent key row (view state)) = view state := by
+  by_cases same : state = current
+  · simp [groundingMessage, branchAction, applyGroundingMessage, same]
+  · by_cases child : parent = current
+    · simpa [groundingMessage, branchAction, same, child] using (appendCut child same).symm
+    · simp [groundingMessage, branchAction, applyGroundingMessage, same, child]
+
+/-- The choice Session uses the whole initial or replacement cut and the
+indexed first-fresh partition on admitted append cuts. Here the read view is
+constructed from the installed source cut plus its positive closure. -/
+theorem grounding_after_message_exact {Key Value : Type} [DecidableEq Key] [DecidableEq Value]
+    (installed : Key → List (List Value)) (message : GroundingMessage Key (List Value))
+    (close : (Key → List (List Value)) → SemiNaive.Database (List Value))
+    (rule : IndexedIteration.Rule Key Value (List Value))
+    (rows : IndexedIteration.Rows Key Value (List Value)) (domain : Key → List Value → Prop)
+    (valid : IndexedIteration.Valid domain rule) (covered : IndexedIteration.RowsAdmitted domain rows)
+    (monotone : IndexedIteration.RowsMonotone rows)
+    (appendGrowth : ∀ key row item, close installed item →
+      close (applyGroundingMessage installed (.append key row)) item)
+    (row : List Value) :
+    let previous := close installed
+    let current := close (applyGroundingMessage installed message)
+    (match message with
+     | .append _ _ => row ∈ IndexedIteration.fullRun rule rows previous ∨
+         row ∈ IndexedIteration.pivotRun rule rows previous current
+     | _ => row ∈ IndexedIteration.fullRun rule rows current) ↔
+    IndexedIteration.consequence rule rows current row := by
+  cases message with
+  | run => exact IndexedIteration.full_run_exact rule rows domain valid covered _ row
+  | replace _ => exact IndexedIteration.full_run_exact rule rows domain valid covered _ row
+  | append key item =>
+    apply grounding_delta_exact rule rows domain valid covered _ _ (appendGrowth key item) monotone
+    intro value prior
+    obtain ⟨env, path, emitted⟩ := prior
+    refine ⟨env, ?_, emitted⟩
+    have liftPath (atoms : List (PositiveConsequence.Atom Key Value)) (seed output : AtomicBinding.Env Value)
+        (body : ProviderFrontier.body (PositiveConsequence.transition (rows (close installed))) atoms seed output) :
+        ProviderFrontier.body
+          (PositiveConsequence.transition (rows (close (applyGroundingMessage installed (.append key item)))))
+          atoms seed output := by
+      induction atoms generalizing seed with
+      | nil => exact body
+      | cons atom rest ih =>
+        obtain ⟨middle, first, tail⟩ := body
+        refine ⟨middle, ?_, ih middle tail⟩
+        exact PositiveConsequence.transition_monotone _ _
+          (monotone _ _ (appendGrowth key item)) atom seed middle first
+    exact liftPath _ _ _ path
+
+def constrainedValues (seed : List Nat) (restrictions : List (List Nat)) : List Nat :=
+  seed.filter fun value => restrictions.all fun allowed => allowed.contains value
+
+theorem constrained_values_exact (seed : List Nat) (restrictions : List (List Nat)) (value : Nat) :
+    value ∈ constrainedValues seed restrictions ↔
+      value ∈ seed ∧ ∀ allowed ∈ restrictions, value ∈ allowed := by
+  simp [constrainedValues, List.all_eq_true]
+
+/-- A compatible model extending the current database must satisfy each
+currently enabled closed head. Positive bodies persist under extension. -/
+theorem closed_intersection_forced (database model : Database) (key value : Nat)
+    (seed : List Nat) (restrictions : List (List Nat))
+    (rules : List Rule)
+    (seedRule : ∃ r ∈ rules, enabled database r ∧ r.head = .closed key seed)
+    (otherRules : ∀ allowed ∈ restrictions,
+      ∃ r ∈ rules, enabled database r ∧ r.head = .closed key allowed)
+    (preserves : ∀ atKey atValue, database atKey = some atValue → model atKey = some atValue)
+    (complete : saturated rules model)
+    (singleton : constrainedValues seed restrictions = [value]) :
+    model key = some value := by
+  have satisfies (allowed : List Nat)
+      (rule : ∃ r ∈ rules, enabled database r ∧ r.head = .closed key allowed) :
+      ∃ prior ∈ allowed, model key = some prior := by
+    obtain ⟨r, inRules, body, head⟩ := rule
+    have saturatedHead := complete r inRules (fun fact inBody => preserves fact.1 fact.2 (body fact inBody))
+    rw [head] at saturatedHead
+    exact (closed_saturated_iff model key allowed).mp saturatedHead
+  obtain ⟨prior, inSeed, assigned⟩ := satisfies seed seedRule
+  have inOthers : ∀ allowed ∈ restrictions, prior ∈ allowed := by
+    intro allowed member
+    obtain ⟨other, inside, also⟩ := satisfies allowed (otherRules allowed member)
+    have same : prior = other := Option.some.inj (assigned.symm.trans also)
+    simpa [same] using inside
+  have inAll := (constrained_values_exact seed restrictions prior).mpr ⟨inSeed, inOthers⟩
+  rw [singleton, List.mem_singleton] at inAll
+  simpa [inAll] using assigned
+
+/-- The first assignment in a model's derivation that is missing from the
+current state has an enabled rule. This remains true when the current
+state already contains facts from later in that derivation. -/
+theorem missing_assignment_has_offer (rules : List Rule) (current model upper : Database)
+    (reached : Reachable rules model)
+    (modelFits : ∀ key value, model key = some value → upper key = some value)
+    (currentFits : ∀ key value, current key = some value → upper key = some value)
+    (missing : ∃ key value, model key = some value ∧ current key ≠ some value) :
+    ∃ rule ∈ rules, enabled current rule ∧
+      ∃ successor, offersExtension current successor rule.head ∧
+        ∀ key value, successor key = some value → upper key = some value := by
+  induction reached with
+  | empty =>
+    obtain ⟨_, _, impossible, _⟩ := missing
+    simp at impossible
+  | @step before after rule _ member active step ih =>
+    have beforeFits : ∀ key value, before key = some value → upper key = some value :=
+      fun key value present =>
+        modelFits key value (step_preserves_assignment before after rule.head key value present step)
+    by_cases earlier : ∃ key value, before key = some value ∧ current key ≠ some value
+    · exact ih beforeFits earlier
+    · have included : ∀ key value, before key = some value → current key = some value := by
+        intro key value present
+        by_cases presentNow : current key = some value
+        · exact presentNow
+        · exact False.elim (earlier ⟨key, value, present, presentNow⟩)
+      have strict : after ≠ before := by
+        intro same
+        apply earlier
+        simpa [same] using missing
+      have extension := (offers_extension_exact before after rule.head).mpr ⟨strict, step⟩
+      have lift (key value : Nat) (afterEq : after = assign before key value) :
+          current key = none ∧
+            ∀ k v, assign current key value k = some v → upper k = some v := by
+        have target := modelFits key value (by simp [afterEq, assign])
+        have absent : current key = none := by
+          cases h : current key with
+          | none => rfl
+          | some prior =>
+            have agrees := Option.some.inj ((currentFits key prior h).symm.trans target)
+            obtain ⟨k, v, found, absent⟩ := missing
+            exfalso
+            apply absent
+            by_cases same : k = key
+            · subst k
+              simp [afterEq, assign] at found
+              simpa [agrees, found] using h
+            · exact included k v (by simpa [afterEq, assign, same] using found)
+        refine ⟨absent, ?_⟩
+        intro k v found
+        by_cases same : k = key
+        · subst k
+          simp [assign] at found
+          simpa [found] using target
+        · exact currentFits k v (by simpa [assign, same] using found)
+      refine ⟨rule, member, fun fact inBody => included fact.1 fact.2 (active fact inBody), ?_⟩
+      cases head : rule.head with
+      | openOffer key value =>
+        rw [head] at extension
+        obtain ⟨unset, fits⟩ := lift key value extension.2
+        exact ⟨assign current key value, ⟨unset, rfl⟩, fits⟩
+      | closed key values =>
+        rw [head] at extension
+        obtain ⟨value, allowed, equal⟩ := extension.2
+        obtain ⟨unset, fits⟩ := lift key value equal
+        exact ⟨assign current key value, ⟨unset, value, allowed, rfl⟩, fits⟩
+
+/-- A model-compatible value has grounded support on the selected key:
+a closed seed offers every value in the intersection. The prioritized
+edge is therefore still a fact-set step. -/
+theorem forced_step_reachable (rules : List Rule) (current : Database)
+    (reached : Reachable rules current) (key value : Nat)
+    (seed : List Nat) (restrictions : List (List Nat))
+    (source : ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key seed)
+    (unset : current key = none)
+    (singleton : constrainedValues seed restrictions = [value]) :
+    Reachable rules (assign current key value) := by
+  have included : value ∈ constrainedValues seed restrictions := by simp [singleton]
+  have offered := ((constrained_values_exact seed restrictions value).mp included).1
+  obtain ⟨rule, belongs, active, head⟩ := source
+  apply Reachable.step reached belongs active
+  rw [head]
+  exact ((offers_extension_exact current (assign current key value) (.closed key seed)).mp
+    ⟨unset, value, offered, rfl⟩).2
+
+/-- A compatible model survives a deduction-first step, even if its original
+derivation used a different order. -/
+theorem forced_step_preserves_model (current model : Database)
+    (key value : Nat) (compatible : ∀ k v, current k = some v → model k = some v)
+    (forced : model key = some value) :
+    ∀ k v, assign current key value k = some v → model k = some v := by
+  intro k v assigned
+  by_cases same : k = key
+  · subst k
+    simp [assign] at assigned
+    simpa [assigned] using forced
+  · exact compatible k v (by simpa [assign, same] using assigned)
+
+/-- A retained branch agrees with every currently enabled closed offer. -/
+def allowed (rules : List Rule) (current : Database) (key value : Nat) : Prop :=
+  ∀ values, (∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key values) →
+    value ∈ values
+
+/-- A closed rule obliges every compatible solution to assign its key.
+A scheduler can visit all admissible values of that key before considering
+other keys. Open offers alone do not justify that restriction. -/
+theorem compatible_closed_key_has_value (rules : List Rule) (current model : Database)
+    (key : Nat) (values : List Nat)
+    (source : ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key values)
+    (target : saturated rules model)
+    (fits : ∀ k v, current k = some v → model k = some v) :
+    ∃ value, model key = some value ∧ value ∈ values ∧ allowed rules current key value := by
+  have accepts (offers : List Nat)
+      (evidence : ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key offers) :
+      ∃ value, value ∈ offers ∧ model key = some value := by
+    obtain ⟨rule, member, active, head⟩ := evidence
+    have result := target rule member (fun f inBody => fits f.1 f.2 (active f inBody))
+    rw [head] at result
+    exact (closed_saturated_iff model key offers).mp result
+  obtain ⟨value, inValues, assigned⟩ := accepts values source
+  refine ⟨value, assigned, inValues, ?_⟩
+  intro offers evidence
+  obtain ⟨prior, offered, found⟩ := accepts offers evidence
+  simpa [Option.some.inj (found.symm.trans assigned)] using offered
+
+/-- A singleton takes priority. Otherwise a selected closed key narrows
+search to its admissible values. Without either, keep all supported moves. -/
+def Scheduled (rules : List Rule) (forced : Database → Option Fact)
+    (closedKey : Database → Option Nat)
+    (current : Database) (key value : Nat) : Prop :=
+  match forced current with
+  | some choice => (key, value) = choice
+  | none => (∀ selected, closedKey current = some selected → key = selected) ∧
+      allowed rules current key value ∧
+      ∃ rule ∈ rules, enabled current rule ∧
+        offersExtension current (assign current key value) rule.head
+
+theorem compatible_model_has_scheduled_step (rules : List Rule)
+    (forced : Database → Option Fact) (closedKey : Database → Option Nat)
+    (justified : ∀ current key value, forced current = some (key, value) →
+      current key = none ∧ ∃ seed restrictions,
+        (∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key seed) ∧
+        (∀ values ∈ restrictions,
+          ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key values) ∧
+        constrainedValues seed restrictions = [value])
+    (required : ∀ current key, closedKey current = some key →
+      current key = none ∧
+      ∃ rule ∈ rules, enabled current rule ∧ ∃ values, rule.head = .closed key values)
+    (current model : Database) (target : solution rules model)
+    (fits : ∀ key value, current key = some value → model key = some value)
+    (different : current ≠ model) :
+    ∃ key value, current key = none ∧ model key = some value ∧
+      Scheduled rules forced closedKey current key value := by
+  cases decision : forced current with
+  | some pair =>
+    obtain ⟨key, value⟩ := pair
+    obtain ⟨unset, seed, restrictions, source, others, singleton⟩ :=
+      justified current key value decision
+    exact ⟨key, value, unset,
+      closed_intersection_forced current model key value seed restrictions
+        rules source others fits target.2 singleton, by simp [Scheduled, decision]⟩
+  | none =>
+    by_cases selected : ∃ key, closedKey current = some key
+    · obtain ⟨key, selection⟩ := selected
+      obtain ⟨unset, rule, member, active, values, head⟩ := required current key selection
+      obtain ⟨value, assigned, offered, permitted⟩ :=
+        compatible_closed_key_has_value rules current model key values
+          ⟨rule, member, active, head⟩ target.2 fits
+      refine ⟨key, value, unset, assigned, ?_⟩
+      simp only [Scheduled, decision]
+      refine ⟨fun k found => Option.some.inj (selection.symm.trans found),
+        permitted, rule, member, active, ?_⟩
+      rw [head]
+      exact ⟨unset, value, offered, rfl⟩
+    have missing : ∃ key value, model key = some value ∧ current key ≠ some value := by
+      by_cases existsMissing : ∃ key value, model key = some value ∧ current key ≠ some value
+      · exact existsMissing
+      exfalso
+      apply different
+      funext key
+      cases assigned : model key with
+      | some value =>
+        by_cases present : current key = some value
+        · exact present
+        · exact False.elim (existsMissing ⟨key, value, assigned, present⟩)
+      | none =>
+        cases value : current key with
+        | none => rfl
+        | some prior =>
+          have impossible := fits key prior value
+          simp [assigned] at impossible
+    obtain ⟨rule, member, active, successor, extension, preserves⟩ :=
+      missing_assignment_has_offer rules current model model target.1
+        (fun _ _ h => h) fits missing
+    have recordStep (key value : Nat) (unset : current key = none)
+        (same : successor = assign current key value) :
+        ∃ key value, current key = none ∧ model key = some value ∧
+          Scheduled rules forced closedKey current key value := by
+      have assigned := preserves key value (by simp [same, assign])
+      refine ⟨key, value, unset, assigned, ?_⟩
+      simp only [Scheduled, decision]
+      refine ⟨fun k found => False.elim (selected ⟨k, found⟩), ?_,
+        rule, member, active, same ▸ extension⟩
+      rintro values ⟨closedRule, inRules, enabledNow, head⟩
+      have result := target.2 closedRule inRules
+        (fun fact inBody => fits fact.1 fact.2 (enabledNow fact inBody))
+      rw [head] at result
+      obtain ⟨prior, inValues, found⟩ := (closed_saturated_iff model key values).mp result
+      have equal := Option.some.inj (found.symm.trans assigned)
+      simpa [equal] using inValues
+    cases head : rule.head with
+    | openOffer key value =>
+      rw [head] at extension
+      exact recordStep key value extension.1 extension.2
+    | closed key values =>
+      rw [head] at extension
+      obtain ⟨value, _, same⟩ := extension.2
+      exact recordStep key value extension.1 same
+
+/-- Exhausting a deduction-first worklist publishes exactly the reachable
+saturated models on a finite support. Each compatible scheduled extension
+removes a missing key, even when deduction changes the derivation order. -/
+theorem exhausted_deduction_answers_exact (rules : List Rule)
+    (forced : Database → Option Fact) (closedKey : Database → Option Nat)
+    (processed accepted : Database → Prop)
+    (justified : ∀ current key value, forced current = some (key, value) →
+      current key = none ∧ ∃ seed restrictions,
+        (∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key seed) ∧
+        (∀ values ∈ restrictions,
+          ∃ rule ∈ rules, enabled current rule ∧ rule.head = .closed key values) ∧
+        constrainedValues seed restrictions = [value])
+    (required : ∀ current key, closedKey current = some key →
+      current key = none ∧
+      ∃ rule ∈ rules, enabled current rule ∧ ∃ values, rule.head = .closed key values)
+    (initial : processed (fun _ => none))
+    (closed : ∀ current key value, processed current →
+      Scheduled rules forced closedKey current key value → processed (assign current key value))
+    (sound : ∀ current, processed current → Reachable rules current)
+    (publish : ∀ current, accepted current ↔ processed current ∧ saturated rules current)
+    (model : Database) (keys : List Nat)
+    (support : ∀ key value, model key = some value → key ∈ keys) :
+    accepted model ↔ solution rules model := by
+  rw [publish]
+  refine ⟨fun h => ⟨sound model h.1, h.2⟩, fun target => ⟨?_, target.2⟩⟩
+  have enumerate (n : Nat) : ∀ (todo : List Nat) (current : Database), todo.length = n →
+      processed current →
+      (∀ key value, current key = some value → model key = some value) →
+      (∀ key value, model key = some value → current key ≠ some value → key ∈ todo) →
+      processed model := by
+    induction n using Nat.strongRecOn
+    rename_i n ih
+    intro todo current size done fits missing
+    by_cases same : current = model
+    · exact same ▸ done
+    · obtain ⟨key, value, unset, assigned, scheduled⟩ :=
+        compatible_model_has_scheduled_step rules forced closedKey justified required
+          current model target fits same
+      have member := missing key value assigned (by simp [unset])
+      have smaller : (todo.erase key).length < n := by
+        have nonempty := List.length_pos_of_mem member
+        rw [List.length_erase_of_mem member, ← size]
+        omega
+      apply ih _ smaller (todo.erase key) (assign current key value) rfl
+        (closed current key value done scheduled)
+        (forced_step_preserves_model current model key value fits assigned)
+      intro k v present absent
+      have other : k ≠ key := by
+        intro sameKey
+        subst k
+        have agrees := Option.some.inj (present.symm.trans assigned)
+        simp [assign, agrees] at absent
+      exact (List.mem_erase_of_ne other).mpr (missing k v present (by simpa [assign, other] using absent))
+  exact enumerate keys.length keys (fun _ => none) rfl initial (by simp) (fun k v h _ => support k v h)
+
+/-! Offer caches consume an explicit publication prefix from a direct child. -/
+
+/-- Physical roots are newest-first. The old root is the verified suffix.
+The choice layer consumes the new rows in chronological order. -/
+theorem newest_offer_delta_exact {Row : Type} (current previous : List Row)
+    (tail : current.drop (current.length - previous.length) = previous) :
+    current.reverse =
+      previous.reverse ++ (current.take (current.length - previous.length)).reverse := by
+  let count := current.length - previous.length
+  calc
+    current.reverse = (current.take count ++ current.drop count).reverse :=
+      congrArg List.reverse (List.take_append_drop count current).symm
+    _ = previous.reverse ++ (current.take count).reverse := by
+      simp [count, tail]
+
+/-- Narrowing a cached closed intersection by the new offers is equivalent
+to testing every closed offer of the extended cut. -/
+theorem closed_delta_intersection_exact (seed : List Nat) (previous delta : List (List Nat))
+    (value : Nat) :
+    value ∈ constrainedValues seed (previous ++ delta) ↔
+      value ∈ constrainedValues seed previous ∧ ∀ offers ∈ delta, value ∈ offers := by
+  simp only [constrained_values_exact, List.mem_append]
+  constructor
+  · rintro ⟨initial, all⟩
+    exact ⟨⟨initial, fun offers present => all offers (Or.inl present)⟩,
+      fun offers present => all offers (Or.inr present)⟩
+  · rintro ⟨⟨initial, old⟩, fresh⟩
+    exact ⟨initial, fun offers present => present.elim (old offers) (fresh offers)⟩
+
+/-- A cache stores all admitted offers by key. Changing an assignment
+requires rechecking the old offers on that key, plus all new offers. -/
+theorem assignment_recheck_exact {Offer Key Value : Type}
+    (keyOf : Offer → Key) (allows : Offer → Option Value → Prop)
+    (before after : Key → Option Value) (assigned : Key)
+    (unchanged : ∀ key, key ≠ assigned → after key = before key)
+    (previous delta : List Offer)
+    (valid : ∀ offer ∈ previous, allows offer (before (keyOf offer))) :
+    (∀ offer ∈ previous ++ delta, allows offer (after (keyOf offer))) ↔
+      (∀ offer ∈ previous, keyOf offer = assigned → allows offer (after assigned)) ∧
+      (∀ offer ∈ delta, allows offer (after (keyOf offer))) := by
+  constructor
+  · intro allValid
+    refine ⟨?_, fun offer present => allValid offer (List.mem_append_right _ present)⟩
+    intro offer present key
+    simpa [key] using allValid offer (List.mem_append_left _ present)
+  · rintro ⟨rechecked, added⟩ offer present
+    rcases List.mem_append.mp present with old | fresh
+    · by_cases same : keyOf offer = assigned
+      · simpa [same] using rechecked offer old same
+      · rw [unchanged _ same]
+        exact valid offer old
+    · exact added offer fresh
+
+/-- Rebuilding on a sibling drops an old witness unless the new
+publication itself contains that witness. -/
+theorem sibling_offer_cache_exact {Offer Key : Type} [DecidableEq Key]
+    (keyOf : Offer → Key) (_previous current : List Offer) (key : Key)
+    (witness : Offer) :
+    witness ∈ current.filter (fun row => keyOf row == key) ↔
+      witness ∈ current ∧ keyOf witness = key := by
+  simp
+
+/-! Backtracking restores the completed parent of the queued alternative. -/
+
+structure ChoiceCheckpoint (Owner Branch Offer : Type) where
+  owner : Owner
+  branch : Branch
+  offers : List Offer
+
+def restoreChoiceCheckpoint {Owner Branch Offer : Type} [DecidableEq Owner] [DecidableEq Branch]
+    (saved : ChoiceCheckpoint Owner Branch Offer) (owner : Owner) (parent : Branch) :
+    Option (List Offer) :=
+  if saved.owner = owner ∧ saved.branch = parent then some saved.offers else none
+
+theorem restore_choice_checkpoint_exact {Owner Branch Offer : Type}
+    [DecidableEq Owner] [DecidableEq Branch]
+    (saved : ChoiceCheckpoint Owner Branch Offer) (owner : Owner) (parent : Branch)
+    (offers : List Offer) :
+    restoreChoiceCheckpoint saved owner parent = some offers ↔
+      saved.owner = owner ∧ saved.branch = parent ∧ saved.offers = offers := by
+  unfold restoreChoiceCheckpoint
+  split <;> simp_all
+
+/-- Replaying only a child's fresh offers reads the same witness set as
+reconstructing the child from its full closure. A discarded child's
+additional offers do not participate in the reconstruction. -/
+theorem restored_child_witness_exact {Owner Branch Offer : Type}
+    [DecidableEq Owner] [DecidableEq Branch]
+    (saved : ChoiceCheckpoint Owner Branch Offer) (owner : Owner) (parent : Branch)
+    (parentOffers childOffers delta : List Offer)
+    (installed : restoreChoiceCheckpoint saved owner parent = some parentOffers)
+    (complete : childOffers = parentOffers ++ delta) (witness : Offer) :
+    witness ∈ childOffers ↔ witness ∈ saved.offers ∨ witness ∈ delta := by
+  have exactParent := ((restore_choice_checkpoint_exact saved owner parent parentOffers).mp
+    installed).2.2
+  simp [complete, exactParent]
+
+def matchedPrefix {Row Slots : Type} (bind : Row → Option Slots) (rows : List Row) :
+    List (Row × Slots) :=
+  rows.filterMap fun row => (bind row).map (fun slots => (row, slots))
+
+/-- A shared first atom has no incoming slots. Checking the full ordered
+static view permits restoring its successful slot writes in the same order.
+The continuation and its branch-specific witnesses still execute afresh. -/
+theorem checked_static_prefix_exact {Row Slots : Type}
+    (bind : Row → Option Slots) (recorded current : List Row)
+    (sameOrder : current = recorded) :
+    matchedPrefix bind current = matchedPrefix bind recorded := by
+  rw [sameOrder]
+
+def choiceBucketEdit {Key Bucket : Type} [DecidableEq Key]
+    (root : Key → Option Bucket) (key : Key) (value : Option Bucket) : Key → Option Bucket :=
+  fun query => if query = key then value else root query
+
+/-- A branch update installs a new root. Other buckets and the retained
+parent's bucket at the edited key still resolve as before. -/
+theorem choice_bucket_edit_exact {Key Bucket : Type} [DecidableEq Key]
+    (parent : Key → Option Bucket) (key : Key) (value : Option Bucket) :
+    choiceBucketEdit parent key value key = value ∧
+      ∀ query, query ≠ key → choiceBucketEdit parent key value query = parent query := by
+  exact ⟨by simp [choiceBucketEdit], fun query other => by simp [choiceBucketEdit, other]⟩
+
+theorem choice_bucket_siblings_isolated {Key Bucket : Type} [DecidableEq Key]
+    (parent : Key → Option Bucket) (left right : Key) (leftValue rightValue : Option Bucket)
+    (different : left ≠ right) :
+    choiceBucketEdit parent left leftValue right = parent right ∧
+      choiceBucketEdit parent right rightValue left = parent left := by
+  simp [choiceBucketEdit, different, Ne.symm different]
+
+/-- Charging each saved root independently is conservative even when their
+rows are physically shared. Rejecting a capture leaves the charge unchanged. -/
+theorem choice_parent_units_bounded (used weight budget : Nat) (within : used ≤ budget) :
+    (if used + weight ≤ budget then used + weight else used) ≤ budget := by
+  split <;> assumption
+
+theorem release_choice_parent_units (used weight budget : Nat) (within : used ≤ budget) :
+    used - weight ≤ budget :=
+  Nat.le_trans (Nat.sub_le _ _) within
+
+/-- The internal evaluation retains the completed cut and its relation
+sizes. Public projection is needed only at accepted leaves. -/
+def choiceCutUnits (sizes : List Nat) : Nat :=
+  sizes.foldl (fun units size => units + (1 + size)) 0
+
+theorem choice_cut_units_fold (sizes : List Nat) (units : Nat) :
+    sizes.foldl (fun total size => total + (1 + size)) units =
+      units + (sizes.map (fun size => 1 + size)).sum := by
+  induction sizes generalizing units with
+  | nil => simp
+  | cons head tail ih => simp [ih, Nat.add_assoc]
+
+theorem choice_cut_units_exact {Name : Type} (sizes : List (Name × Nat)) :
+    choiceCutUnits (sizes.map Prod.snd) =
+      sizes.foldl (fun total entry => total + 1 + entry.2) 0 := by
+  have same (entries : List (Name × Nat)) (units : Nat) :
+      (entries.map Prod.snd).foldl (fun total size => total + (1 + size)) units =
+        entries.foldl (fun total entry => total + 1 + entry.2) units := by
+    induction entries generalizing units with
+    | nil => rfl
+    | cons head tail ih => simp [ih, Nat.add_assoc]
+  exact same sizes 0
+
+/-- The raw offer cut is newest-first. Scanning a cut from an empty
+predecessor builds the same oldest-first order as public export. -/
+def scanPrivateOfferRows {Row : Type} : List Row → List Row → List Row
+  | [], acc => acc
+  | row :: tail, acc => scanPrivateOfferRows tail (row :: acc)
+
+theorem choice_full_offer_scan_exact {Row : Type} (rows acc : List Row) :
+    scanPrivateOfferRows rows acc = rows.reverse ++ acc := by
+  induction rows generalizing acc with
+  | nil => rfl
+  | cons head tail ih => simp [scanPrivateOfferRows, ih]
+
+/-- A deferred result closes over its own immutable cut. A sibling can
+change the working cut without changing what the saved model projects. -/
+theorem choice_deferred_result_exact {Cut Result : Type} (project : Cut → Result)
+    (completed sibling : Cut) :
+    (let frozen := completed
+     let delayed := fun () => project frozen
+     let _current := sibling
+     delayed ()) = project completed := rfl
+
+/-- Materializing only accepted leaves preserves the order and values
+of eagerly projected accepted leaves. -/
+theorem choice_deferred_model_order {Cut Result : Type}
+    (project : Cut → Result) (visits : List (Bool × Cut)) :
+    (visits.filterMap fun (accepted, cut) => if accepted then some cut else none).map project =
+      visits.filterMap (fun (accepted, cut) => if accepted then some (project cut) else none) := by
+  induction visits with
+  | nil => rfl
+  | cons head tail ih =>
+    cases head with
+    | mk accepted cut => cases accepted <;> simp [ih]
+
+/-- The one-fresh-row join can select a bucket of the ordered static prefix.
+A physical index must return exactly this stable projection of its owning cut. -/
+def orderedChoiceBucket {Key Prefix : Type} [DecidableEq Key]
+    (keyOf : Prefix → Key) (key : Key) (prefixRows : List Prefix) : List Prefix :=
+  prefixRows.filter fun row => decide (keyOf row = key)
+
+theorem choice_single_delta_bucket_exact
+    {Key Prefix Fresh : Type} [DecidableEq Key]
+    (prefixKey : Prefix → Key) (freshKey : Fresh → Key)
+    (prefixRows : List Prefix) (fresh : Fresh) :
+    (prefixRows.flatMap fun row =>
+        if prefixKey row = freshKey fresh then [(row, fresh)] else []) =
+      (orderedChoiceBucket prefixKey (freshKey fresh) prefixRows).map
+        (fun row => (row, fresh)) := by
+  induction prefixRows with
+  | nil => rfl
+  | cons head tail ih =>
+    by_cases same : prefixKey head = freshKey fresh <;>
+      simp [orderedChoiceBucket, same] at ih ⊢ <;> exact ih
+
+theorem choice_single_delta_bucket_visit_bound
+    {Key Prefix : Type} [DecidableEq Key]
+    (keyOf : Prefix → Key) (key : Key) (prefixRows : List Prefix) :
+    (orderedChoiceBucket keyOf key prefixRows).length ≤ prefixRows.length :=
+  List.length_filter_le _ _
+
+/-- One lane of the canonical physical builder prepends each matching
+occurrence via hash update and reverses the freshly owned bucket. -/
+theorem choice_native_ordered_bucket
+    {Key Prefix : Type} [DecidableEq Key]
+    (keyOf : Prefix → Key) (key : Key) (rows accumulated : List Prefix) :
+    (rows.foldl (fun bucket row =>
+      if keyOf row = key then row :: bucket else bucket) accumulated).reverse =
+      accumulated.reverse ++ orderedChoiceBucket keyOf key rows := by
+  induction rows generalizing accumulated with
+  | nil => simp [orderedChoiceBucket]
+  | cons head tail ih =>
+    by_cases same : keyOf head = key <;>
+      simp [List.foldl, same, ih, orderedChoiceBucket, List.append_assoc]
+
+/-- A cache hit can borrow the physical bucket of an earlier evaluator
+only when both cuts contain the exact same ordered rows. -/
+theorem choice_ordered_bucket_restore
+    {Key Prefix : Type} [DecidableEq Key]
+    (keyOf : Prefix → Key) (key : Key)
+    (cached current physicalBucket : List Prefix)
+    (bucketCorrect : physicalBucket = orderedChoiceBucket keyOf key cached)
+    (sameCut : current = cached) :
+    physicalBucket = orderedChoiceBucket keyOf key current := by
+  rw [sameCut, bucketCorrect]
+
+/-- The checked runtime uses one admission procedure for both branches.
+Feeding it the same ordered witnesses preserves its rejection boundary. -/
+theorem choice_single_delta_ordered_admission
+    {Key Prefix Fresh Admission : Type} [DecidableEq Key]
+    (prefixKey : Prefix → Key) (freshKey : Fresh → Key)
+    (prefixRows : List Prefix) (fresh : Fresh)
+    (admit : Admission → Prefix × Fresh → Admission) (initial : Admission) :
+    (prefixRows.flatMap fun row =>
+        if prefixKey row = freshKey fresh then [(row, fresh)] else []).foldl admit initial =
+      ((orderedChoiceBucket prefixKey (freshKey fresh) prefixRows).map
+        (fun row => (row, fresh))).foldl admit initial := by
+  rw [choice_single_delta_bucket_exact prefixKey freshKey prefixRows fresh]
+
+/-- The former restore walk charges each row on its first membership miss. -/
+def restoreFreshCount {Row : Type} [DecidableEq Row] : List Row → List Row → Nat
+  | [], _ => 0
+  | row :: tail, seen =>
+    if row ∈ seen then restoreFreshCount tail seen
+    else 1 + restoreFreshCount tail (row :: seen)
+
+theorem restore_fresh_count_disjoint
+    {Row : Type} [DecidableEq Row] (rows seen : List Row)
+    (distinct : rows.Nodup) (fresh : ∀ row ∈ rows, row ∉ seen) :
+    restoreFreshCount rows seen = rows.length := by
+  induction rows generalizing seen with
+  | nil => rfl
+  | cons row tail ih =>
+    have split := List.nodup_cons.mp distinct
+    have miss : row ∉ seen := fresh row (by simp)
+    have rest : ∀ item ∈ tail, item ∉ row :: seen := by
+      intro item mem
+      have differs : item ≠ row := fun eq => split.1 (eq ▸ mem)
+      have absent := fresh item (by simp [mem])
+      simp [differs, absent]
+    simp [restoreFreshCount, miss, ih _ split.2 rest, Nat.add_comm]
+
+/-- An empty base can charge the frozen cardinality of an exact Set cut. -/
+theorem choice_empty_base_charge
+    {Row : Type} [DecidableEq Row] (rows : List Row) (distinct : rows.Nodup) :
+    restoreFreshCount rows [] = rows.length :=
+  restore_fresh_count_disjoint rows [] distinct (by simp)
+
+theorem choice_deferred_membership_exact {Row : Type} (rows : List Row) (row : Row) :
+    row ∈ rows.reverse ↔ row ∈ rows := List.mem_reverse
+
+/-- The standard hash normalization keeps the last equal occurrence. -/
+def lastChoiceValues {Value : Type} [DecidableEq Value] : List Value → List Value
+  | [] => []
+  | value :: tail =>
+    if value ∈ tail then lastChoiceValues tail else value :: lastChoiceValues tail
+
+theorem choice_single_value_already_distinct {Value : Type} [DecidableEq Value]
+    (value : Value) : lastChoiceValues [value] = [value] := by
+  simp [lastChoiceValues]
+
+theorem choice_single_value_intersection {Value : Type} [DecidableEq Value]
+    (value : Value) (allowed : List Value) :
+    [value].filter (fun candidate => decide (candidate ∈ allowed)) =
+      (if value ∈ allowed then [value] else []) := by
+  by_cases allowedValue : value ∈ allowed <;> simp [allowedValue]
+
+/-- The runtime inserts assignments in ascending attribute order. Existing
+elements are preserved, so a digest can be updated from just the new pair. -/
+def choiceStateInsert {Binding : Type} (key : Binding → Nat)
+    (binding : Binding) : List Binding → List Binding
+  | [] => [binding]
+  | head :: tail =>
+      if key binding < key head then binding :: head :: tail
+      else head :: choiceStateInsert key binding tail
+
+def choiceStateDigest {Binding : Type} (mix : Binding → Nat) (state : List Binding) : Nat :=
+  state.foldr (fun binding suffix => mix binding ^^^ suffix) 0
+
+theorem choice_state_digest_insert {Binding : Type} (key mix : Binding → Nat)
+    (binding : Binding) (state : List Binding) :
+    choiceStateDigest mix (choiceStateInsert key binding state) =
+      choiceStateDigest mix state ^^^ mix binding := by
+  induction state with
+  | nil => simp [choiceStateInsert, choiceStateDigest]
+  | cons head tail ih =>
+    by_cases earlier : key binding < key head
+    · simp [choiceStateInsert, earlier, choiceStateDigest]
+      exact Nat.xor_comm _ _
+    · simp only [choiceStateInsert, earlier, ite_false, choiceStateDigest, List.foldr_cons] at ih ⊢
+      rw [ih, Nat.xor_assoc]
+
+/-- The digest selects a bucket. It has no authority to decide state identity. -/
+theorem choice_state_key_exact {Binding : Type} (mix : Binding → Nat)
+    (left right : List Binding) :
+    (choiceStateDigest mix left, left) = (choiceStateDigest mix right, right) ↔ left = right := by
+  constructor
+  · exact fun equalKey => congrArg Prod.snd equalKey
+  · rintro rfl
+    rfl
+
+end Ascent.FiniteChoice

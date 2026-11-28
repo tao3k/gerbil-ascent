@@ -6,6 +6,10 @@
 #+DATE: 2026-10-01
 #+FILETAGS: :scheme-dsl:qualification:roadmap:
 
+The [[file:library-boundary.org][library boundary]] lists current public entry
+points and an Agentic AI Lab integration example. The downstream acceptance
+records below retain the package names and revisions used in each experiment.
+
 * Delivery boundary
 
 The public language is the =relational-program= and

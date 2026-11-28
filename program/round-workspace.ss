@@ -6,12 +6,13 @@
 ;;; touched destinations. Slot marks deduplicate an ordered write list without
 ;;; a second hash owner. No row spine or callback lives here.
 (import (only-in :std/iter for for/fold in-range)
+        (only-in :gerbil-ascent/core/relation-view gerbil-ascent-row-count)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?)
         (only-in :gerbil-ascent/table/storage gerbil-ascent-canonical-set-storage-provider?
                  gerbil-ascent-canonical-view-storage-provider? gerbil-ascent-storage-admit-state!)
         (only-in :std/list/list-builder with-list-builder))
 (export make-round-layout round-layout-source! make-round-work
-        round-work-write! round-work-reset! round-work-commit-indices
+        round-work-write! round-work-reset! round-reset-deltas! round-work-commit-indices
         round-work-complete! round-work-admit-states!
         round-layout-view-staging? round-layout-lattice-staging?)
 
@@ -93,6 +94,25 @@
       (for-each (lambda (index)
                   (when (> (vector-ref deltas index) 0) (hash-put! layout.frontier index #t)))
                 selected))))
+
+;;; Reset the borrowed engine buffers for a fresh stratum. The workspace
+;;; selects sparse indices when available; other engines retain the full walk.
+;; : (-> (Maybe RoundWork) Natural Boolean Strata RowsVector Sizes RowsVector Sizes Versions Void)
+(def (round-reset-deltas! work stratum seed? strata all sizes deltas delta-sizes delta-versions)
+  (def (reset! index)
+    (let (in-stratum? (= (vector-ref strata index) stratum))
+      (vector-set! deltas index
+        (cond ((not in-stratum?) []) (seed? (vector-ref all index))
+              (else (vector-ref deltas index))))
+      (vector-set! delta-sizes index
+        (cond ((not work) (gerbil-ascent-row-count (vector-ref deltas index)))
+              ((not in-stratum?) 0)
+              (seed? (vector-ref sizes index))
+              (else (vector-ref delta-sizes index))))
+      (vector-set! delta-versions index (+ 1 (vector-ref delta-versions index)))))
+  (if work
+    (round-work-reset! work stratum seed? sizes delta-sizes reset!)
+    (for (index (in-range (vector-length deltas))) (reset! index))))
 
 ;; Ascending declaration order preserves commit/index publication order.
 ;; The old frontier is included even when no new candidate replaces its delta.

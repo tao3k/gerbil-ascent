@@ -1,0 +1,164 @@
+#+TITLE: Paged delivery tail and frozen-reader control
+
+* Per-request evidence
+
+At =78bcf2d4=, run the original 128- and 512-wide ten-million-row
+pagination fixtures with their independent, per-field verifier. Each
+arm covered shards 34, 0, 17 and 39, with 25 requests per shard.
+The Gerbil and Gambit build, 2 GiB heap, single VM processor, 8192-row
+page size, and 90-second watchdog match the previous investigation.
+The original benchmark and the traced program used separate processes.
+The collector was allowed to run naturally.
+
+Clock replacement, publication, cursor opening, the Actor send and
+resume intervals, staging, copy and verification inside the same
+request. A second diagnostic adds direct stamps for owner admission,
+the gap between writing scratch and copying to the destination, and
+the final cursor update. =measured_page_partition= establishes that
+these adjacent clock intervals cover the pull. A GC interval already
+inside one of them adds no second charge. Trace output and the modified
+measurement modules remain in the cache.
+
+| Width | Stock complete P95 (ms) | Traced complete P95 (ms) | Stock maximum (ms) | Traced maximum (ms) |
+|-------+-------------------------+--------------------------+--------------------+---------------------|
+| 128 | 69.040 | 81.214 | 95.226 | 99.479 |
+| 512 | 59.118 | 68.251 | 92.385 | 80.142 |
+
+The 128-wide 95th-ranked traced request had 80.38 ms CPU time and
+35.47 ms collector wall. The send and receive intervals together
+took 0.78 ms. A distinct request took 95.53 ms with 52.42 ms CPU
+and no collection. Its staging took 27.53 ms, the independent oracle
+49.21 ms and the two Actor handoffs 2.83 ms. The process-time gap
+establishes elapsed time outside execution on the CPU for that
+request. It does not distinguish scheduler preemption from waits.
+
+In the more detailed shard 34 run, 128-wide request 3 took 86.028 ms.
+The stage-end to copy-start intervals totalled 39.039 ms, with a
+38.954 ms collection reported while that interval was active.
+Staging itself totalled 13.714 ms and physical copying 2.838 ms.
+The 512-wide traced request 14 often collected near a page handoff.
+A separate allocation probe moved the observed collection point.
+Hook labels indicate where an instrumented execution observed a
+collection and do not identify the triggering object.
+
+The dedicated allocation probe uses Gambit's
+=##get-bytes-allocated!= with a caller-owned statistics vector.
+A no-collection 128-wide request showed about 4.53 million accounting
+units over the send-to-dispatch intervals and 0.11 million over
+numeric staging. The compiler's stack frames and the probe's work
+also affect that counter. The Gambit implementation counts occupied
+stack, heap and still-object space. Negative subinterval deltas and
+cross-collection deltas supply no object-size estimates.
+
+Correlated pauses can inflate wall tails in multiple stages of one
+request. This is a reason to compare the same request's wall and CPU
+clocks. See [[https://research.google/pubs/the-tail-at-scale/][The Tail at Scale]] for the shared-resource phenomenon.
+The historical 113.09 ms shard P95 remains on record. The original
+sample has no phase timestamps.
+
+* Frozen-reader control and production conditions
+
+The control captures =with-ordered-binary-pages= on the exact completed
+Result. It uses the same stage closure, bounded scratch, destination
+copy, independent oracle and two checkpoints. It runs them on the
+native caller's thread. Both arms use the same benchmark module.
+A single test caller owns the cursor for the whole read and does not
+publish a new cut during delivery. The control supplies no evidence
+about shared cursor ownership or staleness during a concurrent cut
+change. It leaves the public Session implementation unchanged.
+
+A production handoff-free path needs an owner-authorized Result
+identity and cursor position. Staging can read immutable data. Final
+validation and the destination write must linearize together with
+cursor advancement. The production path must check Session liveness
+and refuse a changed cut, changed cursor or final cancellation before
+touching the destination. =commitPreparedPage= relates the active
+Session portion of that boundary to the existing owner
+commit. Its refusal lemma preserves both buffer and cursor under
+each of those conditions. It does not establish the lock protocol
+or Scheme implementation. Neither direct writes into the caller's
+buffer before the final check nor a benchmark-only cursor is eligible
+as a replacement for the current Session semantics.
+
+Use [[https://www.kernel.org/doc/html/latest/locking/seqlock.html][sequence counters]]
+as a reference for validation of the observed version. In ASCENT the
+immutable Result remains strongly referenced during staging. The
+destination write is an external effect, so optimistic preparation
+still requires one serialized validation and commit.
+
+* Matched result and decision
+
+Each width and arm verified 100 requests, covering the same four
+shards and retaining all measured delays. The frozen reader retains
+the same 128 KiB scratch plus the caller's 128 KiB buffer.
+
+| Width | Allocation counter median | CPU (s) | Collections and GC wall (s) | Complete P95 (ms) | Complete maximum (ms) |
+|-------+---------------------------+---------+-----------------------------+--------------------+------------------------|
+| 128 | 7209072 -> 311072 | 7.244 -> 7.017 | 4 / 0.356 -> 0 / 0 | 223.057 -> 206.980 | 345.163 -> 407.216 |
+| 512 | 7280304 -> 302272 | 6.816 -> 6.012 | 4 / 0.476 -> 4 / 0.291 | 288.482 -> 170.054 | 572.213 -> 304.320 |
+
+Allocation medians use the monotone, same-epoch request observations.
+Removing the mailbox and request wrappers reduced these counter deltas
+by 95.7 and 95.8 percent. The result identifies the protocol envelope
+as a practical allocation-reduction target; the experiment does not
+isolate a single Gambit or Gerbil primitive. The calculation neither
+changes the copy count nor represents a reduction in the returned
+fields.
+
+The full paired distributions exceed 100 ms. In the 128-wide arm the
+maximum rose even with zero collections, and first-page P95 rose
+from 20.773 to 22.001 ms. The small wall differences in the faster
+shards are recorded alongside the slower shards. The complete wall
+tail and the production interleaving proof remain open. No inference
+about the source of the slowest wall interval is made from a shard
+aggregate. The control remains an experiment in the cache. The
+complete mutable-list failure at 105.93 ms and original 100 ms /
+90-second limits remain in force.
+
+* Native CPU time inside one request
+
+This follow-up uses the kept Actor implementation and only the 128-wide
+fixture. Match shards 17 and 34 with 25 requests per shard and arm.
+Both arms use the same wall instrumentation and independent verifier.
+One arm also records Darwin native-thread CPU time at the existing
+stage, copy and oracle boundaries. Each accepted interval has the same
+native thread at both ends. The source of the clock is the pinned
+host's =CLOCK_THREAD_CPUTIME_ID=. Process CPU and natural collection
+counts remain separate. A calibration sleep reported 25.058 ms wall
+and 0.052 ms CPU. Native instrumentation stays in the cache.
+
+All four processes passed. Complete P95 was 63.814 ms in the
+wall-only arm and 88.266 ms with the CPU probe. They measure
+different requests. The difference includes probe effects and process
+scheduling; it is not an estimate of production overhead or a change
+to the gate.
+
+Shard 17, request 21 took 94.781625 ms wall and 60.931 ms process CPU,
+with zero collections. Direct interval measurements were:
+
+| Phase | Wall (ms) | Native-thread CPU (ms) | Difference (ms) |
+|-------+-----------+------------------------+-----------------|
+| Stage | 28.242 | 19.626 | 8.616 |
+| Physical copy | 8.852 | 3.809 | 5.043 |
+| Independent verifier | 44.882 | 29.971 | 14.912 |
+
+The three intervals account for 28.570531 ms not charged to their
+native threads. Their CPU readings include any work scheduled on those
+threads within the interval. The clock pair does not distinguish
+operating-system preemption from blocking. Small CPU-versus-wall
+read-order differences occur on otherwise quiet samples.
+
+Both Actor handoffs together took 3.939833 ms in this request. Even
+charging zero for those handoffs and the entire measured copy interval
+leaves 81.990292 ms if all other intervals keep their observed
+durations. The guarded Lean replay checks both sums from the same
+sample. This fixed-schedule calculation neither predicts future
+scheduling nor attributes the older 113 ms receipt. A separate
+88.266 ms request in the CPU arm had 39.196 ms of collection wall,
+with the collection observed around a handoff.
+
+The measured no-collection request gives limited leverage to further
+copy tuning. It also leaves room for actual staging work, which used
+19.626 ms native-thread CPU in that request versus a 13.793 ms warm
+no-collection median. The production path and the original
+100 ms / 90-second acceptance remain unchanged.

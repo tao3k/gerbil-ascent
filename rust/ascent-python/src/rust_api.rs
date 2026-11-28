@@ -104,7 +104,7 @@ impl Owner {
             self.0.clone(),
             source,
             constructor,
-            limits.map(|p| p.0).unwrap_or_default(),
+            limits.map_or_else(Default::default, |p| p.0),
             diagnostics,
         )
     }
@@ -125,7 +125,7 @@ impl Owner {
         crate::core_abi::CoreSession::open_graph(
             self.0.clone(),
             graph,
-            limits.map(|p| p.0).unwrap_or_default(),
+            limits.map_or_else(Default::default, |p| p.0),
             diagnostics,
         )
     }
@@ -150,7 +150,7 @@ impl Owner {
             components,
             entry,
             constructor,
-            limits.map(|p| p.0).unwrap_or_default(),
+            limits.map_or_else(Default::default, |p| p.0),
             diagnostics,
         )
     }
@@ -173,7 +173,7 @@ impl Owner {
             self.0.clone(),
             source,
             constructor,
-            limits.map(|p| p.0).unwrap_or_default(),
+            limits.map_or_else(Default::default, |p| p.0),
             diagnostics,
         )
     }
@@ -290,7 +290,7 @@ impl Owner {
                 ),
             ])),
         )?;
-        let limits = limits.map(|p| p.0).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |p| p.0);
         py.detach(|| {
             self.0
                 .open_declaration_sources(&[source], constructor, limits)
@@ -344,7 +344,7 @@ impl Owner {
             self.0.request_limit(),
             &OwnedValue::List(texts.iter().cloned().map(OwnedValue::Text).collect()),
         )?;
-        let limits = limits.map(|p| p.0).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |p| p.0);
         py.detach(|| {
             self.0.open_sources(
                 &texts.iter().map(String::as_str).collect::<Vec<_>>(),
@@ -369,7 +369,7 @@ impl Owner {
             self.0.request_limit(),
             &OwnedValue::List(texts.iter().cloned().map(OwnedValue::Text).collect()),
         )?;
-        let limits = limits.map(|p| p.0).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |p| p.0);
         py.detach(|| {
             self.0.open_rule_sources(
                 &texts.iter().map(String::as_str).collect::<Vec<_>>(),
@@ -419,7 +419,7 @@ impl Owner {
             )?;
         }
         let catalog = gerbil_ascent::Catalog::read(&packets::read(program)?).map_err(error)?;
-        let limits = limits.map(|p| p.0).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |p| p.0);
         py.detach(|| {
             self.0
                 .open_catalog(catalog.program, BTreeMap::new(), catalog.queries, limits)
@@ -547,7 +547,7 @@ impl RuleSession {
         cancellation: Option<PyRef<'_, Control>>,
     ) -> PyResult<Py<PyAny>> {
         let deadline = Instant::now() + Duration::from_nanos(timeout_nanoseconds);
-        let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let cancellation = cancellation.map_or_else(Default::default, |c| c.0.clone());
         let declarations: BTreeMap<_, _> = self
             .declarations
             .iter()
@@ -606,7 +606,7 @@ impl RuleSession {
             return Err(error(gerbil_ascent::Error::Timeout));
         }
         let deadline = Instant::now() + Duration::from_nanos(timeout_nanoseconds);
-        let cancellation = cancellation.map(|c| c.0.clone()).unwrap_or_default();
+        let cancellation = cancellation.map_or_else(Default::default, |c| c.0.clone());
         let queries = queries.unwrap_or_else(|| self.queries.clone());
         let mut limits = SourceSession::default_limits();
         limits.timeout = Duration::from_nanos(timeout_nanoseconds);
@@ -904,8 +904,8 @@ fn project(py: Python<'_>, value: &Value) -> PyResult<Py<PyAny>> {
     };
     value.to_python(py)
 }
-#[pymodule]
-fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
+#[pymodule(name = "_core")]
+fn core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     crate::core_abi::install(module)?;
     super::build_inventory::install(module)?;
     exports::install(module)?;

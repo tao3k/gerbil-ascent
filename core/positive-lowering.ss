@@ -11,7 +11,7 @@
                  gerbil-ascent-compile-frame-sequence))
 (export gerbil-ascent-positive-plan gerbil-ascent-compile-positive-plan
         gerbil-ascent-positive-plan-with-outputs gerbil-ascent-pure-positive-plan?
-        match-row! match-parts! term-value)
+        match-row! match-vector-row! vector-match-width match-parts! term-value)
 
 (def +positive-plans+
   (make-hash-table-eq weak-keys: #t lock: (make-mutex 'ascent-positive-plans)))
@@ -284,6 +284,22 @@
       ((literal) (equal? (cdr selected) stored))
       ((expression) (equal? ((cdr selected) bindings) stored))
       ((wildcard) #t))))
+;;; Packet admission already checked the complete width. The suffix cannot
+;;; inspect a value or bind a slot, so compute its boundary once per packet.
+(def (vector-match-width terms)
+  (let next ((rest terms) (column 0) (width 0))
+    (if (null? rest)
+      width
+      (let (after (fx+ column 1))
+        (next (cdr rest) after (if (eq? (caar rest) 'wildcard) width after))))))
+
+;; : (-> Terms FieldVector Frame Nat Boolean)
+(def (match-vector-row! terms fields frame width)
+  (let next ((remaining terms) (column 0))
+    (or (fx= column width)
+        (and (match-value! (car remaining) (vector-ref fields column) frame)
+             (next (cdr remaining) (fx+ column 1))))))
+
 ;; : (-> Terms Prefix Value Value Frame Boolean)
 (def (match-parts! terms prefix left right frame)
   (if (pair? prefix)

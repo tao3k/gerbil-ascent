@@ -95,7 +95,8 @@
       "t/performance/operator-scope-benchmark.ss" '("scaled-diamond" "small")
       #t '(scenario library receipt) #f ".sexp")
     (make-study 'provenance-maintenance
-      '("candidate/provenance-maintenance" "candidate/provenance-graph" "t/performance/provenance-maintenance/reference" "t/performance/provenance-maintenance-benchmark")
+      '("candidate/provenance-maintenance" "candidate/provenance-graph" "t/performance/provenance-maintenance/reference"
+        "t/performance/provenance-maintenance/work-accounting" "t/performance/provenance-maintenance-benchmark")
       "t/performance/provenance-maintenance-benchmark.ss" '("wide" "duplicates" "read" "small")
       #t '(scenario library receipt) #f ".sexp")
     (make-study 'component-workspace

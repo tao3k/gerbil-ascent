@@ -55,16 +55,16 @@
 ;;; Caller storage checks and staged admission precede this boundary.
 ;;; Revoke the metadata cache before fallible publication and adopt it only
 ;;; after Result construction succeeds. Clean calls retain the existing Result.
-;; : (forall (r p) (-> (ExecutionPublication r) Names Arities (RowsVector r) Sizes Deadline Observation NameResolver Boolean Boolean (Values p OwnedPublication)))
-;; : (-> ExecutionPublication Names Arities RowsVector Sizes Deadline Observation NameResolver Boolean Boolean (Values EvaluationResult OwnedPublication))
+;; : (forall (r p) (-> (ExecutionPublication r) Names Arities (RowsVector r) Sizes Deadline Observation NameResolver Boolean Boolean (Or Boolean (Vector Boolean)) (Values p OwnedPublication)))
+;; : (-> ExecutionPublication Names Arities RowsVector Sizes Deadline Observation NameResolver Boolean Boolean ExportMask Boolean (Values EvaluationResult OwnedPublication))
 (def (gerbil-ascent-publish-execution! (state :- publication-state)
                                      names arity all all-size deadline observation
-                                     position-of complete? session?)
+                                     position-of complete? session? (detach session?) (defer? #f))
   (let (previous (and session? state.cut))
     (set! state.cut #f)
     (using (cut (prepare-execution-cut previous names all all-size deadline) :- execution-cut)
       (let-values (((result publication)
                     (gerbil-ascent-make-owned-result names arity cut.snapshots cut.sizes
-                      (vector->list cut.representations) observation position-of complete? session?)))
+                      (vector->list cut.representations) observation position-of complete? session? detach defer?)))
         (when session? (set! state.cut cut))
         (values result publication)))))

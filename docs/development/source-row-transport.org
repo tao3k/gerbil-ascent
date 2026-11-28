@@ -1,0 +1,600 @@
+#+title: Source result transport independently of evaluator selection
+
+* Observed production boundary
+
+The typed =define-program= closure fixture in
+=rust/ascent-scheme/benches/process_throughput.rs= selects the ordinary
+Session. A native production-interface probe observed only =primordial=
+execution checkpoints and an ordinary list reply despite requesting packed
+rows. It must not be reported as a resident Actor qualification.
+
+The baseline =source-run= implementation in =interface/engine-api.ss= permits
+integer packets only for a finished Actor result. The Rust decoder in
+=rust/ascent-scheme/src/values.rs= already accepts the same integer packet
+independently of the evaluator. Ordinary list decoding promotes and snapshots
+each row. The existing numeric buffer path copies one signed integer buffer.
+The 1,000-request closure baseline retained all tuple comparisons and recorded
+substantial time inside decoding and release. Raw traces remain in =.cache/=.
+
+* Selection rule and unchanged authority
+
+Keep the existing Actor-ready expression and its getter evaluation order.
+Select the existing integer encoder when that expression is true, or when
+the caller explicitly requests packets for an ordinary Session. Keep the
+existing encoder's signed-64, rectangular, nonempty shape checks and ordinary
+fallback. Do not replace the evaluator or classify host callbacks as pure.
+
+Representation selection does not grant completion. In particular, an ordinary
+partial result may use a lossless integer representation while its complete
+flag, generation, retained result, cancellation outcome and proof scope remain
+unchanged. The current Actor partial-result behavior remains unchanged.
+The existing final publication checkpoint still runs after serialization.
+
+* Mathematical and source obligations
+
+=IntegerRowTransfer= in =WeightedExportCapacity.lean= already proves that
+unpacking flattened rectangular rows preserves all rows and their order.
+Extend that model with the three-Boolean selection decision. Relate the old
+ready flag to its original requested/Actor/finished expression. Prove that
+the Actor decision is unchanged, no non-requested packet is introduced, and
+selection preserves arbitrary receipt metadata as well as decoded rows.
+
+The existing native-call model charges =rows * (6 + 2 * columns)= for the
+known-kind ordinary row path and three calls for the packed numeric vector.
+This excludes Scheme packing, Rust allocations, IPC, GC and scheduler time.
+It is not a wall-time or cumulative-byte theorem. Gambit's backward allocation
+readings remain unavailable evidence, not zero allocation.
+
+Bind the selection source and its Quint counterpart to the Lean renderer.
+Quint must reject changes that force completion, erase cancellation or resource
+failure, lose provenance metadata, reorder rows, or bypass transport opt-in.
+These checks do not prove the compiler, numeric ABI or mutable runtime.
+
+* Native acceptance
+
+Compare ordinary and packed replies through =gerbil test= for the real typed
+DSL, signed endpoints, bignum fallback, empty results, partial completion,
+callback observations, stale proof scope and source replacement. Preserve the
+existing Actor, cancellation, resource and provenance suites. Run the Rust
+decoder and production control tests with the same data.
+
+Rebuild the production worker through the existing package/archive interface.
+Repeat the same 1,000 verified closure requests and report client queueing,
+encoding, call, decoding/release, CPU, natural GC and resource costs separately.
+Retain the fixed-work workload and its original limits. A faster ordinary
+Session transport does not establish resident Actor integration or scheduler
+fairness. The latter remains a separate production-path obligation.
+
+** Selected compiled carriers
+
+The local prefix contained an older =engine-api~0.o2= that Gerbil's native
+loader selected ahead of the newly compiled =.o1=. Declared-target clean did
+not enumerate these historical dynamic carriers. Preserve that generated
+namespace in =.cache/= and rebuild its outputs while reusing the upstream
+dependencies. Source tests that loaded a shadowed object do not qualify the
+current implementation. Verify the actual selected carrier after rebuilding;
+do not add a second loader or infer source identity from build success alone.
+
+* Performance admission and remaining costs
+
+The fixed recursive workload has 256 independent chains of width 16: 3,840
+input edges and 30,720 output rows per changed-source request. Require at least
+1,000 independently checked requests and preserve the existing process limit.
+Record preparation, client queueing, encoding, native execution, decoding,
+release, CPU and natural GC separately. Keep raw receipts in =.cache/= or CI
+artifacts; historical timings are not a current performance admission.
+
+=RuleSession.run= and =admit_replacement= in
+=rust/ascent-scheme/src/api/session.rs= each obtain a finite projection and
+perform independent Rust work-budget admission when finite ceilings are
+requested. Neither execution may be skipped under a transport optimization.
+Source replacement, projection decoding and the serialized owner queue remain
+separate costs. Allocation readings that move backwards remain failed evidence;
+they must not be clamped or described as available cumulative allocation.
+
+* Projected source-row transport
+
+
+The production trace still decodes ordinary nested source rows for
+=source-projection= twice per changed-source request: =admit_replacement= and
+=RuleSession.run= each perform a finite budget check. Their independent Rust
+execution remains required. Optimizing their transport must not cache a public
+object's validation or skip either resource decision.
+
+The current =ascent-engine-program-wire= in =interface/wire-value.ss= already
+represents integer cells as exact integers. Its relation rows can therefore
+reuse the existing signed-integer packet after the complete wire catalogue
+has been captured. Apply this only to fresh private catalogue dictionaries;
+keep every original descriptor, getter, cell conversion and complex-pool visit
+in its original order. Mixed cells, empty rows and integers outside signed 64
+bits retain the ordinary representation.
+
+The Rust =ReplyShape= route table now admits integer packets below either
+result relations or the explicit catalogue path
+=source-projection / program / relations / each relation / rows=. It does not
+recognize numeric vectors throughout arbitrary values. The application
+negotiates the existing transport for =source-projection= as well as
+=source-run=. Ordinary Scheme callers retain their original catalogue shape.
+
+=ProjectionRowTransfer.lean= proves the complete ordered relation-list
+round trip, duplicate preservation, arbitrary metadata preservation, opt-in
+and unsupported-input identity. The packet model includes a target allocation
+capacity and signed header bounds. The source-row codec remains the existing
+signed-64 encoder. A separate theorem counts fewer native row calls; it does
+not predict wall time, cumulative bytes or GC behavior.
+
+The same typed route table emits Rust dispatch and Quint route definitions.
+The private Scheme transformer is emitted alongside them and checked by the
+existing formal source comparisons. This is not a proof of the mutable hash
+implementation, native numeric ABI or whole compiler. Fresh private catalogue
+ownership and the native scalar codec remain explicit boundaries.
+
+Native semantic tests compare the complete ordinary and packed catalogues,
+including signed endpoints, duplicates, empty relations, mixed and complex
+values, source generations and rejected updates. They verify that encoding
+does not re-enter captured caller getters or mutate a retained catalogue.
+Rust compares both rooted ABI representations under the same live execution
+control and rejects packets appearing in metadata. Existing cancellation,
+resource-limit and stale-provenance controls remain required.
+
+Repeat the complete production workload with the original controls. A partial
+timed-out trace is diagnostic evidence, never performance acceptance.
+
+* Ordered binary views at the reply boundary
+
+The affine and packed integer source views own two field readers and the
+published row count. Their full visitor advances by increasing ordinal.
+Their list exporter advances backwards and prepends, yielding the same
+order. Bind the optimization to that exact exporter and its field visitor.
+Replacing an exporter removes this permission unless the exporter is the
+same procedure. General view selection and list consumers keep their
+existing paths.
+
+An eligible complete Result hands the existing integer packet writer the
+captured count and two positional fields per row. Validate a positive
+count and the fixnum allocation extent before constructing the signed
+64-bit vector. Bound every write by the declared count and require exact
+delivery. Check the existing cancellation and deadline authority in the
+writer. Each packet belongs to its invocation. Publication still happens
+at the existing reply acceptance point, after every requested relation
+has produced its complete payload.
+
+The Lean correspondence is in =MillionQueryWorkload.lean=.
+=binary_reply_matches_complete_export= states the order and decoding
+equivalence. =binary_reply_writes_fit= and =binary_reply_refuses_partial=
+cover the bounded writer and canceled or short reply.
+=binary_reply_keeps_capture= states the result-version frame. The proof
+models the ordered field sequence and its allocation bounds. Native tests
+check selection of the exact exporter, interruption, and old reply
+isolation at the Scheme boundary.
+
+The private writer polls the current execution authority before allocating,
+at 1,024-row intervals when an authority is present, and after traversal.
+These are zero-work checks on already admitted rows. The Session's
+work and fact budgets retain their original meaning. The engine compares
+the generation captured at request entry with the generation at reply
+acceptance. A reentrant replacement during a checkpoint can therefore
+advance the Session without relabeling the in-progress packet.
+
+The qualification Case drives =source-run= through a committed identity
+projection with descending origins. It compares complete list order,
+rejects a replacement beyond the existing fact budget, interrupts the
+writer after its first block, and changes the source during another
+packet. An already returned packet keeps its original fields. Separate
+controls replace the view's list exporter and inject count underflow and
+overflow. The reordered view uses the existing list writer.
+
+The million-row delivery Cases reuse the two alternating inputs and the
+existing Actor publication. They live in a separate test module so the
+original list gate keeps its imports and suite unchanged. Both use the
+same production packet encoder.
+The list arm declines the capability, and the ordered arm gives the list
+exporter a refusal stub. Both check the packet's count and width and
+decode every signed cell into the same ordered Scheme consumer. The
+request timer includes replacement, publication, packing, decoding and
+delivery. Rust's VM transfer and PyO3 are outside this native timing.
+The ordered path applies to completed views carrying the certificate.
+Results produced by other evaluators, including timed results without
+the certificate, retain the existing packet writer.
+
+The frozen Gerbil =1cfb032= and Gambit =ea114fc= runs used one VM
+processor, the 2 GiB heap cap and the 90-second process limit. The first
+1,000-request trials stopped before completion. The last recorded
+markers were 400 for the list arm and 900 for the ordered arm. A
+subsequent single 256-request list window was also stopped. The final
+comparison uses separate 128-request windows in the order list, view,
+view, list. Each request still consumes one million rows, and each arm
+consumes 256 million verified rows in total. The original 1,000-request
+mutable-list acceptance test is independent of this comparison.
+
+| Measured phase | List staging | Direct ordered view |
+|----------------+--------------+---------------------|
+| Complete request P95 | 439.13-465.95 ms | 86.71-98.39 ms |
+| Packing P95 | 415.87-437.74 ms | 49.42-59.95 ms |
+| Decode and delivery P95 | 25.44-29.41 ms | 42.26-43.58 ms |
+| Maximum complete request | 535.42 ms | 278.03 ms |
+| Verified rows per second | 3.51-3.55 million | 16.79-17.72 million |
+| Collections per 128 requests | 44 | 3 |
+
+All four windows exited normally after independently checking every row.
+Subphase percentiles are measured from their own samples. The complete
+request percentile includes the source update and publication. The
+ordered writer avoids the temporary detached list, and its maximum still
+reflects long requests in the observed windows. The frozen mutable-list
+gate remains pending the next Gambit release, per the current test scope.
+
+The interface, condensed Session and positive provenance suites passed 28
+native cases. Lean Guard built all 196 jobs, and its rendered row-packet
+selection exactly matched the generated Scheme region. Raw receipts are
+under =.cache/ascent/ordered-packet/=.
+
+#+begin_src sh
+gerbil test t/qualification/ascent-engine-interface-test.ss
+gerbil -:max-heap=2G test -r '^actor-million-integer-list-test$' benchmarks/actor-integer-reply-test.ss
+gerbil -:max-heap=2G test -r '^actor-million-integer-view-test$' benchmarks/actor-integer-reply-test.ss
+#+end_src
+
+* Actor Session delivery into a caller buffer
+
+=ascent-engine-session-copy-integer-relation!= captures one completed
+publication through the Actor Session's existing =.last-completed=
+request. Pending source changes become visible only after a new
+publication. Delivery uses the captured Result for its entire lifetime,
+even when a newer Result is published before the copy.
+
+The caller supplies an exclusively owned mutable =s64vector= and an
+optional starting cell. The function returns a row count and copies the
+ordered binary payload into the indicated slice. The count and width
+header stays in the private integer packet. A missing publication or a
+relation without the existing ordered binary capability returns =#f=.
+Invalid offsets and insufficient buffer capacity raise before staging the
+packet. Cells outside the requested slice retain their original values.
+
+The integer writer keeps the existing extent, type and cancellation
+checks, including its final check after staging. A last authority check
+precedes =s64vector-copy!=. Before that point, refusal leaves the entire
+destination unchanged. The single copy has no callback or checkpoint,
+and the Session retains no reference to its destination. Source budgets
+and detached mutable lists still use their existing paths.
+
+A packed source view can also copy its existing private lane directly.
+The ordered-view certificate binds the copier to the same exporter and
+row count as the field visitor. The copier closes over the admitted
+immutable cells and never exposes their vector. Controlled calls keep
+the staged protocol and its checkpoints. Without an execution authority
+the certified lane needs only the capacity check and one native copy.
+Affine views continue to produce their fields through the packet writer.
+
+=MillionQueryWorkload.copyBinaryReply= specifies the snapshot, packet and
+destination boundaries. The success theorem relates the slice to the
+entire ordered tuple sequence and preserves cells on both sides. The
+refusal theorems cover missing capture, cancellation and insufficient
+capacity. The model assumes the existing packet encoder's completed
+capture and the native vector copy's slice semantics. Scheme tests
+exercise the live owner request, publication changes and cancellation
+checkpoints at those boundaries.
+=copy_packed_lane_matches_staged= establishes that the frozen lane has the
+same destination slice effect as the header-stripped packet. The native
+packed case checks order and isolation after the caller edits its buffer.
+
+The caller-buffer benchmark uses the same two source cuts, 128 requests
+with one million rows each, a 2 GiB heap and a 90-second process limit.
+The request timer includes source replacement, publication, snapshot
+capture, packet staging, the copy and an independent comparison of
+every delivered field. The scalar benchmark keeps its original
+per-field decode. The detached-list acceptance suite remains separate.
+Mean allocation uses samples with a nonnegative allocation counter
+delta and no collection. The full-window signed delta is diagnostic.
+
+#+begin_src sh
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-integer-buffer-test$' benchmarks/actor-integer-reply-test.ss
+timeout --signal=KILL 90s gerbil -:max-heap=2G,debug=q test -v 5 \
+  -r '^actor-million-integer-packed-buffer-test$' benchmarks/actor-integer-reply-test.ss
+#+end_src
+
+* Write compact results straight into the caller buffer
+
+The affine view can emit each admitted field from its first value and
+stride. =affine_copy_row_step= relates the incremental cursor to the
+view's ordinal arithmetic. The destination is checked before any
+write, and =affine_copy_cell_bounds= and
+=affine_copy_ordinals_disjoint= cover its interleaved cells. The functional
+result uses the same ordered traversal for both field visits and direct
+buffer writes. It takes the depths in the reverse of list emission and
+traverses each run in the reverse direction. Other functional
+views keep their previous capability.
+
+Both copiers read only the captured publication, write into the
+caller's storage, and keep no intermediate relation or packet. With
+execution control installed, the existing checked packet path stages
+the complete result and checkpoints before committing the destination.
+This preserves failure atomicity when a checkpoint raises or reenters
+the Session.
+
+The two caller-buffer Suites in =actor-integer-reply-test.ss= each use the
+same 1,000 alternating cuts as the detached-list Suites. The timed
+request includes source replacement, publication, buffer delivery and
+an independent check of every cell for membership, uniqueness and
+complete cardinality. The caller-buffer bound is 50 ms P95. The
+detached-list Suites retain their original 100 ms bound, output
+ownership and allocation path. Both use the 90-second watchdog.
+
+* Complete delivery at ten million rows
+:PROPERTIES:
+:CUSTOM_ID: complete-delivery-scale
+:END:
+
+=ten-million-query= in =benchmarks/actor-million-test.ss= chooses
+=1240 x 128= and =77 x 512= disjoint chains. Both cuts have a strictly
+increasing successor inside each chain. For every origin, all later
+vertices in its chain and only those vertices are reachable. The
+independent oracle checks range, forward order and chain membership,
+then marks one distinct slot per tuple and requires exact cardinality
+(=complete_oracle= and =recursive_gap_slot_exact=). It checks the
+actual detached list or caller vector supplied by the production
+entry point. The oracle builds no expected ASCENT result.
+
+=ten_million_delivery_profiles= fixes both source and output extents.
+This comparison changes input extent and maximum ordinal depth while
+holding the delivered row count within 0.06 percent. Read replacement
+and publication separately from delivery. Index capture and linking
+visit the input edges. The admitted ordinal walk visits each group's
+window at each live depth and emits all result pairs. The two
+fixtures have 157,480 and 39,347 group-depth windows respectively
+for the same roughly ten million outputs. This allows an
+optimization to be evaluated for width and source extent sensitivity
+alongside its per-result-row cost.
+
+Per output, a fresh mutable list owns three pairs per row, whereas
+the caller buffer holds two signed 64-bit cells per row. The modeled
+object words and buffer bytes in =ten_million_delivery_storage_bytes=
+give approximately 726 MB of list objects or 161 MB of buffer
+payload per request. These are layout counts. The heap also holds
+the input cuts, indexes, verifier, and runtime roots, and physically
+allocating a complete result must be verified under the measured
+2 GiB cap. The caller allocates one destination before the timed
+window and reuses it. Every list request obtains a fresh result.
+
+The timed request ID is =25 * shard + local-index=. The Lean bounds,
+coverage and uniqueness lemmas establish the partition of the
+1,000 requests. Using the global index parity keeps the two bands
+balanced even though each independent native process has an odd
+request count. The cold request is independently verified and
+excluded from the merged percentile. A publication-only
+observation and a limited first-origin read belong to the separate
+SCC benchmark.
+
+** Certified affine windows in the direct recursive copy
+
+The ordinal partition already establishes that an edge target is the
+next origin inside its run. The direct copier can test whether each
+run also has a constant positive edge gap, using the retained numeric
+columns. =constant_gap_ordinal_link= relates that evidence to the
+stride of both columns. A window loads its original first pair,
+then advances both fields in the original traversal direction. The
+iterator shares its window boundaries and order with the ordinary
+field traversal. =affine_copy_cell_bounds= applies after the copier
+checks the destination extent of each whole window.
+
+The check is local to the direct copy. It retains no mutable state
+on the published Result and adds no work to list export. A mismatch
+selects the generic ordinal copy before writing any destination
+cells. The controlled delivery still uses the existing checked
+packet and publication checkpoint.
+
+=ordinalAffineReadCount= counts the two source reads per admitted
+edge in the check, plus the base field pair and stored stride per
+nonempty window. Select certification only when its bound, using
+the maximum window count, is below the ordinary field-read count.
+=uniform_ten_million_window_reads= evaluates both profiles. This
+models source-column traffic and stride lookups. The copy still
+writes two destination fields per delivered row, and the client
+still verifies every row.
+
+** Ordered independent validation for the two large fixtures
+
+Each expected tuple is identified by its positive gap, its chain
+number and its in-chain origin. =chain_oracle_coordinates_exact=
+characterizes their complete range, and =chain_oracle_fields_unique=
+shows that distinct coordinates give distinct field pairs.
+=chain_oracle_coordinates_nodup= rules out duplicate expected tuples.
+The order of the independent
+enumerator is descending gap, with ascending chains and descending origins
+at odd gaps, and descending chains and ascending origins at even gaps. It computes
+each tuple directly from the fixture geometry and cut offset.
+=ten_million_recursive_oracle_traffic= counts the two inspected
+fields per row in both paths. The ordered pass removes the
+=groups * width * width= bitmap resets and one membership read
+and write per returned row. These are logical memory operations.
+The paired diagnostic measures their actual elapsed cost.
+
+The fast comparison checks the shape of every list row or the
+complete interleaved buffer extent, compares both fields at every
+position, and verifies the final length. An ordering mismatch falls
+back to the previously admitted bitmap checker on the original
+result. This preserves unordered acceptance and rejection of invalid,
+duplicate or incomplete results. The bitmap is allocated only when
+needed. The native receipt counts fallback uses in the timed window.
+
+To measure the original oracle, keep the delivered object fixed and
+alternate the order of a membership-only diagnostic and the complete
+bitmap verifier. Time bitmap clearing separately and read the
+collector's elapsed counter around the full oracle. The difference
+between the two row passes estimates the incremental cost of bitmap
+addressing, duplicate probes and writes under their observed cache
+conditions. Only the pass with all checks supplies a complete oracle
+result. Keep the diagnostic out of the acceptance cohort.
+
+** Million-row tail attribution and ordinal publication
+
+Pair source replacement, run and publication, delivery, and oracle
+verification for each request. Use the process CPU and collector clocks
+inside the same brackets. Wall time minus non-collector CPU and collector
+wall time is an outside-collector residual. It includes preemption and
+waiting beyond the Actor mailbox. The switches between the caller,
+coordinator, and worker on the same VM also consume process CPU.
+
+The earlier 109.818 ms projection receipt records 0.178 s for
+publication and 24.011 s for delivery across 1,000 requests. Its
+whole-window collector wall time was 21.731 s. The earlier 60.512 ms
+recursive-buffer receipt records 6.652 s for publication, 3.616 s
+for delivery, and 12.652 s for verification. Its nine collector
+events all also appear in the publication receipt. Subtracting
+non-collector process CPU and the measured collector wall time
+leaves 8.111 s outside the collector across the request window,
+including 2.219 s in publication. These are sums from the original
+receipts. The original gates do not retain their phase times per
+request, so the diagnostic attributes the tail of its own samples.
+
+In the 1,000-request projection diagnostic, the P95 request spent
+110.737 ms in detached delivery, including 108.171 ms of collector
+wall time. There were 53 requests with at least 100 ms of collector
+CPU in that stage. =RuntimeMeasurement.bounded_phase_misses_p95=
+applies at the measured collection cadence. The source and output
+pair ownership in =million-export-roots.org= applies to this cut.
+The projection diagnostic adds instrumentation and complements the
+existing uninstrumented gate.
+
+In the recursive buffer diagnostic, all nine collections occurred
+inside run and publication. The independently checked buffer path
+already writes affine windows without per-row allocation. The main
+publication opportunity is the temporary functional index.
+The published origin lane uses =label - low= for dense intervals.
+=dense_origin_slot_injective= justifies duplicate detection while
+filling that lane. Sparse intervals admit the same labels through
+the hash map. =dense_origin_lookup_exact= preserves successful and
+missing lookups for successor linking and bound reads.
+
+The existing =ordinal-runs= recognizer checks the actual successor
+lanes and their direction. For each adjacent run whose boundaries
+are certified by that recognizer, the remaining lengths go from its
+width down to one in reachability order. =ordinal_run_triangular=
+connects the sum of those lengths to the exact count used for
+publication. =ordinal_run_budget_prefix= justifies the earliest
+refusal at a run boundary. The generic distance memo covers the
+other successor graphs. The order and affine window copier both
+consume the same certified boundaries.
+
+** Pair terminal Actor events with delivery
+
+=actor_job_trace_exact= partitions an individual resident =run= in
+=program/actor-session.ss=. Sample before the caller sends its request,
+at owner dispatch, before the resident job send, before worker evaluation,
+after worker evaluation, at owner dispatch of =resident-terminal=, before
+the reply is posted, and after the caller returns from =completion-wait!=.
+The four handoffs have both endpoints. Their time includes message
+transport, wakeup, and any preemption between the two stamps. The
+coordinator and worker spans fill the rest of the bracket.
+
+Use the same send, dispatch, post, and resume points for source replacement
+and for the completed-result read made by the caller-buffer API. The
+list exporter uses the returned Result directly and has no result-read
+mailbox span. Bracket actual delivery and end the request after the
+independent oracle. Sample the cumulative collector elapsed clock and
+collection count at each boundary. =collector_intervals_exact= explains
+why these deltas can be summed without overlapping phases. Collector time
+inside a handoff is a subset of that handoff, not a separate charge.
+
+Keep the same source cuts, fixture ordinals, heap cap, watchdog, and
+oracle. Pair requests across reference and candidate by width, delivery
+mode, shard, and request index. Counterfactual replacement of a single
+span preserves each request's pairing. Comparing marginal percentiles
+does not locate the cause of an end-to-end percentile change.
+
+The complete-list exporter reuses the binary writer's constant-stride
+certificate when its logical read bound is below ordinary ordinal
+delivery. =ordinal_window_prepend_exact= takes the existing detached
+suffix as an explicit argument. Carrying the first pair and the signed
+advance preserves each window's prepending order in both directions.
+The number of freshly allocated pair cells remains three per row.
+Uncertified windows retain the indexed traversal.
+
+The fixed diagnostic comparison runs four paired shards per workload
+and alternates arm order between shards. The trace of the earlier
+publication change reproduced the P95 increase for the width-128
+complete list. On the 100 paired requests, substituting only the
+reference handoff spans changed candidate P95 by 0.002 ms. Substituting
+the non-collector delivery spans reduced it by 129.949 ms. These
+within-request substitutions diagnose the observed cohort. They do not
+predict the distribution that an implementation change will produce.
+
+A second paired comparison changed only the list field traversal.
+The mean delivery wall time outside GC fell from 123.709 to 39.838 ms
+at width 128 and from 131.879 to 31.127 ms at width 512. The mean
+collector times were 121.069 and 121.357 ms at width 128, and 75.432
+and 72.966 ms at width 512. The production qualification uses the
+uninstrumented module and the original gates.
+
+** Direct-buffer write and oracle timing
+
+The buffer probe brackets the direct =copy!= invocation inside
+=ascent-engine-session-copy-integer-relation!= in =interface/engine-api.ss=.
+The result lookup keeps the Actor send, dispatch, post, and resume
+timestamps. Inside the ordinal =copy!=, mark the first traversal step
+after the extent and stride certificate are ready, then mark the end
+of the last window before the final extent assertion. Thus the writer
+span contains actual field stores and the traversal that drives them.
+=direct_copy_brackets= partitions copy preparation, writes, and the
+completion check using these source endpoints.
+
+Start the independent oracle after the delivered buffer has been
+returned. Capture elapsed wall, GC clocks, and OS-thread CPU at the
+same writer and verification endpoints. Thread CPU is comparable
+only when the two endpoints carry the same OS thread identity.
+These recorded intervals separate write and oracle work from Actor
+handoffs. Clock differences between wall and CPU do not identify who
+was running while the thread was off CPU.
+
+Pair the dense ordinal publication with the complete-list candidate
+on the same buffer request numbers. Use identical probes on both,
+reverse their run order on alternating shards, and validate the
+whole interleaved output. Before any production optimization,
+retain the samples and both ranked and same-request stage comparisons.
+
+The controlled writer experiment keeps the existing ordinal
+windows, first pair, signed stride, and destination extent check.
+Each complete block writes four rows before advancing the cursor.
+=affine_copy_four_row_partition= accounts for the final zero to three
+rows. =affine_copy_four_rows_fit= checks the last cell of every
+block, including an odd destination start. =affine_copy_block_field=
+relates the carried first pair and its offsets to the existing
+single-row recurrence. Fixnum stepping uses the writer's existing
+wrapping operations. Every emitted field is in the certified range.
+The stepped cursor after the final write is unused.
+
+The direct-copy probe compared the two source versions on 16 paired
+shards per width. The width-128 candidate P95 request spent 39.562 ms
+in writes and 52.615 ms in the oracle, with 0.042 ms in Actor handoffs.
+The width-512 candidate P95 request had 38.559 ms of GC entirely in
+publication. This cohort did not reproduce both increases seen in
+the earlier uninstrumented 1,000-request runs.
+
+The controlled four-row writer comparison used eight paired shards
+per width. Mean caller-thread CPU in the writer fell from 22.937 to
+18.246 ms at width 128, and from 21.049 to 14.870 ms at width 512.
+The independent oracle still checked every field. In this comparison
+end-to-end P95 rose in both widths even though the mean fell. The
+width-128 P95 request shared its request number with the reference
+P95 request and spent 65.009 ms in the oracle, up from 31.962 ms.
+The width-512 candidate P95 request spent 56.919 ms of caller-thread
+CPU in the writer. These samples do not establish a tail bound.
+
+* POO reuse boundaries
+
+Yuanxu's pinned POO already provides persistent correlated table indexes
+and an SCC partition over admitted symbolic owners and packed adjacency.
+An occurrence ordinal is a suitable primary key for a grouped index
+comparison. A tuple used as the primary key would collapse repeated
+source occurrences. Compare build cost and complete ordered bucket
+delivery, using the same key equivalence, before changing the engine's
+native hash backend. Each all or delta lane must keep its own version
+and preserve refusal of custom provider packets.
+
+For a Boolean cycle check, translate all endpoints, including missing
+parents, and compare against the dense traversal. The recursive engine
+also consumes a source-before-target component order and cancellable
+checkpoints in the traversal. An ordinal SCC interface can share the
+upstream core once it can expose those properties without symbol
+conversion or a second graph capture. POO's public symbolic partition
+and persistent bucket APIs keep their existing contracts.

@@ -31,7 +31,7 @@ impl Module {
         component: Option<&str>,
         limits: Option<PyRef<'_, FactLimits>>,
     ) -> PyResult<super::program::RuleSession> {
-        let policy = limits.map(|v| v.0).unwrap_or_default();
+        let policy = limits.map_or_else(Default::default, |v| v.0);
         let args = module_values::arguments(arguments)?;
         py.detach(|| {
             self.0
@@ -87,7 +87,7 @@ impl OwnedValue {
         py: Python<'_>,
         limits: Option<PyRef<'_, super::sources::FactLimits>>,
     ) -> PyResult<super::program::RuleSession> {
-        let limits = limits.map(|v| v.0).unwrap_or_default();
+        let limits = limits.map_or_else(Default::default, |v| v.0);
         py.detach(|| self.0.open_session(limits))
             .map(super::program::RuleSession)
             .map_err(source_error)
@@ -99,7 +99,7 @@ impl OwnedValue {
         py: Python<'_>,
         limits: Option<PyRef<'_, super::sources::FactLimits>>,
     ) -> PyResult<super::sources::SourceSession> {
-        let policy = limits.map(|p| p.0).unwrap_or_default();
+        let policy = limits.map_or_else(Default::default, |p| p.0);
         py.detach(|| self.0.project_session(policy))
             .map(super::sources::SourceSession::owned)
             .map_err(source_error)

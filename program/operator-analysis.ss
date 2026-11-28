@@ -10,7 +10,7 @@
         (only-in :std/list/list-builder with-list-builder))
 (export analyze-operator-graph operator-analysis-checked-rows operator-analysis-free-cache free-parameters
         capture-operator-transform operator-snapshot-transform operator-snapshot-checked-rows)
-(defstruct operator-analysis (checked-rows free-cache))
+(defstruct operator-analysis (checked-rows free-cache) final: #t)
 
 ;; Cached dependency lists are ordered identity sets. Reuse a complete spine
 ;; until a genuinely new dependency requires an owned result header.
@@ -138,7 +138,7 @@
 ;; A capture owns both the copied graph and the already detached validated rows.
 ;; No caller callback runs between analysis and copying. Transport rows when each
 ;; private source/mapping node is issued; do not reanalyze that owned graph.
-(defstruct operator-snapshot (transform checked-rows))
+(defstruct operator-snapshot (transform checked-rows) final: #t)
 (def (capture-operator-transform transform)
   (unless (relational-transform? transform) (error "expected a relation transformer"))
   (let* ((root (relational-op-apply transform

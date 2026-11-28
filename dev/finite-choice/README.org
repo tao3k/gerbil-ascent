@@ -1,0 +1,987 @@
+#+TITLE: Ground finite-choice reference
+#+LANGUAGE: en
+
+* Authority
+
+[[https://arxiv.org/html/2405.19040v3#S2.SS1][Finite-Choice Logic Programming, Section 2.1]]
+defines a solution as a reachable, saturated consistent database.
+The Scheme oracle enumerates finite ground programs from the empty database.
+Each rule body is a list of attribute and value pairs. A closed head supplies
+a list of allowed values, including an empty list for a forbidden body.
+An open head supplies one value. Attribute and value identities are
+nonnegative integers.
+
+* Correspondence
+
+| Paper notion | Lean | Scheme oracle |
+|--------------+------+---------------|
+| Consistent database | =Database= | Ordered partial assignments |
+| Body satisfaction | =enabled= | =enabled?= |
+| One rule evolution | =evolve= | =rule-extensions=, with stuttering successors omitted |
+| Reachability and saturation | =Reachable= and =saturated= | Visited databases and the completed rule scan |
+
+If an enabled open head sees an unset attribute, its possible strict extension
+prevents saturation. A compatible prior assignment makes an open head
+saturated. A closed head is saturated exactly when the assigned value is among
+its alternatives. An enabled closed head that excludes a previously assigned
+value rules out all descendants of that database. The Scheme search discards
+that branch, retaining the alternatives already queued from other databases.
+An interruption raised by the caller escapes the search.
+
+The independent test enumerates all partial assignments over two keys and two
+values. It checks candidate saturation directly and works backwards to find
+an order in which supported assignments could have been introduced. Source
+tests cover 256 programs in both rule orders and selected conflicts,
+unsupported cycles and interruption.
+
+* Checks
+
+Use =just check-lean-file FiniteChoice.lean= through the locked LeanPoo Guard
+and =gerbil test dev/finite-choice/oracle-test.ss=. The Lean model proves local
+saturation and assignment preservation. The native DSL and the finite search
+model are described below.
+
+* Native checked DSL
+
+=relational-choice-program= uses the existing checked relation declarations,
+scalar terms, positive rules and final =limits= form. Its new clauses specify
+functional attributes and the two paper head forms.
+
+#+begin_src scheme
+(import :gerbil-ascent/program/api)
+
+(def program
+  (relational-choice-program
+    (relation edge (from to) '((0 1) (1 2)))
+    (relation path (from to))
+    (choice color (vertex value))
+    (rule (path ?x ?y) (edge ?x ?y))
+    (rule (path ?x ?z) (path ?x ?y) (edge ?y ?z))
+    (rule (closed (color 0) (0 1)))
+    (rule (open (color ?y) ?value) (color 0 ?value) (path 0 ?y))
+    (limits 32 64 64)))
+
+(map (lambda (model) (relational-program-query model 'color))
+     (relational-choice-solve program state-budget: 16))
+#+end_src
+
+Use ordinary relations for positive Boolean facts. Use choice predicates
+for functional facts, with the value in the last column. An empty closed
+offer forbids its grounded body. Ordinary heads cannot write choice predicates.
+Only positive relational atoms are admitted in rule bodies. Consequently a
+range-restricted rule can only copy existing scalars or use its finite set of
+literals. This gives a finite universe for a fixed finite input.
+
+=lower-relational-choice-program= compiles each choice rule into a separate
+private derived relation with the rule's reader origin. Its rows hold the
+values of all distinct body variables, followed by the attribute arguments
+and offered values. Each anonymous occurrence receives a fresh binding.
+The grounding rows preserve distinct witnesses that propose the same value.
+Exact repeat firings of one row are coalesced by ordinary Set storage. At each source cut the existing checked
+planner validates body bindings and the retained Session reaches deterministic
+closure. Traversal to a direct child appends a single source row, letting
+the existing semi-naive scheduler extend physical indexes and discover new
+offer rows. Other transitions use the atomic replacement of all choice
+sources. The Session owns recomputation and invalidation at that boundary.
+Fairness and completeness do not assume shareable indexes between siblings.
+
+| Lean obligation | Scheme operation |
+|-----------------+------------------|
+| =open_saturated_iff= and =closed_saturated_iff= | =process!= checks every grounded offer before saving a model |
+| =step_preserves_assignment= and =offers_extension_exact= | =insert-choice= writes only an unset, interned attribute |
+| =fresh_discovery_fits_budget= | =enqueue!= tests membership before charging one of the state slots, including the empty state |
+| =worklist_counts_preserved= and =worklist_budget_decreases= | =search= removes one seen entry per successful iteration |
+| =finite_databases_count= | Each finite attribute has one unset state plus its admitted values |
+| =register_successors_closes_cut= and =worklist_drain_covers_discovery= | =enqueue!= retains fresh successors and exhaustion leaves all seen states processed |
+| =exhausted_deduction_answers_exact= | All pending entries are drained before =ascent-accept-publication!= |
+
+The final acceptance boundary is outside the grounding Session. Intermediate
+commits leave the outer cancellation and work policy active. Budget exhaustion
+raises =RelationalChoiceLimit= and completed models become visible only when
+the whole search is exhausted. The state budget counts distinct assignments;
+existing per-cut fact budgets and execution checkpoints also apply.
+
+** Grounding refinement
+
+| Scheme boundary | Kernel-checked obligation |
+|-----------------+---------------------------|
+| =relational-choice-rule= calls =relational-term= and =relational-atom= in premise order. =capture-term= retains a named identity and gives each anonymous occurrence its own identity. | =capture_terms_exact= equates the captured terms with their named and anonymous occurrence semantics. =wildcard_fresh= establishes disjointness and =captured_occurrences_determine_row= proves that the bindings identify the matched tuple. |
+| =compile-head= puts distinct binding ordinals before the attribute and offered values. The evidence reader reconstructs the original premises by those ordinals. | =grounding_distinguishes_instances= recovers distinct binding prefixes. =ground_captured_terms_exact= establishes that rendering a captured premise is exact for the binding environment. |
+| =program/index.ss= admits a current entry by lane version, revokes it before mutation and publishes only a completed rebuild or extension. =table/index-sharing.ss= numbers inserts and invalidates cached projections on extension. | =CachePublication.extend_program_exact= and =rebuild_program_exact= describe the emitted publication code. =visible_bucket_exact= composes versioned lookup with exact bucket membership. =bucket_cache_extension_exact= proves that warm empty and nonempty views remain coherent after insertion. =CurriedDictionary.numbered_prefix_restore= establishes ordered prefix lookup over the modeled curried store, including insert batches. |
+| =install-state!= reads the current result, appends one choice on a direct child, or replaces every choice source atomically. | =branch_message_installs_exact_cut= gives the source set seen by each message and =replace_removes_sibling= frames out the previous choice cut. Formal CI compares the executable dispatch macro with Lean's rendering of =branchAction=. |
+| A completed monotone append reuses the previous cut and runs first-fresh delta pivots. A sibling branch has its own completed cut. | =grounding_after_message_exact= composes these cases and =grounding_delta_exact=, proving membership equivalence with the full consequence on the installed cut. |
+
+The composed membership theorem still uses the admitted rule and row views
+from =IndexedIteration.Valid= and =RowsAdmitted=. The correspondence relies on
+Gerbil reader hygiene and scalar equality, hash get/put coherence, and valid
+mutable lane ownership. The complete expander output and scheduler state are
+not extracted into Lean. In particular, the theorem covers the chosen cut's
+semantics while the production replacement path can reuse unaffected positive
+relations. =SourceUpdateFrame.completed_reuse= proves the related dependency
+frame with its compiled-read correspondence premise. A full proof of that
+premise for native Session messages and mutable cache state remains open.
+
+For each unassigned key, the search intersects every currently enabled closed
+offer and records open offers separately. An empty intersection or an
+incompatible prior assignment rejects the state. A singleton intersection
+schedules only that assignment. Otherwise, if there is an enabled closed
+offer on an unset key, the search picks one such key and visits every
+value in its intersection. Every compatible saturated model must assign
+that key. In an open-only state the search retains assignments on every
+enabled key, since assigning one key can enable a new value for another.
+=closed_intersection_forced=,
+=forced_step_reachable= and =forced_step_preserves_model= establish that
+prioritizing the singleton preserves every compatible saturated model and
+consumes a valid semantic edge. =missing_assignment_has_offer= establishes
+progress towards a compatible reachable model with a missing assignment.
+=compatible_model_has_scheduled_step= retains such a step under the deduction
+policy and the selected closed key. =compatible_closed_key_has_value=
+establishes that a compatible model's value belongs to every enabled
+closed offer on that key. =exhausted_deduction_answers_exact= proves the result equivalence when
+the worklist is exhausted and the target has finite support, by induction on
+the remaining keys. The native Suite compares with independent ground search
+on all 16 edge subsets of a small diamond. It also exercises native append and
+sibling replacement, exact and insufficient budgets, and cancellation at
+grounding and publication.
+
+** Attribute selection and measured state counts
+
+[[https://arxiv.org/html/2405.19040v3#S6.SS2][Dusa Section 6.2]]
+separates attribute selection from value backtracking. Its constraint
+database supports explicit exclusions for open offers. ASCENT currently
+stores positive assignments. The native open-only regression shows why
+choosing one open key and considering just its currently offered values
+would miss a model.
+
+The native regression with six independent two-valued closed keys finds
+all 64 models with the independent oracle. The original scheduler reaches
+every combination of unset, zero and one (729 states). Selecting one
+closed key at each state creates a binary decision tree (127 states).
+The exact and one-short budgets exercise the state boundary. This counts
+discovered states, including the root and leaves. Elapsed time and
+allocation on a graph workload remain to be measured.
+The search order can change the discovery order and the retained
+derivation for a model. Each retained derivation still comes from its
+own branch cut.
+
+** Direct-child offer cut
+
+For a private positive Set relation the completed evaluator publishes a
+newest-first root. On a direct child, walk exactly the size difference
+and check the old root by identity. Only that prefix can enter the
+constraint cache, in publication order. A missing suffix, an unsupported
+representation, or a sibling replacement requires an independent rebuild
+from the current completed result. Check all roots before consuming any
+delta. An unsuccessful or interrupted cut publishes no models.
+
+| Source obligation | Lean check |
+|-------------------+------------|
+| Physical new prefix becomes a chronological suffix | =newest_offer_delta_exact= |
+| The cached intersection narrowed by the delta has the full cut's allowed values. | =closed_delta_intersection_exact= |
+| A direct child changes one assignment. Check its old closed intersection and every new offer, including offers to already assigned keys. | =assignment_recheck_exact= |
+| Cache rebuild sees only the current cut. Saved proofs retain their own detached support rows. | =sibling_offer_cache_exact= |
+
+The proofs relate offers and assignments once the Session's completed
+result identity and persistent suffix checks establish the physical cut.
+They do not model the Gerbil allocator or certify arbitrary providers.
+
+The cache keeps each key and offer's original publication rank. A new
+closed offer from an earlier rule supplies the value ordering for the
+intersection, and scheduled steps return the same support order as a
+full read. The reader returns detached prefix rows. Published witnesses
+therefore keep their own rows when the current cache is cleared.
+
+** Backtracking to a completed parent
+
+Keep a checkpoint only while it has pending alternatives and fits the
+retention allowance. The search entry names its actual parent by
+identity. The Session checks that the token belongs to this invocation
+and rebuilds mutable indexes from the parent's completed Set
+publication. The identical source log leaves the affected rule set
+empty when restoring the parent.
+Apply the queued assignment through the normal append and fixed-point
+path. Restore the parent's constraint buckets, then consume only the new
+child offer rows using the existing suffix check. Other transitions use
+the ordinary source replacement and offer rebuild.
+
+=restore_choice_checkpoint_exact= checks the owner and parent selection.
+=restored_child_witness_exact= composes the selected parent with the
+child's delta. The mutable evaluator's restore code uses the existing
+completed-closure admission. No child retains the parent's writable
+index or constraint header. Saved witnesses share detached rows.
+
+=rbtree-copy= shares the immutable root and allocates just the header.
+A write replaces one constraint record and path-copies the edited
+tree nodes. The scheduler finds a closed or forced key using the
+largest publication rank in one scan. It sorts keys only for the
+open-only case, which enumerates alternatives of all open keys.
+=choice_bucket_edit_exact= and =choice_bucket_siblings_isolated= give
+the lookup and isolation laws. The physical implementation reuses
+=:std/struct/rbtree=, the same library used by POO's graph index and
+ASCENT's bound reachability index.
+
+The sum of retained rows plus relation headers fits the state budget,
+counting each saved checkpoint independently, including shared rows.
+The last pending child releases its parent's charge. An over-budget
+capture falls back to the same source replacement and search. The
+state-count and fact limits keep their previous meanings. See
+=choice_parent_units_bounded= and =release_choice_parent_units=.
+
+The native dependency graph marks every relation reachable from a
+choice write. Sharing a first-atom match across alternatives requires a
+completed relation outside that affected set, immutable scalar rows, a
+non-delta read, and equality of the ordered candidate rows. Its cached
+records include the matching row and the first atom's writes.
+=checked_static_prefix_exact= verifies the replay sequence for that
+ordered read. Downstream atoms are evaluated in the current cut. The
+retained records use a bounded invocation-local budget and pass through
+the original cancellation checkpoint during replay.
+
+** Native representative workload
+
+[[https://arxiv.org/html/2405.19040v3#S3.SS2][Figure 3]] appoints one
+representative per undirected connected component. The native benchmark
+checks every result against a standalone graph flood and component
+product. Both arms use the same Session, grounding evaluator and choice
+policy. The full-read arm rebuilds constraints on each state, while the
+incremental arm reads verified prefixes on direct children.
+
+Run =gerbil test benchmarks/dusa-representative-test.ss=. The following
+are five paired runs with alternating execution order per graph. The
+first-model clock ends when a completed model is found internally.
+The public API still publishes only once the search has exhausted.
+
+| Graph (vertices / undirected edges) | Models | States | Native prefix firing events | New offer reads | Repeated offer reads, full / delta | Median first model, full / delta (ms) |
+|-------------------------------------+--------+--------+-----------------------------+-----------------+------------------------------------+--------------------------------------|
+| Path (24 / 23) | 24 | 577 | 27739 | 1680 | 26221 / 0 | 7.032 / 6.456 |
+| Clique (12 / 66) | 12 | 145 | 20934 | 1728 | 10308 / 0 | 5.999 / 5.848 |
+| Two paths and an isolated vertex (11 / 8) | 25 | 552 | 10462 | 2805 | 9491 / 0 | 5.492 / 5.422 |
+
+Prefix firing events are successful partial matches in the native
+positive matcher; repeated firings across cuts are included. New offer
+reads include the full initial or sibling cut and only the newly
+published rows on direct children. Both arms reported the same numbers
+of states and firings and returned the same ordered models and witnesses.
+The incremental arm rebuilt 24, 12 and 110 cuts, respectively. These
+small graphs measure removed offer reads. They give limited evidence
+about latency at larger graph sizes.
+
+** Original single-parent measurements
+
+The reference retains direct-child offer updates from the preceding
+implementation. The candidate also restores an owned parent and replays
+the checked static prefix. Run
+=gerbil test -r '^dusa-parent-representative-test$' benchmarks/dusa-representative-test.ss=.
+Each graph ran five alternating pairs. All ordered models and witness
+queries agreed between the two arms, and every model matched the
+independent component oracle.
+
+| Graph (vertices / undirected edges) | Models | States | Offer rebuilds, reference / candidate | Native prefix matches, reference / candidate | Median first model (ms) | Median full solve (ms) |
+|-------------------------------------+--------+--------+--------------------------------------+--------------------------------------------+-------------------------+------------------------|
+| Path (48 / 47) | 48 | 2305 | 48 / 1 | 221371 / 4889 | 8.064 / 8.051 | 205.904 / 200.694 |
+| Clique (22 / 231) | 22 | 485 | 22 / 1 | 234949 / 11803 | 8.246 / 8.513 | 103.257 / 98.867 |
+| Two paths and an isolated vertex (19 / 16) | 81 | 3080 | 342 / 307 | 109022 / 20318 | 5.982 / 5.929 | 250.316 / 266.695 |
+
+The candidate made 216482, 223146 and 88704 ordered prefix replays.
+In each case native matches plus replay events equal the reference
+matches. Ordinary source replacements fell from 47 to 0, 21 to 0,
+and 341 to 306. The disconnected graph spent 6.5 percent longer in
+the full solve. The single retained parent still leaves most such
+switches on the rebuild path. Timing includes the diagnostic counters.
+
+** Shared constraint roots and budgeted parent restores
+
+Compare the exact =73cb1a13= implementation with the shared-root
+candidate using the same larger representative tests and independent
+oracle. Each build ran twice, in reversed process order, with five
+alternating native pairs per process. The table compares the existing
+single-parent arm with the new budgeted arm, using all ten samples per
+build. The published models and witnesses matched each run's reference
+arm, and the state sets have the same cardinalities.
+
+| Graph | States | Offer rebuilds, old / new | Source replacements, old / new | Native prefix matches, old / new | First model median (ms) | Full solve median (ms) |
+|-------+--------+---------------------------+--------------------------------+----------------------------------+-------------------------+------------------------|
+| Path | 2305 | 1 / 1 | 0 / 0 | 4889 / 4889 | 7.833 / 7.328 | 200.309 / 181.625 |
+| Clique | 485 | 1 / 1 | 0 / 0 | 11803 / 11803 | 7.860 / 7.771 | 97.144 / 93.216 |
+| Disconnected | 3080 | 307 / 1 | 306 / 0 | 20318 / 5630 | 5.739 / 5.701 | 245.697 / 220.460 |
+
+The disconnected case retained 38 eligible parent checkpoints over
+the search and restored them 341 times, against 35 restores previously.
+Peak charged parent units were 243, 743 and 210 for the three graphs
+under the unchanged 20,000-state budget. The latest disconnected arm's
+slowest full solve was 545.393 ms versus 282.356 ms in the previous arm.
+The measured improvement applies to the median. The replayed work and
+checkpoints do not explain that single tail sample.
+
+** Tail counterexample and property checks
+
+The retained 545.393 ms sample at =b6ec2538= is the two nine-vertex
+paths plus an isolated vertex. Its receipt contains 81 models, 3080
+states, 341 parent restores, one offer rebuild and no source
+replacements. The receipt has no per-phase CPU or GC timestamps.
+
+A separate native diagnostic run of five paired solves on this input
+measured 242.207--277.115 ms in the cached arm. The slowest of those
+solves spent 197.286 ms in 3079 child appends and solves, 37.468 ms in
+341 parent restores and 19.714 ms in constraint processing. Parent
+engine construction took 25.071 ms within the restore interval. The
+three GC pauses accounted for 86.064 ms of wall time in that solve.
+Sampling timestamps give a conservative bound of at least 86.042 ms
+inside child appends and solves, allowing for the time used to read
+counters. Publication was below 0.001 ms. These timings describe the
+instrumented run. The original sample's tail remains unexplained.
+The next cost to isolate is row and index construction inside child
+solves, including which allocations survive between children.
+
+Run the generated test with
+=gerbil test t/qualification/ascent-choice-property-test.ss=. Seeds
+20261123 and 20261124 each accept 500 graphs with coverage checks for
+connected and disconnected inputs, isolated vertices, self-loops,
+edgeless graphs and nested alternatives. The test compares the models
+with an independent connected-component oracle and checks each witness
+against the input and its preceding assignments. It also checks the
+full model and witness order against direct search, requires actual
+parent restores on nontrivial components, and bounds the retained
+parent units.
+
+For the negative control, capture a parent's writable constraint
+tree directly at =remember-parent!=, omitting =rbtree-copy=. The
+generated test rejected this mutant on the first trial of seed
+20261123. POO reported =((0 1) (2 3))= on four vertices as minimized
+under its configured shrinker, with 12 attempted reductions and zero
+successful reductions. This input is a fixed regression on the
+production path. A second regression tampers with a witness's supporting
+assignment while retaining the original head and checks rejection.
+
+** Deferred result construction during choice search
+
+The child-run diagnostic split showed 3421 evaluation freezes on the
+disconnected graph. Those calls accounted for 64.890 MiB of observed
+allocation in intervals with no collection, compared with 10.904 MiB
+for flushing staged sources and 11.750 MiB for the two Session source
+snapshot operations. These counters are nested under the corresponding
+solve or restore interval.
+
+A completed choice evaluation now retains its frozen publication under
+a private result identity. The parent restore still checks the owner,
+branch and publication identity, while checkpoint accounting sums the
+frozen relation sizes. A full offer rescan reads the chronological rows
+from the same cut through the existing ordered delta reader. Only model
+delivery constructs a public result on the checked ordered-cut path.
+A fallback without an ordered cut can force the original result and
+use the ordinary query surface. Result detachment and commitment still
+use their existing owners.
+
+A separate instrumented run on the disconnected graph counted 3421
+public result constructions per baseline solve and 81 per candidate
+solve. Across five solves per arm, the median sum of observed
+allocations in collector-free constructor intervals fell from
+56.48 MiB to 1.34 MiB. This measures the constructor only.
+
+The Lean lemmas =choice_cut_units_exact= and
+=choice_full_offer_scan_exact= match the vector charge and raw-row
+accumulator against their eager definitions.
+=choice_deferred_result_exact= and =choice_deferred_model_order= state
+the frozen-cut and ordered-projection laws. The generated Scheme
+checks cover the source seam, including mutation of a returned row and
+list spine after the sibling visits.
+
+With the same Gerbil staging image and frozen Dusa Figure 3 inputs,
+four native processes ran in baseline/candidate/candidate/baseline
+order. Each arm has ten full-solve measurements per graph.
+
+| Graph | Baseline median / maximum (ms) | Candidate median / maximum (ms) |
+|-------+--------------------------------+---------------------------------|
+| Path | 186.296 / 248.549 | 113.156 / 305.270 |
+| Clique | 95.319 / 110.573 | 80.373 / 297.006 |
+| Disconnected | 229.448 / 287.866 | 109.273 / 119.557 |
+
+The work receipts match for each graph, including visited states, offer
+rebuilds, parent restores, retained units and prefix work. End-to-end
+timings come from uninstrumented runs. The path and clique each had
+one slower tail sample in the candidate. These receipts have no phase
+data for either event. The original 545.393 ms sample remains a
+separate observation.
+
+The private evaluator uses its own constructor. Adding a keyword to
+the ordinary constructor in an initial candidate changed Gerbil's
+compiled direct-call entry and caused a native Actor crash. The
+ordinary entry retains the baseline signature. The same previously
+compiled Actor module passed all 40 of its native Session cases after
+the private constructor was introduced.
+
+** Work counters and single-row delta joins
+
+The Figure 3 benchmark enabled a numeric work meter. The executable
+also built slot signatures and supporting-row spines at each candidate,
+even when no trace or prefix attribution was requested. In a native
+on/off pairing on =9f598d4e=, each graph used ten solves per mode.
+The path median was 113.405 ms with the meter and 85.494 ms without it.
+The slowest metered path took 260.913 ms wall and 129.363 ms CPU.
+At least 124.322 ms of GC was inside that solve after deducting the
+sampling window. The clique medians were 81.358 and 46.903 ms, and the
+disconnected medians were 112.721 and 105.772 ms. Each pair had equal
+ordered models and witnesses and agreed with the graph oracle. The
+earlier 305.270 and 297.006 ms samples have no phase data.
+
+The matcher now builds support spines only for prefix attribution or
+explicit visit traces. A four-process paired native comparison using
+the original metered benchmark gave these full-solve results. Work
+counters were identical for every graph.
+
+| Graph | Original meter median / max (ms) | Numeric-only meter median / max (ms) |
+|-------+----------------------------------+---------------------------------------|
+| Path | 87.025 / 116.243 | 60.179 / 89.759 |
+| Clique | 76.811 / 128.937 | 74.642 / 81.794 |
+| Disconnected | 106.180 / 120.792 | 103.433 / 107.995 |
+
+The revised meter and ordinary execution had nearly equal path
+medians in a separate paired run, 86.811 ms and 86.979 ms. The
+disconnected ordinary arm still produced a 324.538 ms sample without
+the meter. Its CPU time was 117.211 ms, with one collector event
+accounting for at least 110.054 ms of solve wall time. Its paired
+metered run took 136.215 ms with at least 31.312 ms in GC. The receipt
+does not identify the source of the remaining wall delay.
+
+The remaining algorithm question is which prefix rows the matcher
+visits. [[https://arxiv.org/html/2405.19040v3#S7.SS1][Dusa Section 7.1]]
+uses prefix firings to explain work. The same idea applies to
+=visit-static-prefix!=: cached bindings still replay across the entire
+ordered prefix when the first fresh row is in the second atom. For
+Figure 3, the edge replay count plus the initial prefix build equals
+twice the number of undirected edges times the number of extensions.
+Each closed offer records its complete binding, so subtracting the
+one-time open offer per vertex gives the number of matching edge
+bindings in this fixture.
+
+| Graph | Edge prefix visits | Matching edge bindings | Visit ratio |
+|-------+--------------------+------------------------+-------------|
+| Path | 216576 | 4512 | 48.0 |
+| Clique | 223608 | 10164 | 22.0 |
+| Disconnected | 98528 | 5499 | 17.9 |
+
+=choice_single_delta_bucket_exact= proves ordered list equality
+between scanning the whole prefix and visiting an exact bucket for a
+single fresh key. It keeps repeated row occurrences and pairs each
+with the same fresh supporting row. The accompanying visit bound
+excludes index construction. A multi-row delta needs a merge that
+recovers original prefix order and continues through the existing
+general join.
+
+** Singleton delta selection in the positive matcher
+
+The retained choice evaluator supplies a singleton suffix only when the
+actual prefix delta is empty and the actual suffix is an explicit
+one-row delta. The checked static-relation predicate already excludes
+relations reachable from a choice source. The matcher admits a pure
+two-atom rule, two distinct prefix slots, and a suffix that reads one
+of those slots and writes one fresh slot. It uses the canonical
+one-column physical index. The three bound values feed the original
+head admission, in the same order.
+
+The private cache uses the compiled action sequence and its ordered
+prefix root. Cross-engine reuse requires exact ordered row equality
+when the roots differ. The same static-prefix budget charges the
+index before construction. Controlled executions or diagnostic
+traces use the existing traversal, preserving each checkpoint and
+observed candidate. Empty buckets, repeated occurrences, equal-size
+replacement, insufficient retention, and a two-row derived delta
+are exercised by native regression tests.
+
+The Lean model connects the canonical prepend-and-reverse bucket
+builder to stable filtering. The restore theorem assumes exact
+ordered-cut equality, and ordered admission folds the same witness
+list for both paths. The Scheme guards and physical lookup are
+checked by native tests, including POO-generated graph programs and
+the independent model and witness oracles.
+
+With ten solves per arm in the existing four-process pairing, state,
+offer, rebuild, parent-restore, and charged-parent counters matched.
+
+| Graph | Old / new median (ms) | Old / new maximum (ms) | Bucket build rows | Physical prefix visits | Equal-cut rechecks |
+|-------+-----------------------+------------------------+-------------------+------------------------+--------------------|
+| Path | 58.870 / 53.659 | 86.728 / 160.959 | 94 | 4512 | 47 |
+| Clique | 77.952 / 27.549 | 80.899 / 54.494 | 462 | 10164 | 21 |
+| Disconnected | 102.886 / 96.951 | 109.157 / 106.399 | 32 | 5499 | 341 |
+
+The prefix counts above are bucket row visits. A restore can also
+compare the two complete ordered cuts. The slowest candidate path
+sample remains open, with no per-phase receipt in this pairing.
+
+A separate five-solve 128-vertex path enumerated 16,385 states in both
+arms. Complete-solve median and maximum fell from 1142.769 and
+1502.493 ms to 431.555 and 514.277 ms. Prefix visits fell from
+4,161,536 to 32,512 with one 254-row index build and 127 ordered-cut
+rechecks.
+
+An independent ten-pair run without work counters measured median
+wall times of 82.496 to 35.584 ms for the smaller path, 73.087 to
+26.943 ms for the clique, and 100.870 to 95.758 ms for the
+disconnected graph. The candidate path's 141.842 ms maximum used
+43.261 ms CPU and had no GC. The disconnected maximum was
+237.663 ms, with 118.161 ms CPU and at least 52.066 ms of GC inside
+the solve. These receipts leave the rest of the wall delay open.
+
+** Parent restore root-retention experiment
+
+At =54081232= the retained choice restore rebuilds membership and
+reverses published chronological rows into engine order. A prototype
+retained the already-committed spines and reused them after the
+existing admission and budget checks. Keeping all eligible spines
+slowed the 128-vertex path median from 428.780 to 485.112 ms. A second
+prototype retained only spines allowed by the static dependency mask.
+
+The static-only prototype passed 139 native cases, including the
+1,000 POO graphs and an explicit sibling restore identity check.
+On 32 isolated restores of 4,096 derived rows, the original root
+survived in all 32 candidate restores and none of the baseline
+restores. Median allocation in collector-free samples fell from
+1,361,648 to 1,165,120 bytes. Median restore duration changed from
+1.512 to 1.500 ms. Disconnected Figure 3 solves eliminated all 341
+ordered-cut equality checks while keeping the same work and models.
+
+End-to-end timings did not support adoption. The static-only
+candidate moved the 128-vertex path median from 455.597 to 541.412 ms.
+The disconnected metered maximum rose from 103.543 to 202.772 ms.
+Without the meter the disconnected maximum rose from 102.922 to
+188.297 ms. That 188.297 ms sample recorded 71.666 ms CPU and no GC.
+The exact source of its remaining wall delay is unresolved.
+
+The prototype and raw receipts stay in the local experiment cache.
+The production path keeps ordered-content checks. Restoring the
+raw spine still leaves fresh engine admission and relation membership
+reconstruction, which are the larger operations to isolate next.
+
+** Deferred membership for completed choice parents
+
+In a separate phase profile of 32 restores of 4,096 derived rows,
+the old membership and row-admission pass averaged 0.793 ms.
+Source initialization averaged 0.630 ms, and reversing the accepted
+row spine averaged 0.006 ms. Copying the row spine accounted for
+less than one percent of the measured restore time.
+
+The private choice Session checks checkpoint owner and branch, then
+uses the normal reuse selection for the saved source cut. An
+unchanged canonical Set with an empty admitted base can charge the
+frozen publication cardinality directly. It still reverses the rows
+into engine order. The first frontier or source update requiring
+membership builds a fresh private hash table from the committed
+rows. The budget check runs before publication. An already-controlled
+restore uses ordinary admission, and a later controlled membership
+build checks for cancellation before each insertion and installs its
+table only on success. Nonempty bases and ordinary Session updates
+use the existing membership and row-admission pass.
+
+=choice_empty_base_charge= equates the first-miss count with the
+frozen size of a duplicate-free Set. =choice_deferred_membership_exact=
+connects the reversed engine spine to the same membership predicate.
+The added native case verifies duplicate suppression on the first
+write, the exact derived budget, recovery of the accepted result,
+and a subsequent sibling restore.
+
+In 32 collector-free isolated restores of 4,096 derived rows,
+the median fell from 1.497 to 0.695 ms and allocation from
+1,361,648 to 1,095,792 bytes. A separate instrumented solve of the
+disconnected representative fixture deferred membership for 22,287
+rows and later hashed 4,896 of them. The path deferred 6,674 rows
+and needed none of those tables.
+
+Ordinary native solves had these wall-clock results, ten samples per arm.
+
+| Graph | Old / new median (ms) | Old / new maximum (ms) |
+|-------+-----------------------+------------------------|
+| Path | 37.642 / 35.617 | 110.004 / 89.715 |
+| Clique | 28.832 / 25.083 | 223.900 / 60.126 |
+| Disconnected | 98.023 / 91.926 | 127.363 / 103.563 |
+
+The separate five-solve 128-vertex metered median improved from
+497.375 to 457.324 ms. In the ten-solve four-process metered cohort,
+the 48-vertex path median regressed from 59.320 to 74.238 ms.
+The metered state, offer, and index work receipts matched. The
+metered regression has no per-sample phase attribution. Source
+initialization and save/restore preparation remain visible costs.
+
+** Metered path diagnosis and singleton closed offers
+
+The original 74.238 ms median has no per-solve collector receipt.
+A fresh comparison on the 48-vertex path used the same state budget
+and result/witness checks. In the native benchmark's metered arm,
+the membership-deferred version moved from 42.055 to 69.644 ms
+against its preceding baseline. Collections moved from 4 to 6 in ten
+solves, while CPU excluding recorded GC moved from 39.853 to 38.701 ms.
+A 197.637 ms sample recorded about 99.872 ms of GC wall time, with a
+13 microsecond sampling window. The rest of the wall time remains
+unattributed by that receipt.
+
+A separate reference/candidate alternating diagnostic gave the
+membership-deferred arm 36.482 ms across twenty counted solves with
+no collection. The same native invocation could place collections
+on either the ordinary or the metered solve when the two shared a
+process. The checked-in benchmark now times all candidate solves
+before the heavier reference for each fixture. It stores detached
+rows and witnesses for comparison, checks every solve against the
+independent graph oracle, and records wall, CPU, collector time/count,
+sampling window, and collector-free allocated bytes per solve.
+The five solves per lane and the logical gates are unchanged.
+
+The pinned Gerbil STD hash normalizer creates a table even for one
+value. The Dusa constraint merger now admits the empty or singleton
+domain directly. When the left side of an intersection contains one
+value it retains that list on a match, after the same checkpoint.
+Wider domains preserve the existing STD normalization and order.
+Lean verifies the singleton normal form and ordered intersection.
+The native test checks a singleton that becomes active after a
+multivalue offer, including the original support order.
+
+A separate activity probe observed 2,256 skipped hash
+normalizations on the 48-vertex path and 16,256 on the 128-vertex
+path. Under the same metered benchmark protocol the immediate
+before/after medians were 69.644 to 40.902 ms and 575.518 to
+473.123 ms respectively. Collector-free allocation for the smaller
+path was 75.626 to 73.213 MiB. The work receipts matched. The
+disconnected metered median moved from 65.077 to 91.130 ms, with
+four versus six collections and CPU excluding GC of 62.844 versus
+63.677 ms.
+
+A separate ordinary-only path run used fresh native processes,
+twenty samples per version, and no reference, meter, or forced GC.
+The medians were 67.040 and 67.551 ms. Both recorded twelve
+collections. Allocations in collector-free solves fell from 75.491
+to 73.078 MiB. The maximum rose from 76.549 to 95.195 ms.
+These results leave ordinary wall-clock tails open.
+
+** Pending Set membership and wall-time counterexamples
+
+The baseline for this comparison is =8cd7b3ba=. On the disconnected
+Figure 3 workload (3,080 states and 81 models), a separate
+instrumented run put the median of the accumulated engine evaluation
+intervals at 41.149 ms. Offer processing was 15.995 ms and parent
+restoration was 21.461 ms. These are instrumented phase totals,
+with nested events where indicated in the raw receipt, and cannot
+explain an individual uninstrumented long sample.
+
+In =program/evaluate.ss=, =emit-row!= lazily creates an exact pending
+hash table for each derived relation that emits in an invocation.
+=admit-stored!= checks committed and pending membership in order.
+=commit!= publishes the pending list and clears the index. The
+experiment used the existing pending list until the second or third
+distinct row needed admission. It preserved the order of row
+publication and left controlled execution and custom providers on
+their existing path. Lean checked the finite membership equivalence.
+The native control checks duplicate suppression through promotion
+and compares output order and provenance against direct grounding.
+
+In one separately instrumented solve, the one-row variant changed
+pending table creations from 2,306 to 2,210 on the path, 486 to 486
+on the clique, and 2,981 to 2,522 on the disconnected graph. Yet
+collector-free allocation rose from 117.929 to 118.202 MiB in
+ordinary disconnected solves. Its P95 rose from 123.183 to
+152.837 ms. The slowest candidate had 169.250 ms wall time,
+96.643 ms CPU and 31.798 ms of GC wall time. This receipt does
+not assign the remaining wall time to any specific runtime event.
+The one-row variant was rejected.
+
+The two-row variant reduced pending table creations to two each
+on the path and disconnected graph. The clique stayed at 486.
+Ordinary collector-free allocation fell from 73.079 to 71.481 MiB
+on the path and from 117.930 to 115.937 MiB on the disconnected
+graph. Native wall time still failed the same criterion.
+
+| Figure 3 graph | Ordinary P50, base / candidate (ms) | Ordinary P95, base / candidate (ms) | Metered P50, base / candidate (ms) | Metered P95, base / candidate (ms) |
+|----------------+------------------------------------+------------------------------------+-----------------------------------+-----------------------------------|
+| Path           | 64.157 / 36.099                    | 91.407 / 192.353                   | 37.503 / 37.355                   | 70.552 / 74.349                    |
+| Clique         | 25.897 / 25.513                    | 63.762 / 60.671                    | 26.304 / 25.291                   | 61.173 / 72.049                    |
+| Disconnected   | 91.792 / 90.435                    | 106.088 / 106.694                  | 90.087 / 88.608                   | 93.250 / 111.628                   |
+
+Each arm used 30 ordinary and 10 metered solves per graph in fresh
+native test processes, ordered baseline/candidate/candidate/baseline.
+P95 uses the nearest rank. The slowest ordinary path solve recorded
+229.773 ms wall, 57.365 ms CPU, and no collection. There is no trace
+naming the remaining wait. The separate 128-vertex path metered median
+moved from 497.715 to 502.655 ms. The original pending-table
+implementation stays in production. Both patches and raw measurements
+are retained in the local cache.
+
+** Source snapshot ownership experiment
+
+The private source-log path in =program/session.ss= produced the
+source snapshot directly in a vector and shallow-copied the vector
+for saved and committed cuts. Paths capable of editing log headers in place continued
+to copy the headers. In the direct path, append writes engine buffers and
+replacement writes a fresh vector slot. A candidate Lean proof
+checked the per-slot source projection and replacement frame.
+The Scheme suite exercised rollback after a refused direct append
+and restored a prior branch after later successful appends.
+
+| Figure 3 graph | Ordinary allocated MiB, base / candidate | Ordinary P50, base / candidate (ms) | Ordinary P95, base / candidate (ms) |
+|----------------+------------------------------------------+------------------------------------+------------------------------------|
+| Path           | 73.078 / 71.151                          | 69.794 / 70.190                    | 120.306 / 212.636                  |
+| Clique         | 35.213 / 34.800                          | 29.207 / 71.976                    | 82.348 / 179.339                   |
+| Disconnected   | 117.929 / 115.186                        | 98.472 / 148.525                   | 162.600 / 284.112                  |
+
+These were separate native cohorts with the same ABBA order and
+30 ordinary solves per arm. Allocation includes only nonnegative
+counter differences without a collection. Metered P95 fell on
+each smaller graph in this cohort, while the 128-vertex metered
+P95 moved from 1,389.713 to 1,460.347 ms across five solves per
+arm. The ordinary regression and the larger path maximum failed
+the wall time criterion. The source snapshot candidate is
+retained in the local cache and was removed from production.
+
+** Forced deduction through the existing Delta
+
+The disconnected work receipt records 3,079 direct extensions,
+341 parent restores, and 38 captures. A direct extension calls
+=relational-program-session-run= from =install-state!= and freezes
+a private result. The larger remaining question is whether a forced
+deduction chain can advance its Delta and retain ordered supports
+without creating a Session result for every step. This would
+require the same state admission, checkpoint, fact charge and
+provenance sequence, including before a rejection or first
+alternative. The present measurements do not qualify such a change.
+
+** Demand-driven projection of completed choice states
+
+The previous result promise avoided constructing a public result during
+propagation, but every completed state still prepared all ordered
+snapshots and representation descriptors. The offer reader instead
+uses the current raw ordered cut under the completed result identity.
+The candidate therefore freezes the engine root and size vectors at
+every commit and prepares complete projection only when a model or
+query requires it. Parent reuse reads just its unaffected relations
+from the captured roots. Its explicit row reader reverses and copies
+each row spine in one pass, preserving the detachment of the old view.
+
+=choice_demand_rows_exact= matches captured slot order and size to
+eager projection after a working slot update.
+=choice_demand_parent_rows_exact= checks the single-pass detached
+row sequence. The native case holds two completed sibling results
+across repeated restores, reads both after the engine moves, and
+mutates a delivered row before checking the retained cut. Evaluation,
+state admission, the fact budget, and the final publication checkpoint
+remain at their existing call sites.
+
+A separate instrumented run counted full relation projections.
+The counts fell from 2,352 to 48 on the path, 506 to 22 on the
+clique, and 3,421 to 81 on the disconnected graph. Each candidate
+count equals the number of delivered models. Reading those models
+after solving did not trigger a second complete projection. Among
+ordinary disconnected solves without a collection, the median
+allocation fell from 117.933 to 110.175 MiB.
+
+The same native four-process comparison checked models and witnesses.
+There were 30 ordinary solves per arm, including separate timestamps
+at solve completion and after reading every model and witness.
+Indexed and delta work receipts matched in the ten metered solves
+per arm. All values below are elapsed milliseconds.
+
+| Figure 3 graph | Solve P95, base / candidate | Complete delivery P50, base / candidate | Complete delivery P95, base / candidate |
+|----------------+-----------------------------+----------------------------------------+----------------------------------------|
+| Path 48        | 94.989 / 137.880            | 70.178 / 69.150                        | 112.592 / 247.645                      |
+| Clique 22      | 203.080 / 95.868            | 35.623 / 32.043                        | 231.913 / 132.330                      |
+| Disconnected   | 178.593 / 176.781           | 95.785 / 92.694                        | 184.899 / 180.605                      |
+
+The candidate path's delivery P95 sample had already spent 137.880 ms
+solving, including 47.382 ms of collector wall time. It took 109.765 ms
+more to read models and witnesses, with no additional collection.
+This interval does not assign the delay to row reads, witness
+construction or runtime wait. On the disconnected graph, the metered
+P95 increased from 248.902 to 281.528 ms. That candidate sample used
+67.286 ms of CPU with no collection. The five-solve, 128-vertex metered
+path median moved from 473.396 to 539.291 ms.
+
+The allocation, native checks, and guarded Lean proofs support the
+ownership change. The regressions preclude adoption under the elapsed
+time criterion. The implementation, proofs, and raw receipts are kept
+in the local experiment cache. The new native case also runs against
+the existing production implementation.
+
+** Witness projection and delivery phases
+
+Separate timestamps in a single solve split delivery into public row
+reads, benchmark-only oracle sorting, and public provenance construction.
+The initial baseline diagnostic measured these phase medians at
+1.238, 0.428, and 3.547 ms on the 48-vertex path. At 128 vertices the
+medians were 4.023, 3.588, and 22.483 ms. One 128-vertex witness phase
+took 159.796 ms and recorded 125.038 ms of GC wall time. These
+diagnostics are separate from the earlier delivery failure receipt.
+
+In =program/scheme-choice.ss=, each support's captured row contains
+the binding prefix followed by attribute key and offered values.
+The lowering records each premise occurrence as a literal or an
+ordinal below that prefix width. The candidate reads narrow bindings
+directly, with at most three tail steps per occurrence. Wider bindings
+fill their vector in one pass. This removes the temporary =take= list,
+and narrow supports also no longer allocate a binding vector. Existing
+step, support, and premise checkpoints are kept in their original order.
+Source origin and externally mutable witness lists are still detached.
+
+The Lean binding lemmas connect the admitted row and the wide-vector
+projection to the copied prefix. The native wide-rule case checks
+repeated binding occurrences, ordered premises, a caller-mutated
+witness, and the exact query checkpoint charges.
+
+The binding-only comparison removed 473,088 bytes from delivery of
+2,304 supports on the 48-vertex path and 3,391,488 bytes from
+16,384 supports at 128 vertices, taking medians from collector-free
+witness intervals. Witness P95 fell from 38.203 to 20.080 ms and
+from 97.417 to 78.991 ms. Full delivery in the instrumented 48-vertex
+cohort still regressed from 85.291 to 189.598 ms at P95. That exact
+candidate sample recorded 49.003 ms of CPU and no collection.
+
+The combined candidate captures each validated source origin from
+its compiled rule once. A private reader retains that copy and
+constructs a fresh public origin for every support, including both
+reader location layouts, filename strings, and symbolic filenames.
+The original public rule getter retains validation. The new native
+case mutates the locations, the filename string and the symbolic
+filename in one returned witness, then reads the original values
+from a second witness. =choice_witness_origin_admitted= connects
+reuse of validated offer slots to the per-visit validation predicate.
+
+The second paired diagnostic times public rows and witnesses before
+running benchmark-only oracle sorting. The original benchmark and
+its sorted complete delivery checks ran separately with their original
+timing boundary. Working sets, output and witnesses were checked
+in both comparisons.
+
+| Path vertices | Supports | Witness CPU median without GC (ms) | Allocated bytes without GC | Complete delivery P50 / P95 (ms) |
+|---------------+----------+------------------------------------+----------------------------+----------------------------------|
+| 48            | 2304     | 4.225 / 1.893                      | 9213824 / 8261504          | 97.263 / 417.197 to 105.534 / 403.449 |
+| 128           | 16384    | 27.508 / 8.619                     | 65526144 / 58726784        | 1009.524 / 1781.661 to 1552.832 / 1887.118 |
+
+CPU and bytes use medians of witness intervals without a collection.
+The 48- and 128-vertex phase runs used 30 and 10 samples per arm.
+The 128-vertex candidate P95 sample spent 1,782.934 ms in the solve,
+5.650 ms reading rows, and 98.534 ms generating witnesses. Its solve
+recorded 668.363 ms CPU and 552.364 ms of collector wall time.
+The remaining delay has no scheduler-level attribution.
+
+The ordinary sorted delivery checks also regressed. For the
+disconnected graph, P95 moved from 435.926 to 556.156 ms. The
+full combined candidate property suite reached the original
+90-second cap before completing the first generated-graph case.
+The exact baseline passed in 87.06 seconds. The result does not
+attribute the candidate timeout. The combined candidate passed
+the other 139 native cases and the Lean Guard's 196 build jobs.
+Both implementation candidates and their receipts are retained
+in the local cache. Production keeps the prior witness projection.
+
+** Incremental hashing of canonical search states
+
+The five instrumented adaptive solves on the 128-vertex path
+entered =install-state!= and =process!= 16,385 times per solve.
+Median cumulative wall intervals were 544.605 ms for installation,
+330.027 ms inside its engine runs, 347.180 ms for offer processing,
+and 215.406 ms inside its 16,384 enqueue attempts. The 127 parent
+restores took 17.450 ms cumulatively. These nested intervals include
+probe overhead and are separate from native paired wall timings.
+
+=enqueue!= previously gave the native structural hash table the
+entire canonical assignment list on both lookup and insertion.
+The candidate carries an incremental digest on the entry. Adding a
+binding XORs the native pair hash into the parent's digest. The
+standard hash table uses that digest to select a bucket and keeps
+full structural equality for the complete key. The ascending
+assignment list, the LIFO search order, state budget checks, and
+choice witnesses still use their existing representation.
+
+=choice_state_digest_insert= relates the incremental update to a
+fold over the sorted assignment list. =choice_state_key_exact=
+shows that the digest plus the canonical list has the original
+logical equality. The native case uses four independent open
+assignments: all sixteen subsets consume a distinct state, multiple
+insertion orders produce one final model, and a budget of fifteen
+fails. An isolated constant-digest build challenges the same
+membership boundary without relying on a naturally occurring collision.
+
+A second instrumented arm kept the same work. Median cumulative
+enqueue CPU fell from 235.799 to 35.200 ms in the 128-vertex solve.
+Its engine-run CPU was 341.313 versus 340.358 ms, locating the
+recorded change in state insertion rather than rule evaluation.
+Collector-free enqueue allocations grew from 45.501 to 46.501
+MiB. The constant-digest build passed all 24 finite-choice cases.
+
+The native 128-vertex comparison timed the entire request externally,
+including model and witness delivery. It moved from 534.029 to
+311.548 ms at P50 and from 701.258 to 597.762 ms at P95. The
+separately metered solve-only median moved from 528.699 to 286.937 ms.
+The disconnected ordinary delivery P95 still increased from 118.126
+to 168.016 ms. Its P95 sample ran for 153.011 ms before delivery,
+used 64.312 ms of CPU in that solve interval and recorded no collection.
+The remaining wall delay has no source-level attribution.
+
+The second candidate shares the canonical key between the index and
+worklist. It also stores the existing assignment pair in the
+canonical list instead of constructing an equivalent copy. The
+worklist entry holds its key once. Interpretation never mutates
+that assignment, and model rows detach at the existing source
+admission and witness delivery boundaries.
+
+The shared-key enqueue probe measured 34.840 ms of cumulative
+CPU and 45.497 MiB of allocations, against 235.799 ms and
+45.501 MiB for the original. Both made 16,384 enqueue attempts.
+The native phase comparison used ten 128-vertex samples per
+arm and measured complete delivery at 517.760 / 801.718 ms
+(P50 / P95) for the original and 308.601 / 344.584 ms for the
+candidate. The corresponding 48-vertex comparison used thirty
+samples per arm, with P50 / P95 of 69.819 / 78.376 ms and
+63.483 / 71.155 ms respectively.
+
+The separately timed, ordinary disconnected delivery cohort
+regressed from 110.841 to 268.649 ms at P95, despite a lower
+median. The selected candidate spent 265.402 ms in the solve,
+including 101.149 ms CPU and 31.222 ms of collector wall time.
+The baseline P95 request recorded 100.690 ms solve CPU and
+35.073 ms collector wall time. These receipts leave the extra
+elapsed interval unassigned. Its metered P95 also increased from
+116.040 to 317.423 ms. The shared-key candidate is included in the
+existing pull request for review with this performance result open.
+
+Both candidates passed 145 native cases, including both seeds
+and all one thousand property-generated graphs. The Lean guard
+completed its 196 build jobs. The experiment receipts are retained
+in the local cache.
+
+** POO graph and index correspondence
+
+The current =table/provider.ss= already uses sealed POO prototypes and
+=.defgeneric= for index build, extend and lookup. This remains the
+extension point for a table or graph-backed lookup implementation.
+POO's =feedback-graph.ss= uses a published SCC owner map and a revision
+guard. Its =support/index.ss= shares roots and path-copies sparse edits
+when creating a new owner. The choice checkpoints now apply that
+ownership pattern to their constraint maps through the standard red-black
+tree. Session restoration still reconstructs mutable relation indexes.
+
+POO's published graph owner uses symbolic keys. The ASCENT evaluator
+uses dense relation positions and integer attribute IDs. A backend
+experiment should exercise the existing provider and keep ordered
+rows and revision ownership in the comparison. The Figure 3 graph
+partition is independent of which representative values are reachable
+through closed and open choice rules. The graph oracle checks expected
+models and provenance still follows the actual solver transitions.
+
+The pinned local POO =30fe206= passed its native feedback graph and
+revision suites, 25 cases in total. The ASCENT checks passed 89 native
+cases, including the representative suites and the retention refusal
+case, and the guarded Lean build completed all 196 jobs.
+
+** Derivation witness query
+
+#+begin_src scheme
+(relational-program-query completed-model 'color provenance?: #t)
+#+end_src
+
+For a choice relation this returns a detached derivation in assignment order.
+Each step contains its kind (=deduction= or =branch=), a relation-prefixed row,
+and a list of supports. A support contains the choice rule ordinal, head kind,
+reader origin, ordered grounded premises, and the original offered values.
+A closed step retains the enabled constraints used to select the value. An
+open branch retains one enabling rule instance. The retained path belongs to
+the published solution and cannot read the current mutable Session or mix
+sibling cuts. The query runs the existing execution checkpoints. It reports a
+witness for the selected path. Exhaustive alternate derivations, recursive
+expansion of ordinary premise rows, cross-interface RuleModule =explain=,
+and watched constraints remain open. Branch-dependent prefix reuse
+requires a separate ownership and invalidation argument.

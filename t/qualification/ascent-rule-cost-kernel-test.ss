@@ -440,6 +440,42 @@
         (check-equal? (read-count reused 'prefix-build-input-rows) 3)
         (check-equal? (read-count reused 'prefix-slot-stores) 1)
         (check-equal? (read-count reused 'prefix-slot-restores) 1)))
+    (test-case "projected keys ignore unrelated slots and repeated local writes"
+      (let* ((x '(variable . x)) (y '(variable . y)) (z '(variable . z))
+             (plan (gerbil-ascent-compile-positive-plan
+                     (list (vector 4 (list x y z)))
+                     (map (lambda (relation terms)
+                            (vector 'atom (vector relation terms [] [] [])))
+                          '(0 1 2 3) (list (list x y) (list y z z) (list z) (list z)))))
+             (inputs (vector '((1 #f) (2 #f) (1 7) (3 #f))
+                             '((#f a a) (#f missed a) (7 b b))
+                             '((a) (b)) '((a) (b))))
+             (workspace (make-prefix-fixture plan (lambda () '(0 . 0))))
+             (expected '((1 #f a) (2 #f a) (1 7 b) (3 #f a))))
+        (def (old atom _frame _keys _checkpoint!)
+          (vector-ref inputs (vector-ref atom 0)))
+        (def (rows atom _frame _delta? _keys)
+          (vector-ref inputs (vector-ref atom 0)))
+        (def (observe state)
+          (let ((out []) (cost (make-positive-plan-cost #f #t)))
+            (call-with-positive-plan-cost cost
+              (lambda ()
+                (gerbil-ascent-run-positive-plan!
+                 plan (make-vector 3 'dirty) 3 rows
+                 (lambda (_head row) (set! out (cons row out)))
+                 #f #f old '(0 1 0) state)))
+            (check-equal? (reverse out) expected)
+            (check-equal? (read-count cost 'complete-witnesses) (length expected))
+            (values (filter (lambda (visit) (and (= (caddr visit) 3) (list-ref visit 3)))
+                            (positive-plan-cost-visits cost))
+                    (read-count cost 'prefix-build-input-rows))))
+        (let-values (((stream _stream-cost) (observe #f))
+                     ((retained build-inputs) (observe workspace)))
+          (check-equal? retained stream)
+          (check-equal? (length retained) (length expected))
+          ;; Four first-atom rows, plus three label candidates for each of
+          ;; the two distinct keys (#f and 7).
+          (check-equal? build-inputs 10))))
     (test-case "prefix owners isolate siblings and version both empty and nonempty revisions"
       ;; Deliberately stale version readers must fail the independent oracle.
       (check-equal? (prefix-property (list (vector 9 1) (vector 3 1)) 'source) #f)
@@ -598,6 +634,51 @@
         (check-equal? (read-count cost 'cross-plan-candidate-revisits) 2)
         (check-equal? (read-count cost 'same-plan-prefix-revisits) 0)
         (check-equal? (read-count cost 'same-plan-candidate-revisits) 0)))
+    (test-case "singleton delta buckets preserve order and rebuild equal-sized changed cuts"
+      (let* ((plan (gerbil-ascent-compile-positive-plan
+                   (list (vector 2 '((variable . y) (variable . z))))
+                   (list (vector 'atom (vector 0 '((variable . x) (variable . y)) [] [] []))
+                         (vector 'atom (vector 1 '((variable . x) (variable . z)) '(0) [] '((variable . x)))))))
+             (cache (make-bounded-static-prefix-cache [] 256))
+             (first '((9 0) (2 3) (9 0) (9 4)))
+             (changed '((9 8) (2 7) (9 8) (9 6))))
+        (def (run rows delta owner (checkpoint! #f))
+          (let ((cost (make-positive-plan-cost #f)) (out []))
+            (parameterize ((current-static-prefix-cache owner)
+                           (current-static-prefix-relation? (lambda (index) (= index 0)))
+                           (current-static-prefix-single-delta
+                            (lambda (prefix suffix)
+                              (and (= prefix 0) (= suffix 1) (pair? delta) (null? (cdr delta)) (car delta)))))
+              (call-with-positive-plan-cost cost
+                (lambda ()
+                  (gerbil-ascent-run-positive-plan! plan (make-vector 3 #f) 1
+                    (lambda (_atom _frame fresh? _terms) (if fresh? delta rows))
+                    (lambda (_head row) (set! out (cons row out))) checkpoint!))))
+            (list (reverse! out) (read-count cost 'single-delta-probes)
+                  (read-count cost 'single-delta-build-rows)
+                  (read-count cost 'single-delta-prefix-visits))))
+        (check-equal? (run first '((9 42)) cache) '(((0 42) (0 42) (4 42)) 1 4 3))
+        (check-equal? (run (map list-copy first) '((3 0)) cache) '(() 1 0 0))
+        (check-equal? (run changed '((9 42)) cache) '(((8 42) (8 42) (6 42)) 1 4 3))
+        (check-equal? (run changed '((9 42) (2 30)) cache)
+                      '(((8 42) (7 30) (8 42) (6 42)) 0 0 0))
+        (check-equal? (run first '((9 42)) (make-bounded-static-prefix-cache [] 4))
+                      '(((0 42) (0 42) (4 42)) 0 0 0))
+        (let (checks 0)
+          (check-equal? (run first '((9 42)) cache (lambda () (set! checks (+ checks 1))))
+                        '(((0 42) (0 42) (4 42)) 0 0 0))
+          (check-equal? checks 8))))
+    (test-case "numeric counters preserve emitted rows and match the full trace counts"
+      (def (observe record?)
+        (let ((cost (make-positive-plan-cost record? record?)) (emitted []))
+          (call-with-positive-plan-cost cost
+            (lambda ()
+              (gerbil-ascent-run-positive-plan! (fixture) (make-vector 2 #f) -1 inputs
+                (lambda (head row) (set! emitted (cons (cons (vector-ref head 0) row) emitted))))))
+          (cons (reverse! emitted)
+                (map (lambda (name) (read-count cost name))
+                     '(candidate-rows partial-matches complete-witnesses head-proposals)))))
+      (check-equal? (observe #f) (observe #t)))
     (test-case "unrecorded repeated prefixes are unknown rather than zero"
       (let (cost (make-positive-plan-cost #f))
         (call-with-positive-plan-cost cost

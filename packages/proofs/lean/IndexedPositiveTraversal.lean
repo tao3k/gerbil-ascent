@@ -396,6 +396,21 @@ theorem frontier_to_rows (body : List (Atom Value)) (input output : Env Value)
 def rawTransition (atom : PositiveTraversal.Atom Value) (input output : Env Value) : Prop :=
   ∃ row ∈ atom.rows, AtomicBinding.bind atom.terms row input = some output
 
+/-- A selected occurrence with an exact zero delta count has no witness,
+regardless of the prefix, including repeated occurrences of a relation. -/
+theorem empty_delta_pivot_no_derivation (prior rest : List (Atom Value))
+    (atom : Atom Value) (count depth : Nat) (exactCount : atom.deltaRows.length = count)
+    (empty : count = 0) (input output : Env Value) :
+    ¬ ProviderFrontier.body rawTransition
+      (rawBody (prior ++ atom :: rest) (some (depth + prior.length)) depth) input output := by
+  have noRows : atom.deltaRows = [] := List.length_eq_zero_iff.mp (exactCount.trans empty)
+  induction prior generalizing depth input with
+  | nil => simp [rawBody, lane, noRows, ProviderFrontier.body, rawTransition]
+  | cons before prior ih =>
+      simp only [List.cons_append, rawBody, ProviderFrontier.body, List.length_cons]
+      rintro ⟨middle, _, tail⟩
+      exact ih (depth + 1) middle (by simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using tail)
+
 theorem raw_all (body : List (Atom Value)) (depth : Nat) (input output : Env Value) :
     ProviderFrontier.body rawTransition (rawBody body none depth) input output ↔
       ProviderFrontier.body (transition Atom.allRows) body input output := by
@@ -1076,5 +1091,318 @@ theorem release_bounded (used own budget : Nat) (bounded : used ≤ budget) :
 #print axioms renamed_binding
 #print axioms provenance_projection
 end FactorizedDAG
+
+/-! A scalar Set commit in program/evaluate.ss conses the admitted
+fresh batch onto the old root and stamps the two resulting versions. The
+membership premise is supplied by admit-stored! against seen and pending.
+The suffix can be returned in its original order, including old duplicates. -/
+theorem committed_old_tail (fresh previous : List Value)
+    (absent : ∀ row ∈ previous, row ∉ fresh) :
+    (fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh)) = previous := by
+  rw [List.filter_append]
+  have removed : fresh.reverse.filter (fun row => decide (row ∉ fresh)) = [] := by
+    apply List.filter_eq_nil_iff.mpr
+    intro row member
+    have inFresh : row ∈ fresh := List.mem_reverse.mp member
+    simp [inFresh]
+  rw [removed, List.nil_append]
+  exact List.filter_eq_self.mpr (fun row member => by simp [absent row member])
+
+-- program/index.ss reads the saved spine only at the exact unkeyed cut.
+def readCommittedOld (totalVersion deltaVersion savedTotal savedDelta : Nat)
+    (unkeyed checkpoint : Bool) (savedRows fresh previous : List Value) : List Value :=
+  if unkeyed && !checkpoint &&
+      decide (totalVersion = savedTotal ∧ deltaVersion = savedDelta) then
+    savedRows
+  else
+    (fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh))
+
+theorem read_committed_old_exact (totalVersion deltaVersion savedTotal savedDelta : Nat)
+    (unkeyed checkpoint : Bool) (savedRows fresh previous : List Value)
+    (owns : totalVersion = savedTotal → deltaVersion = savedDelta → savedRows = previous)
+    (absent : ∀ row ∈ previous, row ∉ fresh) :
+    readCommittedOld totalVersion deltaVersion savedTotal savedDelta
+      unkeyed checkpoint savedRows fresh previous =
+    (fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh)) := by
+  unfold readCommittedOld
+  split
+  · rename_i eligible
+    have both : totalVersion = savedTotal ∧ deltaVersion = savedDelta := by
+      simpa using (Bool.and_eq_true_iff.mp eligible).2
+    rw [owns both.1 both.2, committed_old_tail fresh previous absent]
+  · rfl
+
+-- Counts work before the join traverses its old rows. A fresh membership
+-- table inserts one entry per delta row; the STD list builder then allocates
+-- one cons per retained row, plus an excluded constant sentinel.
+def coldOldPreparation (borrow : Bool) (fresh previous : List Value) : Nat × Nat × Nat :=
+  if borrow then (0, 0, 0) else
+    (fresh.length, (fresh.reverse ++ previous).length,
+      ((fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh))).length)
+
+theorem cold_old_preparation_cost (fresh previous : List Value)
+    (absent : ∀ row ∈ previous, row ∉ fresh) :
+    coldOldPreparation false fresh previous =
+      (fresh.length, fresh.length + previous.length, previous.length) ∧
+    coldOldPreparation true fresh previous = (0, 0, 0) := by
+  constructor
+  · change (fresh.length, (fresh.reverse ++ previous).length,
+      ((fresh.reverse ++ previous).filter (fun row => decide (row ∉ fresh))).length) = _
+    rw [committed_old_tail fresh previous absent]
+    simp
+  · rfl
+
+namespace PrefixCacheKey
+
+/-- A bound read following a fresh write to the same slot observes the row,
+not the incoming frame. Reads before that write remain in the key. -/
+def incomingSlots : List (Action Value) → List Nat
+  | [] => []
+  | .bound slot :: actions => slot :: incomingSlots actions
+  | .fresh slot :: actions => (incomingSlots actions).filter (· != slot)
+  | _ :: actions => incomingSlots actions
+
+def writtenSlots : List (Action Value) → List Nat
+  | [] => []
+  | .fresh slot :: actions => slot :: writtenSlots actions
+  | _ :: actions => writtenSlots actions
+
+theorem matching_agrees (actions : List (Action Value)) (row : List Value)
+    (left right : Frame Value)
+    (same : ∀ slot ∈ incomingSlots actions, left slot = right slot) :
+    (run actions row left).1 = (run actions row right).1 ∧
+    ((run actions row left).1 = true → ∀ slot,
+      slot ∈ writtenSlots actions ∨ left slot = right slot →
+      (run actions row left).2 slot = (run actions row right).2 slot) := by
+  induction actions generalizing row left right with
+  | nil => simp [writtenSlots, run]
+  | cons action actions ih =>
+      cases row with
+      | nil => simp [run]
+      | cons value row =>
+          cases action with
+          | wildcard => exact ih row left right same
+          | literal expected =>
+              by_cases hit : expected = value
+              · simpa [run, hit, writtenSlots] using ih row left right same
+              · simp [run, hit]
+          | bound slot =>
+              have agrees := same slot (by simp [incomingSlots])
+              have tail : ∀ i ∈ incomingSlots actions, left i = right i :=
+                fun i member => same i (by simp [incomingSlots, member])
+              by_cases hit : left slot = value
+              · have rightMatches := agrees.symm.trans hit
+                simpa [run, hit, rightMatches, writtenSlots] using ih row left right tail
+              · have rightMisses : right slot ≠ value := fun rightHit => hit (agrees.trans rightHit)
+                simp [run, hit, rightMisses]
+          | fresh slot =>
+              have updated : ∀ i ∈ incomingSlots actions,
+                  write left slot value i = write right slot value i := by
+                intro i member
+                by_cases localWrite : i = slot
+                · simp [write, localWrite]
+                · exact by
+                    have agreement := same i (List.mem_filter.mpr ⟨member, by simp [localWrite]⟩)
+                    simp [write, localWrite, agreement]
+              have rest := ih row (write left slot value) (write right slot value) updated
+              refine ⟨rest.1, ?_⟩
+              intro accepted i reads
+              apply rest.2 accepted i
+              rcases reads with stored | untouched
+              · simp only [writtenSlots, List.mem_cons] at stored
+                rcases stored with sameSlot | tail
+                · exact Or.inr (by simp [write, sameSlot])
+                · exact Or.inl tail
+              · exact Or.inr (by simp [write, untouched])
+
+/-- This is the exact payload retained by the Scheme cache: the row
+occurrence and values written by the current atom in slot order. -/
+def record (actions : List (Action Value)) (row : List Value) (frame : Frame Value) :
+    Option (List Value × List Value) :=
+  let matched := run actions row frame
+  if matched.1 then some (row, (writtenSlots actions).map matched.2) else none
+
+theorem records_agree (actions : List (Action Value)) (candidates : List (List Value))
+    (left right : Frame Value)
+    (same : ∀ slot ∈ incomingSlots actions, left slot = right slot) :
+    candidates.filterMap (fun row => record actions row left) =
+    candidates.filterMap (fun row => record actions row right) := by
+  congr 1
+  funext row
+  obtain ⟨hit, written⟩ := matching_agrees actions row left right same
+  unfold record
+  dsimp only
+  rw [← hit]
+  split
+  · rename_i accepted
+    have projected : (writtenSlots actions).map (run actions row left).2 =
+        (writtenSlots actions).map (run actions row right).2 :=
+      List.map_congr_left (fun slot member => written accepted slot (Or.inl member))
+    rw [projected]
+  · rfl
+
+def key (reads : List Nat) (frame : Frame Value) : Value ⊕ List Value :=
+  match reads with
+  | [slot] => .inl (frame slot)
+  | _ => .inr (reads.map frame)
+
+omit [DecidableEq Value] in
+theorem key_agrees (reads : List Nat) (left right : Frame Value)
+    (same : key reads left = key reads right) :
+    ∀ slot ∈ reads, left slot = right slot := by
+  cases reads with
+  | nil => simp
+  | cons first rest =>
+      cases rest with
+      | nil => simpa [key] using same
+      | cons next tail =>
+          exact List.map_inj_left.mp (by simpa [key] using same)
+
+theorem records_agree_at_key (actions : List (Action Value)) (candidates : List (List Value))
+    (left right : Frame Value)
+    (same : key (incomingSlots actions) left = key (incomingSlots actions) right) :
+    candidates.filterMap (fun row => record actions row left) =
+    candidates.filterMap (fun row => record actions row right) :=
+  records_agree actions candidates left right (key_agrees _ _ _ same)
+
+omit [DecidableEq Value] in
+theorem bound_below_reads (actions : List (Action Value)) (count slot : Nat)
+    (fresh : FreshAbove count actions) (lower : slot < count)
+    (bound : Action.bound slot ∈ actions) :
+    slot ∈ incomingSlots actions := by
+  induction actions with
+  | nil => simp at bound
+  | cons action actions ih =>
+      have tailFresh : FreshAbove count actions := fun i member =>
+        fresh i (List.mem_cons_of_mem _ member)
+      cases action with
+      | bound prior =>
+          simpa only [incomingSlots, List.mem_cons, Action.bound.injEq] using
+            ((List.mem_cons.mp bound).elim
+              (fun equal => Or.inl (Action.bound.inj equal))
+              (fun tail => Or.inr (ih tailFresh tail)) :
+                slot = prior ∨ slot ∈ incomingSlots actions)
+      | fresh written =>
+          have upper := fresh written (by simp)
+          have different : slot ≠ written := by omega
+          have tail : Action.bound slot ∈ actions := by simpa using bound
+          exact List.mem_filter.mpr ⟨ih tailFresh tail, by simp [different]⟩
+      | literal value => exact ih tailFresh (by simpa using bound)
+      | wildcard => exact ih tailFresh (by simpa using bound)
+
+omit [DecidableEq Value] in
+/-- The source certificate restricts index columns to literals and prior
+bindings. A projected cache key therefore fixes the bucket selector as well
+as the payload produced from that bucket by the matcher. -/
+theorem compiled_key_agrees (terms : List (Term Value)) (columns names : List Nat)
+    (left right : Frame Value)
+    (known : ∀ i ∈ columns, ∃ term, terms[i]? = some term ∧ Indexable names term)
+    (same : key (incomingSlots (compile terms names).1) left =
+            key (incomingSlots (compile terms names).1) right) :
+    compiledKey terms columns names left = compiledKey terms columns names right := by
+  apply List.map_congr_left
+  intro i member
+  obtain ⟨term, located, readable⟩ := known i member
+  have atAction := compile_known_at terms names i term located readable
+  rw [atAction]
+  cases term with
+  | literal value => rfl
+  | wildcard => simp [Indexable] at readable
+  | «variable» name =>
+      cases found : slot name names with
+      | none => simp [Indexable, found] at readable
+      | some index =>
+          have atBound : (compile terms names).1[i]? = some (.bound index) := by
+            simpa [lower, found] using atAction
+          have reads := bound_below_reads _ names.length index (compile_fresh_above terms names)
+            (slot_lt name names index found) (List.mem_of_getElem? atBound)
+          simp [lower, found, actionValue, key_agrees _ _ _ same index reads]
+
+end PrefixCacheKey
+
+namespace BinaryListMatch
+
+/-- Direct binding for the two binary layouts used by the recursive chain.
+    A bound mismatch must leave the frame untouched. -/
+def bind (firstBound : Bool) (a b : Nat)
+    (left right : Value) (frame : Frame Value) : Bool × Frame Value :=
+  if firstBound then
+    if frame a = left then (true, write frame b right) else (false, frame)
+  else (true, write (write frame a left) b right)
+
+theorem full_match (firstBound : Bool) (a b : Nat)
+    (left right : Value) (frame : Frame Value) :
+    bind firstBound a b left right frame =
+      run [if firstBound then .bound a else .fresh a, .fresh b] [left, right] frame := by
+  cases firstBound <;> simp [bind, run]
+
+end BinaryListMatch
+
+namespace LinearClosureCost
+
+/-- Sum of the frontier cardinalities of one directed chain, beginning
+with its seed edges and ending with the last nonempty path distance. -/
+def frontierRows : Nat → Nat
+  | 0 => 0
+  | n + 1 => n + 1 + frontierRows n
+
+/-- All rounds probe the static edge index once per prefix. A chain's
+successful suffix candidates are one fewer than its prefixes in each round. -/
+def suffixRows (edges : Nat) : Nat := frontierRows (edges - 1)
+
+def witnesses (edges : Nat) : Nat := edges + suffixRows edges
+
+def liveCandidateRows (edges : Nat) : Nat := edges + frontierRows edges + suffixRows edges
+
+theorem frontier_rows_triangular (edges : Nat) :
+    2 * frontierRows edges = edges * (edges + 1) := by
+  induction edges with
+  | zero => rfl
+  | succ edges ih =>
+      change 2 * ((edges + 1) + frontierRows edges) = (edges + 1) * ((edges + 1) + 1)
+      rw [Nat.mul_add 2, ih, Nat.mul_add (edges + 1) (edges + 1) 1,
+        Nat.add_mul edges 1 (edges + 1), Nat.one_mul, Nat.mul_one]
+      omega
+
+theorem frontier_rows_equal_witnesses (edges : Nat) :
+    frontierRows edges = witnesses edges := by
+  cases edges <;> simp [frontierRows, witnesses, suffixRows]
+
+theorem live_candidates_double_witnesses (edges : Nat) :
+    liveCandidateRows edges = 2 * witnesses edges := by
+  unfold liveCandidateRows
+  rw [frontier_rows_equal_witnesses]
+  unfold witnesses
+  omega
+
+/-- A generic two-column candidate dispatches on both term tags when it
+    matches. The two binary layouts dispatch once at preparation instead.
+    The actual slot writes and bound comparison still execute. -/
+def matchedTermDispatches (edges : Nat) : Nat := 2 * liveCandidateRows edges
+
+example : 256 * matchedTermDispatches 15 = 122880 := by decide
+
+/-- Before skipping the empty Edge pivot, that pivot also visited every
+already-committed row in the Reach prefix. The committed rows exclude the
+current frontier and are increased only at a completed round. -/
+def emptyEdgePivotRows : Nat → Nat → Nat
+  | 0, _ => 0
+  | n + 1, old => old + emptyEdgePivotRows n (old + (n + 1))
+
+theorem extra_old_rows_are_visited_each_round (edges old extra : Nat) :
+    emptyEdgePivotRows edges (old + extra) =
+      emptyEdgePivotRows edges old + edges * extra := by
+  induction edges generalizing old with
+  | zero => simp [emptyEdgePivotRows]
+  | succ n ih =>
+      simp only [emptyEdgePivotRows, Nat.succ_mul]
+      rw [show old + extra + (n + 1) = (old + (n + 1)) + extra by omega, ih]
+      omega
+
+example : (256 * liveCandidateRows 15, 256 * witnesses 15,
+    256 * (liveCandidateRows 15 + emptyEdgePivotRows 15 0)) =
+    (61440, 30720, 348160) := by decide
+
+end LinearClosureCost
 
 end Ascent.IndexedPositiveTraversal

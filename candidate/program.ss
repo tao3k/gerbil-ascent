@@ -7,8 +7,8 @@
 ;;; Inspect inert proposal data, then lower the checked form into the
 ;;; trusted Scheme relational language. This module never evaluates a
 ;;; candidate-supplied procedure.
-(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data? candidate-copy-pairs)
-        (only-in :gerbil-ascent/candidate/types
+(import (only-in "datum.ss" reasoning-bounded-data? candidate-copy-pairs)
+        (only-in "types.ss"
                  reasoning-snapshot-relations
                  make-reasoning-diagnostic make-candidate-rejection
                  make-reasoning-candidate reasoning-candidate-relations
@@ -16,13 +16,13 @@
                  reasoning-candidate-query reasoning-candidate-limits
                  +max-relations+ +max-rules+ +max-input-facts+
                  +max-derived-facts+ +max-output-facts+)
-        (only-in :gerbil-ascent/program/func
+        (only-in "../program/func.ss"
                  gerbil-ascent-relation gerbil-ascent-atom
                  gerbil-ascent-negation gerbil-ascent-rule
                  gerbil-ascent-program gerbil-ascent-construct-inert-program
                  gerbil-ascent-variable
                  gerbil-ascent-wildcard gerbil-ascent-literal)
-        (only-in :gerbil-ascent/program/scheme-checked
+        (only-in "../program/scheme-checked.ss"
                  relational-where relational-compute relational-reducer))
 
 (export scalar? candidate-variable? candidate-inspect candidate-program
@@ -128,7 +128,7 @@
 
 ;;; One inspection owns name resolution and source/derived write authority.
 ;;; Public candidate records stay inert; these indexes never escape inspection.
-(defstruct candidate-declaration (arity source?))
+(defstruct candidate-declaration (arity source?) final: #t)
 (def (candidate-schema source derived)
   (let (schema (make-hash-table-eq))
     (for-each

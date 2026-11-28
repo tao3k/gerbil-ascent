@@ -9,9 +9,12 @@
                  source-snapshot-rows)
         (only-in :clan/poo/object .o .ref)
         (only-in "types.ss" gerbil-ascent-make-session-value)
+        (only-in "result.ss" gerbil-ascent-result-complete?)
         (only-in "admission.ss" gerbil-ascent-check-replacement-rows!)
         (only-in "update-selection.ss" gerbil-ascent-update-eligible?)
-        (only-in "evaluate.ss" gerbil-ascent-make-engine-state gerbil-ascent-make-updated-engine-state)
+        (only-in "evaluate.ss" gerbil-ascent-make-engine-state gerbil-ascent-make-updated-engine-state
+                 gerbil-ascent-make-choice-engine-state)
+        (only-in "reuse.ss" gerbil-ascent-prepare-session-reuse gerbil-ascent-prepare-parent-reuse)
         (only-in "engine-state.ss" engine-state-append-source! engine-state-replace-source! engine-state-run
                  engine-state-run-timeout engine-state-analysis engine-state-schema
                  engine-state-publication engine-state-recomputed?
@@ -24,6 +27,7 @@
 (import :gerbil-ascent/core/execution-control)
 
 (export gerbil-ascent-open-session
+        gerbil-ascent-open-session/choice
         gerbil-ascent-session-append-source!
         gerbil-ascent-session-replace-source!
         gerbil-ascent-session-replace-sources!
@@ -35,17 +39,32 @@
 ;;; engine, allowing failed provider updates to rebuild from committed input.
 (def (gerbil-ascent-open-session program
                                  measure-rule-times?: (measure-rule-times? #f))
+  (open-session program measure-rule-times? #f #f))
+
+(def (gerbil-ascent-open-session/choice program receive (defer-result? #f))
+  (open-session program #f receive defer-result?))
+
+(defstruct session-choice-cut (owner branch sources snapshot result publication) final: #t)
+
+(def (open-session program measure-rule-times? receive-choice-operations defer-result?)
   (unless (boolean? measure-rule-times?)
     (error "invalid ASCENT rule timing option" measure-rule-times?))
   ;; Capture the optional retention policy once. Recovery/revision cannot
   ;; silently change it when invoked outside the caller's dynamic extent.
   (def prefix-budget (current-positive-prefix-budget))
-  (def (fresh-engine . args)
+  (def (fresh-engine candidate analysis schema measure?)
     (parameterize ((current-positive-prefix-budget prefix-budget))
-      (apply gerbil-ascent-make-engine-state args)))
-  (def (updated-engine . args)
+      (if defer-result?
+        (gerbil-ascent-make-choice-engine-state candidate analysis schema)
+        (gerbil-ascent-make-engine-state candidate analysis schema measure?))))
+  (def (updated-engine previous candidate result analysis schema measure? cut publication (parent? #f))
     (parameterize ((current-positive-prefix-budget prefix-budget))
-      (apply gerbil-ascent-make-updated-engine-state args)))
+      (if defer-result?
+        (gerbil-ascent-make-choice-engine-state candidate analysis schema
+          ((if parent? gerbil-ascent-prepare-parent-reuse gerbil-ascent-prepare-session-reuse)
+           previous candidate result analysis cut publication))
+        (gerbil-ascent-make-updated-engine-state previous candidate result
+          analysis schema measure? cut publication))))
   (def (copy-source-rows rows)
     ;; Own both the outer list and every row pair before an engine can observe
     ;; them. Nested host values remain shared and need a separate contract.
@@ -305,7 +324,7 @@
                         (and engine ((engine-state-publication engine))))
                        (fresh-engine candidate engine-analysis engine-schema measure-rule-times?)))
                (result ((engine-state-run fresh))))
-          (unless (.ref result 'finished)
+          (unless (gerbil-ascent-result-complete? result)
             (error "batch source replacement did not complete"))
           ;; A trusted owner checks evidence against this completed prospective
           ;; result before any retained source or engine is published. Reentrant
@@ -390,6 +409,43 @@
                 (set! partial? #f))
               (set! partial? #t))
             result))))
+    (when receive-choice-operations
+      (let (owner (cons #f #f))
+        (def (read-root completed name)
+          (and clean? (eq? completed committed-result)
+               ((engine-state-publication engine) completed name)))
+        (def (save branch)
+          (check-idle!)
+          (and clean? (not partial?)
+               (andmap (lambda (relation) (not (eq? (.ref relation 'storage-kind) 'lattice)))
+                       initial-relations)
+               (let* ((cut (prepare-source-cut committed))
+                      (candidate (source-snapshot-program cut))
+                      (publication ((engine-state-publication engine))))
+                 (and publication (gerbil-ascent-update-eligible? candidate cut)
+                      (make-session-choice-cut owner branch (snapshot-copy committed)
+                        cut committed-result publication)))))
+        (def (restore! saved parent)
+          (check-idle!)
+          (ascent-execution-checkpoint!)
+          (using (saved :- session-choice-cut)
+            (unless (and clean? (eq? saved.owner owner) (eq? saved.branch parent))
+              (error "invalid ASCENT choice parent"))
+            (let* ((candidate (source-snapshot-program saved.snapshot))
+                   (fresh (updated-engine saved.sources candidate saved.result
+                            engine-analysis engine-schema measure-rule-times?
+                            saved.snapshot saved.publication #t))
+                   (result ((engine-state-run fresh))))
+              (unless (gerbil-ascent-result-complete? result)
+                (error "ASCENT choice parent did not complete"))
+              (ascent-accept-publication!)
+              (adopt-engine! fresh saved.snapshot)
+              (set! pending (snapshot-copy saved.sources))
+              (set! committed (snapshot-copy saved.sources))
+              (set! committed-result result)
+              (set! last-result result)
+              result)))
+        (receive-choice-operations read-root save restore!)))
     (gerbil-ascent-make-session-value
       (if direct-appends? direct-append-source! append-source!)
       replace-source! replace-sources! run! run-timeout!)))

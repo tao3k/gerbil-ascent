@@ -1,10 +1,10 @@
 ;;; -*- Gerbil -*-
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
-(import (only-in "../../build.ss" gerbil-ascent-library-modules)
+(import (only-in "../../build.ss" gerbil-ascent-build-projection gerbil-ascent-library-modules)
         :std/test
         (only-in :clan/poo/object .get .ref .all-slots object?)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         "../../init.ss")
 (export yuanxu-library-test)
 
@@ -55,9 +55,9 @@
         (check-equal? ((.ref ((.ref left '.run)) 'rows-of) 'seed) '((7)))))
     (test-case "native compiler projection derives every owner from the same init"
       (let (modules (gerbil-ascent-library-modules))
-        ;; The published Rules operations must own their native implementation;
-        ;; a linked ABI import must not rely on a previous package installation.
-        (check-equal? (and (member "init" modules) #t) #t)
+        ;; The source init publishes the selection. Its Module owners provide
+        ;; the native targets required by library and linked ABI consumers.
+        (check-equal? (member "init" modules) #f)
         (check-equal? (and (member "rules/module" modules) #t) #t)
         (for-each (lambda (owner)
           (let (entry (string-append (symbol->string owner) "/interface"))
@@ -68,8 +68,9 @@
               (string-prefix? "inference/" entry)
               (string-prefix? "evidence/" entry))) modules) #f)))
     (test-case "Interface owns its ABI targets in the Yuanxu Make projection"
-      (let ((spec (.get gerbil-ascent.init.exports std-make-spec))
-            (library (gerbil-ascent-library-modules)))
+      (let* ((projection (gerbil-ascent-build-projection))
+             (spec (.get projection std-make-spec))
+             (library (gerbil-ascent-library-modules projection)))
         (for-each
           (lambda (expected)
             (let* ((name (cadr expected))
@@ -79,7 +80,12 @@
               (check-equal? (length targets) 1)
               (check-equal? (take (car targets) (length expected)) expected)
               (check-equal? (and (member name library) #t) #f)))
-          '((gxc: "interface/c-api" "-ld-options")
-            (gxc: "interface/runtime" "-ld-options")
-            (exe: "interface/entry" bin: "libascent" "-ld-options")
-            (exe: "interface/develop" bin: "ascent-develop" "-ld-options")))))))
+          `((gxc: "interface/c-api" "-ld-options")
+            (gxc: "interface/runtime"
+              (extra-inputs: (,(path-normalize (path-expand "bindings/c/runtime.c"))
+                              ,(path-normalize (path-expand "bindings/c/ascent.h"))))
+              "-ld-options")
+            (exe: "interface/entry" bin: "libascent" "-ld-options")))
+        (check-equal? (map cadr (filter (lambda (target)
+                                        (and (pair? target) (eq? (car target) exe:))) spec))
+                      '("interface/entry"))))))

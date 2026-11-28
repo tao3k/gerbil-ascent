@@ -43,3 +43,8 @@ workspace = true
 name = "runtime_comparison"
 harness = false
 required-features = ["rayon"]
+
+[[bench]]
+name = "actor_closure"
+path = "benches/actor_closure/mod.rs"
+harness = false

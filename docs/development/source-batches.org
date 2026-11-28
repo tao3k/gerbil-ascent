@@ -1,0 +1,157 @@
+#+title: Source batch ownership
+
+* Boundary
+
+Gerbil GxTest owns source import, Suite discovery, assertions and process exit.
+ASP's public testing interface owns compatible balanced batches and serial-resource profiles. ASCENT keeps
+its isolated exhaustive and process-wide protocol-mutation corpora and the
+600-second macOS semantic deadline. The native framework selects one worker
+per reported machine core, capped by available batches. Each VM remains
+single-threaded. Regular CI uses the released VM heap and collector defaults,
+without a per-process 2 GiB override. All
+source modules, Cases and original performance checks remain required.
+
+* Repeated work
+
+A second partition of a balanced batch creates more fresh processes. Each
+process repeats source initialization and module retirement. Linux retains the native balanced width. Darwin additionally uses Gerbil STD
+=group-n-consecutive= to retain at most eight source entries per process.
+This bounds source context accumulation without replacing the native worker
+capacity. The entry estimate is not a byte-allocation or host-memory bound.
+Explicit benchmark and leak-test heap profiles retain their original controls.
+
+Ordinary Rust binding CI likewise leaves Nextest's test-thread count at its
+native default. Test-executor capacity does not redefine the fixed Actor or
+owner populations inside an individual semantic scenario. The on-demand
+fixed-work experiments retain their explicitly selected concurrency controls.
+
+The controller checks actual batch lengths before starting children. The log
+verifier independently rejects oversized batches, missing or duplicate modules,
+compiled Suite carriers and incomplete single-processor receipts. Isolated
+corpora still own distinct processes. Native commands, argv, exit handling and
+the native collector are preserved.
+
+* Model and implementation
+
+=PreparationWork.lean= renders the Scheme grouping implementation and the
+Quint width function. =refined_entries_preserved= establishes coverage given
+an order-preserving splitter. =second_partition_never_fewer_starts= and
+=native_lifecycle_work_le_refined= prove that a further partition cannot reduce
+fixed per-process lifecycle work. =complete_lifecycle_work_saved= accounts for
+the current inventory's removed process starts. These are work identities,
+not proofs of elapsed time, scheduler fairness or native heap bytes.
+
+=PreparationWork.qnt= retains oversized-batch and retained-roots mutation
+controls. The Scheme source tests compare the complete actual grouping with
+the public framework projection, including empty and boundary inventories,
+exhaustive-process isolation and the oversized-batch refusal boundary.
+
+* Acceptance
+
+The full source inventory must complete naturally through =gerbil test= under
+the existing heap, processor, concurrency and deadline controls. Larger native
+batches must expose cross-Suite state leaks and allocation failures as failures;
+coverage, isolation and resource checks must not be skipped to obtain a pass.
+Local acceptance and exact-head Linux/macOS CI are separate obligations.
+Raw logs and diagnostic measurements belong exclusively under =.cache/=.
+
+* CPU progress across compiler exec
+
+The build observer's inactivity deadline remains five seconds. A process-group
+CPU sum is not monotone across Darwin exec: an execution image may reset CPU
+counters while retaining its PID. A global high-water mark can consequently
+hide genuine work in the new image until the previous epoch's total is reached.
+
+The observer retains inclusive group sampling for short-lived compiler work.
+It additionally reads each process's own CPU, excluding inherited child usage.
+Only an increase for a PID present in both samples supplies this independent
+progress witness. A counter reset itself, a first observation, a missing child
+or reaping alone supplies no own-CPU progress. The observer takes the larger
+witness instead of adding overlapping measurements; this is an inactivity
+observation, not a cumulative CPU or allocation report. Sleeping and failed
+commands retain their original rejection and cleanup behavior.
+
+Snapshot regressions cover reset, inherited transfer, disappearing members and
+new PIDs. A controlled native fork/wait/exec workload verifies real continuous
+CPU work under the unchanged production deadline. Darwin ABI decoding and
+floating-point counter conversion are not a whole-source equivalence proof.
+
+* Fault injection has process-wide revision effects
+
+The Contract-admission, delta-admission, operator-publication, value-membership
+and closure-contract Suites intentionally edit shared descriptor protocols.
+POO revisions remain monotone when a test restores the original method. The
+previously captured optimization guard must therefore stay revoked. Refreshing
+that guard or rolling back its revision would change the library's admission
+semantics and is not a test cleanup mechanism.
+
+These five Suites use the existing process-isolation profile. They retain every
+fault and refusal assertion and use the selected native or explicit heap profile. Ordinary cache eviction and local object edits remain in compatible
+batches. Framework tests check that each selected Suite owns a singleton batch,
+all ordinary modules remain present, and the protocol-mutation roster is part
+of the Lean-rendered source. Linux and macOS semantic steps use native machine capacity. Explicit worker
+counts in controlled experiments remain workload inputs, not CI defaults.
+
+* Build projections have another namespace lifetime
+
+The static-input and Yuanxu Library Suites load the source build entry and its
+source Module graph. Their source expansion can install Module contexts with
+the same identities as the already compiled runtime graph. Evaluating a later
+source fixture can then initialize that source context, replacing nominal
+prototype bindings held by an unrelated live Session.
+
+These two build-projection Suites therefore use the same framework isolation
+profile. Runtime source-import tests stay in ordinary compatible batches and
+continue to assert unchanged prototype identity and valid held Sessions across
+late imports. Descriptor cache eviction also stays in ordinary batches. No
+namespace restoration hook, type-identity bypass or runtime loader is added.
+
+* Concurrent source heap targets
+
+Process isolation does not reserve separate host memory. The two source-build
+Suites select ASP's existing =serial-resource= profile. The dispatcher completes
+its machine-sized runtime lane before executing these Suites, one at a time.
+All phases share the same outer deadline; no phase starts another timeout.
+The ordinary source corpus exercises the reported native capacity of concurrent
+single-thread VMs.
+
+Regular CI selects =auto= and omits the memory profile and collector override.
+Explicit bounded Darwin source runs retain the optional =live-ratio=90= target;
+serial build projections and compiled isolated profiles retain =50=.
+The complete corpus, semantic deadline and independent performance gates
+remain unchanged. No explicit collection, extra loader or collector patch is
+used. In particular, the library's evaluator GC policy is unchanged.
+
+The Darwin entry bound trades extra module initializations for a smaller
+concurrent source working set. Linux retains the original balanced batching.
+Both preserve source order, coverage, process isolation and native argv. The
+old optional queue-order switch has been removed. Compiler projections have an
+explicit resource profile instead of sharing the runtime lane by queue position.
+
+=source_width_le_native=, =darwin_source_width_bounded= and the GC arithmetic
+lemmas describe retained entry counts and the released collector's target
+arithmetic. =completeDarwinStarts= records the twelve-worker reference projection.
+=native_source_workers_fit_host= and =native_source_workers_fill_host= describe
+the generic native capacity arithmetic; OS CPU discovery remains a boundary.
+These are not proofs of resident memory, collector latency or native scheduler
+fairness. Source grouping, GC decisions and retained-width audits are emitted
+from Lean; the Quint policies consume the same generated definitions.
+
+An independent log audit requires complete batch ownership, runtime quiescence
+at the serial barrier, exclusive compiler work and the machine-sized in-flight
+runtime capacity for the full corpus. The verifier independently reads host
+CPU capacity, or the caller's explicit native build-core setting. Missing or overlapping events reject acceptance.
+The audit observes executed traces; it is not a proof of the SDK workgroup or
+OS process implementation. Full source execution and exact-head CI remain
+separate obligations.
+
+Concurrent progress and ownership records use the runtime's =with-lock= around
+the complete output line. A multipart =displayln= must not let another worker
+split a start, completion or collector receipt. The log checker keeps rejecting
+interleaved, missing and orphaned events.
+
+The macOS gate records native timing and virtual-memory counters before and
+after execution, including failure. Counters are host-wide snapshots, not
+per-Suite allocation totals. Native child CPU accounting can be incomplete
+when the outer timeout kills parents before they reap descendants. Raw logs
+and diagnostic measurements remain exclusively under =.cache/= or CI artifacts.

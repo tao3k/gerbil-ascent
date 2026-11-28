@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-#+TITLE: Gerbil ASCENT Research Program for POO Flow and MRR
+#+TITLE: ASCENT Research Program and Downstream Case Studies
 #+DATE: 2026-09-25
 #+STATUS: research proposal
 
@@ -270,9 +270,10 @@ candidate sets independently of POO Flow.
 
 This is a research plan, not a claim that the full path is implemented or that
 an Ascent replacement has been selected.  The existing
-[[https://github.com/tao3k/poo-flow][POO Flow]]
-continues to own POO Flow's organization, Bundle, runtime interface, and
-effect-authorization boundaries.  MRR's
+[[https://github.com/tao3k/agentic-ai-lab][Agentic AI Lab]] is one downstream
+library studied here. It owns its own control-plane declarations, policies and
+runtime handoffs. ASCENT exposes public reasoning contracts independently of
+this integration.  MRR's
 [[https://github.com/tao3k/meta-relational-reasoning/blob/main/docs/architecture/0003-mrr-ascent-evaluation.org][bounded Ascent RFC]]
 continues to own the current candidate/admission split.  The corresponding
 [[https://github.com/tao3k/meta-relational-reasoning/blob/main/research/ascent-poo-flow-research-program.org][MRR research program]]
@@ -283,22 +284,22 @@ owns the semantic questions and evaluator experiments.
 | Step | Owner | Output or invariant |
 |------+-------+---------------------|
 | source snapshot and typed rule bundle | source owner and MRR | exact source identities, generation, validated RulePackId |
-| strategy declaration | POO Flow | POO-native policy object and functional composition; budget, capability, cancellation, evidence requirement |
+| strategy declaration | Agentic AI Lab | POO-native policy object and functional composition; budget, capability, cancellation, evidence requirement |
 | request projection | gerbil-ascent | inert, typed external evaluation request bound to the MRR bundle and organization epoch |
 | fixed-point evaluation | gerbil-ascent kernel experiment, checked against Rust Ascent | bounded candidate receipt; no live publication or identity allocation |
 | semantic admission | MRR lineage and transition owners | complete, generation-bound, identity-bound admitted result or typed rejection |
-| decision and handoff | POO Flow | policy decision over admitted evidence, followed by authorized runtime handoff |
+| decision and handoff | Agentic AI Lab | policy decision over admitted evidence, followed by authorized runtime handoff |
 | external effect and feedback | admitted runtime and source owner | effect receipt; observations return as proposals |
 
-The POO Flow declaration must be an ordinary Gerbil POO object/prototype with
+The Agentic AI Lab declaration must be an ordinary Gerbil POO object/prototype with
 named functional combinators.  It must not add an alist rule DSL or duplicate
 the MRR ReasoningBundle grammar.  The native experiment may evaluate candidate
 relations, but MRR remains the independent semantic oracle and admission
-owner.  POO Flow must not infer admission from a POO result or an Ascent
+owner.  Agentic AI Lab must not infer admission from a POO result or an Ascent
 completion flag.  A result from a
 cancelled, partial, expired, or mismatched generation cannot authorize a
 handoff.  An admitted semantic result also cannot grant effect authority by
-itself: the POO Flow decision and runtime effect remain separate claims.
+itself: the Agentic AI Lab decision and runtime effect remain separate claims.
 
 * First vertical slice: native POO kernel mapping
 
@@ -313,9 +314,9 @@ itself: the POO Flow decision and runtime effect remain separate claims.
 3. Bind an exact MRR RulePackId and source generation to each candidate result.
    Keep rule/fact semantics, lineage, and admission in MRR.  Test completion,
    truncation, cancellation, stale generation, and source withdrawal before a
-   candidate can enter a POO Flow decision.
+   candidate can enter a Agentic AI Lab decision.
 4. Compose the existing policy and runtime handoff path over admitted results.
-   Only separate POO Flow authorization may reach an external effect.
+   Only separate Agentic AI Lab authorization may reach an external effect.
 
 The first two steps measure whether the native POO fixed point is sufficient
 for the selected relation fragment.  Later steps establish control and evidence
@@ -328,7 +329,7 @@ An Agent must repeatedly choose what to inspect, what to believe, what to do
 next, and when to stop or escalate.  These are different questions.  Search
 finds source-bound candidates under an exact snapshot and selector; MRR can
 derive consequences and preserve support; a model can make a bounded judgment
-under uncertainty; POO Flow controls context projection, policy, capability,
+under uncertainty; Agentic AI Lab controls context projection, policy, capability,
 and handoff.  The value is measured by better task outcomes with less
 unsupported action, latency, and model cost, not by fixed-point throughput
 alone.
@@ -337,11 +338,11 @@ The control path to study is:
 
 #+begin_example
 source-bound retrieval -> MRR admitted facts and derivations
-  -> POO Flow bounded context -> model judgment proposal
-  -> POO Flow authorization -> runtime effect -> new source observation
+  -> Agentic AI Lab bounded context -> model judgment proposal
+  -> Agentic AI Lab authorization -> runtime effect -> new source observation
 #+end_example
 
-Concrete retrieval belongs to its source/search producer.  POO Flow does not
+Concrete retrieval belongs to its source/search producer.  Agentic AI Lab does not
 add a second text index, parser, or graph language.  A retrieved passage is
 evidence only when its source identity, revision, selector, and coverage are
 known.  MRR inference may show what follows from such facts; neither a search
@@ -357,12 +358,12 @@ therefore a useful example of a fast *judgment provider*, not an authority for
 source truth, derivation, or external effects.  Vendor speed and calibration
 claims must be measured on our own tasks with independent labels.
 
-For a model-routing or next-action Choice, POO Flow first removes options that
+For a model-routing or next-action Choice, Agentic AI Lab first removes options that
 violate capability, budget, or dependency constraints.  It then projects a
 compact, provenance-bound state and asks the model to rank the remaining
 options.  The returned option, probability distribution, model version,
 question criteria, and input-state digest form a judgment proposal.  MRR
-admission and POO Flow authorization remain separate gates; a high score
+admission and Agentic AI Lab authorization remain separate gates; a high score
 cannot widen capability or repair missing evidence.  An explicit abstain,
 request-more-evidence, or human handoff route is required when coverage or
 confidence is inadequate.
@@ -379,7 +380,7 @@ Each scenario needs a frozen source snapshot, task, allowed actions, independent
 outcome labels, failure cases, and a replayable trace.  A claim that an Agent
 improved requires a task-level comparison, not only a model accuracy score.
 At minimum compare a generative-model-only workflow, search plus model,
-search plus Jev-style judgments, and the full MRR/POO Flow evidence path under
+search plus Jev-style judgments, and the full MRR/Agentic AI Lab evidence path under
 the same tools and budgets.  Report end-to-end success, coverage, calibrated
 abstention, unauthorized-action rate, latency, token/model cost, and receipt
 size.  Vendor model agreement may be a diagnostic; it is not ground truth.
@@ -388,7 +389,7 @@ size.  Vendor model agreement may be a diagnostic; it is not ground truth.
 
 ** Source change and revocation
 
-POO Flow controls snapshot selection, capability scope, expiry, cancellation,
+Agentic AI Lab controls snapshot selection, capability scope, expiry, cancellation,
 and retry.  MRR decides which facts and derivations survive a source generation
 change.  The cross-layer property is that no stale receipt can authorize a new
 decision.  Incremental evaluation must be compared with full recomputation
@@ -396,7 +397,7 @@ after each insertion and retraction.
 
 ** Evidence-aware optimization
 
-POO Flow may select an evaluation profile or physical plan under a budget.  MRR
+Agentic AI Lab may select an evaluation profile or physical plan under a budget.  MRR
 must first define the rule semantics and complete evidence requirements; the
 candidate engine may then try Ascent indexes, parallel evaluation, or BYODS.
 Two plans are interchangeable only when they produce the same admitted
@@ -405,7 +406,7 @@ with a partial or weaker receipt is not an equivalent plan.
 
 ** Agent-facing explanation and action
 
-MRR owns recursive provenance, WHY/WHY-NOT, and Impact meaning.  POO Flow owns
+MRR owns recursive provenance, WHY/WHY-NOT, and Impact meaning.  Agentic AI Lab owns
 which admitted explanation is projected into a task's context and which actor
 may act on it.  A model or tool observation remains a proposal until its source
 and MRR admission paths accept it.  The control-plane proof obligation is
@@ -426,7 +427,7 @@ research program.
 - [[https://effect.systems/doc/pldi-2023-egglog/paper.pdf][egglog]] demonstrates equality saturation plus Datalog; reuse its results
   before proposing another equality engine.
 
-These works motivate experiments, not POO Flow semantic ownership over MRR or
+These works motivate experiments, not Agentic AI Lab semantic ownership over MRR or
 a claim that a particular backend is already superior.
 
 * Acceptance evidence for the first slice

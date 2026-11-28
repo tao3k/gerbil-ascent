@@ -43,4 +43,4 @@ cross-feature scope and ordering in the [[file:../scheme-paper-closure.org][clos
 | Steensgaard | [[file:steensgaard/acceptance.org][acceptance]] / [[file:steensgaard/byods.org][byods]] / [[file:steensgaard/design.org][design]] / [[file:steensgaard/proofs.org][proofs]] |
 | Transitive | [[file:transitive/acceptance.org][acceptance]] / [[file:transitive/byods.org][byods]] / [[file:transitive/compiler.org][compiler]] / [[file:transitive/design.org][design]] / [[file:transitive/proofs.org][proofs]] |
 
-Application Evidence and model interaction are maintained in [[https://github.com/tao3k/poo-flow][POO Flow]]. See [[file:../library-boundary.org][the Library boundary]].
+Downstream libraries supply application evidence policy and model interaction. [[https://github.com/tao3k/agentic-ai-lab][Agentic AI Lab]] is one example. See [[file:../library-boundary.org][the ASCENT library boundary]].

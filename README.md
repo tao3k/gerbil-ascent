@@ -1,111 +1,85 @@
 <!-- SPDX-FileCopyrightText: 2026 tao3k team and Contributors -->
 <!-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later -->
 
-# gerbil-ascent
+# ASCENT
 
-gerbil-ascent is a logical programming Library for checked rule declarations,
-queries, fixed-point evaluation, incremental source maintenance and derivation
-provenance. Scheme owns the native language and POO declarations; the Rust and
-Python bindings expose the same bounded relational contracts.
+ASCENT is a public, reusable [Gerbil Scheme](https://cons.io/) library for
+relational and logical programming. It brings checked rule declarations,
+fixed-point evaluation, versioned sessions, and derivation evidence into
+Scheme. Its research asks how an engine can reuse work across changes while
+keeping the meaning and evidence of each result explicit.
 
-Python consumers use `Engine.dsl`, `Engine.rules`, retained rule sessions and
-owned results. Trusted Scheme execution is explicit. Source identity and a
-recorded derivation do not authenticate external facts or authorize effects.
+## Research directions
 
-Application Evidence, Clue, Trajectory, model conversations, budget accounting
-and model studies are owned by [POO Flow](https://github.com/tao3k/poo-flow).
-Those APIs have been removed here. Consumers migrate directly to
-`poo_flow_runtime.reasoning`; no compatibility facade is provided.
+- **Language and semantics.** The Scheme DSL supports recursive rules,
+  stratified negation, aggregates, and lattices. Its positive finite-choice
+  fragment adds dynamic grounding and bounded search inspired by Dusa.
+  [Finite-choice semantics and implementation](dev/finite-choice/README.org)
+- **Evaluation and change.** Semi-naive evaluation uses new facts to drive
+  recursive joins. Retained Actor sessions can reuse state across source edits.
+  Specialized reachability queries use strongly connected components and
+  versioned integer adjacency. Ordered integer results can be delivered into
+  caller-owned buffers. [Reachability and edit costs](docs/development/bound-reachability.org)
+  | [Result delivery](docs/development/source-row-transport.org)
+- **Evidence and time.** Bounded derivation witnesses and replay are tied to
+  a source version. Temporal queries use an explicit event cut. Verification
+  of a derivation establishes support under the admitted rules and source
+  facts. Downstream libraries own their application policies.
+  [Agentic AI Lab](https://github.com/tao3k/agentic-ai-lab) is one integration
+  example. See the [library boundary](docs/library-boundary.org).
+- **Validation and cost.** Lean checks mathematical obligations, Quint
+  explores protocol behavior, and native tests compare execution with
+  independent oracles. Benchmarks distinguish construction, updates, first
+  queries, and result delivery. Each check has its documented scope.
+  [Semantic and performance acceptance](docs/library-acceptance.org)
 
-The engine retains generic founded support, nonmembership, source-generation
-invalidation and proof replay. These describe rule execution, independently of
-an application's interpretation of a result as evidence.
+## Try it in Scheme
 
-See [the migration boundary](docs/library-boundary.org), the
-[native Library contract](docs/library-acceptance.org) and the
-[Rust parity matrix](docs/rust-parity.org). Abstract Lean/Quint models and native
-acceptance remain separate obligations.
-
-## Run
-
-`init.ss` selects the actual `core`, `table`, `program`, `rules`, `candidate`,
-`temporal`, `interface` and `applications` Yuanxu Modules from the repository
-root. Each `interface.ss` owns its Module declaration. Native Scheme consumers
-use `:gerbil-ascent/program/api`, `:gerbil-ascent/program/func` (constructors),
-`:gerbil-ascent/rules/func` and `:gerbil-ascent/table/func` directly.
-
-Source-bound Module APIs are demanded through `Library.<owner>`. Program
-and Table publish their corresponding `types` alongside their values. Nominal
-types from independent source contexts are not interchangeable. See the
-[Module migration audit](docs/yuanxu-module-convergence-20261102.org) for the
-breaking entry changes, actual validation and retained failures.
+From a checkout with Gerbil, a C toolchain, and OpenSSL discoverable by
+`pkg-config`, install the declared dependencies and build the library.
 
 ```sh
 gerbil deps --install
 just build
-just test
+gerbil test t/qualification/ascent-condensed-session-test.ss
 ```
 
-Builds preserve the caller's `PATH` and leave compiler selection to Gerbil/Gambit
-and explicit native configuration. Dependency metadata and libraries must be
-visible to that toolchain. When Nix tools are on PATH alongside Homebrew
-Gerbil/Gambit, GCC's standard `COMPILER_PATH` can select the Apple assembler and
-linker without changing GCC or injecting SDK flags. Prepare that environment
-and the installed dependencies before the commands above:
+`just build` invokes `gerbil build` with the project's compiler environment.
+The example below can be evaluated in Gerbil once the library is on its load
+path.
 
-```sh
-export COMPILER_PATH="$(dirname "$(xcrun --find ld)")"
-export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
-export LIBRARY_PATH="$(brew --prefix libiconv)/lib:$(brew --prefix openssl@3)/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
+```scheme
+(import :gerbil-ascent/program/api)
+
+(def graph
+  (relational-program
+    (relation edge (from to) '((0 1) (1 2)))
+    (relation reach (from to))
+    (rule (reach ?x ?y) (edge ?x ?y))
+    (rule (reach ?x ?z) (reach ?x ?y) (edge ?y ?z))
+    (limits 32 64 128)))
+
+(def result (relational-solve (relational-admit graph)))
+(relational-query-name result 'reach)
+;; The result includes (0 2), inferred from (0 1) and (1 2).
 ```
 
-The Rust consumer also needs libiconv discoverable by its host linker. Do not
-automatically inject `SDKROOT` or `-isysroot` into `RUSTFLAGS`: that can mix SDKs.
+## Execution and reproducibility
 
-`just oracle` runs the Rust comparison; `just performance` runs the
-benchmark suite. See `just --list` for focused checks.
+Scheme owns the DSL and host callbacks. Rust/PyO3 exposes the library to Python,
+and supported finite projections can run on the Rayon backend. Downstream
+callers load Scheme DSL at runtime. Upstream Rust Ascent serves as an independent
+development and benchmark reference.
+[Rust integration](rust/README.md) | [Python bindings](python/README.org)
 
-## Research
+Use the [benchmark guide](benchmarks/README.org) for workload definitions,
+commands, and measurement boundaries. The maintained
+[related-work matrix](docs/related-work-matrix.org) records the broader research
+questions and the corresponding implementation and evidence.
 
-The engine studies logical programming, BYODS relation implementations, retained
-sessions, delta maintenance and derivation provenance. See the
-[Scheme DSL readings](docs/research/scheme-dsl/index.org),
-[logical programming and provenance](docs/research/logical-programming/index.org),
-[related-work matrix](docs/related-work-matrix.org) and
-[feature assurance](docs/features/index.org). Model efficacy and application
-Evidence research are maintained downstream in POO Flow.
-The [native plan-cost study](docs/features/rule-costs/acceptance.org) separates
-matching work, derived rows and the cost of materializing shared prefixes.
+## Selected papers
 
-## References
-
-- Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski.
-  [Seamless Deductive Inference via Macros](https://doi.org/10.1145/3497776.3517779).
-  CC 2022. Rule planning and semi-naive deductive evaluation.
-- Chris Martens, Robert J. Simmons, and Michael Arntzenius.
-  [Finite-Choice Logic Programming](https://doi.org/10.1145/3704849).
-  POPL 2025; [arXiv:2405.19040v3](https://arxiv.org/abs/2405.19040v3).
-  Prefix-firing cost semantics motivates the native Scheme plan-cost study;
-  its finite-choice language is not the implemented DSL semantics.
-- David McAllester. [On the Complexity Analysis of Static Analyses](https://doi.org/10.1145/581771.581774).
-  Journal of the ACM 49(4), 2002. The prefix-firing cost model discussed by the
-  finite-choice paper; its complexity assumptions require separate validation.
-  The [paper's indexing transformation](https://www.cs.cmu.edu/~fp/courses/lp/handouts/mcallester02jacm.pdf)
-  also motivates exact bound-key reuse. Native matcher visits, index construction,
-  extension and probes are reported separately in the plan-cost study.
-- Ashok K. Chandra and Philip M. Merlin.
-  [Optimal Implementation of Conjunctive Queries in Relational Data Bases](https://research.ibm.com/publications/optimal-implementation-of-conjunctive-queries-in-relational-data-bases).
-  STOC 1977. Query equivalence is the relevant boundary for explicit positive
-  Set prefix projection; this Library does not implement a general query minimizer.
-- Todd J. Green, Grigoris Karvounarakis, and Val Tannen.
-  [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf).
-  PODS 2007. Answer equality and preservation of derivation information are
-  separate obligations; the native cost study does not claim semiring provenance.
-- Ashish Gupta, Inderpal Singh Mumick, and V. S. Subrahmanian.
-  [Maintaining Views Incrementally](https://sigmodrecord.org/1993/06/03/maintaining-views-incrementally/).
-  SIGMOD 1993. Alternative supports and recursive deletion require an explicit
-  maintenance argument; endpoint projection alone supplies neither counting nor DRed.
-- Koen Claessen and John Hughes.
-  [QuickCheck: A Lightweight Tool for Random Testing of Haskell Programs](https://doi.org/10.1145/351240.351266).
-  ICFP 2000. Generated property checks complement finite oracles and proofs.
-  ASCENT uses POO's existing model, coverage, shrinking and replay protocols.
+- Arash Sahebolamri, Thomas Gilray, and Kristopher Micinski. [Seamless Deductive Inference via Macros](https://s-arash.github.io/ascent/cc22main-p95-seamless-deductive-inference-via-macros.pdf), CC 2022.
+- Chris Martens, Robert J. Simmons, and Michael Arntzenius. [Finite-Choice Logic Programming](https://arxiv.org/abs/2405.19040v3), POPL 2025.
+- Ashish Gupta, Inderpal Singh Mumick, and V. S. Subrahmanian. [Maintaining Views Incrementally](https://sigmodrecord.org/1993/06/03/maintaining-views-incrementally/), SIGMOD 1993.
+- Todd J. Green, Grigoris Karvounarakis, and Val Tannen. [Provenance Semirings](https://www.cs.ucdavis.edu/~green/papers/pods07.pdf), PODS 2007.

@@ -102,8 +102,8 @@
         (check-equal? (reverse events) '(#f lookup))))
     (test-case "Actor envelope preserves every field and payload identity"
       (let ((key (vector 'key)) (task (vector 'task)) (payload (vector 'stopped)))
-        (gerbil-ascent-send-round! (current-thread) 'done key (current-thread) task payload)
-        (gerbil-ascent-match-round! (thread-receive)
+        (gerbil-ascent-send-envelope! (current-thread) 'done key (current-thread) task payload)
+        (gerbil-ascent-match-envelope! (thread-receive)
           ([kind received-key worker received-task received-payload]
             (begin (check-equal? kind 'done)
             (check-equal? (eq? key received-key) #t)
@@ -111,7 +111,7 @@
             (check-equal? (eq? task received-task) #t)
             (check-equal? (eq? payload received-payload) #t)))
           (else (error "valid envelope rejected")))
-        (check-equal? (gerbil-ascent-match-round! '(done key worker task)
+        (check-equal? (gerbil-ascent-match-envelope! '(done key worker task)
           ([_ _ _ _ _] 'accepted) (else 'malformed)) 'malformed)))
     (test-case "SCC discovery zero is on stack and each branch evaluates only once"
       (let ((observed []) (known 'outer-known))

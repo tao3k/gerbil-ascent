@@ -1,0 +1,190 @@
+-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import Std
+
+/-! Measurement policy, not a proof of achieved speed. Native trace generation
+and Scheme execution remain separate source-correspondence obligations. -/
+namespace Ascent.RuntimeMeasurement
+
+inductive Unit where
+  | mailboxMessage | sessionState | relationRun | sourceUpdate | fullExport
+  deriving DecidableEq, Repr
+
+structure Trace where
+  enqueued : Nat
+  entered : Nat
+  computed : Nat
+  visible : Nat
+
+def Ordered (t : Trace) : Prop :=
+  t.enqueued ≤ t.entered ∧ t.entered ≤ t.computed ∧ t.computed ≤ t.visible
+def latency (t : Trace) : Nat := t.visible - t.enqueued
+def queueTime (t : Trace) : Nat := t.entered - t.enqueued
+def executionTime (t : Trace) : Nat := t.computed - t.entered
+def publicationTime (t : Trace) : Nat := t.visible - t.computed
+
+/-- The benchmark reads Gambit's monotonic tick counter relative to one module
+origin. The SDK supplies the nondecreasing ticks and positive frequency. -/
+def tickTimestamp (origin tick frequency : Nat) : Nat :=
+  (tick - origin) * 1000000000 / frequency
+
+theorem tick_timestamp_monotone (origin first last frequency : Nat)
+    (ordered : first ≤ last) :
+    tickTimestamp origin first frequency ≤ tickTimestamp origin last frequency := by
+  unfold tickTimestamp
+  apply Nat.div_le_div_right
+  exact Nat.mul_le_mul_right 1000000000 (Nat.sub_le_sub_right ordered origin)
+
+theorem phase_decomposition (t : Trace) (h : Ordered t) :
+    latency t = queueTime t + executionTime t + publicationTime t := by
+  unfold Ordered at h
+  unfold latency queueTime executionTime publicationTime
+  omega
+
+/-- Events for one terminal job. Each boundary is sampled by the thread
+performing the send, receive, or publication in the production Actor path. -/
+structure ActorJobTrace where
+  callerSend : Nat
+  ownerReceive : Nat
+  workerSend : Nat
+  workerReceive : Nat
+  workerDone : Nat
+  ownerReceiveResult : Nat
+  replyPost : Nat
+  callerResume : Nat
+
+def actorJobOrdered (t : ActorJobTrace) : Prop :=
+  t.callerSend ≤ t.ownerReceive ∧ t.ownerReceive ≤ t.workerSend ∧
+  t.workerSend ≤ t.workerReceive ∧ t.workerReceive ≤ t.workerDone ∧
+  t.workerDone ≤ t.ownerReceiveResult ∧ t.ownerReceiveResult ≤ t.replyPost ∧
+  t.replyPost ≤ t.callerResume
+
+def actorHandoffTime (t : ActorJobTrace) : Nat :=
+  (t.ownerReceive - t.callerSend) + (t.workerReceive - t.workerSend) +
+  (t.ownerReceiveResult - t.workerDone) + (t.callerResume - t.replyPost)
+
+def actorActiveTime (t : ActorJobTrace) : Nat :=
+  (t.workerSend - t.ownerReceive) + (t.workerDone - t.workerReceive) +
+  (t.replyPost - t.ownerReceiveResult)
+
+theorem actor_job_trace_exact (t : ActorJobTrace) (ordered : actorJobOrdered t) :
+    t.callerResume - t.callerSend = actorHandoffTime t + actorActiveTime t := by
+  unfold actorJobOrdered at ordered
+  unfold actorHandoffTime actorActiveTime
+  omega
+
+/-- Consecutive collector clock deltas are parts of the same cumulative
+clock. Sum them once even if a collector event occurs during a handoff. -/
+theorem collector_intervals_exact (first middle last : Nat)
+    (firstLe : first ≤ middle) (middleLe : middle ≤ last) :
+    (middle - first) + (last - middle) = last - first := by omega
+
+/-- Endpoints of one admitted direct buffer copy. Certification prepares
+the affine windows. The writer interval starts just before traversal. -/
+structure BufferCopyTrace where
+  copyEnter : Nat
+  writeEnter : Nat
+  writeExit : Nat
+  copyExit : Nat
+
+theorem direct_copy_brackets (t : BufferCopyTrace)
+    (before : t.copyEnter ≤ t.writeEnter)
+    (writes : t.writeEnter ≤ t.writeExit)
+    (after : t.writeExit ≤ t.copyExit) :
+    t.copyExit - t.copyEnter =
+      (t.writeEnter - t.copyEnter) + (t.writeExit - t.writeEnter) +
+      (t.copyExit - t.writeExit) := by omega
+
+/-- If the caller reads the same cumulative clock at consecutive endpoints,
+the difference belongs to that phase. The identity applies independently
+to wall ticks, caller thread CPU, and the collector's elapsed clock. -/
+theorem measured_interval_refines_bracket (phaseStart phaseEnd outerStart outerEnd : Nat)
+    (enter : outerStart ≤ phaseStart) (exit : phaseEnd ≤ outerEnd) :
+    phaseEnd - phaseStart ≤ outerEnd - outerStart := by omega
+
+structure Evidence where
+  unit : Unit
+  planned : Nat
+  samples : List Nat
+  checked : Bool
+  ownerAffine : Bool
+  drained : Bool
+
+-- Distribution policy: at least 95 percent of ALL completions meet the bound.
+-- Native Suites retain their existing quantile implementations and thresholds.
+def Policy (minimum : Nat) (unit : Unit) (p95Bound : Nat) (e : Evidence) : Prop :=
+  e.unit = unit ∧ e.planned = e.samples.length ∧ minimum ≤ e.planned ∧
+  e.checked = true ∧ e.ownerAffine = true ∧ e.drained = true ∧
+  19 * e.samples.length ≤ 20 * (e.samples.filter (fun n => decide (n < p95Bound))).length
+
+theorem bound_itself_is_not_fast (bound : Nat) :
+    ([bound].filter (fun n => decide (n < bound))).length = 0 := by simp
+
+/-- Each pair contains an enclosed phase and the remaining request time.
+If fewer than 950 of 1,000 enclosed phases are below the bound, removing
+all other work while holding those phase durations fixed cannot pass
+the native nearest-rank P95 gate. -/
+theorem bounded_phases_limit_fast_requests (bound : Nat) (durations : List (Nat × Nat)) :
+    (durations.filter (fun t => decide (t.1 + t.2 < bound))).length ≤
+      (durations.filter (fun t => decide (t.1 < bound))).length := by
+  induction durations with
+  | nil => simp
+  | cons duration rest ih =>
+    rcases duration with ⟨phase, other⟩
+    by_cases fast : phase + other < bound
+    · have phaseFast : phase < bound := by omega
+      simpa [fast, phaseFast] using Nat.succ_le_succ ih
+    · by_cases phaseFast : phase < bound
+      · simpa [fast, phaseFast] using Nat.le.step ih
+      · simpa [fast, phaseFast] using ih
+
+/-- If fewer than 95 percent of enclosed phases are below the bound,
+the strict P95 quota is impossible with those durations. -/
+theorem bounded_phase_misses_p95 (bound : Nat) (durations : List (Nat × Nat))
+    (slowPhase : 20 * (durations.filter (fun t => decide (t.1 < bound))).length <
+      19 * durations.length) :
+    ¬ (19 * durations.length ≤
+      20 * (durations.filter (fun t => decide (t.1 + t.2 < bound))).length) := by
+  intro enough
+  have fastBound := bounded_phases_limit_fast_requests bound durations
+  omega
+
+def Admitted (unit : Unit) (p95Bound : Nat) (e : Evidence) : Prop :=
+  Policy 1000 unit p95Bound e
+
+structure Experiment where
+  preparationNs : Nat
+  coldLoadNs : Nat
+  runtime : Evidence
+
+def RuntimeAdmitted (unit : Unit) (bound : Nat) (e : Experiment) : Prop :=
+  Admitted unit bound e.runtime
+
+theorem preparation_is_not_query_latency (unit : Unit) (bound preparation cold : Nat)
+    (e : Experiment) :
+    RuntimeAdmitted unit bound { e with preparationNs := preparation, coldLoadNs := cold } ↔
+      RuntimeAdmitted unit bound e := Iff.rfl
+
+theorem incomplete_rejected (unit : Unit) (bound : Nat) (e : Evidence)
+    (missing : e.planned ≠ e.samples.length) : ¬ Admitted unit bound e := by
+  intro accepted
+  exact missing accepted.2.1
+
+theorem different_units_rejected (expected : Unit) (bound : Nat) (e : Evidence)
+    (different : e.unit ≠ expected) : ¬ Admitted expected bound e := by
+  intro accepted
+  exact different accepted.1
+
+theorem too_few_samples_rejected (unit : Unit) (bound : Nat) (e : Evidence)
+    (few : e.planned < 1000) : ¬ Admitted unit bound e := by
+  intro accepted
+  have enough := accepted.2.2.1
+  omega
+
+end Ascent.RuntimeMeasurement
+
+#print axioms Ascent.RuntimeMeasurement.phase_decomposition
+#print axioms Ascent.RuntimeMeasurement.tick_timestamp_monotone
+#print axioms Ascent.RuntimeMeasurement.preparation_is_not_query_latency
+#print axioms Ascent.RuntimeMeasurement.incomplete_rejected
+#print axioms Ascent.RuntimeMeasurement.different_units_rejected
+#print axioms Ascent.RuntimeMeasurement.too_few_samples_rejected

@@ -5,14 +5,15 @@
 ;;; Public Scheme relational language and lower-level POO declarations.
 (import "types.ss" "func.ss" "aggregators.ss" "summary.ss" "evaluate.ss"
         "session.ss" "actor-session.ss" "scheme-language.ss" "operator.ss"
-        "operator-change.ss" "operator-session.ss")
+        "operator-change.ss" "operator-session.ss" "bound-reachability.ss")
 (export (import: "types.ss")
         (except-out (import: "func.ss") gerbil-ascent-construct-inert-program)
         (import: "aggregators.ss")
         (import: "summary.ss")
         gerbil-ascent-evaluate-program
-        (import: "session.ss")
+        (except-out (import: "session.ss") gerbil-ascent-open-session/choice)
         (import: "actor-session.ss")
+        (import: "bound-reachability.ss")
         (import: "scheme-language.ss")
         relational-op-source relational-op-union relational-op-join
         relational-op-select-eq relational-op-project

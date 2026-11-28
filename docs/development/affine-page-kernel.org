@@ -1,0 +1,78 @@
+#+TITLE: Affine page window synthesis
+
+* Source correspondence
+
+The Actor page transaction validates the destination and row budget
+before staging. The ordinal worker clips a certified affine window to
+the space left in the page. The current private scratch, initial pair,
+stride, and clipped row count suffice to generate that part of the
+page. The caller still receives the same checked copy at the existing
+second checkpoint.
+
+The C compilation target carries both signed fields in one unsigned
+two-lane vector. Each lane adds the same stride; the store writes one
+pair. Blocks write four pairs, then a scalar-counted tail writes the
+remaining zero to three pairs. Source loading and subwindows larger
+than 512 rows use the existing Scheme recurrence. Ordinary row
+visitation, complete mutable-list export, publication identities,
+the 256 KiB two-buffer geometry and cancellation checks stay on their
+existing paths. A client does not compile its DSL.
+
+=carried_affine_word_exact= identifies the carried unsigned word with
+the mathematical affine recurrence modulo 2^64, including a negative
+stride. =carried_affine_word_writes_admitted_value= removes the modulus
+at each admitted field. =affine_copy_four_row_partition= and
+=affine_window_chunk_cells= cover the four-pair blocks and tail
+within the already validated scratch extent. The compiled expression
+uses constant-size unaligned-safe copies and does not call back into
+Scheme while holding a scratch pointer. The emitted macOS code has
+two-lane adds and 16-byte stores.
+
+* Validation
+
+The guarded Lean inventory passed all 196 jobs. The native interface,
+Actor Session, and condensed Session suites passed with the candidate.
+The added case compares ascending and descending cuts with labels
+near the maximum fixnum, partial final pages and an odd caller-buffer
+offset. The standard interface case still exercises cancellation
+between staging and copy. Source loading with =gxi= ran a separate
+ordered-page prefix check against a literal expected sequence.
+
+Paired diagnostic processes use the same Actor and oracle with the
+native thread CPU clock from the preceding investigation. The table
+keeps only matched request ordinals after the first two requests
+where neither arm collected.
+
+| Chain width | Paired requests | Stage CPU median (ms) | Copy CPU median (ms) | Oracle CPU median (ms) |
+|-------------+-----------------+-----------------------+----------------------+------------------------|
+| 128 | 44 | 13.253 -> 7.467 | 3.327 -> 3.206 | 25.865 -> 25.920 |
+| 512 | 42 | 10.693 -> 6.955 | 2.990 -> 3.137 | 25.289 -> 25.145 |
+
+The median paired stage savings were 5.892 ms and 3.753 ms. Raw
+timing receipts and the probe sources remain in the cache.
+
+* Uninstrumented qualification
+
+Each width and arm used 40 matched shards, 25 requests per shard.
+The first four pairs were retained in the same distributions, and
+the remaining shards completed once with the frozen candidate and
+reference binaries. The original per-field oracle checked each row.
+All 160 processes passed; the longest took 4.116 s under the original
+90-second watchdog.
+
+| Width | First-page P95 (ms) | Complete P50 (ms) | Complete P95 (ms) | Maximum (ms) | Rows/s (millions) | CPU (s) |
+|-------+---------------------+-------------------+-------------------+--------------+--------------------+---------|
+| 128 | 3.796 -> 3.907 | 44.842 -> 38.578 | 69.151 -> 62.541 | 198.172 -> 99.317 | 210.33 -> 242.49 | 47.241 -> 40.803 |
+| 512 | 1.430 -> 1.445 | 39.661 -> 36.627 | 62.381 -> 59.272 | 151.210 -> 156.339 | 239.86 -> 257.93 | 41.158 -> 38.180 |
+
+Each width and arm recorded 40 timed collections. GC wall time was
+1.501 -> 1.524 s for width 128 and 1.146 -> 1.185 s for width 512.
+The candidate had zero 128-wide requests at or above 100 ms and
+three 512-wide requests at or above 100 ms. The P95 gains apply to
+this host and matrix. The first-page P95 rose slightly at both widths
+and the width 512 maximum also rose.
+
+The existing complete mutable-list gate was not rerun. Its 105.93 ms
+failure remains on record at the unchanged 100 ms limit. This change
+uses neither the collector nor that list materializer. The original
+acceptance condition for pushing PR 2 remains open.

@@ -1,38 +1,44 @@
-#+title: Logical programming Library boundary
+#+title: ASCENT library boundary
+#+language: en
 
-* Ownership
-ASCENT owns checked rule declarations, query admission, fixed-point execution,
-retained source sessions, incremental updates and generic derivation provenance.
-A source generation binds a result to rule-engine inputs. A provenance graph
-records a derivation under those inputs. Neither authenticates an external fact,
-chooses an agent action, or certifies whole-task correctness.
+* Public library
 
-POO Flow owns application Evidence, Clue submission and observation policy,
-Trajectory history, external verification, model conversations, usage accounting,
-model studies and their application-specific formal obligations. The implementation
-and tests move to its existing evidence-assessment, ai-agentic-context,
-temporal-causality and Python runtime/testing packages.
+ASCENT is a reusable relational and logical programming library. It owns
+checked rule declarations, query admission, fixed-point execution, retained
+sessions, incremental updates and generic derivation provenance. A result
+and its witnesses are bound to the admitted rules and source generation.
+Consumers own source selection, external authority, application policy and
+effect authorization.
 
-* Direct migration
-The generic declaration API is =define-program= / =RuleProgram= / =RuleSession=;
-Python consumers call =Engine.rules=. The former application modules and old
-=evidence= declaration entrypoints are removed. No compatibility layer delegates
-old ASCENT application imports to POO Flow.
+* Entry points
 
-POO consumers import =poo_flow_runtime.reasoning=. Its application owner delegates
-all rule execution to ASCENT; it does not copy the fixed-point evaluator. Rule
-session/result/provenance lifecycle models remain here despite historical names
-containing the word Evidence. Model budgets and application applicability belong
-to the consumer.
+Scheme clients import =:gerbil-ascent/program/api= for the checked DSL and
+session operations. For trusted Scheme rule modules, the declaration entry
+is =define-program=. Python clients use =Engine.rules= for rule modules and
+=Engine.dsl= for DSL source. See [[file:../README.md][the native example]]
+and [[file:../python/README.org][the Python bindings]].
+
+* Agentic AI Lab integration example
+
+[[https://github.com/tao3k/agentic-ai-lab][Agentic AI Lab]] is one downstream
+library. Its development branch declares ASCENT as a dependency and exposes
+its temporal integration through =TemporalCausality=. The published operations
+include =ascent-exchange-solve= and =ascent-exchange-verify=. The Lab also
+maintains its own evidence-assessment interface.
+
+These interfaces were checked against [[https://github.com/tao3k/agentic-ai-lab/pull/34][Lab PR #34]]
+at =4954eb8a=. The linked package manifest pins the ASCENT revision used by
+that integration. Follow the Lab's own selected revision when using those
+operations.
+
+- [[https://github.com/tao3k/agentic-ai-lab/blob/4954eb8a12b3cc118d92ea32f06cd7bd800ddffb/gerbil.pkg][Lab package manifest]]
+- [[https://github.com/tao3k/agentic-ai-lab/blob/4954eb8a12b3cc118d92ea32f06cd7bd800ddffb/modules/temporal-causality/interface.ss][Temporal integration exports]]
+- [[https://github.com/tao3k/agentic-ai-lab/blob/4954eb8a12b3cc118d92ea32f06cd7bd800ddffb/modules/evidence-assessment/interface.ss][Evidence-assessment interface]]
 
 * Qualification
-Run =just test= for Scheme, the existing Rust crate checks and installed Python
-consumer tests for bindings, and =just check-lean-proofs= / =just check-formal=
-for the producer obligations. Application models and their negative controls are
-qualified in POO Flow. Frozen formal-obligation inventories retain the original
-configurations and fault mappings across the split.
 
-Historical model runs keep their original source identities and failures. Moving
-them never qualifies a new build or establishes a reduction in repeated thinking.
-New application studies must bind both installed native artifacts and match the
-resolved ASCENT producer source inputs before using a frozen protocol.
+Run the native Scheme, Rust/PyO3 and formal checks for the ASCENT producer.
+Each downstream library qualifies its own consumer configuration with its
+resolved dependency versions. Historical package names and import paths in the
+[[file:migration-audit-20261021.org][migration audit]] identify the original
+experiments.

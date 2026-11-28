@@ -2,12 +2,12 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 
-(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
-        :gerbil-ascent/candidate/grounding-plan
-        (only-in :gerbil-ascent/candidate/types
+(import (only-in "datum.ss" reasoning-bounded-data?)
+        "grounding-plan.ss"
+        (only-in "types.ss"
                  reasoning-snapshot-relations reasoning-candidate-facts
                  reasoning-candidate-rules)
-        (only-in :gerbil-ascent/candidate/provenance
+        (only-in "provenance.ss"
                  candidate-positive-closed-absence
                  positive-proof? positive-proof-status positive-proof-nodes positive-proof-roots
                  positive-proof-snapshot-identity positive-proof-snapshot-generation
@@ -31,7 +31,7 @@
 ;;; Complete finite grounded derivation graph. A fact node may have several
 ;;; alternatives and rule alternatives may refer back to that same node.
 ;;; Cycles represent recursive equations, not an infinite list of proof trees.
-(defstruct positive-provenance (status witness alternatives))
+(defstruct positive-provenance (status witness alternatives) final: #t)
 
 ;; candidate-positive-provenance
 ;;   : (-> ReasoningSnapshot InspectedCandidate Digest Status Rows Nat Nat PositiveProvenance)

@@ -107,9 +107,18 @@ pub(super) fn scheme_output(recipe: &str, request: &str) -> String {
         .stderr(Stdio::piped());
     let gerbil_path = std::env::var_os("GERBIL_PATH")
         .expect("run the Rust oracle through `gerbil env` to set GERBIL_PATH");
-    let inherited = std::env::var("GERBIL_LOADPATH").unwrap_or_default();
+    // Keep the explicitly selected fixture as source, but let Gerbil reuse the
+    // production interfaces prepared by the native build instead of expanding
+    // their source again in every differential child.
+    let mut load_paths = vec![PathBuf::from(&gerbil_path).join("lib"), root.clone()];
+    if let Some(inherited) = std::env::var_os("GERBIL_LOADPATH") {
+        load_paths.extend(std::env::split_paths(&inherited));
+    }
     command.env("GERBIL_PATH", gerbil_path);
-    command.env("GERBIL_LOADPATH", format!("{}:{inherited}", root.display()));
+    command.env(
+        "GERBIL_LOADPATH",
+        std::env::join_paths(load_paths).expect("native Gerbil library paths"),
+    );
     let mut child = command
         .spawn()
         .expect("launch gerbil-ascent Scheme fixture");

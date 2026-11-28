@@ -5,7 +5,7 @@
 ;;; Private lookup over one verified finite replay. Ordered rows remain the
 ;;; authority for enumeration and budget charging; membership never emits rows.
 (export make-closure-index closure-index-rows closure-index-member? closure-index-source)
-(defstruct closure-relation (rows members source))
+(defstruct closure-relation (rows members source) final: #t)
 
 ;;; Intentional raw data record: a verified replay owns finite membership tables; ordered source rows remain enumeration and budget authority.
 ;; : (-> VerifiedClosure SourceRelations ClosureIndex)

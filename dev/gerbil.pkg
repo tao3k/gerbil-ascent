@@ -2,4 +2,4 @@
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (package: gerbil-ascent-dev
  depend:
- ("github.com/tao3k/asp-gerbil-scheme@c755f39b903c04c43e65c3a4d6f3c4fec9b3a963"))
+ ("github.com/tao3k/asp-gerbil-scheme@9394be8a3b1ee66f2f847294ed8633f1cc72f13e"))

@@ -5,6 +5,7 @@
 ;;; One engine's physical indexes over live all/delta vectors. Metadata plans
 ;;; stay immutable; source admission and row/version publication stay in evaluate.
 (import (only-in :std/iter for for/fold in-vector in-range)
+        (only-in :std/list/list length<=n? length>=n?)
         (only-in :std/list/list-builder with-list-builder)
         :gerbil-ascent/core/relation-view
         (only-in :gerbil-ascent/core/index-publication
@@ -13,18 +14,25 @@
                  gerbil-ascent-shared-index-build gerbil-ascent-shared-index-extend!
                  gerbil-ascent-shared-index-rows)
         (only-in :gerbil-ascent/core/positive-plan gerbil-ascent-index-key
-                 gerbil-ascent-index-key/terms gerbil-ascent-index-value positive-plan-cost-index! make-positive-prefix-cut)
+                 gerbil-ascent-index-key/terms gerbil-ascent-index-value positive-plan-cost-index! make-positive-prefix-cut
+                 make-compiled-provider-packet)
         (only-in :gerbil-ascent/table/access gerbil-ascent-physical-index-build
                  gerbil-ascent-physical-index-extend! gerbil-ascent-physical-index-rows
-                 gerbil-ascent-physical-index-single-rows)
+                 gerbil-ascent-physical-index-single-rows gerbil-ascent-refill-cleared-index!
+                 gerbil-ascent-source-scalar-index-write! gerbil-ascent-source-scalar-index-rows)
         (only-in :gerbil-ascent/table/provider gerbil-ascent-canonical-hash-index-provider?
                  gerbil-ascent-curried-index-provider?)
         (rename-in (only-in :gerbil-ascent/table/funs gerbil-ascent-index-key
-                           gerbil-ascent-index-row-snapshot/arity)
+                           gerbil-ascent-index-row-snapshot/arity
+                           gerbil-ascent-index-row-vector/arity)
                    (gerbil-ascent-index-key row-key)))
-(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut)
+(export gerbil-ascent-make-row-indexes row-indexes-rows row-indexes-old-rows row-indexes-publish-old-tail! row-indexes-visit-parts row-indexes-advance! row-indexes-plan-atoms! row-indexes-plan-rules! row-indexes-plan-actions! row-indexes-plan-positive-rules! row-indexes-prefix-cut
+        gerbil-ascent-make-source-row-indexes row-indexes-recycle-source!
+        source-row-indexes-bind!)
 
-(defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut))
+(defstruct row-indexes (rows advance! plan! visit-parts old-rows prefix-cut publish-old-tail! recycle-source!))
+(defstruct (source-row-indexes row-indexes) (bind!) final: #t)
+(defstruct prefix-cut-entry (all-version delta-version cut) final: #t)
 
 ;;; Public metadata adapters feed one synchronous, owner-controlled collector.
 ;;; Physical state admission precedes traversal; unused metadata stays borrowed.
@@ -71,16 +79,29 @@
 ;;; Traversal is bounded by admitted arity, including improper/cyclic rows.
 ;;; One value-keyed admission per equal row class; transient packet counts
 ;;; use this version-owned member identity instead of rehashing wide rows.
-(defstruct provider-row-member (ordinal key occurrences))
-(defstruct provider-row-witness (members counts))
+(defstruct provider-row-member (ordinal key occurrences) final: #t)
+(defstruct provider-row-witness (members counts single-column packed-width) final: #t)
 
-(def (checked-provider-rows rows terms witness key)
+(def (checked-provider-rows rows terms witness key packed-consumer?)
   ;; Shape admission and spine detachment share one bounded traversal. The
   ;; entire packet still precedes membership, coverage and term callbacks.
   ;; The witness belongs to this physical entry's all/delta version.
-  (let ((snapshot (gerbil-ascent-index-row-snapshot/arity rows (length terms)))
-        ;; Dense ordinals belong to this witness version, never to provider rows.
-        (seen (make-hash-table)) (matched 0))
+  (let* ((packed-width (provider-row-witness-packed-width witness))
+         (snapshot (if packed-width
+                     (map (cut gerbil-ascent-index-row-vector/arity <> packed-width) rows)
+                     (gerbil-ascent-index-row-snapshot/arity rows (length terms))))
+         ;; Ordinals are fixnum hash lengths from this witness version.
+         ;; The specialized constructor costs more on small packets.
+         (seen (if (length<=n? snapshot 32)
+                 (make-hash-table)
+                 (make-hash-table-immediate)))
+         (key (if (provider-row-witness-single-column witness) (car key) key))
+         (matched 0) (occurrences 0))
+    ;; Gerbil invokes the updater synchronously. Reuse it across this packet.
+    (def (count-occurrence enumerated)
+      (when (>= enumerated occurrences)
+        (error "ASCENT index provider returned duplicate row"))
+      (+ enumerated 1))
     (for-each
      (lambda (row)
        (let (member (hash-get (provider-row-witness-members witness) row))
@@ -88,39 +109,66 @@
            (error "ASCENT index provider returned foreign row"))
          ;; Initial source snapshots can contain equal row occurrences.
          ;; Reject only enumeration beyond this lane/version's admitted count.
-         (let (enumerated (or (hash-get seen (provider-row-member-ordinal member)) 0))
-          (when (>= enumerated (provider-row-member-occurrences member))
-           (error "ASCENT index provider returned duplicate row"))
-          (hash-put! seen (provider-row-member-ordinal member) (+ enumerated 1)))
+         (set! occurrences (provider-row-member-occurrences member))
+         (hash-update! seen (provider-row-member-ordinal member) count-occurrence 0)
          (when (equal? (provider-row-member-key member) key) (set! matched (+ matched 1)))))
      snapshot)
     ;; Represented occurrences cover this key iff their count equals the
     ;; snapshot's key count. No second key-expression evaluation.
     (unless (= matched (or (hash-get (provider-row-witness-counts witness) key) 0))
       (error "ASCENT index provider omitted matching rows"))
-    snapshot))
+    (cond
+     ((not packed-width) snapshot)
+     (packed-consumer? (make-compiled-provider-packet snapshot))
+     (else (map vector->list snapshot)))))
 
 ;;; Extend the same value classes only after source admission. Their identity
 ;;; stays stable for the physical version; packet-local counters never escape.
 ;; : (-> ProviderRowWitness Rows Columns ProviderRowWitness)
 (def (extend-provider-row-witness! witness rows columns)
   (let ((members (provider-row-witness-members witness))
-        (counts (provider-row-witness-counts witness)))
+        (counts (provider-row-witness-counts witness))
+        (column (provider-row-witness-single-column witness))
+        (packed-width (provider-row-witness-packed-width witness)))
     (for-each
      (lambda (row)
-       (let* ((member (or (hash-get members row)
-                         (let (fresh (make-provider-row-member (hash-length members) (row-key row columns) 0))
-                           (hash-put! members row fresh) fresh)))
+       (let* ((row-id (if packed-width (list->vector row) row))
+              (member (or (hash-get members row-id)
+                         (let (fresh (make-provider-row-member
+                                      (hash-length members)
+                                      (if column (list-ref row column) (row-key row columns))
+                                      0))
+                           (hash-put! members row-id fresh) fresh)))
               (key (provider-row-member-key member)))
          (provider-row-member-occurrences-set! member
            (+ 1 (provider-row-member-occurrences member)))
-         (hash-put! counts key (+ 1 (or (hash-get counts key) 0))))) rows))
+         (hash-update! counts key 1+ 0))) rows))
   witness)
 
-;; : (-> Rows Columns ProviderRowWitness)
-(def (build-provider-row-witness rows columns)
-  (extend-provider-row-witness!
-   (make-provider-row-witness (make-hash-table) (make-hash-table)) rows columns))
+;;; Pack only when the initial literal lookup must cover the entire source
+;;; cut. This bounds the extra witness vectors by the returned packet. A
+;;; selective lookup would pay to encode every source row for few results.
+(def (provider-packed-width rows columns atom)
+  (match (vector-ref atom 4)
+    ([['literal . key]]
+     (and (fixnum? key)
+          (let (terms (vector-ref atom 1))
+            (and (length>=n? terms 32)
+                 (let (column (car columns))
+                   (and (andmap (lambda (row) (eq? (list-ref row column) key)) rows)
+                        (length terms)))))))
+    (else #f)))
+
+;; : (-> Rows Columns (Maybe Nat) ProviderRowWitness)
+(def (build-provider-row-witness rows columns packed-width)
+  (let (members (if (and packed-width (length>=n? rows 4096))
+                  (make-hash-table size: 2048)
+                  (make-hash-table)))
+    (extend-provider-row-witness!
+     (make-provider-row-witness members (make-hash-table)
+                               (and (null? (cdr columns)) (car columns))
+                               packed-width)
+     rows columns)))
 
 ;;; Index ownership includes discovery of the logical lookup requirements.
 ;;; The three execution owners supply admitted metadata, never row snapshots
@@ -194,11 +242,15 @@
      (error "ASCENT empty index owner has no lookup consumer"))
    (lambda (index rows (reverse-order? #f)) (void))
    (lambda (visit! (small-exact? #f) (empty-reuse? #f))
-     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements")))) #f #f (lambda (_) (error "empty index owner has no prefix cut"))))
+     (visit! (lambda (_) (error "ASCENT empty index owner has lookup requirements"))))
+   #f #f (lambda (_) (error "empty index owner has no prefix cut"))
+   (lambda (_index _rows) (error "empty index owner cannot publish an old tail")) #f))
 
 (defstruct physical-index-entry (version lookup shared? witness))
+(defstruct (source-index-entry physical-index-entry) (prior-keys) final: #t)
 (defstruct (empty-bucket-entry physical-index-entry) (empty-version empty-key) final: #t)
-(defstruct atom-index-view (entry permutation))
+(defstruct atom-index-view (entry permutation) final: #t)
+(defstruct old-tail-cut (all-version delta-version rows) final: #t)
 
 ;; gerbil-ascent-make-row-indexes
 ;;   : (-> Rows Rows Sizes Sizes Versions Versions Providers RowIndexes)
@@ -215,12 +267,30 @@
 ;;     %
 (def (gerbil-ascent-make-row-indexes all delta all-size delta-size all-version delta-version index-providers (required? #t))
   (if required?
-    (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
+    (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers #f)
     empty-row-indexes))
+
+;; gerbil-ascent-make-source-row-indexes
+;; : (forall (r p) (-> (Vector [r]) (Vector Natural) (Vector Natural) p RowIndexes))
+;; : (-> SourceRowsVector SourceSizes SourceVersions NativeIndexProvider RowIndexes)
+;; | doc m%
+;;     Own exactly one total lane for a single-worker Session. The owner may
+;;     recycle its private canonical table storage after all workers join.
+;;
+;;     # Examples
+;;
+;;     ```scheme
+;;     (gerbil-ascent-make-source-row-indexes total sizes versions provider)
+;;     ;; => a native indexed reader with a cleared-table replay operation
+;;     ```
+;;   %
+(def (gerbil-ascent-make-source-row-indexes total sizes version provider)
+  (make-required-row-indexes total (vector []) sizes '#(0) version '#(0)
+    (vector provider) #t))
 
 ;;; Boundary: Each engine owns the mutable cache cells created here.
 ;;; Invariant: Failed publication revokes versions before another reader can reuse an entry.
-(def (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers)
+(def (make-required-row-indexes all delta all-size delta-size all-version delta-version index-providers recycle-source?)
   ;; Allocate a physical lane only on demand. The ordinary route retains its
   ;; scan threshold; qualified pure plans may reuse exact bound-key indexes
   ;; below that threshold, through the same versioned entries.
@@ -230,15 +300,17 @@
         (sharing? (for/fold (found? #f) (provider (in-vector index-providers))
                     (or found? (gerbil-ascent-curried-index-provider? provider))))
         (ordered-all #f) (ordered-delta #f)
-        (prefix-owner (list 'ascent-prefix-index-owner))
-        (delta-members #f) (exact-small? #f) (reuse-empty? #f))
+        (prefix-owner (list 'ascent-prefix-index-owner)) (prefix-cuts #f)
+        (delta-members #f) (old-tails #f) (exact-small? #f) (reuse-empty? #f))
       ;; One empty bucket certificate per existing entry, never a prefix-failure
       ;; table. Entry ownership separates all/delta lanes and column layouts.
       ;; The physical lookup has already rebuilt/extended to this version.
       (def (single-rows entry lookup value version)
         (def (probe)
           (positive-plan-cost-index! 'probe)
-          (gerbil-ascent-physical-index-single-rows lookup value))
+          (if (and recycle-source? (source-index-entry? entry))
+            (gerbil-ascent-source-scalar-index-rows lookup value)
+            (gerbil-ascent-physical-index-single-rows lookup value)))
         (if (not reuse-empty?) (probe)
           (begin
             (positive-plan-cost-index! 'empty-test)
@@ -257,6 +329,41 @@
                   (positive-plan-cost-index! 'empty-store)
                   (empty-bucket-entry-empty-version-set! entry version))
                 rows)))))
+      ;; Readers on the same two versions share the immutable stamp. A version
+      ;; change publishes a new stamp without mutating the one held by a lane.
+      (def (prefix-cut index)
+        (unless prefix-cuts (set! prefix-cuts (make-vector (vector-length all) #f)))
+        (let ((total (vector-ref all-version index))
+              (fresh (vector-ref delta-version index))
+              (cached (vector-ref prefix-cuts index)))
+          (if (and cached
+                   (= (prefix-cut-entry-all-version cached) total)
+                   (= (prefix-cut-entry-delta-version cached) fresh))
+            (prefix-cut-entry-cut cached)
+            (let (cut (make-positive-prefix-cut prefix-owner (cons total fresh)))
+              (vector-set! prefix-cuts index (make-prefix-cut-entry total fresh cut))
+              cut))))
+      ;; Only a scalar Set commit publishes this suffix. Its fresh rows were
+      ;; absent from the previous all membership and were prepended to it.
+      (def (publish-old-tail! index rows)
+        (unless old-tails (set! old-tails (make-vector (vector-length all) #f)))
+        (let ((total (vector-ref all-version index))
+              (fresh (vector-ref delta-version index)))
+          (cond
+           ((vector-ref old-tails index)
+            => (lambda (cut)
+                 (old-tail-cut-all-version-set! cut total)
+                 (old-tail-cut-delta-version-set! cut fresh)
+                 (old-tail-cut-rows-set! cut rows)))
+           (else
+            (vector-set! old-tails index (make-old-tail-cut total fresh rows))))))
+      (def (published-old-tail index)
+        (and old-tails
+             (let (cut (vector-ref old-tails index))
+               (and cut
+                    (= (old-tail-cut-all-version cut) (vector-ref all-version index))
+                    (= (old-tail-cut-delta-version cut) (vector-ref delta-version index))
+                    (old-tail-cut-rows cut)))))
       ;; Only admitted pure Set rules use this lane. The first fresh occurrence
       ;; owns a witness: prefix reads exclude delta, suffix reads remain total.
       ;; Cache exact membership by the owner's delta version, never by row count.
@@ -267,31 +374,34 @@
             ((zero? (vector-ref delta-size index))
              (indexed-rows atom environment #f slot-terms))
             ((= (vector-ref all-size index) (vector-ref delta-size index)) [])
+            ((and (not checkpoint!) (null? (vector-ref atom 2))
+                  (published-old-tail index))
+             => (lambda (rows) (positive-plan-cost-index! 'old-tail) rows))
             (else
-        (let* ((fresh (vector-ref delta index))
-               (version (vector-ref delta-version index))
-               (prior (and delta-members (vector-ref delta-members index)))
-               (present?
-                (cond
-                  ((relation-view? fresh) (lambda (row) (gerbil-ascent-view-contains? fresh row)))
-                  ((null? fresh) (lambda (_) #f))
-                  (else
-                   (let (members
-                         (if (and prior (= (car prior) version)) (cdr prior)
-                           (let (table (make-hash-table))
-                             (positive-plan-cost-index! 'membership fresh)
-                             (for-each (lambda (row)
-                                         (when checkpoint! (checkpoint!))
-                                         (hash-put! table row #t)) fresh)
-                             (unless delta-members (set! delta-members (make-vector (vector-length all) #f)))
-                             (vector-set! delta-members index (cons version table)) table)))
-                     (lambda (row) (hash-get members row)))))))
-          (with-list-builder (collect!)
-            (gerbil-ascent-for-each-row
-             (lambda (row)
-               (when checkpoint! (checkpoint!))
-               (unless (present? row) (collect! row)))
-             (indexed-rows atom environment #f slot-terms))))))))
+              (let* ((fresh (vector-ref delta index))
+                     (version (vector-ref delta-version index))
+                     (prior (and delta-members (vector-ref delta-members index)))
+                     (present?
+                      (cond
+                        ((relation-view? fresh) (lambda (row) (gerbil-ascent-view-contains? fresh row)))
+                        ((null? fresh) (lambda (_) #f))
+                        (else
+                         (let (members
+                               (if (and prior (= (car prior) version)) (cdr prior)
+                                 (let (table (make-hash-table))
+                                   (positive-plan-cost-index! 'membership fresh)
+                                   (for-each (lambda (row)
+                                               (when checkpoint! (checkpoint!))
+                                               (hash-put! table row #t)) fresh)
+                                   (unless delta-members (set! delta-members (make-vector (vector-length all) #f)))
+                                   (vector-set! delta-members index (cons version table)) table)))
+                           (lambda (row) (hash-get members row)))))))
+                (with-list-builder (collect!)
+                  (gerbil-ascent-for-each-row
+                   (lambda (row)
+                     (when checkpoint! (checkpoint!))
+                     (unless (present? row) (collect! row)))
+                   (indexed-rows atom environment #f slot-terms))))))))
       (def (ordered-cut captured index use-delta?)
         (let* ((cache (if use-delta?
                         (or ordered-delta (let (v (make-vector (vector-length all) #f))
@@ -346,27 +456,13 @@
                   (gerbil-ascent-index-key (vector-ref atom 1) (vector-ref atom 2) environment slot-terms)
                   (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)) consume)
               #t))))
-      (def (indexed-rows atom environment use-delta? slot-terms (ordered? #f))
-        (let* ((index (vector-ref atom 0))
-               (columns (vector-ref atom 2))
-               (captured (vector-ref (if use-delta? delta all) index))
-               ;; Observable callbacks and aggregators use the legacy list/index
-               ;; ordering. Pure plans retain the descriptor access path.
-               (rows (if (and ordered? (relation-view? captured))
-                       (ordered-cut captured index use-delta?) captured)))
-          (if (relation-view? rows)
-            (gerbil-ascent-view-select rows columns
-              (if slot-terms
-                (gerbil-ascent-index-key (vector-ref atom 1) columns environment slot-terms)
-                (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)))
-          (if (or (null? columns)
-                  (zero? (vector-ref (if use-delta? delta-size all-size) index))
-                  (and (not exact-small?)
-                       (< (vector-ref (if use-delta? delta-size all-size) index) 32)))
-            rows
-            (begin
-              (ensure-layouts!)
-            (let* ((identities
+      ;; Keep physical admission shared with ordinary indexed reads. The
+      ;; retained source path resolves this only on the atom's first probe.
+      (defrule (with-index (entry lookup provider permutation version)
+                          atom rows index columns use-delta? packed-consumer? body ...)
+        (begin
+          (ensure-layouts!)
+          (let* ((identities
                     (if use-delta?
                       (or delta-atoms
                           (let (fresh (make-hash-table-eq))
@@ -396,11 +492,13 @@
                                (shared (hash-get cache physical-columns))
                                (resolved
                                 (or shared
-                                    (let (fresh (if reuse-empty?
-                                                  (begin
-                                                    (positive-plan-cost-index! 'empty-entry)
-                                                    (make-empty-bucket-entry #f #f (and permutation #t) #f #f #f))
-                                                  (make-physical-index-entry #f #f (and permutation #t) #f)))
+                                    (let (fresh (cond
+                                                  (reuse-empty?
+                                                   (positive-plan-cost-index! 'empty-entry)
+                                                   (make-empty-bucket-entry #f #f (and permutation #t) #f #f #f))
+                                                  ((and recycle-source? (not use-delta?))
+                                                   (make-source-index-entry #f #f #f #f #f))
+                                                  (else (make-physical-index-entry #f #f (and permutation #t) #f))))
                                       (hash-put! cache physical-columns fresh) fresh))))
                           (let (view (make-atom-index-view resolved permutation))
                             (hash-put! identities atom view)
@@ -417,15 +515,66 @@
                        (gerbil-ascent-index-rebuild! entry version
                         (and (not permutation)
                              (not (gerbil-ascent-canonical-hash-index-provider? provider))
-                             (build-provider-row-witness rows columns))
-                        (if permutation
-                            (gerbil-ascent-shared-index-build rows permutation)
-                            (gerbil-ascent-physical-index-build provider rows columns))
-                        ;; Failed builds keep the old version and lookup. Publish
-                        ;; both only after the provider has returned successfully.
+                             (build-provider-row-witness rows columns
+                               (and packed-consumer? (provider-packed-width rows columns atom))))
+                        (cond
+                         (permutation (gerbil-ascent-shared-index-build rows permutation))
+                         ((and recycle-source? (source-index-entry? entry))
+                          (let* ((prior-keys (source-index-entry-prior-keys entry))
+                                 (built
+                                  (cond
+                                   ((null? (cdr columns))
+                                    (gerbil-ascent-source-scalar-index-write!
+                                     (if prior-keys (physical-index-entry-lookup entry) (make-hash-table))
+                                     rows (car columns) #t prior-keys))
+                                   (prior-keys
+                                    (gerbil-ascent-refill-cleared-index!
+                                     (physical-index-entry-lookup entry) rows columns prior-keys))
+                                   (else (gerbil-ascent-physical-index-build provider rows columns)))))
+                            (source-index-entry-prior-keys-set! entry #f)
+                            built))
+                         (else (gerbil-ascent-physical-index-build provider rows columns)))
+                        ;; Publish the current version after success. Recycled
+                        ;; source entries have already revoked their old version.
                         physical-index-entry-lookup-set!
                         physical-index-entry-witness-set!
                         physical-index-entry-version-set!)))))
+            body ...)))
+      (def (bind-source! atom)
+        (let ((columns (vector-ref atom 2)) (rows (vector-ref all 0)))
+          (and (pair? columns) (null? (cdr columns))
+               (not (relation-view? rows))
+               (>= (vector-ref all-size 0) 32)
+               (gerbil-ascent-canonical-hash-index-provider? (vector-ref index-providers 0))
+               (with-index (entry lookup _provider _permutation version)
+                 atom rows 0 columns #f #f
+                 ;; Terms and frames come from the current action. Only
+                 ;; the immutable key descriptor and physical lane are held.
+                 (let (term (car (vector-ref atom 4)))
+                   (lambda (frame terms)
+                     (single-rows entry lookup
+                       (gerbil-ascent-index-value term frame (and terms (car terms)))
+                       version)))))))
+      (def (indexed-rows atom environment use-delta? slot-terms
+                           (ordered? #f) (packed-consumer? #f) (index (vector-ref atom 0)))
+        (let* ((columns (vector-ref atom 2))
+               (captured (vector-ref (if use-delta? delta all) index))
+               ;; Observable callbacks and aggregators use the legacy list/index
+               ;; ordering. Pure plans retain the descriptor access path.
+               (rows (if (and ordered? (relation-view? captured))
+                       (ordered-cut captured index use-delta?) captured)))
+          (if (relation-view? rows)
+            (gerbil-ascent-view-select rows columns
+              (if slot-terms
+                (gerbil-ascent-index-key (vector-ref atom 1) columns environment slot-terms)
+                (gerbil-ascent-index-key/terms (vector-ref atom 4) environment)))
+          (if (or (null? columns)
+                  (zero? (vector-ref (if use-delta? delta-size all-size) index))
+                  (and (not exact-small?)
+                       (< (vector-ref (if use-delta? delta-size all-size) index) 32)))
+            rows
+            (with-index (entry lookup provider permutation version)
+              atom rows index columns use-delta? packed-consumer?
               ;; Only this trusted representation consumes a scalar. Custom
               ;; receivers retain list keys, callbacks and their lookup order.
               (if (and (not permutation) (gerbil-ascent-canonical-hash-index-provider? provider)
@@ -455,7 +604,7 @@
                          (checked-provider-rows
                           (gerbil-ascent-physical-index-rows provider lookup key)
                           (vector-ref atom 1)
-                          (physical-index-entry-witness entry) key)))))))))))))
+                          (physical-index-entry-witness entry) key packed-consumer?))))))))))))
       (def (advance-all-indexes! index new-rows (reverse-order? #f))
         (let (cache (and all-indexes (vector-ref all-indexes index)))
           (when (and cache (pair? new-rows))
@@ -471,17 +620,40 @@
                    ;; from still-committed rows on the next read.
                    (positive-plan-cost-index! 'extend rows)
                    (gerbil-ascent-index-extend! entry (+ version 1)
-                     (if (physical-index-entry-shared? entry)
-                         (gerbil-ascent-shared-index-extend! (physical-index-entry-lookup entry) rows)
-                         (gerbil-ascent-physical-index-extend!
-                          provider (physical-index-entry-lookup entry) rows columns))
+                     (cond
+                      ((physical-index-entry-shared? entry)
+                       (gerbil-ascent-shared-index-extend! (physical-index-entry-lookup entry) rows))
+                      ((and recycle-source? (source-index-entry? entry) (null? (cdr columns)))
+                       (gerbil-ascent-source-scalar-index-write!
+                        (physical-index-entry-lookup entry) rows (car columns)))
+                      (else
+                       (gerbil-ascent-physical-index-extend!
+                        provider (physical-index-entry-lookup entry) rows columns)))
                      (when (physical-index-entry-witness entry)
                        (extend-provider-row-witness!
                         (physical-index-entry-witness entry) rows columns))
                      physical-index-entry-lookup-set!
                      physical-index-entry-version-set!)))
                cache)))))
-    (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
-      (lambda (relation)
-        (make-positive-prefix-cut prefix-owner
-          (cons (vector-ref all-version relation) (vector-ref delta-version relation)))))))
+    ;; This owner has exactly one source lane. Revoke all physical columns
+    ;; before clearing; a column that the new traversal skips drops its rows too.
+    (def (recycle-source!)
+      (let (cache (and all-indexes (vector-ref all-indexes 0)))
+        (when cache
+          (hash-for-each
+           (lambda (_columns entry)
+             (if (physical-index-entry-version entry)
+               (let (lookup (physical-index-entry-lookup entry))
+                 (physical-index-entry-version-set! entry #f)
+                 (source-index-entry-prior-keys-set! entry (hash-length lookup))
+                 (hash-clear! lookup))
+               ;; Release an empty table already skipped by the previous cut.
+               (begin
+                 (source-index-entry-prior-keys-set! entry #f)
+                 (physical-index-entry-lookup-set! entry #f))))
+           cache))))
+    (if recycle-source?
+      (make-source-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
+        prefix-cut publish-old-tail! recycle-source! bind-source!)
+      (make-row-indexes indexed-rows advance-all-indexes! plan! visit-parts old-rows
+        prefix-cut publish-old-tail! #f))))

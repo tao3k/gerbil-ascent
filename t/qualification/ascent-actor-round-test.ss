@@ -2,6 +2,7 @@
 ;;; SPDX-FileCopyrightText: 2026 tao3k team and Contributors
 ;;; SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 (import (only-in :std/test check-equal? test-case test-suite)
+        (only-in :std/struct/pqueue make-PQueue pqueue-push! pqueue-pop!)
         (only-in :clan/poo/object .ref)
         :gerbil-ascent/program/func
         :gerbil-ascent/program/actor-round
@@ -133,6 +134,21 @@
          (lambda (task) (set! done (cons task done))))
         (check-equal? (reverse started) '(first later last))
         (check-equal? tasks '(later first last))))
+    (test-case "queued admission merges the last predecessor before unlocking the lower ordinal"
+      (let ((queue (make-PQueue values)) (merged []) (admitted []))
+        (pqueue-push! queue 2)
+        (pqueue-push! queue 1)
+        (gerbil-ascent-run-actor-ready-round! (vector 'ordered-ready) '(0 1 2) 1
+          (lambda (task emit! checkpoint!) (emit! task (list task)))
+          (lambda (task _) (set! merged (cons task merged)))
+          (lambda () #f)
+          (lambda (task)
+            (set! admitted (cons task admitted))
+            (or (> task 0) (equal? merged '(1))))
+          (lambda (task) (when (= task 1) (pqueue-push! queue 0)))
+          (lambda () (pqueue-pop! queue #f)))
+        (check-equal? (reverse admitted) '(1 0 2))
+        (check-equal? (reverse merged) '(1 0 2))))
     (test-case "identity aliases admit once and equal distinct tasks both execute"
       (let* ((a (vector 1)) (b (vector 1)) (tasks (list a a b a b)) (started []))
         (gerbil-ascent-run-actor-round! (vector 'aliases) tasks 1

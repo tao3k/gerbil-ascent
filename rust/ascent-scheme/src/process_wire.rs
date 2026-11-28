@@ -5,8 +5,12 @@ use bincode::Options;
 use gerbil_ascent::{Data, Result};
 use serde::{Deserialize, Serialize};
 use std::{
-    io::{BufReader, Cursor, Read, Write},
-    os::{fd::AsRawFd, unix::net::UnixStream},
+    cell::RefCell,
+    io::{self, BufReader, Cursor, Read, Write},
+    os::{
+        fd::{AsRawFd, RawFd},
+        unix::net::UnixStream,
+    },
 };
 #[derive(Serialize, Deserialize)]
 pub(crate) enum Frame {
@@ -37,6 +41,9 @@ impl Connection {
     pub(crate) fn new(socket: UnixStream) -> Self {
         Self(BufReader::with_capacity(4096, socket))
     }
+    pub(crate) fn descriptor(&self) -> RawFd {
+        self.0.get_ref().as_raw_fd()
+    }
     pub(crate) fn send(&mut self, frame: &Frame) -> std::io::Result<()> {
         send(self.0.get_mut(), frame)
     }
@@ -49,7 +56,7 @@ impl Connection {
         // consumes framed input; DONTWAIT does not change descriptor flags.
         let count = unsafe {
             libc::recv(
-                self.0.get_ref().as_raw_fd(),
+                self.descriptor(),
                 (&raw mut byte).cast(),
                 1,
                 libc::MSG_PEEK | libc::MSG_DONTWAIT,
@@ -72,7 +79,7 @@ impl Connection {
         // leave a complete packet behind. Preserve the original hangup/error
         // check in that case. The hot, empty-open case avoids Darwin poll.
         let mut fd = libc::pollfd {
-            fd: self.0.get_ref().as_raw_fd(),
+            fd: self.descriptor(),
             events: libc::POLLIN,
             revents: libc::POLLIN,
         };
@@ -92,6 +99,65 @@ impl Connection {
         self.0.get_ref().shutdown(std::net::Shutdown::Both)
     }
 }
+/// Feed the existing codec without holding a connection borrow across a
+/// scheduler entry. The codec still owns the partial header or body offset.
+pub(crate) struct ResidentIo<'a, Wait> {
+    pub(crate) socket: &'a RefCell<Connection>,
+    pub(crate) wait: Wait,
+}
+
+impl<Wait: FnMut(bool) -> io::Result<()>> ResidentIo<'_, Wait> {
+    fn transfer<T>(
+        &mut self,
+        output: bool,
+        mut attempt: impl FnMut(&mut Connection) -> io::Result<T>,
+    ) -> io::Result<T> {
+        loop {
+            let result = attempt(&mut self.socket.borrow_mut());
+            match result {
+                Err(error) if error.kind() == io::ErrorKind::WouldBlock => (self.wait)(output)?,
+                result => return result,
+            }
+        }
+    }
+}
+
+impl<Wait: FnMut(bool) -> io::Result<()>> Read for ResidentIo<'_, Wait> {
+    fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+        self.transfer(false, |socket| socket.0.read(bytes))
+    }
+}
+
+impl<Wait: FnMut(bool) -> io::Result<()>> Write for ResidentIo<'_, Wait> {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        self.transfer(true, |socket| socket.0.get_mut().write(bytes))
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+/// Only the active C checkpoint uses this wait. Reentering Gerbil there
+/// would let the scheduler run inside a borrowed request authority.
+pub(crate) fn wait_for_checkpoint_io(descriptor: RawFd, output: bool) -> io::Result<()> {
+    let mut watch = libc::pollfd {
+        fd: descriptor,
+        events: if output { libc::POLLOUT } else { libc::POLLIN },
+        revents: 0,
+    };
+    loop {
+        // SAFETY: the caller owns the live connection throughout the poll,
+        // and the poll descriptor remains on this thread's stack.
+        if unsafe { libc::poll(&raw mut watch, 1, -1) } >= 0 {
+            return Ok(());
+        }
+        let error = io::Error::last_os_error();
+        if error.kind() != io::ErrorKind::Interrupted {
+            return Err(error);
+        }
+    }
+}
+
 pub(crate) fn send(stream: &mut impl Write, value: &Frame) -> std::io::Result<()> {
     if matches!(
         value,

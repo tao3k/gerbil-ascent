@@ -29,9 +29,7 @@ pub fn prepare(root: &Path, output: &Path) -> Result<GerbilRuntime, String> {
         &[]
     };
     let entry = root.join("interface/hybrid.ss");
-    for source in [root.join("build.ss"), root.join("init.ss"), entry.clone()] {
-        println!("cargo:rerun-if-changed={}", source.display());
-    }
+    println!("cargo:rerun-if-changed={}", root.join("build.ss").display());
     admit(
         runtime.stage_package_program(
             entry.to_str().ok_or("non-UTF8 embedding entry")?,

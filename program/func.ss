@@ -6,15 +6,17 @@
 ;;; in these objects; each evaluation owns its own relation storage.
 
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop .defgeneric validate)
-        (only-in :gerbil-ascent/table/provider
+        (only-in :clan/poo/mop .defgeneric)
+        (only-in :clan/poo/type validate)
+        (only-in "../table/provider.ss"
                  gerbil-ascent-hash-index-provider)
-        (only-in :gerbil-ascent/table/storage
+        (only-in "../table/storage.ss"
                  gerbil-ascent-set-storage-provider)
         (only-in "types.ss"
                  gerbil-ascent-make-term-value gerbil-ascent-make-atom-value
                  gerbil-ascent-check-owned-term-value gerbil-ascent-check-owned-atom-value
                  gerbil-ascent-make-rule-value gerbil-ascent-check-owned-rule-value
+                 gerbil-ascent-closed-rule-contracts-current?
                  gerbil-ascent-make-located-rule-value gerbil-ascent-rule-with-origin
                  gerbil-ascent-make-program-value gerbil-ascent-check-source-handles
                  gerbil-ascent-make-aggregate-value gerbil-ascent-check-owned-aggregate-value
@@ -52,6 +54,7 @@
   gerbil-ascent-rule/reader-origin
   gerbil-ascent-fragment
   gerbil-ascent-program
+  gerbil-ascent-construct-inert-rules
   gerbil-ascent-construct-inert-program
   gerbil-ascent-construct-inert-fragment)
 
@@ -97,6 +100,20 @@
         (values checked output))))))
 
 ;; END GENERATED DSL-ROOT
+
+;; BEGIN GENERATED DSL-RULE-EXTENT
+;; The macro supplies only closed rule constructors. Its receiver evaluates
+;; all later declaration arguments with ordinary validation restored.
+(def (gerbil-ascent-construct-inert-rules construct)
+  (if (and (eq? (current-declaration-check) validate)
+           (gerbil-ascent-closed-rule-contracts-current?))
+    (let (rules (receive-inert-declarations construct values))
+      ;; A different green thread can edit a descriptor. Only the ordinary
+      ;; constructor may publish rules after its protocol has changed.
+      (if (gerbil-ascent-closed-rule-contracts-current?) rules (construct)))
+    (construct)))
+
+;; END GENERATED DSL-RULE-EXTENT
 
 ;; : (forall (f) (-> (-> f) f))
 ;; : (-> InertFragmentConstructor ValidatedFragment)

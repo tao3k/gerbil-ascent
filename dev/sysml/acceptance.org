@@ -50,8 +50,8 @@ state model was introduced for pure role filtering or diagnostic metadata.
 
 The snapshot source rendering was updated alongside its Scheme producer; exact
 render comparison remains enabled. A separate existing cache-source mismatch
-was corrected by including =init.ss= in the CI compiler input list, matching
-=CompilerCost.preparationCompatibilityInputs=. The deleted =build-modules.ss=
+was corrected by including =init.ss= in the CI compiler input list. The
+workflow owns that list. The deleted =build-modules.ss=
 remains removed. No threshold, obligation or CI scheduling rule was weakened.
 
 * Current integration cohort (2026-11-03)

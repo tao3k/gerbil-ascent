@@ -7,20 +7,20 @@
 ;;; scalar filters and computations.
 ;;; Its result is checked against the completed native query before use.
 ;;; Node inputs always refer to earlier nodes, so the list is a finite DAG.
-(import (only-in :gerbil-ascent/candidate/datum candidate-copy-pairs)
-        :gerbil-ascent/candidate/grounding-plan
-        :gerbil-ascent/candidate/proof-frame
-        (only-in :gerbil-ascent/candidate/certificate-limits
+(import (only-in "datum.ss" candidate-copy-pairs)
+        "grounding-plan.ss"
+        "proof-frame.ss"
+        (only-in "certificate-limits.ss"
                  make-certificate-material-budget certificate-material-reserve!
                  certificate-for-each-while bounded-list-length)
-        (only-in :gerbil-ascent/candidate/types
+        (only-in "types.ss"
                  reasoning-snapshot-identity reasoning-snapshot-generation
                  reasoning-snapshot-digest reasoning-snapshot-relations
                  reasoning-snapshot-valid?
                  reasoning-candidate-facts reasoning-candidate-rules
                  reasoning-candidate-query reasoning-candidate-limits)
-        (only-in :gerbil-ascent/candidate/program candidate-variable?)
-        (only-in :gerbil-ascent/candidate/funs
+        (only-in "program.ss" candidate-variable?)
+        (only-in "funs.ss"
                  candidate-same-row-set? candidate-schema-of))
 
 (export candidate-positive-proof candidate-positive-closed-absence
@@ -36,12 +36,12 @@
 
 (defstruct positive-proof
   (status snapshot-identity snapshot-generation snapshot-digest
-          candidate-digest query work-budget nodes roots))
-(defstruct proof-node (id kind relation row label inputs))
+          candidate-digest query work-budget nodes roots) final: #t)
+(defstruct proof-node (id kind relation row label inputs) final: #t)
 ;;; One replay owns these queue spines and row indexes. Only proof nodes are
 ;;; published; a queue is extended only between completed grounding rounds.
 ;; : (-> ProofNodes (Maybe Pair) RowIndex ProofRelation)
-(defstruct proof-relation (nodes tail members))
+(defstruct proof-relation (nodes tail members) final: #t)
 (def (positive-atom? atom)
   (and (pair? atom) (symbol? (car atom))
        (not (memq (car atom) '(not where compute reduce)))))

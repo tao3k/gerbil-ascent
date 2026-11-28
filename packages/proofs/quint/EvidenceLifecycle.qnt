@@ -8,11 +8,11 @@ module EvidenceLifecycle {
   pure def count(mask: int): int = mask % 2 + mask / 2
   pure def admitted(mask: int, limit: int): bool = limit == 0 or count(mask) <= limit
   type State = {alive: bool, generation: int, source: int,
-    resultLive: bool, resultGeneration: int, resultRows: int,
+    resultLive: bool, resultComplete: bool, resultGeneration: int, resultRows: int,
     proofHeld: bool, proofOwned: bool, proofGeneration: int,
     proofRows: int, proofOrigin: int, rejected: bool, rejectedSource: int}
   pure def initial(mask: int): State = {alive: true, generation: 0, source: mask,
-    resultLive: false, resultGeneration: -1, resultRows: 0,
+    resultLive: false, resultComplete: false, resultGeneration: -1, resultRows: 0,
     proofHeld: false, proofOwned: false, proofGeneration: -1,
     proofRows: 0, proofOrigin: 0, rejected: false, rejectedSource: mask}
   // Event IDs: run, explain, release-result, replace, reject-batch,
@@ -20,7 +20,8 @@ module EvidenceLifecycle {
   // relation; neither this model nor Python evaluates arbitrary Scheme.
   pure def advance(s: State, event: int, replacement: int, fault: str): State = {
     val base = {...s, rejected: false}
-    if (event == 0) {...base, resultLive: true, resultGeneration: s.generation, resultRows: s.source}
+    if (event == 0 or event == 8) {...base, resultLive: true, resultComplete: event == 0,
+      resultGeneration: s.generation, resultRows: s.source}
     else if (event == 1) {...base, proofHeld: true, proofOwned: true,
       proofGeneration: s.generation, proofRows: s.resultRows, proofOrigin: s.resultRows}
     else if (event == 2) {...base, resultLive: false,
@@ -39,6 +40,7 @@ module EvidenceLifecycle {
   action init = {nondet mask = Set(0,1,2,3).oneOf(); all {
     admitted(mask, InputLimit), q' = initial(mask)}}
   action Run = all {q.alive, not(q.resultLive), q' = advance(q, 0, 0, Mutation)}
+  action RunPartial = all {q.alive, not(q.resultLive), q' = advance(q, 8, 0, Mutation)}
   action Explain = all {q.alive, q.resultLive, not(q.proofHeld), q' = advance(q, 1, 0, Mutation)}
   action ReleaseResult = all {q.alive, q.resultLive, q' = advance(q, 2, 0, Mutation)}
   action Replace = {nondet mask = Set(0,1,2,3).oneOf(); all {
@@ -47,9 +49,12 @@ module EvidenceLifecycle {
   action ReleaseProof = all {q.alive, q.proofHeld, q' = advance(q, 5, 0, Mutation)}
   action Close = all {q.alive, q' = advance(q, 6, 0, Mutation)}
   action RepeatRun = all {q.alive, q.resultLive, q' = advance(q, 7, 0, Mutation)}
-  action step = any {Run, Explain, ReleaseResult, Replace, RejectBatch, ReleaseProof, Close, RepeatRun}
+  action step = any {Run, RunPartial, Explain, ReleaseResult, Replace, RejectBatch, ReleaseProof, Close, RepeatRun}
   val TypeOK = all {q.generation >= 0, Set(0,1,2,3).contains(q.source), admitted(q.source, InputLimit)}
   val CurrentResult = q.resultLive implies all {q.alive, q.resultGeneration == q.generation, q.resultRows == q.source}
+  val proofScope = q.alive and q.resultLive and q.resultGeneration == q.generation and
+    (q.resultComplete or Mutation == "partial-scope")
+  val CompleteProofScope = proofScope implies q.resultComplete
   val IndependentExplanation = (q.alive and q.proofHeld and q.proofGeneration == q.generation) implies q.proofOwned
   val FrozenObservation = q.proofHeld implies q.proofRows == q.proofOrigin
   val RejectionAtomic = q.rejected implies q.source == q.rejectedSource

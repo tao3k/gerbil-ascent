@@ -18,6 +18,7 @@ gerbil-scheme-python = { workspace = true, features = ["python", "c-abi", "paral
 
 [build-dependencies]
 ascent-build = { path = "../ascent-build", features = ["python-sources"] }
+pyo3-build-config = "=0.27.2"
 
 [dev-dependencies]
 asp-rust.workspace = true

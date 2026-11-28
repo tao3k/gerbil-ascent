@@ -8,7 +8,7 @@
         relational-op-measurement-join-probes relational-op-measurement-fix-body-evaluations
         relational-op-count-join! relational-op-count-fix!)
 (defstruct relational-op-measurement
-  (result-values join-probes fix-body-evaluations))
+  (result-values join-probes fix-body-evaluations) final: #t)
 
 (def current-relational-op-meter (make-parameter #f))
 

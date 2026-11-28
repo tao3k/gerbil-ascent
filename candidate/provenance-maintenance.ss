@@ -15,7 +15,7 @@
         candidate-provenance-preview-withdraw candidate-provenance-compact
         provenance-maintenance-size candidate-provenance-heights
         provenance-maintenance-alternatives)
-(defstruct provenance-maintenance (rows-table roots edges sources alive removed))
+(defstruct provenance-maintenance (rows-table roots edges sources alive removed) final: #t)
 
 ;;; Every phase reads the membership it owns, including tentative withdrawal
 ;;; and fresh height labels. A shared selector never borrows published state.
@@ -188,10 +188,11 @@
               (unless (hash-get (provenance-maintenance-sources state) selector)
                 (error "unknown provenance source occurrence" selector))) selectors)
   (let ((edges (provenance-maintenance-edges state))
-        (selected (make-hash-table))
+        ;; Retain each owner's comparator in a fresh, empty work table.
+        (selected (hash-new (provenance-maintenance-removed state)))
         (removed (hash-copy (provenance-maintenance-removed state)))
         (alive (hash-copy (provenance-maintenance-alive state)))
-        (affected (make-hash-table-eqv)) (seeds []) (steps 0))
+        (affected (hash-new (provenance-maintenance-alive state))) (seeds []) (steps 0))
     (for-each (lambda (selector)
                 (hash-put! selected selector #t) (hash-put! removed selector #t))
               (candidate-copy-pairs selectors))

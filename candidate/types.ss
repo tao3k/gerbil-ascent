@@ -6,7 +6,7 @@
 ;;; A receipt is an observation of one candidate, not source admission.
 ;;; Shared bounded proposal data and source snapshot value types.
 
-(import (only-in :gerbil-ascent/candidate/datum reasoning-bounded-data?)
+(import (only-in "datum.ss" reasoning-bounded-data?)
         (only-in :std/crypto/digest sha256)
         (only-in :std/encoding/hex hex-encode))
 
@@ -40,10 +40,10 @@
   +max-derived-facts+
   +max-output-facts+)
 
-(defstruct reasoning-snapshot (identity generation digest relations))
-(defstruct reasoning-diagnostic (code path detail))
-(defstruct reasoning-candidate (relations facts rules query limits))
-(defstruct candidate-rejection (diagnostic))
+(defstruct reasoning-snapshot (identity generation digest relations) final: #t)
+(defstruct reasoning-diagnostic (code path detail) final: #t)
+(defstruct reasoning-candidate (relations facts rules query limits) final: #t)
+(defstruct candidate-rejection (diagnostic) final: #t)
 
 (def +max-relations+ 64)
 
@@ -131,7 +131,7 @@
 ;;; Module publication contract; candidate data contracts above are unchanged.
 
 (import (only-in :clan/poo/object .cc)
-        (only-in :clan/poo/mop Type.)
+        (only-in :clan/poo/type Type.)
         (only-in :clan/poo/type Record))
 
 (export CandidateScopeContract)

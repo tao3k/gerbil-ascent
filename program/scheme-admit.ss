@@ -12,7 +12,7 @@
         (only-in "scheme-query.ss" make-relational-solution)
         (only-in "evaluate.ss" gerbil-ascent-make-engine)
         (only-in :clan/poo/object .ref)
-        (only-in :clan/poo/mop validate)
+        (only-in :clan/poo/type validate)
         (only-in :std/error exception->string)
         (only-in :std/list/list append-map))
 (export relational-compose relational-admit relational-admit/report relational-solve
@@ -21,9 +21,9 @@
         relational-diagnostic-code relational-diagnostic-path relational-diagnostic-detail
         relational-diagnostic-origin)
 
-(defstruct relational-admission (run))
-(defstruct relational-diagnostic (code path detail origin))
-(defstruct relational-admission-report (admission diagnostic))
+(defstruct relational-admission (run) final: #t)
+(defstruct relational-diagnostic (code path detail origin) final: #t)
+(defstruct relational-admission-report (admission diagnostic) final: #t)
 
 ;;; Composition is inert. Admission checks the assembled schema and rules
 ;;; later, after every fragment has contributed to the whole program.

@@ -5,8 +5,8 @@
 ;;; Rule declarations are Core POO contracts. Relation rows
 ;;; remain ordinary Scheme values; constructors check their declared arity.
 (import (only-in :clan/poo/object .o .ref)
-        (only-in :clan/poo/mop define-type element?)
-        (only-in :tao3k/yuanxu/object-types/contracts
+        (only-in :clan/poo/type define-type element?)
+        (only-in :tao3k/yuanxu/types/contracts
                  YuanxuObjectContract.
                  yuanxu-predicate-contract)
         (only-in :gerbil-ascent/table/provider
